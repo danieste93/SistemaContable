@@ -28,6 +28,7 @@ const Articulo = require("../models/articulo")
 const userModel = require('../models/users');
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
+const moment = require('moment');
 
 async function addReg (req, res){
 
@@ -1728,7 +1729,9 @@ return res.status(200).send({status: "Ok", message: "getCuentasRegs", regsHabile
      let tiempoIni = new Date(fechamensual.getFullYear(), fechamensual.getMonth(), 1).setHours(0,0,0,0);
       let tiempoFin = new Date(fechamensual.getFullYear(), fechamensual.getMonth() + 1, 0).setHours(23,59,59,999);
       console.log(fechamensual.getFullYear())
+      let month10 = moment(fechamensual.getTime()).month();
       console.log(fechamensual.getMonth())
+      console.log(month10)
       console.log(new Date(tiempoIni))
  console.log(new Date(tiempoFin))
       let regsHabiles = await RegModelSass.find({
