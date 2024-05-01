@@ -768,7 +768,7 @@ const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.Importe).t
    
   }
   async  function exeRegs (req, res){
-console.log(req.body)
+
     let conn = await mongoose.connection.useDb(req.body.User.DBname);
     let RegModelSass = await conn.model('Reg', regSchema);
     let CuentasModelSass = await conn.model('Cuenta', accountSchema);
@@ -789,9 +789,7 @@ let regToexe =[]
         {Tiempo: {$lte : new Date().getTime()}}
       ]
     })
-    console.log(new Date())
-    console.log(new Date().getTime())
-    console.log(regToexe)
+    
     let registrosUpdate=[]
 if(regToexe.length > 0){
  
@@ -1723,8 +1721,10 @@ return res.status(200).send({status: "Ok", message: "getCuentasRegs", regsHabile
    async function getMontRegs (req, res) {
     let conn = await mongoose.connection.useDb(req.body.User.DBname);
     let RegModelSass = await conn.model('Reg', regSchema);
+    console.log(req.body)
+    console.log(new Date())
     let fechamensual = new Date(req.body.tiempo);
-    
+    console.log(fechamensual)
      let tiempoIni = new Date(fechamensual.getFullYear(), fechamensual.getMonth(), 1).setHours(0,0,0,0);
       let tiempoFin = new Date(fechamensual.getFullYear(), fechamensual.getMonth() + 1, 0).setHours(23,59,59,999);
  console.log(new Date(tiempoIni))
