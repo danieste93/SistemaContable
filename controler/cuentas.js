@@ -252,7 +252,7 @@ async function addReg (req, res){
 
                   else if(req.body.TipoRep == "Repetir"){
               
-                   console.log(req.body)
+                 
                 let yearCurrent =     new Date().getFullYear()
                 let yearRegister = new Date(req.body.Tiempo).getFullYear()
                 let datosEspecificos 
@@ -333,7 +333,7 @@ async function addReg (req, res){
                                         let fechapormodi = fechaconver.setMonth(fechaconver.getMonth() + x )
                                         let fechamodi = new Date(fechapormodi).setDate(1)
                                   
-                                  let dateFechamodi = new Date(fechamodi)
+                                        let dateFechamodi = new Date(fechamodi)
                                         var ultimoDia = new Date(dateFechamodi.getFullYear(), dateFechamodi.getMonth() + 1, 0)
                                         let diaActual = dateFechamodi.getDate() 
                                         let Diasestemes = ultimoDia.getDate()  - diaActual
@@ -503,18 +503,21 @@ async function addReg (req, res){
                               let fechaeje = 0
                               let fechaRep = new Date()
                             
-                              if(req.body.Valrep == "Cada Semana" ){
-                                let setmes = fechaRep.setMonth(mesActual + 1)
-                                let setdia = new Date(setmes).setDate(1)
-                                let sethora =new Date(setdia).setHours(0,5,0)
-                                fechaeje = sethora
+                              if(req.body.Valrep == "Cada Semana"){
+                                let ultimafecha =new Date(fechaset)
+      
+                                let setdia = ultimafecha.setDate(ultimafecha.getDate() + 7)
                           
-                              }else if(  req.body.Valrep ==="Cada Mes" ){
+                                let sethora =new Date(setdia).setHours(0,5,0)
+                          
+                                fechaeje = sethora
+                             
+                              }else if(  req.body.Valrep ==="Cada Mes"){
                                 let setmes = fechaRep.setMonth(mesActual + 1)
                                 let setdia = new Date(setmes).setDate(1)
                                 let sethora =new Date(setdia).setHours(0,5,0)
                                 fechaeje = sethora
-                              }        else if(  req.body.Valrep ==="Cada Día" ){
+                              }else if(  req.body.Valrep ==="Cada Día" ){
            
                                 let setmes = fechaRep.setMonth(mesActual + 1)
                                 let sethora =new Date(setmes).setHours(0,5,0)
@@ -530,6 +533,7 @@ async function addReg (req, res){
                                
                                fechaeje = sethora
                                }
+                             
                                const resultrep = await  RepeticionModelSass.create([{
                                 reg: {
                                  ...datareg,
@@ -551,12 +555,7 @@ async function addReg (req, res){
                       
                            
                             }//fin del for
-                         
-                        
-      
-                        
-      
-      
+             
                           
                         }else{
                                
@@ -1301,7 +1300,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
     }
 
  async function addRepeticiones(req,res){
- 
+ console.log(req.body)
    let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
    let CuentasModelSass = await conn.model('Cuenta', accountSchema);
    let RegModelSass = await conn.model('Reg', regSchema);
@@ -1311,7 +1310,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
    const session = await mongoose.startSession();  
       
    session.startTransaction();
-   console.log(req.body)
+
    try {
     const opts2 = { session, new:true };
     const options = { session};
@@ -1362,7 +1361,6 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
               nombreCuenta: req.body.CuentaSelec.nombreCuenta,
              },
 
-      
             CuentaSelec2:{idCuenta:req.body.CuentaSelec2.idCuenta,
                         nombreCuenta: req.body.CuentaSelec2.nombreCuenta,
                         },
@@ -1370,12 +1368,10 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
 
         } 
       
-  
-     
+
           let mes = new Date(req.body.Tiempo).getMonth()
           let mesActual = new Date().getMonth()
            
-
 
                    let mesesExtra = (mesActual - mes) + 1
                   let fechacambio = new Date(req.body.Tiempo)
@@ -1559,11 +1555,13 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
                       let fechaRep = new Date(req.body.Tiempo)
                     
                       if(req.body.Valrep == "Cada Semana" ){
-                        let setmes = fechaRep.setMonth(fechaRep.getMonth() + 1)
-                        let setdia = new Date(setmes).setDate(1)
-                        let sethora =new Date(setdia).setHours(0,5,0)
-                        fechaeje = sethora
+                        let ultimafecha =new Date(fechaset)
+      
+                        let setdia = ultimafecha.setDate(ultimafecha.getDate() + 7)
                   
+                        let sethora =new Date(setdia).setHours(0,5,0)
+    
+                        fechaeje = sethora
                       }else if(  req.body.Valrep ==="Cada Mes" ){
                         let setmes = fechaRep.setMonth(fechaRep.getMonth() + 1)
                         let setdia = new Date(setmes).setDate(1)
@@ -1729,7 +1727,8 @@ return res.status(200).send({status: "Ok", message: "getCuentasRegs", regsHabile
     
      let tiempoIni = new Date(fechamensual.getFullYear(), fechamensual.getMonth(), 1).setHours(0,0,0,0);
       let tiempoFin = new Date(fechamensual.getFullYear(), fechamensual.getMonth() + 1, 0).setHours(23,59,59,999);
- 
+ console.log(new Date(tiempoIni))
+ console.log(new Date(tiempoFin))
       let regsHabiles = await RegModelSass.find({
         $and: [
           {Tiempo: {$gte : tiempoIni}},

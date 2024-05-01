@@ -9,10 +9,12 @@ const Demo=(Comprobante, archivop12, pass)=>
 {
     
 let FirmarComprobante=(mi_contenido_p12, mi_pwd_p12, comprobante) =>{
-   
+   console.log(mi_contenido_p12)
 
-let issuerName= ""
+try{
 
+
+    let issuerName= ""
     let arrayUint8 = new Uint8Array(mi_contenido_p12);
  
     let p12B64 = Forge.util.binary.base64.encode(arrayUint8);
@@ -28,7 +30,7 @@ let issuerName= ""
     let pkcs8 
    
    var signaturesQuantity = certBags[Forge.oids.certBag];
-
+   console.log(signaturesQuantity)
 for (let z = 0 ;z<signaturesQuantity.length;z++){
 
     if(signaturesQuantity[z].attributes.friendlyName){
@@ -305,6 +307,13 @@ for (let z = 0 ;z<signaturesQuantity.length;z++){
     //FIN DE LA FIRMA DIGITAL 
 
     return  comprobante.replace(/(<[^<]+)$/, xades_bes + '$1');
+}
+catch(error){
+    console.log(error.name, error.message);
+    
+    return {status: "Error", message: error.message , error };
+  }
+
 }
 
 

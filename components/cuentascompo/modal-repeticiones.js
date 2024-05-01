@@ -13,10 +13,6 @@ class Contacto extends Component {
    channel1 = null;
     componentDidMount(){
       this.channel1 = postal.channel();
-     
-
-
-   
 
       setTimeout(function(){ 
         

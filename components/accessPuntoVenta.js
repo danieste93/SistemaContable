@@ -1680,7 +1680,6 @@ this.setState({ data:nuevoval})
           genCoti = (SuperTotal, SubTotal, IvaEC, TotalDescuento ) => {
 
 
-
             let nombreComercial = this.props.state.userReducer.update.usuario.user.Factura.nombreComercial
            let tiempo = new Date()    
             let mes = this.addCero(tiempo.getMonth()+1)
@@ -1967,130 +1966,299 @@ this.setState({ data:nuevoval})
          let docFirmado = SignerJS(xmlgenerator, 
             contP12, 
            this.decryptData( this.props.state.userReducer.update.usuario.user.Firmdata.pass))
-      
-      
-         let accumText = ""
-        let mimapper =  this.state.Fpago.map(x=> accumText.concat(x.Detalles))
-   
-/*
-const url = window.URL.createObjectURL(
-    new Blob([docFirmado], { type: "text/plain"}),
-  );
-link.href = url;
-link.setAttribute(
-  'download',
-  `Consultores Asociados 001-001-100.xml`,
-);
 
- link.click()
- 
- */
-         
+           if(docFirmado.status == "Error"){
 
-        
-   
-let dataexample2 = {
-    ClaveAcceso:clavefinal, 
-    xmlDoc:docFirmado,
-    numeroAuto:"1511202201170655537000110010010000001001234567812",
-     fechaAuto:"2022-11-15T22:49:50-05:00",
-     secuencial:"100",
-       SuperTotal,                                           
-       TotalDescuento,
-       IvaEC:valorIVA,
-       fechaEmision,
-       nombreComercial,
-       dirEstablecimiento,
-       baseImpoSinImpuestos,
-       baseImpoConImpuestos,
-       Doctype: this.state.doctype,
-        UserId: this.state.id,
-
-        razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
-        ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
-        estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
-        ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision,
-        secuencial:this.ceroMaker(this.state.secuencialGen),
-        obligadoContabilidad :this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO",
-        rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?true:false,
-        razonSocialComprador:this.state.UserSelect?this.state.usuario:'CONSUMIDOR FINAL',
-        ciudadComprador:this.state.UserSelect?this.state.ciudad:'',
-        correoComprador:this.state.UserSelect?this.state.correo:'',
-        identificacionComprador:this.state.UserSelect?this.state.cedula:'9999999999999',
-        direccionComprador:this.state.UserSelect?this.state.direccion:'',
-        ArticulosVendidos:this.state.ArtVent,
-        LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
-      populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
-         Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
-         Estado:"AUTORIZADO",
-         detalles:mimapper.map((x)=>  x +" ")
-     };
-    let generatedFact = factGenerator(dataexample2)
-
- // this.setState({html:generatedFact})
-
-let allData ={doc:docFirmado,
-          codigo:clavefinal,
-          idUser:this.props.state.userReducer.update.usuario.user._id,
-          ambiente:ambiente==1?"Pruebas":"Produccion"  
-             }
-
-   
-           fetch("/public/uploadSignedXml", {
-            method: 'POST', // or 'PUT'
-            body: JSON.stringify(allData), // data can be `string` or {object}!
-            headers:{
-              'Content-Type': 'application/json',
-              "x-access-token": this.props.state.userReducer.update.usuario.token
+           console.log(docFirmado)
+            let add = {
+                Estado:true,
+                Tipo:"error",
+                Mensaje:`Error con la firma electronica, ${docFirmado.message}`
             }
-          }).then(res => res.json())
-          .catch(error => {console.error('Error:', error);
-                 })
-          .then(response => {
-           console.log(response)
-                  if(response.status =="ok" ){
-                   if(response.resdata.estado == "AUTORIZADO"){
-                       let numeroAuto = response.resdata.numeroAutorizacion
-                       let fechaAuto = response.resdata.fechaAutorizacion
-                       let accumText = ""
-                       let mimapper =  this.state.Fpago.map(x=> accumText.concat(x.Detalles))
-                      
+            this.setState({Alert: add, loading:false}) 
+           }else{
+
+            let accumText = ""
+            let mimapper =  this.state.Fpago.map(x=> accumText.concat(x.Detalles))
+       
+    /*
+    const url = window.URL.createObjectURL(
+        new Blob([docFirmado], { type: "text/plain"}),
+      );
+    link.href = url;
+    link.setAttribute(
+      'download',
+      `Consultores Asociados 001-001-100.xml`,
+    );
+    
+     link.click()
+     
+     */
+             
+    
+            
+       
+    let dataexample2 = {
+        ClaveAcceso:clavefinal, 
+        xmlDoc:docFirmado,
+        numeroAuto:"1511202201170655537000110010010000001001234567812",
+         fechaAuto:"2022-11-15T22:49:50-05:00",
+         secuencial:"100",
+           SuperTotal,                                           
+           TotalDescuento,
+           IvaEC:valorIVA,
+           fechaEmision,
+           nombreComercial,
+           dirEstablecimiento,
+           baseImpoSinImpuestos,
+           baseImpoConImpuestos,
+           Doctype: this.state.doctype,
+            UserId: this.state.id,
+    
+            razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
+            ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
+            estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
+            ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision,
+            secuencial:this.ceroMaker(this.state.secuencialGen),
+            obligadoContabilidad :this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO",
+            rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?true:false,
+            razonSocialComprador:this.state.UserSelect?this.state.usuario:'CONSUMIDOR FINAL',
+            ciudadComprador:this.state.UserSelect?this.state.ciudad:'',
+            correoComprador:this.state.UserSelect?this.state.correo:'',
+            identificacionComprador:this.state.UserSelect?this.state.cedula:'9999999999999',
+            direccionComprador:this.state.UserSelect?this.state.direccion:'',
+            ArticulosVendidos:this.state.ArtVent,
+            LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
+          populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
+             Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
+             Estado:"AUTORIZADO",
+             detalles:mimapper.map((x)=>  x +" ")
+         };
+        let generatedFact = factGenerator(dataexample2)
+    
+     // this.setState({html:generatedFact})
+    
+    let allData ={doc:docFirmado,
+              codigo:clavefinal,
+              idUser:this.props.state.userReducer.update.usuario.user._id,
+              ambiente:ambiente==1?"Pruebas":"Produccion"  
+                 }
+    
+       
+               fetch("/public/uploadSignedXml", {
+                method: 'POST', // or 'PUT'
+                body: JSON.stringify(allData), // data can be `string` or {object}!
+                headers:{
+                  'Content-Type': 'application/json',
+                  "x-access-token": this.props.state.userReducer.update.usuario.token
+                }
+              }).then(res => res.json())
+              .catch(error => {console.error('Error:', error);
+                     })
+              .then(response => {
+               console.log(response)
+                      if(response.status =="ok" ){
+                       if(response.resdata.estado == "AUTORIZADO"){
+                           let numeroAuto = response.resdata.numeroAutorizacion
+                           let fechaAuto = response.resdata.fechaAutorizacion
+                           let accumText = ""
+                           let mimapper =  this.state.Fpago.map(x=> accumText.concat(x.Detalles))
+                          
+                           let vendedorCont ={
+                               Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
+                               Id:this.props.state.userReducer.update.usuario.user._id,
+                               Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
+                           }
+    
+                           let newdocFirmado =     `    <autorizacion>\n`+
+                           `    <estado>AUTORIZADO</estado>\n`+
+                            `    <numeroAutorizacion>${numeroAuto}</numeroAutorizacion>\n`+
+                            `    <fechaAutorizacion>${fechaAuto}</fechaAutorizacion>\n`+
+                            `    <ambiente>PRODUCCIÓN</ambiente>\n`+
+                            `    <comprobante>
+                            <![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+                            ${docFirmado}
+                        ]]>
+                            </comprobante>\n`+
+                            
+                           `    </autorizacion>`
+    
+           
+    
+                           let PDFdata = {
+                            ClaveAcceso:clavefinal, 
+                            xmlDoc:docFirmado,
+                            numeroAuto,
+                             fechaAuto,
+                             secuencial,
+                               SuperTotal,                                           
+                               TotalDescuento,
+                               baseImpoSinImpuestos,
+                               baseImpoConImpuestos,
+                               IvaEC:valorIVA,
+                               fechaEmision,
+                               nombreComercial,
+                               dirEstablecimiento,
+                            
+                               Doctype: this.state.doctype,
+                                UserId: this.state.id,
+                                razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
+                                ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
+                                estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
+                                ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision,
+                                secuencial:this.ceroMaker(this.state.secuencialGen),
+                                obligadoContabilidad :this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO",
+                                rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?"CONTRIBUYENTE RÉGIMEN RIMPE":"",
+                                razonSocialComprador:this.state.UserSelect?this.state.usuario:'CONSUMIDOR FINAL',
+                                identificacionComprador:this.state.UserSelect?this.state.cedula:'9999999999999',
+                                direccionComprador:this.state.UserSelect?this.state.direccion:'',
+                                correoComprador:this.state.UserSelect?this.state.correo:'',
+                                ciudadComprador:this.state.UserSelect?this.state.ciudad:'',
+                                ArticulosVendidos:this.state.ArtVent,
+                                LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
+                        
+                                 Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
+                                 Estado:"AUTORIZADO",
+                                 detalles:mimapper.map((x)=>  x +" ")
+                             };
+                           let CompiladoFactdata = {
+                                               iDCating:5,
+                                               html:factGenerator(PDFdata),
+                                               allData:PDFdata,
+                                               xmlDoc:newdocFirmado,
+                                              numeroAuto,
+                                               fechaAuto,
+                                               secuencial,                                      
+                                                 SuperTotal,   
+                                                 ClaveAcceso:clavefinal,                                        
+                                                 TotalDescuento,
+                                                 IvaEC:valorIVA,
+                                                 baseImponible,
+                                                 Doctype: "Factura-Electronica",
+                                                  UserId: this.state.id,
+                                                  UserName:this.state.usuario,
+                                                  Correo: this.state.correo,
+                                                  Telefono: this.state.telefono,
+                                                  Direccion: this.state.direccion,
+                                                   Cedula:this.state.cedula,
+                                                   Ciudad:this.state.ciudad,
+                                                   ArticulosVendidos:this.state.ArtVent,
+                                                   FormasPago:this.state.Fpago,
+                                                   idVenta:this.state.idVenta,
+                                                   idRegistro:this.state.idReg,
+                                                   Tiempo: new Date().getTime(),
+                                                   Vendedor: vendedorCont,
+                                                   Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
+                                                   Estado:"AUTORIZADO",
+                                                   detalles:mimapper.map((x)=>  x +" ")
+                                               };
+                                               
+                           fetch('/cuentas/generarventa', {
+                               method: 'POST', // or 'PUT'
+                               body: JSON.stringify(CompiladoFactdata), // data can be `string` or {object}!
+                               headers:{
+                                 'Content-Type': 'application/json',
+                                 "x-access-token": this.props.state.userReducer.update.usuario.token
+                               }
+                             }).then(res => res.json())
+                             .catch(error => console.error('Error:', error))
+                             .then(response => {
+                              
+                               if(response.message=="error al registrar"){
+                                   let add = {
+                                     Estado:true,
+                                     Tipo:"error",
+                                     Mensaje:"Error en el sistema, porfavor intente en unos minutos"
+                                 }
+                                 this.setState({Alert: add, loading:false}) 
+                                 }
+                                 else if(response.message=="fatalerror"){
+                                    let add = {
+                                        Estado:true,
+                                        Tipo:"error",
+                                        Mensaje:"Error en el sistema del SRI, porfavor intente mas tarde"
+                                    }
+                                    this.setState({Alert: add, loading:false}) 
+                                 }
+                                 else{
+                                   let add = {
+                                       Estado:true,
+                                       Tipo:"success",
+                                       Mensaje:"Factura Electrónica Generada Satisfactoriamente"
+                                   }
+                                   this.setState({Alert: add,
+                                    loading:false,
+                                 
+                                })
+                               
+                             
+                                  setTimeout(()=>{ 
+                                                   this.getUA()
+                                    let cleanData = { 
+                                        loading:false,
+                                        UserSelect:false,
+                                        userDisplay:false,
+                                        id:"",
+                                        usuario:"",
+                                        readOnly:true,
+                                        correo:"",
+                                        telefono:"",
+                                        ciudad:"",
+                                        direccion:"",
+                                        cedula:"",
+                                        disableDoc:false,
+                                        SelectFormaPago:[],
+                                        Fcredito:[],
+                                        ArtVent:[],
+                                        tipopago:"Contado",
+                                        Fpago:[  ],
+                                        descuentoPer:0,
+                                        descuentoVal:0,
+                                        arrPrecios:[],
+                                       
+            
+                                    }
+                                   this.setState(cleanData)
+                                   this.saveToLocalStorage(cleanData)
+                                   this.props.dispatch(addVenta(response.VentaGen));
+                                   this.props.dispatch(addRegs(response.arrRegsSend));
+                                   this.props.dispatch(updateCuentas(response.Cuentas));
+                                   this.props.dispatch(updateArts(response.Articulos));
+                                },100)
+                                  
+                                   
+                           }
+                           })
+            
+            
+            
+                       }                  
+            
+                 }else if( response.status =="error" ){
+            
+                   if(response.resdata.estado == 'EN PROCESO'){
+                       let numeroAuto = "00000000000"
+                       let fechaAuto = "xx-en-espera--xx"
+                       
+    
                        let vendedorCont ={
                            Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
                            Id:this.props.state.userReducer.update.usuario.user._id,
                            Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
                        }
-
-                       let newdocFirmado =     `    <autorizacion>\n`+
-                       `    <estado>AUTORIZADO</estado>\n`+
-                        `    <numeroAutorizacion>${numeroAuto}</numeroAutorizacion>\n`+
-                        `    <fechaAutorizacion>${fechaAuto}</fechaAutorizacion>\n`+
-                        `    <ambiente>PRODUCCIÓN</ambiente>\n`+
-                        `    <comprobante>
-                        <![CDATA[<?xml version="1.0" encoding="UTF-8"?>
-                        ${docFirmado}
-                    ]]>
-                        </comprobante>\n`+
-                        
-                       `    </autorizacion>`
-
-       
-
-                       let PDFdata = {
+                       let PDFproceso = {
                         ClaveAcceso:clavefinal, 
-                        xmlDoc:docFirmado,
                         numeroAuto,
                          fechaAuto,
                          secuencial,
                            SuperTotal,                                           
                            TotalDescuento,
-                           baseImpoSinImpuestos,
-                           baseImpoConImpuestos,
                            IvaEC:valorIVA,
                            fechaEmision,
                            nombreComercial,
                            dirEstablecimiento,
-                        
+                           baseImpoSinImpuestos,
+                           baseImpoConImpuestos,
                            Doctype: this.state.doctype,
                             UserId: this.state.id,
                             razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
@@ -2104,27 +2272,27 @@ let allData ={doc:docFirmado,
                             identificacionComprador:this.state.UserSelect?this.state.cedula:'9999999999999',
                             direccionComprador:this.state.UserSelect?this.state.direccion:'',
                             correoComprador:this.state.UserSelect?this.state.correo:'',
-                            ciudadComprador:this.state.UserSelect?this.state.ciudad:'',
+    
                             ArticulosVendidos:this.state.ArtVent,
-                            LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
-                    
-                             Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
-                             Estado:"AUTORIZADO",
+                            populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,            
+                                                        correoComprador:this.state.UserSelect?this.state.correo:'',
+                             Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
+                             Estado:"EN PROCESO",
                              detalles:mimapper.map((x)=>  x +" ")
-                         };
-                       let CompiladoFactdata = {
-                                           iDCating:5,
-                                           html:factGenerator(PDFdata),
-                                           allData:PDFdata,
-                                           xmlDoc:newdocFirmado,
+                                         };
+                       var dataexample = {
+                                    
+                                         html:factGenerator(PDFproceso),
+                                               allData:PDFproceso,
                                           numeroAuto,
                                            fechaAuto,
-                                           secuencial,                                      
-                                             SuperTotal,   
+                                           secuencial,
+                                             SuperTotal,  
+                                             xmlDoc:docFirmado, 
                                              ClaveAcceso:clavefinal,                                        
                                              TotalDescuento,
                                              IvaEC:valorIVA,
-                                             baseImponible,
+                                             baseImponible:baseImponible,
                                              Doctype: "Factura-Electronica",
                                               UserId: this.state.id,
                                               UserName:this.state.usuario,
@@ -2139,14 +2307,13 @@ let allData ={doc:docFirmado,
                                                idRegistro:this.state.idReg,
                                                Tiempo: new Date().getTime(),
                                                Vendedor: vendedorCont,
-                                               Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
-                                               Estado:"AUTORIZADO",
-                                               detalles:mimapper.map((x)=>  x +" ")
-                                           };
-                                           
+                                               Estado:"EN PROCESO",
+                                               detalles:mimapper.map((x)=>  x +" "),
+                                               Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}  
+                                        };
                        fetch('/cuentas/generarventa', {
                            method: 'POST', // or 'PUT'
-                           body: JSON.stringify(CompiladoFactdata), // data can be `string` or {object}!
+                           body: JSON.stringify(dataexample), // data can be `string` or {object}!
                            headers:{
                              'Content-Type': 'application/json',
                              "x-access-token": this.props.state.userReducer.update.usuario.token
@@ -2162,33 +2329,27 @@ let allData ={doc:docFirmado,
                                  Mensaje:"Error en el sistema, porfavor intente en unos minutos"
                              }
                              this.setState({Alert: add, loading:false}) 
-                             }
-                             else if(response.message=="fatalerror"){
-                                let add = {
-                                    Estado:true,
-                                    Tipo:"error",
-                                    Mensaje:"Error en el sistema del SRI, porfavor intente mas tarde"
-                                }
-                                this.setState({Alert: add, loading:false}) 
-                             }
-                             else{
+                             }else{
                                let add = {
                                    Estado:true,
-                                   Tipo:"success",
-                                   Mensaje:"Factura Electrónica Generada Satisfactoriamente"
+                                   Tipo:"warning",
+                                   Mensaje:"Factura en Proceso de Validacion, revisar "
                                }
-                               this.setState({Alert: add,
-                                loading:false,
                              
-                            })
-                           
+                               this.setState({Alert: add,
+                                loading:false })
+    
+                            let accumText = ""
+                            let mimapper =  this.state.Fpago.map(x=> accumText.concat(x.Detalles))
                          
+                          
+                          
+                            
+                              
                               setTimeout(()=>{ 
-                                               this.getUA()
-                                let cleanData = { 
-                                    loading:false,
-                                    UserSelect:false,
-                                    userDisplay:false,
+                                this.setState({
+                                    UserSelect:false,  
+                                    userDisplay:false, 
                                     id:"",
                                     usuario:"",
                                     readOnly:true,
@@ -2197,9 +2358,8 @@ let allData ={doc:docFirmado,
                                     ciudad:"",
                                     direccion:"",
                                     cedula:"",
-                                    disableDoc:false,
                                     SelectFormaPago:[],
-                                    Fcredito:[],
+    
                                     ArtVent:[],
                                     tipopago:"Contado",
                                     Fpago:[  ],
@@ -2207,194 +2367,47 @@ let allData ={doc:docFirmado,
                                     descuentoVal:0,
                                     arrPrecios:[],
                                    
-        
-                                }
-                               this.setState(cleanData)
-                               this.saveToLocalStorage(cleanData)
-                               this.props.dispatch(addVenta(response.VentaGen));
-                               this.props.dispatch(addRegs(response.arrRegsSend));
-                               this.props.dispatch(updateCuentas(response.Cuentas));
-                               this.props.dispatch(updateArts(response.Articulos));
+         
+                                })
+                            
                             },100)
-                              
-                               
                        }
                        })
-        
-        
-        
-                   }                  
-        
-             }else if( response.status =="error" ){
-        
-               if(response.resdata.estado == 'EN PROCESO'){
-                   let numeroAuto = "00000000000"
-                   let fechaAuto = "xx-en-espera--xx"
-                   
-
-                   let vendedorCont ={
-                       Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
-                       Id:this.props.state.userReducer.update.usuario.user._id,
-                       Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
                    }
-                   let PDFproceso = {
-                    ClaveAcceso:clavefinal, 
-                    numeroAuto,
-                     fechaAuto,
-                     secuencial,
-                       SuperTotal,                                           
-                       TotalDescuento,
-                       IvaEC:valorIVA,
-                       fechaEmision,
-                       nombreComercial,
-                       dirEstablecimiento,
-                       baseImpoSinImpuestos,
-                       baseImpoConImpuestos,
-                       Doctype: this.state.doctype,
-                        UserId: this.state.id,
-                        razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
-                        ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
-                        estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
-                        ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision,
-                        secuencial:this.ceroMaker(this.state.secuencialGen),
-                        obligadoContabilidad :this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO",
-                        rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?"CONTRIBUYENTE RÉGIMEN RIMPE":"",
-                        razonSocialComprador:this.state.UserSelect?this.state.usuario:'CONSUMIDOR FINAL',
-                        identificacionComprador:this.state.UserSelect?this.state.cedula:'9999999999999',
-                        direccionComprador:this.state.UserSelect?this.state.direccion:'',
-                        correoComprador:this.state.UserSelect?this.state.correo:'',
-
-                        ArticulosVendidos:this.state.ArtVent,
-                        populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,            
-                                                    correoComprador:this.state.UserSelect?this.state.correo:'',
-                         Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
-                         Estado:"EN PROCESO",
-                         detalles:mimapper.map((x)=>  x +" ")
-                                     };
-                   var dataexample = {
-                                
-                                     html:factGenerator(PDFproceso),
-                                           allData:PDFproceso,
-                                      numeroAuto,
-                                       fechaAuto,
-                                       secuencial,
-                                         SuperTotal,  
-                                         xmlDoc:docFirmado, 
-                                         ClaveAcceso:clavefinal,                                        
-                                         TotalDescuento,
-                                         IvaEC:valorIVA,
-                                         baseImponible:baseImponible,
-                                         Doctype: "Factura-Electronica",
-                                          UserId: this.state.id,
-                                          UserName:this.state.usuario,
-                                          Correo: this.state.correo,
-                                          Telefono: this.state.telefono,
-                                          Direccion: this.state.direccion,
-                                           Cedula:this.state.cedula,
-                                           Ciudad:this.state.ciudad,
-                                           ArticulosVendidos:this.state.ArtVent,
-                                           FormasPago:this.state.Fpago,
-                                           idVenta:this.state.idVenta,
-                                           idRegistro:this.state.idReg,
-                                           Tiempo: new Date().getTime(),
-                                           Vendedor: vendedorCont,
-                                           Estado:"EN PROCESO",
-                                           detalles:mimapper.map((x)=>  x +" "),
-                                           Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}  
-                                    };
-                   fetch('/cuentas/generarventa', {
-                       method: 'POST', // or 'PUT'
-                       body: JSON.stringify(dataexample), // data can be `string` or {object}!
-                       headers:{
-                         'Content-Type': 'application/json',
-                         "x-access-token": this.props.state.userReducer.update.usuario.token
-                       }
-                     }).then(res => res.json())
-                     .catch(error => console.error('Error:', error))
-                     .then(response => {
-                      
-                       if(response.message=="error al registrar"){
-                           let add = {
-                             Estado:true,
-                             Tipo:"error",
-                             Mensaje:"Error en el sistema, porfavor intente en unos minutos"
-                         }
-                         this.setState({Alert: add, loading:false}) 
-                         }else{
-                           let add = {
-                               Estado:true,
-                               Tipo:"warning",
-                               Mensaje:"Factura en Proceso de Validacion, revisar "
-                           }
-                         
-                           this.setState({Alert: add,
-                            loading:false })
-
-                        let accumText = ""
-                        let mimapper =  this.state.Fpago.map(x=> accumText.concat(x.Detalles))
-                     
-                      
-                      
-                        
-                          
-                          setTimeout(()=>{ 
-                            this.setState({
-                                UserSelect:false,  
-                                userDisplay:false, 
-                                id:"",
-                                usuario:"",
-                                readOnly:true,
-                                correo:"",
-                                telefono:"",
-                                ciudad:"",
-                                direccion:"",
-                                cedula:"",
-                                SelectFormaPago:[],
-
-                                ArtVent:[],
-                                tipopago:"Contado",
-                                Fpago:[  ],
-                                descuentoPer:0,
-                                descuentoVal:0,
-                                arrPrecios:[],
-                               
-     
-                            })
-                        
-                        },100)
-                   }
-                   })
-               }
-               else {
-                let add = {
-               Estado:true,
-               Tipo:"error",
-               Mensaje:`Error en la factura, ${response.resdata.mensajes.mensaje.mensaje},  ${response.resdata.mensajes.mensaje.informacionAdicional
-               } `
-           }
-        
-           this.setState({Alert: add, 
-               loading:false,
-           })
-            
-             }
-           }else if(response.status =="fatalerror" ){
-           
+                   else {
                     let add = {
-                               Estado:true,
-                               Tipo:"error",
-                               Mensaje:"Error el los Servidores del SRI, intente en unos momentos"
-                           }
-                         
-                           this.setState({Alert: add,
-                                        loading:false,
-                         })
+                   Estado:true,
+                   Tipo:"error",
+                   Mensaje:`Error en la factura, ${response.resdata.mensajes.mensaje.mensaje},  ${response.resdata.mensajes.mensaje.informacionAdicional
+                   } `
+               }
+            
+               this.setState({Alert: add, 
+                   loading:false,
+               })
+                
+                 }
+               }else if(response.status =="fatalerror" ){
+               
+                        let add = {
+                                   Estado:true,
+                                   Tipo:"error",
+                                   Mensaje:"Error el los Servidores del SRI, intente en unos momentos"
+                               }
+                             
+                               this.setState({Alert: add,
+                                            loading:false,
+                             })
+               }
+            });
+            
+    
+    
+    
+
            }
-        });
-        
-
-
-
+      
+      
 
 
     

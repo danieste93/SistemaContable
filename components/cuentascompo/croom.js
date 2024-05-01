@@ -766,7 +766,7 @@ ingbalance= (sumaingbalance +sumatransingbalance).toFixed(2)
 
 let balancegeneral = ingbalance - gasbalance
 
-let saldofinal =  Math.abs(balancegeneral)
+let saldofinal =  balancegeneral
 
 return saldofinal.toFixed(2)
 }
@@ -778,8 +778,9 @@ console.log(this.state)
       let flechaCuentasNoP = this.state.cuentaExpand == "NoPosesion"?"expand_less":"expand_more" 
       let flechaCuentasPsinT = this.state.cuentaExpand == "PosesionSinTotal"?"expand_less":"expand_more" 
       let generadorCuentas = (grupoCuentas,formato)=> grupoCuentas.map((cuenta,i)=>{
-
+        let Actualdata  = 0
         let novisible = cuenta.Visibility == false && this.state.visibility == false?"invisiblex":""
+        if(this.props.regC.Regs){
         let registros  = this.props.regC.Regs.filter(x => x.CuentaSelec.idCuenta === cuenta._id   )
         let transregister  = this.props.regC.Regs.filter(x => x.Accion === "Trans" )
         let Ingregister  = registros.filter(x => x.Accion === "Ingreso" )
@@ -793,16 +794,15 @@ console.log(this.state)
         
         //let Diarydata = this.calcData(diaryIngs, diaryGas, diaryTrans, cuenta)
         let Alldata = this.calcData(Ingregister, Gasregister, Transregister, cuenta)
-        
+    
         //console.warn(Math.abs(parseFloat(cuenta.DineroActual.$numberDecimal).toFixed(2)))
         
         //console.warn(Math.abs(parseFloat(Alldata.AllBalanceRender)))
         
      
-        let Actualdata = this.calcData(ActualIngs, ActualGas, ActualTrans, cuenta)
+         Actualdata = this.calcData(ActualIngs, ActualGas, ActualTrans, cuenta)
         
-        
-        
+      }
         let comprobador =()=>{
         
         
@@ -1236,18 +1236,6 @@ if(this.props.regC.Regs.length > 0 && this.state.cuentaSelect != ""){
 
   DetallesPorrender = this.MensualFilter(displayDetalles, this.state.tiempo)
 
-
- 
-
-    let getMesSistema = fecha.getMonth()
-    let getMesActual =new Date().getMonth()
-    let valorActualCuenta =this.state.cuentaSelect.DineroActual.$numberDecimal 
-    if(getMesSistema == getMesActual ){
-      saldoRender = valorActualCuenta
-    
-    }else if(getMesSistema < getMesActual ){
-    
-     
       let getPeriodRegs =  this.PeriodoFilter(displayDetalles, fecha.setDate(1), new Date() )
   
 
@@ -1261,14 +1249,22 @@ if(this.props.regC.Regs.length > 0 && this.state.cuentaSelect != ""){
 
 
        saldoRender = saldoGenerado
-    }
+    
   
     
 
   }
   else if(this.state.periodo){
-    saldoRender = valorActualCuenta
+    
   DetallesPorrender = this.PeriodoFilter(displayDetalles, this.state.tiempoperiodoini, this.state.tiempoperiodofin )
+
+ 
+
+      let balancePeriod = parseFloat(this.generadorBalanceGeneral(DetallesPorrender))
+
+  
+      
+      saldoRender = balancePeriod
 
   }
   
