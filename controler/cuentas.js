@@ -1721,14 +1721,15 @@ return res.status(200).send({status: "Ok", message: "getCuentasRegs", regsHabile
    async function getMontRegs (req, res) {
     let conn = await mongoose.connection.useDb(req.body.User.DBname);
     let RegModelSass = await conn.model('Reg', regSchema);
-    console.log(req.body)
-    console.log(new Date())
-    
+ 
+
     let fechamensual = new Date(req.body.tiempo);
     console.log(fechamensual)
      let tiempoIni = new Date(fechamensual.getFullYear(), fechamensual.getMonth(), 1).setHours(0,0,0,0);
       let tiempoFin = new Date(fechamensual.getFullYear(), fechamensual.getMonth() + 1, 0).setHours(23,59,59,999);
- console.log(new Date(tiempoIni))
+      console.log(fechamensual.getFullYear())
+      console.log(fechamensual.getMonth())
+      console.log(new Date(tiempoIni))
  console.log(new Date(tiempoFin))
       let regsHabiles = await RegModelSass.find({
         $and: [
