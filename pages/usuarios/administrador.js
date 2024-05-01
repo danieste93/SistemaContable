@@ -55,6 +55,7 @@ class admins extends Component {
     },
     tiempo:new Date().getTime()
   }
+  
   console.log(datos)
 let lol = JSON.stringify(datos)
 

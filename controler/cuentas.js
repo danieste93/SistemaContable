@@ -1723,6 +1723,7 @@ return res.status(200).send({status: "Ok", message: "getCuentasRegs", regsHabile
     let RegModelSass = await conn.model('Reg', regSchema);
     console.log(req.body)
     console.log(new Date())
+    
     let fechamensual = new Date(req.body.tiempo);
     console.log(fechamensual)
      let tiempoIni = new Date(fechamensual.getFullYear(), fechamensual.getMonth(), 1).setHours(0,0,0,0);
