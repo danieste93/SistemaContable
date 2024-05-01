@@ -1731,9 +1731,12 @@ return res.status(200).send({status: "Ok", message: "getCuentasRegs", regsHabile
       console.log(fechamensual.getFullYear())
       let month10 = moment(fechamensual.getTime()).month();
       console.log(fechamensual.getMonth())
+    
       console.log(month10)
       console.log(new Date().getMonth())
       console.log(new Date(req.body.tiempo).getMonth())
+      console.log(fechamensual.getUTCMonth())
+      console.log(new Date().getUTCMonth())
 
       let regsHabiles = await RegModelSass.find({
         $and: [
