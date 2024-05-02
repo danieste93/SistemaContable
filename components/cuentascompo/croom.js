@@ -832,8 +832,8 @@ console.log(this.state)
         else{ return "" }
         }
      
-        let backgroundSolido = cuenta.Background.Seleccionado=="Solido"?cuenta.Background.colorPicked:""
-        let backgroundImagen = cuenta.Background.Seleccionado=="Imagen"?cuenta.Background.urlBackGround:""
+        let backgroundSolido = ""
+        let backgroundImagen = ""
         return(<div>
           
     { formato == "cuadros" &&   <div key ={cuenta._id} className={ ` contenedorCuenta  ${novisible}`}  {...this.a11yProps(i)} >
