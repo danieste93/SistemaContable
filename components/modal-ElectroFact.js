@@ -44,7 +44,7 @@ class Contacto extends Component {
     validateFact:this.props.state.userReducer.update.usuario.user.Factura.validateFact || false,
     populares: this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,
     uploadedFactData:false,
-    loadingVal:false,
+    loading:false,
     logoemp:"",
     urlLogoEmp:this.props.state.userReducer.update.usuario.user.Factura.logoEmp ||"",
    }
@@ -102,8 +102,8 @@ console.log(this.state)
 
       valAlldata=()=>{
         console.log(this.state)
-        if(this.state.loadingVal == false){
-          this.setState({loadingVal:true})
+        if(this.state.loading == false){
+          this.setState({loading:true})
   
         if(this.state.valiteFirma 
           && this.state.ruc !=""
@@ -345,87 +345,100 @@ console.log(this.state)
        
 
      let link = document.createElement('a');
+     
      let docFirmado = SignerJS(xmlgenerator, 
       contP12, 
      this.decryptData( this.props.state.userReducer.update.usuario.user.Firmdata.pass))
 
+     if(docFirmado.status == "Error"){
 
-     const url = window.URL.createObjectURL(
-         new Blob([docFirmado]),
-       );
-     link.href = url;
-     link.setAttribute(
-       'download',
-       `result.xml`,
-     );
-
-  
-     let allData ={doc:docFirmado,
-      codigo:clavefinal,
-      idUser:this.state.idUser,
-      ambiente:"Pruebas" 
-         
-    }
+      console.log(docFirmado)
+       let add = {
+           Estado:true,
+           Tipo:"error",
+           Mensaje:`Error con la firma electronica, ${docFirmado.message}`
+       }
+       this.setState({Alert: add, loading:false}) 
+      }else{
+        const url = window.URL.createObjectURL(
+          new Blob([docFirmado]),
+        );
+      link.href = url;
+      link.setAttribute(
+        'download',
+        `result.xml`,
+      );
  
-     fetch("/public/uploadSignedXmlTest", {
-         method: 'POST', // or 'PUT'
-         body: JSON.stringify(allData), // data can be `string` or {object}!
-         headers:{
-           'Content-Type': 'application/json',
-           "x-access-token": this.props.state.userReducer.update.usuario.token
-         }
-       }).then(res => res.json())
-       .catch(error => {console.error('Error:', error);
-              })
-       .then(response => {
-
    
-          if(response.status =="ok" ){
-
-            const usuario= response.user
-         this.props.dispatch(updateUser2({usuario}))
-            this.setState({validateFact:true,
-              areaValidacion:false
-            })
-
-
-
-
-          }else if( response.status =="error" ){
-
-
-            if(response.resdata.estado == 'EN PROCESO'){
-              let add = {
-                Estado:true,
-                Tipo:"error",
-                Mensaje:`Servidor del SRI saturado Intente mas tarde`
-            }
-         
-            this.setState({Alert: add,
-              uploadedFactData:false,
-              readOnly:false,
-              areaValidacion:true,  
-              loadingVal:false,
-            })
-            }
-            else {
-             let add = {
-            Estado:true,
-            Tipo:"error",
-            Mensaje:`Error en la factura, ${response.resdata.mensajes.mensaje.mensaje}, ${response.resdata.mensajes.mensaje.informacionAdicional}, Codigo de Error: ${response.resdata.mensajes.mensaje.identificador} `
-        }
-     
-        this.setState({Alert: add, 
-          loadingVal:false, 
-          areaValidacion:true,  
-          readOnly:false,
-          uploadedFactData:false,
-        })
-         
+      let allData ={doc:docFirmado,
+       codigo:clavefinal,
+       idUser:this.state.idUser,
+       ambiente:"Pruebas" 
+          
+     }
+  
+      fetch("/public/uploadSignedXmlTest", {
+          method: 'POST', // or 'PUT'
+          body: JSON.stringify(allData), // data can be `string` or {object}!
+          headers:{
+            'Content-Type': 'application/json',
+            "x-access-token": this.props.state.userReducer.update.usuario.token
           }
-        }
- });
+        }).then(res => res.json())
+        .catch(error => {console.error('Error:', error);
+               })
+        .then(response => {
+ 
+    
+           if(response.status =="ok" ){
+ 
+             const usuario= response.user
+          this.props.dispatch(updateUser2({usuario}))
+             this.setState({validateFact:true,
+               areaValidacion:false
+             })
+ 
+ 
+ 
+ 
+           }else if( response.status =="error" ){
+ 
+ 
+             if(response.resdata.estado == 'EN PROCESO'){
+               let add = {
+                 Estado:true,
+                 Tipo:"error",
+                 Mensaje:`Servidor del SRI saturado Intente mas tarde`
+             }
+          
+             this.setState({Alert: add,
+               uploadedFactData:false,
+               readOnly:false,
+               areaValidacion:true,  
+               loading:false,
+             })
+             }
+             else {
+              let add = {
+             Estado:true,
+             Tipo:"error",
+             Mensaje:`Error en la factura, ${response.resdata.mensajes.mensaje.mensaje}, ${response.resdata.mensajes.mensaje.informacionAdicional}, Codigo de Error: ${response.resdata.mensajes.mensaje.identificador} `
+         }
+      
+         this.setState({Alert: add, 
+           loading:false, 
+           areaValidacion:true,  
+           readOnly:false,
+           uploadedFactData:false,
+         })
+          
+           }
+         }
+  });
+ 
 
+      }
+   
   
 
        }
@@ -1020,13 +1033,13 @@ ok
 <span className='subtituloArt'> Datos no validados</span>
   
                     </div>
-                    <Animate show={!this.state.loadingVal}>
+                    <Animate show={!this.state.loading}>
                     <button className=" botonValidate verde" onClick={this.valAlldata}>
                      Validar
                     </button>
                     </Animate>
   
-                    <Animate show={this.state.loadingVal}>
+                    <Animate show={this.state.loading}>
                     <CircularProgress />
                     </Animate>
 

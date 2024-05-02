@@ -422,8 +422,7 @@ downloadCuentaRegs = ()=> {
       }
     else{
      
-  
-    
+
     let misarrs = this.props.regC.Regs
 
     let finalars= misarrs.concat(response.regsHabiles)

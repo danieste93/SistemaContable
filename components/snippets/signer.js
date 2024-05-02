@@ -68,8 +68,17 @@ for (let z = 0 ;z<signaturesQuantity.length;z++){
        issuerName = 'CN=ENTIDAD DE CERTIFICACION ICERT-EC,OU=SUBDIRECCION NACIONAL DE SEGURIDAD DE LA INFORMACION DNTICS,O=CONSEJO DE LA JUDICATURA,L=DM QUITO,C=EC';
     }
 
+} else {
+       
+
+    cert = certBags[Forge.oids.certBag][0].cert;      
+   
+   pkcs8 = pkcs8bags[Forge.oids.pkcs8ShroudedKeyBag][0];
+
+   issuerName = 'CN=ENTIDAD DE CERTIFICACION ICERT-EC,OU=SUBDIRECCION NACIONAL DE SEGURIDAD DE LA INFORMACION DNTICS,O=CONSEJO DE LA JUDICATURA,L=DM QUITO,C=EC';
 }
 }
+console.log(pkcs8)
 
     let key = pkcs8.key;
     let X509SerialNumber = converter.hexToDec(cert.serialNumber)  
