@@ -1883,7 +1883,7 @@ if(req.body.dataTime.diario){
         {tiempo: {$gte : tiempoIni}},
         {tiempo: {$lte : tiempoFin}}
       ]
-    }).sort({ $natural: -1 })
+    }).sort({ $natural: -1 }).select("-Html");
    
     res.status(200).send({status: "Ok", message: "venddata",ventasHabiles });
   }
@@ -1891,7 +1891,7 @@ if(req.body.dataTime.diario){
 
     let conn = await mongoose.connection.useDb(req.body.User.DBname);
     let VentaModelSass = await conn.model('Venta', ventasSchema);
-    let ventasHabiles = await VentaModelSass.find().sort({ $natural: -1 })
+    let ventasHabiles = await VentaModelSass.find().sort({ $natural: -1 }).select("-Html");
     res.status(200).send({status: "Ok", message: "venddata",ventasHabiles });
   }
   async function getCompras(req, res){

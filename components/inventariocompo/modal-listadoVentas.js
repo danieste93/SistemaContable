@@ -17,6 +17,7 @@ import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import ViewCreds from "../modal-viewCreds"
 import "./mediaprint.css"
+import DoubleScrollbar from "react-double-scrollbar";
 import Estadisticas from './modal-estadisticasArticulos';
 class Listvent extends Component {
   state={
@@ -66,8 +67,6 @@ class Listvent extends Component {
     return(fechareturn)
 
 }
-
-
 
     componentDidMount(){
      
@@ -320,7 +319,7 @@ if(!this.props.state.RegContableReducer.Ventas){
         this.setState({filtervtotal:nuevoval})
        }
        else   if(nuevoval ==4){
-        console.log("ascendente")
+       
        
         let order = regs.sort((a, b) =>a.PrecioCompraTotal  - b.PrecioCompraTotal)
       
@@ -1166,9 +1165,8 @@ search
       </div>
       </Animate>
       <Animate show={this.state.listmode}>
-                      <div className="centrar">
-                  <div className="contenedorArticulosVentas">
-                  <div className="contTitulosArt">
+        <DoubleScrollbar>
+        <div className="contTitulosArt">
                         
                         <div className="eqIdart">
                         <div className="textPrint">     ID     </div>
@@ -1298,9 +1296,8 @@ search
                             Acc
                         </div>
                     </div>
-                      {listviewcomp} 
-                          </div>
-                          </div>
+                    {listviewcomp} 
+                          </DoubleScrollbar>
                   </Animate>
                    </div>
 
@@ -1349,13 +1346,15 @@ search
               max-width: 500px
             }  
               .contenedorArticulosVentas{
-                overflow: scroll;
+             
                 margin-top: 15px;
                 background: #ffffff7a;
                 padding: 15px;
                 border-radius: 10px;
-           
+                overflow-x: scroll;  
                 padding-bottom: 50px
+                max-width: 1000px;
+              
         }
         .cont-Prin {
           display: flex;
@@ -1394,6 +1393,7 @@ search
 
   }
   .contTitulosArt{
+    margin-top: 15px;
     display:inline-flex;
  
     font-size: 20px;
@@ -1505,8 +1505,8 @@ i{
                
         .maincontacto{
       z-index: 1299;
-         width: 100vw;
-         height: 102vh;
+         width: 98.5vw;
+         height: 100vh;
          background-color: rgba(0, 0, 0, 0.7);
          left: -100%;
          position: fixed;
@@ -1515,7 +1515,7 @@ i{
          justify-content: center;
          align-items: center;
          transition:0.5s;
-         overflow: scroll;
+         overflow-y: scroll;  
          
        }
        .contcontactoCompras{
@@ -1523,9 +1523,9 @@ i{
         width: 98%;
         background-color: whitesmoke;
         padding: 5px 10px;
-    
         position:absolute;
-        top:2%;
+        top:0px;
+        overflow: hidden;
        }
       
       
