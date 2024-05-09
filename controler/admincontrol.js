@@ -2680,7 +2680,7 @@ const  Authdata =()=>{
       if(err) console.log(err)  
       console.log(auth)
       let resdata = auth.RespuestaAutorizacionComprobante.autorizaciones.autorizacion
-
+      console.log(resdata)
      
         if(resdata.estado == "AUTORIZADO"){
 

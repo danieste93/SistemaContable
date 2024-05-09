@@ -30,55 +30,53 @@ try{
     let pkcs8 
    
    var signaturesQuantity = certBags[Forge.oids.certBag];
-   console.log(signaturesQuantity)
-for (let z = 0 ;z<signaturesQuantity.length;z++){
+   //console.log(signaturesQuantity)
 
+for (let z = 0 ;z<signaturesQuantity.length;z++){
+  
     if(signaturesQuantity[z].attributes.friendlyName){
   
     var entidad = signaturesQuantity[z].attributes.friendlyName[0];
-    console.log(entidad)
+    
+
     if (/BANCO CENTRAL/i.test(entidad)) {   
 
-        cert = certBags[Forge.oids.certBag][1].cert;
-      pkcs8 = pkcs8bags[Forge.oids.pkcs8ShroudedKeyBag][1];
-    
+       
        // issuerName
         issuerName = 'CN=AC BANCO CENTRAL DEL ECUADOR,L=QUITO,OU=ENTIDAD DE CERTIFICACION DE INFORMACION-ECIBCE,O=BANCO CENTRAL DEL ECUADOR,C=EC';
      break
     
     }else if(/SECURITY DATA/i.test(entidad)){
-       cert = certBags[Forge.oids.certBag][0].cert;
-       pkcs8 = pkcs8bags[Forge.oids.pkcs8ShroudedKeyBag][0];
-      
+       
        issuerName = 'CN=AUTORIDAD DE CERTIFICACION SUBCA-2 SECURITY DATA,OU=ENTIDAD DE CERTIFICACION DE INFORMACION,O=SECURITY DATA S.A. 2,C=EC';
        break
     }else if(/ArgosData/i.test(entidad)){
-        cert = certBags[Forge.oids.certBag][0].cert;      
-        pkcs8 = pkcs8bags[Forge.oids.pkcs8ShroudedKeyBag][0];
+       
         issuerName = 'CN=ArgosData CA 1 - SHA256,OU=ArgosData CA,O=ArgosData,C=EC';
 
- }
+ break
+    }
     else if(/CONSEJO DE LA JUDICATURA/i.test(entidad)){
        
 
-        cert = certBags[Forge.oids.certBag][0].cert;      
        
-       pkcs8 = pkcs8bags[Forge.oids.pkcs8ShroudedKeyBag][0];
-  
        issuerName = 'CN=ENTIDAD DE CERTIFICACION ICERT-EC,OU=SUBDIRECCION NACIONAL DE SEGURIDAD DE LA INFORMACION DNTICS,O=CONSEJO DE LA JUDICATURA,L=DM QUITO,C=EC';
     }
 
 } else {
        
 
-    cert = certBags[Forge.oids.certBag][0].cert;      
-   
-   pkcs8 = pkcs8bags[Forge.oids.pkcs8ShroudedKeyBag][0];
-
    issuerName = 'CN=ENTIDAD DE CERTIFICACION ICERT-EC,OU=SUBDIRECCION NACIONAL DE SEGURIDAD DE LA INFORMACION DNTICS,O=CONSEJO DE LA JUDICATURA,L=DM QUITO,C=EC';
 }
 }
-console.log(pkcs8)
+for (let z = 0 ;z<signaturesQuantity.length;z++){
+    if(signaturesQuantity[z].cert.extensions[0].digitalSignature == true){
+       
+        cert = certBags[Forge.oids.certBag][z].cert;
+        pkcs8 = pkcs8bags[Forge.oids.pkcs8ShroudedKeyBag][z];
+      
+     }
+}
 
     let key = pkcs8.key;
     let X509SerialNumber = converter.hexToDec(cert.serialNumber)  

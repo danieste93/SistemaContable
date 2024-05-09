@@ -368,6 +368,7 @@ console.log(this.state)
         'download',
         `result.xml`,
       );
+
  
    
       let allData ={doc:docFirmado,
@@ -389,7 +390,7 @@ console.log(this.state)
                })
         .then(response => {
  
-    
+          console.log(response)
            if(response.status =="ok" ){
  
              const usuario= response.user
