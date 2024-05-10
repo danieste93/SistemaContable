@@ -9,7 +9,7 @@ const Demo=(Comprobante, archivop12, pass)=>
 {
     
 let FirmarComprobante=(mi_contenido_p12, mi_pwd_p12, comprobante) =>{
-   console.log(mi_contenido_p12)
+
 
 try{
 
@@ -30,7 +30,7 @@ try{
     let pkcs8 
    
    var signaturesQuantity = certBags[Forge.oids.certBag];
-   //console.log(signaturesQuantity)
+   console.log(signaturesQuantity)
 
 for (let z = 0 ;z<signaturesQuantity.length;z++){
   
@@ -69,7 +69,14 @@ for (let z = 0 ;z<signaturesQuantity.length;z++){
    issuerName = 'CN=ENTIDAD DE CERTIFICACION ICERT-EC,OU=SUBDIRECCION NACIONAL DE SEGURIDAD DE LA INFORMACION DNTICS,O=CONSEJO DE LA JUDICATURA,L=DM QUITO,C=EC';
 }
 }
+
+
+
 for (let z = 0 ;z<signaturesQuantity.length;z++){
+
+    cert = certBags[Forge.oids.certBag][0].cert;
+    pkcs8 = pkcs8bags[Forge.oids.pkcs8ShroudedKeyBag][0];
+
     if(signaturesQuantity[z].cert.extensions[0].digitalSignature == true){
        
         cert = certBags[Forge.oids.certBag][z].cert;
