@@ -2911,8 +2911,13 @@ res.status(200).send({status: "Ok", message: "uploadFactData", user:newuser});
 
 
 async function  downLoadFact (req, res){
-   
-  pdf.create(req.body.Html, {
+
+   let conn = await mongoose.connection.useDb(req.body.User.DBname);
+   let VentaModelSass = await conn.model('Venta', ventasSchema);
+   let getVenta = await VentaModelSass.findById(req.body._id)
+
+   if( getVenta&& getVenta.Html  ){
+  pdf.create(getVenta.Html, {
   
   
     border: {
@@ -2929,7 +2934,10 @@ async function  downLoadFact (req, res){
         res.status(200).send({status: "Ok", message: "Factok", buffer});
   
       
-      })
+      })}else{
+        res.status(200).send({status: "error", message: "venta no encontrada"});
+      }
+
 }
 async function  enviarCoti (req, res){
   let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);

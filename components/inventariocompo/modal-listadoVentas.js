@@ -810,10 +810,15 @@ if(!this.props.state.RegContableReducer.Ventas){
         downloadFact=(e)=>{  console.log(e)
         
           let valorNumero = e.Doctype =="Factura"?e.Secuencial:e.iDVenta
+          let datos = {User: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
+
+          },
+        ...e
+        }
 
           fetch("/public/downloadfact", {
             method: 'POST', // or 'PUT'
-            body: JSON.stringify(e), // data can be `string` or {object}!
+            body: JSON.stringify(datos), // data can be `string` or {object}!
             headers:{
               'Content-Type': 'application/json',
               "x-access-token": this.props.state.userReducer.update.usuario.token
