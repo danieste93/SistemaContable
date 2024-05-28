@@ -118,7 +118,7 @@ console.log(send)
         CategoriaRender:nombreto,
         subCatSelect:send.CatSelect.subCatSelect,
         catSelect:send.CatSelect,
-        tiempo:send.tiempo,      
+        tiempo:send.Tiempo,      
         urlImg:send.urlImg,
         Nota:send.Nota,
         Descripcion:send.Descripcion,
@@ -410,7 +410,7 @@ ingresador=(mival)=>{
   console.log(this.state)
   console.log(send)
   if(this.state.Accion != send.Accion  ||
-    this.state.tiempo.getTime() != send.Tiempo  ||
+    this.state.tiempo != send.Tiempo  ||
     this.state.cuentaSelec.idCuenta != send.CuentaSelec.idCuenta||
     this.state.catSelect._id != send.CatSelect._id ||
     this.state.subCatSelect !=send.CatSelect.subCatSelect||
@@ -440,7 +440,7 @@ ingresador=(mival)=>{
                  
         let datatosend={
           Accion:this.state.Accion,
-          Tiempo:this.state.tiempo.getTime(),
+          Tiempo:this.state.tiempo,
           iDReg:this.state.idReg,
           idMongo:this.state.idMongo,
           CuentaSelec:this.state.cuentaSelec,

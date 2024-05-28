@@ -1858,7 +1858,7 @@ let ventasHabiles = await VentaModelSass.find({})
     console.log(req.body)
    let conn = await mongoose.connection.useDb(req.body.User.DBname);
   let VentaModelSass = await conn.model('Venta', ventasSchema);
-let ventasHabiles = await VentaModelSass.findById(req.body._id)
+let ventasHabiles = await VentaModelSass.findById(req.body.datos._id)
 res.status(200).send({status: "Ok", message: "venddata",ventasHabiles });
 } 
 

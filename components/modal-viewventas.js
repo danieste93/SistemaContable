@@ -1,9 +1,11 @@
 import React, { Component } from 'react'
 
-
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 class Contacto extends Component {
-   
+  state={
+Html:""
+  }
 
     componentDidMount(){
       setTimeout(function(){ 
@@ -24,7 +26,7 @@ class Contacto extends Component {
         body: JSON.stringify(datos), // data can be `string` or {object}!
         headers:{
           'Content-Type': 'application/json',
-          "x-access-token": this.props.state.userReducer.update.usuario.token
+          "x-access-token": this.props.token
         }
       }
        fetch("/cuentas/getVentasHtml", settings).then(res => res.json())
@@ -34,7 +36,7 @@ class Contacto extends Component {
       })
         .then(response => {  
         console.log(response)
-         
+         this.setState({Html:response.ventasHabiles.Html})
       
         })
 
@@ -51,7 +53,7 @@ class Contacto extends Component {
       
 
     render () {
-
+console.log(this.state)
 
         return ( 
 
@@ -73,7 +75,8 @@ class Contacto extends Component {
 
 </div> 
 <div className="Scrolled">
-<div contentEditable='true' dangerouslySetInnerHTML={{ __html: this.props.datos.Html }}></div>
+  {this.state.Html==""?<CircularProgress />:<div contentEditable='true' dangerouslySetInnerHTML={{ __html: this.state.Html }}></div>}
+
 </div>
 </div>
         </div>
