@@ -833,8 +833,8 @@ console.log(this.state)
         else{ return "" }
         }
      
-        let backgroundSolido = cuenta.Background.Seleccionado=="Solido"?cuenta.Background.colorPicked:""
-        let backgroundImagen = cuenta.Background.Seleccionado=="Imagen"?cuenta.Background.urlBackGround:""
+        let backgroundSolido = ""
+        let backgroundImagen = ""
         return(<div>
           
     { formato == "cuadros" &&   <div key ={cuenta._id} className={ ` contenedorCuenta  ${novisible}`}  {...this.a11yProps(i)} >
@@ -965,15 +965,7 @@ delete
       let backgroundSolido = "white"
       let backgroundImagen  ="/fondoscuentas/fblanco.png"
 
-      if( this.state.cuentaSelect.Background.Seleccionado=="Imagen"){
-        backgroundSolido = ""
-        backgroundImagen=this.state.cuentaSelect.Background.urlBackGround
-      }
-      if( this.state.cuentaSelect.Background.Seleccionado=="Solido"){
-        backgroundImagen=""
-        backgroundSolido = this.state.cuentaSelect.Background.colorPicked
      
-      }
 
 
 

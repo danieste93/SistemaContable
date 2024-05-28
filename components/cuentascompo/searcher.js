@@ -130,7 +130,7 @@ if(typeof regfi.Descripcion == "string"){
        regfi.Nota.toLowerCase().split(" ").reverse().join(" ").includes(valor.toLowerCase()) ||      
        regfi.Importe === parseInt(valor) ||
        regfi.IdRegistro === parseInt(valor) ||
-       regfi.CatSelect.nombreCat.toLowerCase().includes(valor.toLowerCase())||
+     //  regfi.CatSelect.nombreCat.toLowerCase().includes(valor.toLowerCase())||
      //  regfi.CatSelect.subCatSelect.toLowerCase().includes(valor.toLowerCase())||
        regfi.CuentaSelec.nombreCuenta.toLowerCase().includes(valor.toLowerCase()))}
        )

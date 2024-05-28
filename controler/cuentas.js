@@ -1854,6 +1854,14 @@ let ventasHabiles = await VentaModelSass.find({})
     res.status(200).send({status: "Ok", message: "cuentdata",cuentasHabiles });
   }
 
+  async function getVentasHtml(req, res){
+    console.log(req.body)
+   let conn = await mongoose.connection.useDb(req.body.User.DBname);
+  let VentaModelSass = await conn.model('Venta', ventasSchema);
+let ventasHabiles = await VentaModelSass.findById(req.body._id)
+res.status(200).send({status: "Ok", message: "venddata",ventasHabiles });
+} 
+
   async function getVentasByTime(req, res){
 
     let conn = await mongoose.connection.useDb(req.body.User.DBname);
@@ -1883,7 +1891,7 @@ if(req.body.dataTime.diario){
         {tiempo: {$gte : tiempoIni}},
         {tiempo: {$lte : tiempoFin}}
       ]
-    }).sort({ $natural: -1 }).select("-Html");
+    }).sort({ $natural: -1 }).select("-Html")
    
     res.status(200).send({status: "Ok", message: "venddata",ventasHabiles });
   }
@@ -3071,4 +3079,4 @@ let nuevosFC = getVenta.FormasCredito.concat(arrpagos)
 
 
 
-module.exports = {getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs,getCuentaRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};
+module.exports = {getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs,getCuentaRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};
