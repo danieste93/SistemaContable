@@ -180,7 +180,7 @@ let renderimg=()=>{
       let flechavalUser = this.state.filtersUsers?"▲":"▼"
       let flechavalExe = this.state.filtersExe?"▲":"▼"
    
-      let idSpliced = dataProvider.Usuario.Id.slice(0, 5)
+      let idSpliced = ""
       let idSplicedDelete = deleteReg? this.props.reg.UsuarioDelete.Id.slice(0, 5):""
         let tiempo = new Date(dataProvider.Tiempo)     
         let mes = this.addCero(tiempo.getMonth()+1)

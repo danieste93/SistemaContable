@@ -11,8 +11,32 @@ class Contacto extends Component {
         document.getElementById('mainViewVentas').classList.add("entradaaddc")
 
        }, 500);
+
+       let datos = {
+        User: {DBname:this.props.usuarioDBname,
+              },
+              ...this.props
         
-     
+
+      }
+       let settings = {
+        method: 'POST', // or 'PUT'
+        body: JSON.stringify(datos), // data can be `string` or {object}!
+        headers:{
+          'Content-Type': 'application/json',
+          "x-access-token": this.props.state.userReducer.update.usuario.token
+        }
+      }
+       fetch("/cuentas/getVentasHtml", settings).then(res => res.json())
+        .catch(error => {console.error('Error:', error);
+        this.setState({loadingData:false})        
+      
+      })
+        .then(response => {  
+        console.log(response)
+         
+      
+        })
 
       
       }
@@ -28,7 +52,7 @@ class Contacto extends Component {
 
     render () {
 
-   console.log(this.props)
+
         return ( 
 
          <div >

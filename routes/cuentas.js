@@ -18,6 +18,7 @@ router.post('/getarmoextradata',Authentication, cuentasController.getArmoextraDa
 router.post('/getpartdata2',Authentication, cuentasController.getPartData2);
 router.post('/getpartdata3',Authentication, cuentasController.getPartData3);
 router.post('/getregsbycuentas',Authentication, cuentasController.getRegsbyCuentas);
+router.post('/getVentasHtml',Authentication, cuentasController.getVentasHtml);
 router.post('/getventas',Authentication, cuentasController.getVentas);
 router.post('/getventasbytime',Authentication, cuentasController.getVentasByTime);
 router.post('/getcompras',Authentication, cuentasController.getCompras);
