@@ -47,6 +47,7 @@ class Croom extends Component {
         allcuentas:true,
         cuentaSelect:{
           NombreC:"",
+          DineroActual:{$numberDecimal:0},
           Background:{
             Seleccionado:""
           }
@@ -421,8 +422,7 @@ downloadCuentaRegs = ()=> {
       }
     else{
      
-  
-    
+
     let misarrs = this.props.regC.Regs
 
     let finalars= misarrs.concat(response.regsHabiles)
@@ -536,34 +536,11 @@ return  misregs
               return regs
             }
   }
-  DiarySaldoFilter=(regs)=>{
-    let fecha = new Date(this.state.tiempo)
-           
-            let fechafin = fecha.setHours(23, 59, 59)
-           
-            if(regs.length >0){
-              let misregs = regs.filter(regs=>  regs.Tiempo <= fechafin  )
-              return misregs
-            }else{
-              return regs
-            }
-  }
-  MensualSaldoFilter=(regs)=>{
-
-  let fecha = new Date(this.state.tiempo)
-  var ultimoDia = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0)
-  var ultimahora = new Date(ultimoDia.setHours(23, 59, 59)).getTime();
   
-  if(regs.length >0){
-    let misregfiltrados = regs.filter(regs=>  regs.Tiempo <= ultimahora  )
-  return misregfiltrados
-  }else{
-    return regs
-  }
-}
-MensualFilter=(regs)=>{
+ 
+MensualFilter=(regs, tiempo)=>{
 
-  let fecha = new Date(this.state.tiempo)
+  let fecha = new Date(tiempo)
             var primerDia = new Date(fecha.getFullYear(), fecha.getMonth(), 1).getTime()
             var ultimoDia = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0)
             var ultimahora = new Date(ultimoDia.setHours(23, 59, 59)).getTime()
@@ -575,13 +552,18 @@ MensualFilter=(regs)=>{
             }
 
 }
-PeriodoFilter=(regs)=>{
+PeriodoFilter=(regs, fechainiAtt, fechafinAtt)=>{
 
-  let fecha = new Date(this.state.tiempoperiodoini)
-  let fechafin = new Date(this.state.tiempoperiodofin)
+  let fecha = new Date(fechainiAtt)
+  let fechafin = new Date(fechafinAtt)
+
+  
 
   var primerDiaP = fecha.setHours(0,0,0)
   var ultimoDiaP = fechafin.setHours(23,59,59)
+
+  console.log(new Date(primerDiaP))
+  console.log(new Date(ultimoDiaP))
 
   let fechainix = new Date(primerDiaP).getTime()
   let fechafinx = new Date(ultimoDiaP).getTime()
@@ -593,22 +575,7 @@ PeriodoFilter=(regs)=>{
   }
 
 }
-PeriodoSaldoFilter=(regs)=>{
 
- 
-  let fechafin = new Date(this.state.tiempoperiodofin)
-
-  var ultimoDiaP = fechafin.setHours(23,59,59)
-
-  let fechafinx = new Date(ultimoDiaP).getTime()
-  if(regs.length >0){
-    let misregsP = regs.filter(regs=>  regs.Tiempo <= fechafinx) 
-    return misregsP
-  }else{
-    return regs
-  }
-
-}
 OrderFilter=(regs)=>{
   let order = regs.sort((a, b) => b.Tiempo - a.Tiempo)
  
@@ -752,15 +719,67 @@ calcData=(Ingregister, Gasregister, Transregister, cuenta)=>{
 
 }
 
+generadorBalanceGeneral=(DetallesPorrender)=>{
+  let sumaingbalance = 0
+  let sumagasbalance = 0
+  let sumatransgasbalance = 0
+  let sumatransingbalance = 0
+
+  let ingbalance = 0
+  let gasbalance = 0
+  let misregsing = DetallesPorrender.filter(regsing => regsing.Accion == "Ingreso")
+            if(misregsing.length > 0){
+              for (let i=0; i < misregsing.length; i++ ){
+                sumaingbalance +=  misregsing[i].Importe
+            }
+              }
+
+            let misregsgas = DetallesPorrender.filter(regsgas => regsgas.Accion == "Gasto")
+            if(misregsgas.length > 0){
+        for (let i=0; i < misregsgas.length; i++ ){
+
+            sumagasbalance += misregsgas[i].Importe
+        
+          }
+          } 
+
+             let misregstrans = DetallesPorrender.filter(regstrans => regstrans.Accion == "Trans")
+           if(misregstrans.length > 0){
+      for (let i=0; i < misregstrans.length; i++ ){
+
+      if(this.state.cuentaSelect._id ==  misregstrans[i].CuentaSelec.idCuenta){
+      sumatransgasbalance +=   misregstrans[i].Importe
+
+      }
+      else if(this.state.cuentaSelect._id ==  misregstrans[i].CuentaSelec2.idCuenta){
+      sumatransingbalance +=   misregstrans[i].Importe
+      } 
+      }
+
+
+               }
+
+
+ingbalance= (sumaingbalance +sumatransingbalance).toFixed(2)
+  gasbalance=(sumagasbalance+sumatransgasbalance).toFixed(2)
+
+let balancegeneral = ingbalance - gasbalance
+
+let saldofinal =  balancegeneral
+
+return saldofinal.toFixed(2)
+}
+
 
     render() {
-
+console.log(this.state)
       let flechaCuentasP = this.state.cuentaExpand == "Posesion"?"expand_less":"expand_more" 
       let flechaCuentasNoP = this.state.cuentaExpand == "NoPosesion"?"expand_less":"expand_more" 
       let flechaCuentasPsinT = this.state.cuentaExpand == "PosesionSinTotal"?"expand_less":"expand_more" 
       let generadorCuentas = (grupoCuentas,formato)=> grupoCuentas.map((cuenta,i)=>{
-
+        let Actualdata  = 0
         let novisible = cuenta.Visibility == false && this.state.visibility == false?"invisiblex":""
+        if(this.props.regC.Regs){
         let registros  = this.props.regC.Regs.filter(x => x.CuentaSelec.idCuenta === cuenta._id   )
         let transregister  = this.props.regC.Regs.filter(x => x.Accion === "Trans" )
         let Ingregister  = registros.filter(x => x.Accion === "Ingreso" )
@@ -774,16 +793,15 @@ calcData=(Ingregister, Gasregister, Transregister, cuenta)=>{
         
         //let Diarydata = this.calcData(diaryIngs, diaryGas, diaryTrans, cuenta)
         let Alldata = this.calcData(Ingregister, Gasregister, Transregister, cuenta)
-        
+    
         //console.warn(Math.abs(parseFloat(cuenta.DineroActual.$numberDecimal).toFixed(2)))
         
         //console.warn(Math.abs(parseFloat(Alldata.AllBalanceRender)))
         
      
-        let Actualdata = this.calcData(ActualIngs, ActualGas, ActualTrans, cuenta)
+         Actualdata = this.calcData(ActualIngs, ActualGas, ActualTrans, cuenta)
         
-        
-        
+      }
         let comprobador =()=>{
         
         
@@ -1029,6 +1047,7 @@ let sumatransingbalance = 0
 let ingbalance = 0
 let gasbalance = 0
 let saldoRender  = 0
+let saldoEnviado  = 0
 let sumatoriaP = 0
   let sumatoriaNP= 0
   
@@ -1196,67 +1215,60 @@ if(this.props.regC.Regs.length > 0 && this.state.cuentaSelect != ""){
   
   let responseTrans = transregister.filter(x => x.CuentaSelec.idCuenta === this.state.cuentaSelect._id || x.CuentaSelec2.idCuenta === this.state.cuentaSelect._id )
   let registrosElegidos =""
+  let balancePosterior = 0
   let combinado = response.concat(responseTrans)
   displayDetalles = this.OrderFilter(combinado)
-  
+  let fecha = new Date(this.state.tiempo)
+  let valorActualCuenta =this.state.cuentaSelect.DineroActual.$numberDecimal 
   if(this.state.diario){
   DetallesPorrender = this.DiaryFilter(displayDetalles)
-  registrosElegidos = this.DiarySaldoFilter(displayDetalles)
+
+  let getMesSistema = fecha.getMonth()
+  let getDiaSistema = fecha.getDate()
+  let getMesActual =new Date().getMonth()
+  let getDiaActual =new Date().getDate()
+
+  
   }else if(this.state.mensual){
-  DetallesPorrender = this.MensualFilter(displayDetalles)
-  registrosElegidos = this.MensualSaldoFilter(displayDetalles)
+
+ 
+
+  DetallesPorrender = this.MensualFilter(displayDetalles, this.state.tiempo)
+
+      let getPeriodRegs =  this.PeriodoFilter(displayDetalles, fecha.setDate(1), new Date() )
+  
+
+      let balancePeriod = parseFloat(this.generadorBalanceGeneral(getPeriodRegs))
+      let balanceMesSistema= parseFloat(this.generadorBalanceGeneral(DetallesPorrender))
+      console.log(balancePeriod) 
+      console.log(balanceMesSistema) 
+      
+      let saldoGenerado = ((valorActualCuenta - balancePeriod) + balanceMesSistema).toFixed(2)
+      
+
+
+       saldoRender = saldoGenerado
+    
+  
+    
+
   }
   else if(this.state.periodo){
-  DetallesPorrender = this.PeriodoFilter(displayDetalles)
-  registrosElegidos = this.PeriodoSaldoFilter(displayDetalles)
+    
+  DetallesPorrender = this.PeriodoFilter(displayDetalles, this.state.tiempoperiodoini, this.state.tiempoperiodofin )
+
+ 
+
+      let balancePeriod = parseFloat(this.generadorBalanceGeneral(DetallesPorrender))
+
+  
+      
+      saldoRender = balancePeriod
+
   }
   
  
-if(registrosElegidos.length > 0){
- 
-  let misregsing = registrosElegidos.filter(regsing => regsing.Accion == "Ingreso")
-  
-  if(misregsing.length > 0){
-    for (let i=0; i < misregsing.length; i++ ){
-      sumaingbalance +=  misregsing[i].Importe
-  }
-}
-let misregsgas = registrosElegidos.filter(regsgas => regsgas.Accion == "Gasto")
 
-
-  if(misregsgas.length > 0){
-  for (let i=0; i < misregsgas.length; i++ ){
-
-       sumagasbalance += misregsgas[i].Importe
-   
-     }
-    } 
-
-  let misregstrans = registrosElegidos.filter(regstrans => regstrans.Accion == "Trans")
-
-if(misregstrans.length > 0){
-for (let i=0; i < misregstrans.length; i++ ){
-
-if(this.state.cuentaSelect._id ==  misregstrans[i].CuentaSelec.idCuenta){
-sumatransgasbalance +=   misregstrans[i].Importe
-
-}
-else if(this.state.cuentaSelect._id ==  misregstrans[i].CuentaSelec2.idCuenta){
-sumatransingbalance +=   misregstrans[i].Importe
-} 
-}
-
-
-}
-
-
-
-
-ingbalance= (sumaingbalance +sumatransingbalance).toFixed(2)
-  gasbalance=(sumagasbalance+sumatransgasbalance).toFixed(2)
-  saldoRender = (ingbalance - gasbalance).toFixed(2)
-
-}
   
   }
   }}
@@ -1266,15 +1278,15 @@ ingbalance= (sumaingbalance +sumatransingbalance).toFixed(2)
   
 if(DetallesPorrender.length > 0){
 
-  
-  let misregs2ing = DetallesPorrender.filter(regsing => regsing.Accion == "Ingreso")
+
+  let misregs2ing = DetallesPorrender.filter(regsing => regsing.Accion == "Ingreso" && regsing.TiempoEjecucion != 0)
   
           if(misregs2ing.length > 0){
             for (let i=0; i < misregs2ing.length; i++ ){
               sumaing += misregs2ing[i].Importe
           }
         }
-        let misregsgas = DetallesPorrender.filter(regsgas => regsgas.Accion == "Gasto")
+        let misregsgas = DetallesPorrender.filter(regsgas => regsgas.Accion == "Gasto"&& regsgas.TiempoEjecucion != 0 )
        
   
           if(misregsgas.length > 0){
@@ -1283,7 +1295,7 @@ if(DetallesPorrender.length > 0){
              }
             } 
   
-            let misregstrans = DetallesPorrender.filter(regstrans => regstrans.Accion == "Trans")
+            let misregstrans = DetallesPorrender.filter(regstrans => regstrans.Accion == "Trans"&& regstrans.TiempoEjecucion != 0)
   let sumatransing = 0
   let sumatransgas = 0
   
@@ -1856,6 +1868,7 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
   <img src="/static/flecharetro.png" alt="" className="flecharetro" 
                   onClick={()=>{this.setState({cuentadetail:false, allcuentas:true,cuentaSelect:{
                     NombreC:"",
+                    DineroActual:{$numberDecimal:0},
                     Background:{
                       Seleccionado:""
                     }
