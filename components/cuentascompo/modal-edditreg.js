@@ -147,7 +147,7 @@ console.log(send)
         CategoriaRender:nombreto,
         subCatSelect:send.CatSelect.subCatSelect,
         catSelect:send.CatSelect,
-        tiempo:send.tiempo,      
+        tiempo:send.Tiempo,      
         urlImg:send.urlImg,
         Nota:send.Nota,
         Descripcion:send.Descripcion,
@@ -170,7 +170,7 @@ console.log(send)
         textorep:send.textorep || "",
         valdefault:send.valdefault,
         CuentaRender:send.CuentaSelec.nombreCuenta,
-        tiempo:send.tiempo,      
+        tiempo:send.Tiempo,      
         urlImg:send.urlImg,
         Nota:send.Nota,
         Descripcion:send.Descripcion,
@@ -317,7 +317,7 @@ this.setState({
 handleChangeTiempo=(e)=>{
 
  this.setState({
-   tiempo:e._d
+   tiempo:new Date(e._d).getTime()
  })
 
 
