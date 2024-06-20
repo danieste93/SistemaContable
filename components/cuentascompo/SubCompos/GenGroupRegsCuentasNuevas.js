@@ -8,7 +8,8 @@ export default class GenGroupRegs extends Component {
 console.log(this.props)
         let detallesrender=""
         let datex = this.props.Registros
-        let Counterregs = this.props.Registros.filter(x=>x.TiempoEjecucion == 0)
+       
+       // let Counterregs = this.props.Registros.filter(x=>x.TiempoEjecucion == 0)
 
         let midata =[...datex]
        

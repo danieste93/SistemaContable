@@ -461,7 +461,7 @@ ingresador=(mival)=>{
         },
         Versiones:this.state.Versiones,
         }
-        console.log(datatosend)     
+          
       
         let lol = JSON.stringify(datatosend)
                   
@@ -474,7 +474,7 @@ ingresador=(mival)=>{
         "x-access-token": this.props.state.userReducer.update.usuario.token
       }
       }).then(res => res.json()).then(response =>{
-        
+   
   
       if(response.message=="error al registrar"){
         let add = {
@@ -486,6 +486,7 @@ ingresador=(mival)=>{
       } 
       else{
   
+        this.props.dispatch(updateCuenta(response.cuentaA))
         this.props.dispatch(updateCuenta(response.cuenta))
       
         this.props.dispatch(updateReg(response.registro))

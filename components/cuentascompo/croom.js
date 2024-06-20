@@ -562,8 +562,7 @@ PeriodoFilter=(regs, fechainiAtt, fechafinAtt)=>{
   var primerDiaP = fecha.setHours(0,0,0)
   var ultimoDiaP = fechafin.setHours(23,59,59)
 
-  console.log(new Date(primerDiaP))
-  console.log(new Date(ultimoDiaP))
+
 
   let fechainix = new Date(primerDiaP).getTime()
   let fechafinx = new Date(ultimoDiaP).getTime()
@@ -772,7 +771,7 @@ return saldofinal.toFixed(2)
 
 
     render() {
-console.log(this.state)
+
       let flechaCuentasP = this.state.cuentaExpand == "Posesion"?"expand_less":"expand_more" 
       let flechaCuentasNoP = this.state.cuentaExpand == "NoPosesion"?"expand_less":"expand_more" 
       let flechaCuentasPsinT = this.state.cuentaExpand == "PosesionSinTotal"?"expand_less":"expand_more" 
@@ -1240,8 +1239,7 @@ if(this.props.regC.Regs.length > 0 && this.state.cuentaSelect != ""){
 
       let balancePeriod = parseFloat(this.generadorBalanceGeneral(getPeriodRegs))
       let balanceMesSistema= parseFloat(this.generadorBalanceGeneral(DetallesPorrender))
-      console.log(balancePeriod) 
-      console.log(balanceMesSistema) 
+   
       
       let saldoGenerado = ((valorActualCuenta - balancePeriod) + balanceMesSistema).toFixed(2)
       

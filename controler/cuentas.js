@@ -583,7 +583,7 @@ async function editReg(req,res){
     let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
     let RegModelSass = await conn.model('Reg', regSchema);
     let CuentasModelSass = await conn.model('Cuenta', accountSchema);
- console.log(req.body)
+ 
 
     const session = await mongoose.startSession();  
           
@@ -593,39 +593,39 @@ async function editReg(req,res){
 
       let registro = await RegModelSass.findById(req.body.idMongo,null,{session})
       let tiempoActual = new Date().getTime()
+      let cuentaUpa ={}
       if(registro.TiempoEjecucion != 0){
       registro.TiempoEjecucion = 0
-
+  
       if(registro.Accion == "Ingreso" || registro.Accion == "Gasto" ){
         if(registro.Accion == "Ingreso"){
           updatex = { $inc: { DineroActual: (registro.Importe *-1) } }
-   
+
          }else{
            updatex = { $inc: { DineroActual: (registro.Importe) } }
          }
          
 
-        let cuentaUpa = await CuentasModelSass.findByIdAndUpdate(registro.CuentaSelec.idCuenta, updatex, {session})
+        cuentaUpa = await CuentasModelSass.findByIdAndUpdate(registro.CuentaSelec.idCuenta, updatex, {new:true,session})
          if(cuentaUpa == null){
           throw new Error("Cuentas no Encontradas, vuelva intentar en unos minutos")
         } 
+    
       }else if(registro.Accion == "Trans"){
         let updateNegativo = { $inc: { DineroActual: (registro.Importe *-1) } }
         let updatePositivo = { $inc: { DineroActual: (registro.Importe ) } }
 let cuentax1= await  CuentasModelSass.findByIdAndUpdate(registro.CuentaSelec.idCuenta, updatePositivo, {session})
 let cuentax2= await  CuentasModelSass.findByIdAndUpdate(registro.CuentaSelec2.idCuenta, updateNegativo, {session})
-console.log(cuentax1)
-console.log(cuentax2)
+
 if(cuentax1 == null || cuentax2 == null){
   throw new Error("Cuentas no Encontradas, vuelva intentar en unos minutos")
 } 
 
 }
 }
-let tiempoTricked = new Date(new Date().setHours(new Date().getHours() + 1))
 
-    
-   
+
+
     let newversiones = req.body.Versiones
 const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.Importe).toFixed(2));
       if(req.body.Accion === "Ingreso" || req.body.Accion === "Gasto"){
@@ -689,7 +689,7 @@ const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.Importe).t
           await session.commitTransaction();
           session.endSession();
          
-          res.send({status: "Ok", message: "reg y cuenta", registro:regUp, cuenta:Cuentaup });
+          res.send({status: "Ok", message: "reg y cuenta", registro:regUp, cuenta:Cuentaup, cuentaA:cuentaUpa });
 
       }
 
@@ -1299,6 +1299,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
     }
 
  async function addRepeticiones(req,res){
+  console.log("addRepeticiones")
  console.log(req.body)
    let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
    let CuentasModelSass = await conn.model('Cuenta', accountSchema);
@@ -1354,7 +1355,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
               }
           }
         }else if(req.body.Accion === "Trans"){
-          console.log(req.body)
+        
           datosEspecificos={
             CuentaSelec:{idCuenta:req.body.CuentaSelec.idCuenta,
               nombreCuenta: req.body.CuentaSelec.nombreCuenta,
@@ -1370,7 +1371,8 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
 
           let mes = new Date(req.body.Tiempo).getMonth()
           let mesActual = new Date().getMonth()
-           
+           console.log("mes actual " + mesActual)
+           console.log( "mes "+mes)
 
                    let mesesExtra = (mesActual - mes) + 1
                   let fechacambio = new Date(req.body.Tiempo)
@@ -1449,7 +1451,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
               
            let allCreatedRegs=[]
            
-                 
+           console.log(cantidadRegistros)
                     for(let i = 0; i < cantidadRegistros; i++){
 
                       let tiempoEXE =    0
@@ -1585,7 +1587,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
 
                        let update3 = {fechaEjecucion: fechaeje }
 
-                       let resultrep= await RepeticionModelSass.findByIdAndUpdate(req.body.Repid, update3, options )
+                       let resultrep= await RepeticionModelSass.findByIdAndUpdate(req.body.Repid, update3, opts2 )
                        if(resultrep == null){
                         throw new Error("rep no Encontradas, vuelva intentar en unos minutos")
                       }
@@ -1596,7 +1598,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
                       let idDataReg = await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,opts2 )
                       await session.commitTransaction();    
                       session.endSession();                 
-                      return res.send({status: "Ok", message: "repeticiones generadas",cuenta1,cuenta2, repUpdate:resultrep, registrosGenerados:allCreatedRegs  });
+                      return res.send({status: "Ok", message: "repeticiones generadas ADD",cuenta1,cuenta2, repUpdate:resultrep, registrosGenerados:allCreatedRegs  });
                       
                     }
 

@@ -221,20 +221,20 @@ import {
                 };
                 case UPDATE_COUNTS:
               let actualCuentas = state.Cuentas
-console.log(action.payload)
+
               for(let i = 0; i < action.payload.length; i++ ){
                 let cuentaIndex = actualCuentas.findIndex(x => x._id == action.payload[i]._id)
-                console.log(cuentaIndex)
+             
                 actualCuentas[cuentaIndex] = action.payload[i]
               }
-              console.log(actualCuentas)
+        
                      return {
                        ...state, Cuentas:actualCuentas
                        
                      };
                      case UPDATE_ARTS:
                       let actualArts = state.Articulos
-                     console.log(action.payload)
+                    
                       for(let i = 0; i < action.payload.length; i++ ){
                         let artIndex = actualArts.findIndex(x => x._id == action.payload[i]._id)
                         actualArts[artIndex] = action.payload[i]
@@ -310,7 +310,7 @@ console.log(action.payload)
                          ...state, Regs
                                                 };
                                                 case UPDATE_REGS:
-                                                console.log( action.payload)
+                                             
                                                 let newRegs = state.Regs
                                               
                                                 action.payload.forEach(element => {
@@ -327,17 +327,17 @@ console.log(action.payload)
                                                   ...state, Regs:newRegs
                                                                          };
                                                 case  UPDATE_REP_ADDREPS:
-                                                 
+                                              
                                             let repupdate = state.Reps.findIndex(x => x._id == action.payload.reps._id)                          
-                                          
+                                         
                                             let Reps = state.Reps
                                             Reps[repupdate] = action.payload.reps
-                                           
+                                      
                                             return {
                                               ...state, Reps
                                                                      };
                      case  UPDATE_VENTA:
-                      console.log(action.payload)
+                    
                       let ventaupdatex = state.Ventas.findIndex(x => x._id == action.payload.ventas._id)                          
                       Ventas = state.Ventas
                       Ventas[ventaupdatex] = action.payload.ventas
@@ -355,7 +355,7 @@ console.log(action.payload)
                     ...state, Reps
                                            };
                                            case  EDIT_PUBLICACION:
-                                          console.log(action.payload)
+                                         
                                            let idUpdate = state.Publicaciones.findIndex(x => x._id == action.payload.pub._id)                          
                                         let   Publicacionesupdate = state.Publicaciones
                                         Publicacionesupdate[idUpdate] = action.payload.pub
@@ -450,11 +450,11 @@ let misregs = state.Regs?state.Regs:[]
                   };
         
             case   ADD_CUENTA:
-  console.log(action.payload.cuenta)
+
 
 let newcuentas = state.Cuentas
 newcuentas.unshift(action.payload.cuenta)
-console.log(newcuentas)        
+     
           
               // All done: set loading "false".
               // Also, replace the items with the ones from the server
@@ -507,7 +507,7 @@ console.log(newcuentas)
               }
               case   ADD_DISTRI:
   
-              console.log(action.payload.distri)
+           
                Distribuidores = state.Distribuidores.concat(action.payload.distri)
              
                 // All done: set loading "false".
