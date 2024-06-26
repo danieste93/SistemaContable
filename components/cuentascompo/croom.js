@@ -24,6 +24,7 @@ import Switch from '@material-ui/core/Switch';
 import ReactToPrint from "react-to-print";
 import {addRegs} from "../../reduxstore/actions/regcont"
 import Dropdown from 'react-bootstrap/Dropdown';
+import { Button } from 'react-bootstrap';
 
 class Croom extends Component {
     state={
@@ -80,6 +81,7 @@ InventarioVal:0,
     }
 
     channel1 = null;
+    channelCroom = null;
     componentRef = React.createRef(); 
     tituloPrin= React.createRef(); 
     tituloDeta= React.createRef(); 
@@ -118,6 +120,12 @@ InventarioVal:0,
   }
 
 componentDidMount(){
+  this.channelCroom = postal.channel();
+  this.channelCroom.subscribe('UpdateCount', (data) => {
+   console.log(data)
+    this.setState({cuentaSelect:data.cuenta})
+     
+   });
 
   let interFun = ()=>{
     newitems = this.props.regC.Tipos.map((x,i)=>{
@@ -132,6 +140,7 @@ componentDidMount(){
 
 
      this.channel1 = postal.channel();
+ 
      let newitems = []
 
      if( this.props.regC.Tipos){
@@ -1239,7 +1248,8 @@ if(this.props.regC.Regs.length > 0 && this.state.cuentaSelect != ""){
 
       let balancePeriod = parseFloat(this.generadorBalanceGeneral(getPeriodRegs))
       let balanceMesSistema= parseFloat(this.generadorBalanceGeneral(DetallesPorrender))
-   
+   console.log(balancePeriod)
+   console.log(balanceMesSistema)
       
       let saldoGenerado = ((valorActualCuenta - balancePeriod) + balanceMesSistema).toFixed(2)
       
@@ -2092,6 +2102,9 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
                          </div>
                          <div className="minigen">
                              <div style={{fontWeight:"Bolder"}}>Saldo </div>
+                          <button onClick={()=>{
+                            this.forceUpdate()
+                          }}>new </button>
                              <div style={{fontWeight:"Bolder"}}> ${saldoRender} </div>
                        
                          </div>

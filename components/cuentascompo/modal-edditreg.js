@@ -537,7 +537,7 @@ ingresadorTrans=(mival)=>{
       let datatosendTrans={
         idMongo:this.state.idMongo,
         Accion:this.state.Accion,
-        Tiempo:this.state.tiempo.getTime(),
+        Tiempo:this.state.tiempo,
         iDReg:this.state.idReg,
         CuentaSelect1:this.state.cuentaSelec,
         CuentaSelect2:this.state.cuentaSelec2,

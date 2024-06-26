@@ -85,7 +85,7 @@ waitingtrans2:false,
   }
  
   channel2 = null;
-  
+  channelCroom = null;
 
   myRef = React.createRef();
   refScroll = React.createRef();
@@ -96,7 +96,7 @@ waitingtrans2:false,
     }
     componentDidMount(){
      
-  
+      this.channelCroom = postal.channel();
       
       this.channel2 = postal.channel();
    
@@ -568,8 +568,11 @@ ingresador=(mival)=>{
       
        
         this.props.dispatch(addRegs(response.regCreate)); 
-        this.getCuentasyCats()
-                  
+        this.props.dispatch(updateCuenta(response.cuenta)); 
+        this.channelCroom.publish('UpdateCount', {
+          message: 'enviado desde reset',
+          cuenta:response.cuenta
+       });
     
 
       }  else if(response.message=="repeticiones generadas" || response.message=="cuotas generadas" ) {

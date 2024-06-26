@@ -2621,7 +2621,8 @@ soap.createClient(url, {}, function(err, client) {
       
        else if(result != undefined){
         if(result.RespuestaRecepcionComprobante){
-         
+          console.log(result.RespuestaRecepcionComprobante)
+          console.log(result.RespuestaRecepcionComprobante.estado)
           if(result.RespuestaRecepcionComprobante.estado == "RECIBIDA"){
             console.log("Recibido")
             setTimeout(()=> {
