@@ -15,6 +15,7 @@ const counterSchema= require("../models/counterSass")
 const userModelSchema = require('../models/usersSass');
 const tipoSchemaSass = require('../models/tiposSass');
 const ArticuloSchema = require("../models/articuloSass")
+
 const ventasSchema = require("../models/ventaSass")
 const distriSchema = require('../models/ditribuidorSass');
 const jwt = require('jsonwebtoken');
@@ -982,9 +983,8 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
   
     async function deleteReg (req,res){
          
-
           let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
-    
+          let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
           let CuentasModelSass = await conn.model('Cuenta', accountSchema);
           let RegModelSass = await conn.model('Reg', regSchema);
           let RegModelSassDelete = await conn.model('RegDelete', regSchemaDelete);
@@ -1005,6 +1005,33 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
          if(!regdel) throw new Error('Registro no se pudo eliminar');
          const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.reg.Importe).toFixed(2))
   
+         if(req.body.reg.CatSelect.idCat == 18){
+
+          if(req.body.reg.Descripcion2.articulosVendidos[0].Tipo =="Producto"){
+            let valorIncremento = req.body.reg.Descripcion2.articulosVendidos[0].CantidadCompra  
+            let update = { $inc: { Existencia: valorIncremento } }
+            let artInve=   await  ArticuloModelSass.findByIdAndUpdate(req.body.reg.Descripcion2.articulosVendidos[0]._id,update,{session, new:true})  
+            if(artInve == null){
+              throw new Error("articulo no encontrado")
+            }
+            
+
+            const fixedImport= new mongoose.Types.Decimal128(JSON.stringify(parseFloat(req.body.reg.Importe)))
+            let updateInv = { $inc: { DineroActual:fixedImport } }
+            let cuentaUpdate=  await CuentasModelSass.findByIdAndUpdate(req.body.reg.CuentaSelec.idCuenta,updateInv,{session, new:true})
+           
+            if(cuentaUpdate == null){
+              throw new Error("Cuenta no encontrada")
+            }
+
+            await session.commitTransaction();    
+            session.endSession(); 
+
+            return res.json({status: "Ok", message: "Registro de baja Eliminado", registro:regdel, cuenta:cuentaUpdate,
+              newRegDelete:newRegDelete[0], articulo:artInve})
+
+          }
+         }else{
           if(req.body.reg.Accion =="Ingreso" ||req.body.reg.Accion =="Gasto"  ){
             let valorvariable = req.body.reg.Accion =="Ingreso"?fixedImport* -1:
             req.body.reg.Accion =="Gasto"?fixedImport * 1:0
@@ -1044,6 +1071,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
       session.endSession();   
      return res.json({status: "Ok", message: "Transferencia Eliminado", registro:regdel, cuenta1, cuenta2,   newRegDelete:newRegDelete[0]})
         }
+      }
       }
        
   

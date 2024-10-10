@@ -164,7 +164,7 @@ render(){
                     display: flex;
  justify-content: center;
  align-items: center;
-  
+      font-size: 14px;
 }
                    }
         .firstcont{

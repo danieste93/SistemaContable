@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import {connect} from 'react-redux';
 
-import {updateCuenta,deleteReg, addRegsDelete} from "../../reduxstore/actions/regcont"
+import {updateArt,updateCuenta,deleteReg, addRegsDelete} from "../../reduxstore/actions/regcont"
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 class Contacto extends Component {
@@ -66,20 +66,31 @@ class Contacto extends Component {
         this.setState({Alert: add, loading:false}) 
         } 
         else{
+          this.props.dispatch(deleteReg(response.registro))
+          this.props.dispatch(addRegsDelete(response.newRegDelete))
       if (response.message == "Registro Eliminado"){
-        this.props.dispatch(deleteReg(response.registro))
+      
         this.props.dispatch(updateCuenta(response.cuenta))
-        this.props.dispatch(addRegsDelete(response.newRegDelete))
-        this.Onsalida()
+
       }
       else if(response.message == "Transferencia Eliminado"){
         this.props.dispatch(updateCuenta(response.cuenta1))
-        this.props.dispatch(deleteReg(response.registro))
-        this.props.dispatch(addRegsDelete(response.newRegDelete))
+      
+     
         this.props.dispatch(updateCuenta(response.cuenta2))
-        this.Onsalida()
-      }
-    }
+ 
+      }  else if(response.message == "Registro de baja Eliminado"){
+      
+        this.props.dispatch(updateCuenta(response.cuenta))
+      
+        this.props.dispatch(updateArt(response.articulo))
+     
+
+
+    } 
+    this.Onsalida()
+  
+  }
    
       })
     

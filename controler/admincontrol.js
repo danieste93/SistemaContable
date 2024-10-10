@@ -16,7 +16,7 @@ const bcrypt = require('bcrypt');
 
 const ComprasShema =  require("../models/comprasSass")
 const counterSchema= require("../models/counterSass")
-const ArticuloShema = require("../models/articuloSass")
+const ArticuloSchema = require("../models/articuloSass")
 const regSchema= require("../models/registrosSass")
 const accountSchema = require("../models/cuentaSass")
 const comprasSchema= require("../models/comprasSass")
@@ -35,7 +35,7 @@ const UserControl = require("./usercontrol")
 async function genOnlyArt(req,res){
 
   let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let CounterModelSass = await conn.model('Counter', counterSchema);
   const session = await mongoose.startSession();  
   session.startTransaction();
@@ -165,7 +165,7 @@ async function addArtIndividual(req,res){
   let data = req.body
   
   let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let ComprasModelSass = await conn.model('Compras', ComprasShema);
   let CounterModelSass = await conn.model('Counter', counterSchema);
   let RegModelSass = await conn.model('Reg', regSchema);
@@ -448,7 +448,7 @@ arrCuentas.push(cuenta2)
 const editArt=async(req, res)=>{
    
   let conn = await mongoose.connection.useDb(req.body.UserData.DBname);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   
  
 
@@ -494,7 +494,7 @@ const editArtCompra= async(req, res)=>{
     let conn = await mongoose.connection.useDb(req.body.UserData.DBname);
     let RegModelSass = await conn.model('Reg', regSchema);
     let ComprasModelSass = await conn.model('Compras', ComprasShema);
-    let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+    let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
     let CuentasModelSass = await conn.model('Cuenta', accountSchema);
     let CounterModelSass = await conn.model('Counter', counterSchema);
     let CatModelSass = await conn.model('Categoria', catSchema);
@@ -727,7 +727,7 @@ const editArtCompra= async(req, res)=>{
 const editArtSalidaInv= async(req, res)=>{
   let conn = await mongoose.connection.useDb(req.body.UserData.DBname);
   let CatModelSass = await conn.model('Categoria', catSchema);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let RegModelSass = await conn.model('Reg', regSchema);
   let CuentasModelSass = await conn.model('Cuenta', accountSchema);
   let CounterModelSass = await conn.model('Counter', counterSchema);
@@ -809,7 +809,7 @@ arrCuentas.push(cuentainvMod)
     Nota:"Salida de Inventario"+ " / " + req.body.Justificacion ,
     Descripcion:"Cantidad de unidades egresadas: "+req.body.TotalEgreso,
     Descripcion2:{articulosVendidos:[artmodi]},
-    Estado:false,
+    Estado:true,
     urlImg:invImage,
     Valrep:"No",
     TipoRep:"",
@@ -848,7 +848,7 @@ async function generateCombo(req,res){
   
  
   let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let CounterModelSass = await conn.model('Counter', counterSchema);
   const session = await mongoose.startSession();   
   session.startTransaction();
@@ -1001,7 +1001,7 @@ async function getTemplates(req,res){
 async function generateService(req,res){
 
   let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let CounterModelSass = await conn.model('Counter', counterSchema);
   const session = await mongoose.startSession(); 
   session.startTransaction();
@@ -1060,7 +1060,7 @@ async function generateService(req,res){
 async function generateCompraMasiva(req,res){
 
   let conn = await mongoose.connection.useDb(req.body.Userdata.DBname)
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let ComprasModelSass = await conn.model('Compras', ComprasShema);
   let CounterModelSass = await conn.model('Counter', counterSchema);
   let RegModelSass = await conn.model('Reg', regSchema);
@@ -1484,7 +1484,7 @@ async function generateCompraMasiva(req,res){
 async function generateCompra (req,res){
 
   let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let ComprasModelSass = await conn.model('Compras', ComprasShema);
   let CounterModelSass = await conn.model('Counter', counterSchema);
   let RegModelSass = await conn.model('Reg', regSchema);
@@ -1846,7 +1846,7 @@ session.endSession();
   async function  getArt (req, res){
 let conn = await mongoose.connection.useDb(req.body.User.DBname);
 
-let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);  
+let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);  
 
 let articulosHabiles = await ArticuloModelSass.find().sort({ $natural: -1 })
 
@@ -1860,7 +1860,7 @@ res.status(200).send({status: "Ok", message: "getArts",articulosHabiles});
  console.log(req.body)
     let conn = await mongoose.connection.useDb(req.body.User.DBname);
     
-    let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);  
+    let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);  
     let HtmlArtModel = await conn.model('htmlArt', HtmlArtSchema);
     let articulosHabiles = await ArticuloModelSass.find({Titulo:req.body.Titulo})
     let articulosHabilesHTML = await HtmlArtModel.find({Titulo:req.body.Titulo})
@@ -1895,7 +1895,7 @@ const deleteVenta = async (req,res)=>{
 
 let conn = await mongoose.connection.useDb(req.body.UserData.DBname);
 let RegModelSass = await conn.model('Reg', regSchema);
-let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
 let VentaModelSass = await conn.model('Venta', ventasSchema);
 let CuentasModelSass = await conn.model('Cuenta', accountSchema);
 
@@ -1938,9 +1938,6 @@ const session = await mongoose.startSession();
     })
   }else if(req.body.articulosVendidos[i].Tipo =="Producto"){
     let valorIncremento = req.body.articulosVendidos[i].CantidadCompra 
-  
-   
-    
 
     let update = { $inc: { Existencia: valorIncremento } }
  let artInve=   await  ArticuloModelSass.findByIdAndUpdate(req.body.articulosVendidos[i]._id,update,{session})  
@@ -1975,11 +1972,11 @@ if(req.body.arrRegs.length == 0 || req.body.arrRegs == undefined ){
         const fixedImport= new mongoose.Types.Decimal128(JSON.stringify(parseFloat(regdata.Importe)))
         let updateInv = { $inc: { DineroActual:fixedImport } }
         let cuentaUpdate=  await CuentasModelSass.findByIdAndUpdate(regdata.CuentaSelec.idCuenta,updateInv,{session})
-       
+      
         if(cuentaUpdate == null){
           throw new Error("Cuenta no encontrada")
         }
-    
+      
       }
       if(regdata.Accion == "Ingreso"){
         const fixedImport= new mongoose.Types.Decimal128(JSON.stringify(parseFloat(regdata.Importe)))
@@ -2045,7 +2042,7 @@ const deleteCompra= async (req, res, next)=>{
 
   let RegModelSass = await conn.model('Reg', regSchema);
   let ComprasModelSass = await conn.model('Compras', ComprasShema);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let CuentasModelSass = await conn.model('Cuenta', accountSchema);
 
 let valdata = false
@@ -2195,7 +2192,7 @@ async function editCombo(req,res){
    
   let data = req.body
   let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let update= {
     
     Titulo:data.Namecombo,
@@ -2217,7 +2214,7 @@ async function editCombo(req,res){
 const editService=async(req, res)=>{
    
   let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
 
 
   let update = {    
@@ -2262,7 +2259,7 @@ const dataInv=(req, res)=>{
 const deleteServComb= async(req, res)=>{
  
 let conn = await mongoose.connection.useDb(req.body.UserData.DBname);
-let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
 const session = await mongoose.startSession();   
 session.startTransaction();
 try{
@@ -2284,7 +2281,7 @@ const deleteArt= async(req, res)=>{
   let conn = await mongoose.connection.useDb(req.body.UserData.DBname);
 
   let RegModelSass = await conn.model('Reg', regSchema);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let CuentasModelSass = await conn.model('Cuenta', accountSchema);
    let CounterModelSass = await conn.model('Counter', counterSchema);
    let CatModelSass = await conn.model('Categoria', catSchema);
@@ -2325,6 +2322,7 @@ let dataregSI= { Accion:"Gasto",
   
     }
   }
+  console.log(dataregSI)
   let updateSI = { $inc: { DineroActual: valEgresado *-1  } }
 
     await RegModelSass.create([dataregSI],{session} )
@@ -3378,7 +3376,7 @@ async function  tryToHelp (req, res){
 
 
   let conn = await mongoose.connection.useDb("jazmin2024-2226");
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
 
   let findarts = await ArticuloModelSass.find({})
 
@@ -3401,7 +3399,7 @@ findarts.forEach(async x=> {
 async function  generateFactCompra(req, res){
 
   let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let ComprasModelSass = await conn.model('Compras', ComprasShema);
   let CounterModelSass = await conn.model('Counter', counterSchema);
   let RegModelSass = await conn.model('Reg', regSchema);
@@ -3835,7 +3833,7 @@ let html = "<h1>TESTO</h1>"
 
 async function  addDefaultDataInv(req, res){
   let conn = await mongoose.connection.useDb("newtester54-93377");
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
 
 console.log("dentro")
 let updatedata = await ArticuloModelSass.updateMany({}, {$set: {Bodega_Inv: 9999998, Bodega_Inv_Nombre:"Principal"}})
@@ -3860,7 +3858,7 @@ async function  researchArt(req, res){
 async function  accountF4(req, res){
   let conn = await mongoose.connection.useDb("newtester54-93377");
   let CuentasModelSass = await conn.model('Cuenta', accountSchema);
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let RegModelSass = await conn.model('Reg', regSchema);
  let allcuentas = await CuentasModelSass.find({})
 
@@ -4161,7 +4159,7 @@ async function  createSystemCats(req, res){
 }
 async function  updateVersionSistemArts(req, res){
   let conn = await mongoose.connection.useDb("iglass2024-99784");
-  let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+  let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
 
   let allarts = await ArticuloModelSass.find({})
 
@@ -4227,7 +4225,7 @@ res.status(200).send({message:"Iconos Actualizados", updadatedIcons })
 
       async function  updateDTCarts(req, res){
         let conn = await mongoose.connection.useDb("dtc2024-6279");
-        let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+        let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
       
         let allarts = await ArticuloModelSass.find({})
         let filteredArt =[]
@@ -4264,7 +4262,7 @@ res.status(200).send({message:"Iconos Actualizados", updadatedIcons })
 
             async function masiveApplyTemplate(req, res){
               let conn = await mongoose.connection.useDb("Dtc-58253");
-              let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
+              let ArticuloModelSass = await conn.model('Articulo', );
               let HtmlArtModel = await conn.model('htmlArt', HtmlArtSchema);
 
               let allarts = await ArticuloModelSass.find({})

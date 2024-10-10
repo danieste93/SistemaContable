@@ -51,13 +51,13 @@ import CryptoJS from "crypto-js";
           doctype:"Factura",
          UserSelect:false,
                     id:"",
-                    usuario:"",
+                    usuario:"Consumidor Final",
                     readOnly:true,
-                    correo:"",
+                    correo:"xxxxxxxxxx",
                     telefono:"",
                     ciudad:"",
-                    direccion:"",
-                    cedula:"",
+                    direccion:"xxxxxxxxxx",
+                    cedula:"999999999",
                     idcuenta:"",
                      ClientID:"Cedula",
                     edditButton:true,
@@ -1623,7 +1623,7 @@ this.setState({creditoCantidadIni:parseFloat(e.target.value) })
 `            <codigoAuxiliar>00000${item.Eqid}</codigoAuxiliar>\n`+
 `            <descripcion>${item.Titulo}</descripcion>\n`+
 `            <cantidad>${item.CantidadCompra}</cantidad>\n`+
-`            <precioUnitario>${(item.PrecioVendido / precioUnitarioval).toFixed(0)}</precioUnitario>\n`+
+`            <precioUnitario>${(precioTotalSinImpuesto / item.CantidadCompra).toFixed(2)}</precioUnitario>\n`+
 `            <descuento>0</descuento>\n`+
 `            <precioTotalSinImpuesto>${precioTotalSinImpuesto}</precioTotalSinImpuesto>\n`+
 `            <impuestos>\n`+
@@ -1865,7 +1865,7 @@ this.setState({ data:nuevoval})
            
             let propina ="0.00"
             let importeTotal= SuperTotal.toFixed(2)
-            let ambiente = "2"
+            let ambiente = "1"
 
             let s1 = this.props.state.userReducer.update.usuario.user.Factura.codigoEstab
             let s2 = this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision
@@ -3949,17 +3949,50 @@ post_add
                </Animate>
                      </div>
                
-                <div style={{display:"none"}}>
+                <div style={{display:"flex"}}>
                 <div  className="Areaimpresion" ref={this.componentRef}>  
                    
                    <img className='logoPrint'src={logogen} alt="logotipo empresa"/>
                   
-                                <p className="tituloArt">{this.props.state.userReducer.update.usuario.user.Factura.nombreComercial}</p>
+                                <p className="tituloArtEdit">{this.props.state.userReducer.update.usuario.user.Factura.nombreComercial}</p>
                                 <p className="subtituloArtPrint">{this.props.state.userReducer.update.usuario.user.Factura.dirEstab}</p>
-                               
+                                <p className="textoArt">--------------------------------------------------</p>
+                                <div className="dataarea" >
+                                <div className="grupoDatosPrint" >
+                                <div className="cDc1" >
+                                <p className='textoArtTituloPrint'>  Cliente: </p>
+                                </div> 
+                                <div className="cDc2" >
+                                    <p className='textoArt'> {this.state.usuario} </p>  
+                                </div> 
+                                </div> 
+                                <div className="grupoDatosPrint" >
+                                <div className="cDc1" >
+                                <p className='textoArtTituloPrint'>  ID: </p>
+                                </div> 
+                                <div className="cDc2" >
+                                    <p className='textoArt'> {this.state.cedula} </p>  
+                                </div> 
+                                </div>
+                                <div className="grupoDatosPrint" >
+                                <div className="cDc1" >
+                                <p className='textoArtTituloPrint'>  Correo: </p>
+                                </div> 
+                                <div className="cDc2" >
+                                    <p className='textoArt'> {this.state.correo} </p>  
+                                </div> 
+                                </div>
+                                <div className="grupoDatosPrint" >
+                                <div className="cDc1" >
+                                <p className='textoArtTituloPrint'>  Dirección: </p>
+                                </div> 
+                                <div className="cDc2" >
+                                    <p className='textoArt'> {this.state.direccion} </p>  
+                                </div> 
+                                </div>
                                 <p className="textoArt">--------------------------------------------------</p>
                           
-                                <div className="dataarea" >
+                            
                                 <div className="grupoDatosPrint" >
                                 <div className="cDc1" >
                                 <p className='textoArtTituloPrint'>  Fecha: </p>
@@ -4167,7 +4200,19 @@ Documento electrónico generado en contaluxe.com
   
                 <style jsx>
                 {                              
-                 `               
+                 ` 
+                  .tituloArtEdit{
+   
+        font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin: 15px 0px;
+
+    }      
+    .textoArtTituloPrint{
+         font-size: 15px;
+    font-weight: bold;
+    }        
                  .centrarlu{
                     text-align:center;
                    }
@@ -4659,6 +4704,7 @@ margin-bottom:0px;
     width: 60%;  
 
 }
+   
 .ArticImp{
     width: 20%;  
     
@@ -4740,8 +4786,10 @@ margin-bottom:0px;
     width: 50%;
    }
    .subtituloArtPrint{
-    padding:5px;
+   padding: 5px;
     text-align: center;
+    font-style: italic;
+    font-size: 15px;
    }
    .contTitulosPrint{
    

@@ -16,6 +16,7 @@ export default class inggas extends Component {
        this.channel1 = postal.channel();
       this.channel2 = postal.channel();
 
+
     }
     
   
@@ -35,6 +36,20 @@ export default class inggas extends Component {
         return ("0"+n)
       }else{
         return n
+      }
+    }
+    genEditMode=(n)=>{
+      if(this.props.reg.Accion == "Trans"){
+        <i className="material-icons i3D" onClick={(e)=>{
+          e.stopPropagation(); 
+         this.sendEdit(this.props.reg)
+       }} >  edit</i>
+      }else{
+        console.log("here")
+        return( this.props.reg.CatSelect.idCat != 18  && <i className="material-icons i3D" onClick={(e)=>{
+          e.stopPropagation(); 
+         this.sendEdit(this.props.reg)
+       }} >  edit</i>)
       }
     }
  
@@ -250,7 +265,8 @@ subcat = dataProvider.CatSelect.subCatSelect != ""? dataProvider.CatSelect.subCa
         return (
      
 <div className= {`jwPointer contDetalleING  ${estiloreg} ${ampliado}`} key={this.props.in} onClick={()=>{
-    console.log(this.props)
+    
+console.log(this.props)
   this.setState({masDetalles:!this.state.masDetalles})
   if(this.state.masDetalles == true){
     this.setState({ version:"Act", filtersUsers:false})
@@ -400,10 +416,11 @@ Registro Número:
 </div>
 <Animate show={dataProvider.Estado && !deleteReg}>
 <div className="detalles iconset">
-<i className="material-icons i3D" onClick={(e)=>{
-   e.stopPropagation(); 
-  this.sendEdit(this.props.reg)
-}} >  edit</i>
+
+
+{ this.genEditMode()}
+
+
 <i className="material-icons i3D" onClick={(e)=>{
    e.stopPropagation(); 
   this.sendDelete(this.props.reg)
