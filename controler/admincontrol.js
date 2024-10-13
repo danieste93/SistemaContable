@@ -4290,6 +4290,121 @@ res.status(200).send({message:"Iconos Actualizados", updadatedIcons })
 
               
             }
- 
+            async function sendSearch(req, res){
+          
+            
+                let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
+                let RegModelSass = await conn.model('Reg', regSchema);
+                const removeAccents = (str) => {
+                  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                } 
+             
+                let condicionesAnd = [];
+                let condicionesOr = [];
+                if(req.body.searcherOut != ""){
+                  condicionesOr = [
+                    {"Descripcion": { $regex: removeAccents(req.body.searcherOut), $options: 'i' }},
+                    {"Nota": { $regex: removeAccents(req.body.searcherOut), $options: 'i' }}
+                  ];
+                let valorNumerico = parseFloat(req.body.searcherOut);
+                
+                let esNumero = !isNaN(valorNumerico);
+                if(esNumero){
+                 
+                  condicionesOr.push({ "Importe": valorNumerico });
+                }
+                if(req.body.incProducts){
+                  condicionesOr.push(  { "Descripcion2.articulosVendidos": { 
+                    $elemMatch: { 
+                      Titulo: { $regex: req.body.searcherOut, $options: 'i' } 
+                    }
+                  }}
+                )
 
-module.exports = {deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,uploadSignedXmlTest, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };
+                condicionesOr.push(  { "Descripcion2.articulosVendidos": { 
+                  $elemMatch: { 
+                    Eqid: { $regex: req.body.searcherOut, $options: 'i' } 
+                  }
+                }}
+              )
+
+                }
+                }
+                if (condicionesOr.length > 0) {
+                  condicionesAnd.push({ $or: condicionesOr });
+                }
+                
+                if (req.body.CuentasElegidas.length != 0) {
+                  let idsCuentas = req.body.CuentasElegidas.map(cuenta => cuenta.id); // Extraemos los IDs
+
+                  let condicionesCuentas = [
+                    { "CuentaSelec.idCuenta": { $in: idsCuentas } },
+                    { "CuentaSelec2.idCuenta": { $in: idsCuentas } }
+                  ];
+                  condicionesAnd.push({ $or: condicionesCuentas });
+                }
+                if (req.body.Categorias.length != 0) {
+                  let idsCats = req.body.Categorias.map(cat=> cat._id); 
+                  condicionesAnd.push({ "CatSelect._id": { $in: idsCats } });
+                }
+
+                if (req.body.subCategorias.length != 0) {   
+                  condicionesAnd.push({ "CatSelect.subCatSelect": { $in: req.body.subCategorias } });
+                }
+                if (req.body.minImport != 0 && req.body.minImport != null) {   
+                  condicionesAnd.push({ "Importe": {$gte : req.body.minImport} });
+                }
+                if (req.body.maxImport != 0 && req.body.maxImport != null) {   
+                  condicionesAnd.push({ "Importe": {$lte : req.body.maxImport} });
+                }
+                if (req.body.UserFilter != "") {   
+                  condicionesAnd.push({ "Usuario.Id": req.body.UserFilter  });
+                }
+                if (req.body.AccionFilter != "") {   
+                  condicionesAnd.push({ "Accion": req.body.AccionFilter});
+                }
+                if (req.body.TiempoFilter != "") {  
+                  let tiempoIni 
+                  let tiempoFin 
+                  if(req.body.TiempoFilter == "Día"){
+                   tiempoIni = new Date(req.body.tiempo).setHours(0,0,0,0).getTime();
+                    tiempoFin =new Date(req.body.tiempo).setHours(23,59,59,999).getTime();
+
+                  }
+                  else if(req.body.TiempoFilter == "Mes"){
+                    fecha = new Date(req.body.tiempo)
+                    var primerDia = new Date(fecha.getFullYear(), fecha.getMonth(), 1).getTime()
+                    var ultimoDia = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0)
+                    var ultimahora = new Date(ultimoDia.setHours(23, 59, 59)).getTime()
+                    tiempoIni = primerDia
+                    tiempoFin =ultimahora
+                   }
+
+                   else if(req.body.TiempoFilter == "Periodo"){
+                    tiempoIni = new Date(req.body.tiempoperiodoini).setHours(0,0,0,0).getTime();
+                     tiempoFin =new Date(req.body.tiempoperiodofin).setHours(23,59,59,999).getTime()
+ 
+                   }
+          
+                   condicionesAnd.push({Tiempo: {$gte : tiempoIni}});
+                   condicionesAnd.push({Tiempo: {$lte : tiempoFin}});
+     
+                }
+
+             
+               
+                let respuestaRegs = await RegModelSass.find({
+                  $and: condicionesAnd
+                });
+            
+                res.status(200).send({ status: "Ok", message: "SendSearch", Regs: respuestaRegs });
+           
+              
+           
+
+                
+                
+            }
+
+
+module.exports = {sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,uploadSignedXmlTest, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };

@@ -362,7 +362,7 @@ if(this.props.state.userReducer != ""){
 </div>
 <div className={` contImagen ${activeIconBuscar}`} onClick={()=>{this.setState({searchrRoom:true,home:false,estadisticas:false,detalles:false})}}>
 <img className='imgBarra' src="/barraicons/lupa.png"  />
-<span> Buscar </span>
+<span>S.Buscador </span>
 </div>
 
 

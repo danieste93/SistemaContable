@@ -35,7 +35,42 @@ state={
         data:[]
       }
     ]
+  },
+  superRSIdata2:{
+    labels:[],
+    datasets: [
+      {
+        data:[]
+      }
+    ]
   }
+}
+ calculateEMAWithTrend =(data, windowSize, threshold = 0.01)=> {
+  if (data.length < windowSize) {
+    console.log('No hay suficientes datos para calcular el EMA');
+}
+
+let alpha = 2 / (windowSize + 1);
+let sma = data.slice(0, windowSize).reduce((acc, val) => acc + val, 0) / windowSize;
+let emaPrev = sma;
+
+// Calcular el EMA hasta el último valor
+for (let i = windowSize; i < data.length; i++) {
+    emaPrev = (data[i] * alpha) + (emaPrev * (1 - alpha));
+}
+
+// Determinar la tendencia comparando el último EMA con el penúltimo valor
+let lastValue = data[data.length - 1];
+let diff = lastValue - emaPrev;
+let trend = 'neutro'; // Tendencia neutra por defecto
+
+if (diff > threshold) {
+    trend = 'alcista';
+} else if (diff < -threshold) {
+    trend = 'bajista';
+}
+
+return { ema: diff.toFixed(6), trend };
 }
 setterRSI = (indicesIniciales) =>{
   let indices=[0]
@@ -317,13 +352,16 @@ let indicesIniciales =this.setterData(arg, indicesTranformados)
 
 
 let rsiData = this.calculateRSI(indicesIniciales.datasets[0].data, 14);
+let rsiData2 = this.calculateRSI(igualarray, 14);
 let newArrRSI = this.setterRSI(rsiData)
+let newArrRSI2 = this.setterRSI(rsiData2)
 
 this.setState({
                 inidata:igualarray,
               
                superdata:indicesIniciales,
-              superRSIdata:newArrRSI   
+              superRSIdata:newArrRSI,   
+              superRSIdata2:newArrRSI2
 
 
 })
@@ -375,16 +413,20 @@ this.setState({
 
  
  // let modifiedArg = tempVar.map(x=> x>10?10:x)
- 
+
+
+
   let rsiData = this.calculateRSI(superData, 14);
+  let rsiData2 = this.calculateRSI( tempVar, 14);
 
   let newArrRSI = this.setterRSI(rsiData)
-
+  let newArrRSI2 = this.setterRSI(rsiData2)
   
     this.setState({
       inidata:tempVar,
      superdata:newEstate,
      superRSIdata:newArrRSI,
+     superRSIdata2:newArrRSI2,
     loadingData:false
 })
   });
@@ -620,14 +662,21 @@ let indicesRender = this.state.inidata.map((value,i)=>{
     let pendienteEditConUmbral = (Math.abs(pendienteEdit) < 0.001 ? 0 : pendienteEdit);
     
     let pendienteEstadistica = this.calcularPendiente(this.state.superdata.datasets[0].data);
-
+    let pendienteSuperDataUmbral = (Math.abs(pendienteEstadistica) < 0.001 ? 0 : pendienteEstadistica);
 let PendienteRender = pendienteConUmbral > 0?  'Alcista' : 
                       pendienteConUmbral < 0 ? 'Bajista' : 
                       'Neutra'
 let PendienteRenderEdit = pendienteEditConUmbral > 0?  'Alcista' : 
                           pendienteEditConUmbral < 0 ? 'Bajista' : 
                           'Neutra'
+  let PendienteRendersuperdata = pendienteSuperDataUmbral > 0?  'Alcista' : 
+                                  pendienteSuperDataUmbral < 0 ? 'Bajista' : 
+                                    'Neutra'
 
+
+                                    const resultEMA = this.calculateEMAWithTrend(this.state.inidata, 8 );
+                                    const resultEMASuperData = this.calculateEMAWithTrend(this.state.superdata.datasets[0].data, 8);
+console.log(resultEMA)
           return(
             <div className='mainGrafic' style={{marginTop:"15vh"}}>
              <p>Bienvenidos</p>
@@ -652,8 +701,20 @@ let PendienteRenderEdit = pendienteEditConUmbral > 0?  'Alcista' :
                 {prediccionMA}
               </div>
              </div>
-             <div className=''>
-              <p>La tendencia en Pendiente con datos transformados{pendienteEstadistica}</p>
+          
+              <div className='jwFlex'>
+              <p>La tendencia en Pendiente con datos transformados:{PendienteRendersuperdata }...-----</p>
+              <p>{pendienteEstadistica.toFixed(4)}</p>
+              </div>
+              <div className=''>
+              <div className='jwFlex'>
+              <p>La tendencia en EMA :{resultEMA.ema }//---</p>
+              <p>{resultEMA.trend }</p>
+              </div>
+              <div className='jwFlex'>
+              <p>La tendencia en EMA con datos transformados:{resultEMASuperData.ema  }//---</p>
+              <p>{resultEMASuperData.trend}</p>
+              </div>
               </div>
             <div className='contindexes'>
             <p> Operando con </p>
@@ -739,6 +800,63 @@ plugins: {
 }
  />
  </div>
+ <div className='contLineas2'>
+ <Line data={this.state.superRSIdata2} 
+options={{
+  responsive: true, 
+        maintainAspectRatio: false, 
+  scales: {
+    y: {
+        min: 0,
+        max: 100,
+        title: {
+            display: true,
+            text: 'RSI'
+        },
+        ticks: {
+            stepSize: 10  // Intervalo de las marcas en el eje Y
+        },
+        grid: {
+            drawBorder: true,
+            color: function(context) {
+                // Dibujar líneas de sobrecompra y sobreventa
+                if (context.tick.value === 70) {
+                    return 'red';  // Línea de sobrecompra
+                } else if (context.tick.value === 30) {
+                    return 'green';  // Línea de sobreventa
+                }
+                return 'rgba(0, 0, 0, 0.1)';  // Otras líneas
+            },
+            lineWidth: function(context) {
+                // Ajustar el ancho de las líneas de sobrecompra y sobreventa
+                if (context.tick.value === 70 || context.tick.value === 30) {
+                    return 2;
+                }
+                return 1;  // Ancho de otras líneas
+            }
+        }
+    },
+    x: {
+      min: this.state.superdata.datasets[0].data.length - this.state.indicesOperativos , // Ajusta el mínimo para hacer espacio debajo del último valor
+      max: this.state.superdata.datasets[0].data.length + 5, // Ajusta el máximo para hacer espacio arriba si lo deseas
+
+        title: {
+            display: true,
+            text: 'Data Points'
+        }
+    }
+},
+plugins: {
+    legend: {
+        display: true,
+        position: 'top'
+    }
+
+}}
+}
+ />
+ </div>
+
  <div className='contDatos'>
              {indicesRender}
              </div>

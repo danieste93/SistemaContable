@@ -85,7 +85,7 @@ router.post('/resendauthfact', Authentication, AdminControl.resendAuthFact);
 
 router.post('/downloadfact', Authentication, AdminControl.downLoadFact);
 
-
+router.post('/sendSearch', Authentication, AdminControl.sendSearch);
 router.post('/editart', Authentication, AdminControl.editArt);
 
 router.post('/editart-salida-inventario', Authentication, AdminControl.editArtSalidaInv);

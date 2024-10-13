@@ -105,36 +105,19 @@ class homepp1 extends Component {
              
                 }
               else{
-                let misarrs
-                if(this.state.diario){
-                  let tiempoIni = new Date(this.state.tiempo).setHours(0,0,0,0);
-                  let tiempoFin =new Date(this.state.tiempo).setHours(23,59,59,999);
-                  misarrs = this.props.regC.Regs.filter(x=>x.Tiempo <= tiempoIni && x.Tiempo >= tiempoFin)
-                }
-                else if(this.state.mensual){
-                  let fechamensual = new Date(this.state.tiempo);
-                  console.log(fechamensual)
-                  let tiempoIni = new Date(fechamensual.getFullYear(), fechamensual.getMonth(), 1).setHours(0,0,0,0);
-                  let tiempoFin = new Date(fechamensual.getFullYear(), fechamensual.getMonth() + 1, 0).setHours(23,59,59,999);
-                  misarrs = this.props.regC.Regs.filter(x=>x.Tiempo <= tiempoIni && x.Tiempo >= tiempoFin)
-                }
-                else if(this.state.periodo){
-                 
-                  let tiempoIni = new Date(this.state.tiempoperiodoini).setHours(0,0,0,0);
-                  let tiempoFin =new Date(this.state.tiempoperiodofin).setHours(23,59,59,999);
-                  misarrs = this.props.regC.Regs.filter(x=>x.Tiempo <= tiempoIni && x.Tiempo >= tiempoFin)
-                }
+                let misarrs = this.props.regC.Regs.slice() 
+              
 
                 let finalars= misarrs.concat(response.regsHabiles)
-              /* let sinRepetidosObjeto= finalars.filter((value, index, self) => {
+             let sinRepetidosObjeto= finalars.filter((value, index, self) => {
                   return(            
                     index === self.findIndex((t) => (
                       t._id === value._id && t._id === value._id
                     ))
                 )
           
-                });*/
-                this.props.dispatch(addFirstRegs(finalars));
+                });
+                this.props.dispatch(addFirstRegs(sinRepetidosObjeto));
                 this.setState({downloadData:false})
               }
           })

@@ -678,7 +678,7 @@ ingresadorTrans=(mival)=>{
       "x-access-token": this.props.state.userReducer.update.usuario.token
     }
     }).then(res => res.json()).then(response =>{
-     
+     console.log(response)
      
      if(response.message=="error al registrar"){
       let add = {
@@ -693,8 +693,13 @@ ingresadorTrans=(mival)=>{
                  
       
       this.props.dispatch(addRegs(response.regCreate));
-
-      this.getCuentasyCats()
+      this.props.dispatch(updateCuenta(response.cuenta1)); 
+      this.props.dispatch(updateCuenta(response.cuenta2)); 
+ 
+     this.channelCroom.publish('UpdateCounts', {
+      message: 'enviado desde reset',
+      cuentas:[response.cuenta1,response.cuenta2]
+   });
                 
   
 

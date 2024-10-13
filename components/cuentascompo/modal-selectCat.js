@@ -34,23 +34,24 @@ state={
         console.log(e.target)
       }
      
-      handleChangeCatMain = (event) => {
- 
-        if (this.state.Categorias.includes(event.target.name)){
-          let elimnado = this.state.Categorias.filter(x => x !=event.target.name )
+      handleChangeCatMain = (cat) => {
+       
+        const existeCategoria = this.state.Categorias.some(categoria => categoria._id === cat._id);
+        if (existeCategoria){
+          let elimnado = this.state.Categorias.filter(x => x._id!= cat._id)
           this.setState({Categorias: elimnado });
         }
         else{
-          let nuevoarr = this.state.Categorias.concat(event.target.name)
+          let nuevoarr = this.state.Categorias.concat(cat)
           this.setState({Categorias: nuevoarr });
         }
     
       };
       handleChangesubCatMain = (event) => {
-        console.log(event.target)
+    
         if (this.state.subCategorias.includes(event.target.name)){
           let elimnado = this.state.subCategorias.filter(x => x != event.target.name )
-          console.log(elimnado)
+         
           this.setState({subCategorias: elimnado });
         }
         else{
@@ -71,7 +72,7 @@ let misCatgas=[]
    let catingRender =""
    let catgasRender =""
    if(misCating.length >0){
-     console.log("dentrodecating")
+     
     
     catingRender = misCating.map((cat,i)=>{
 let subarr = ""
@@ -93,8 +94,9 @@ if(cat.subCategoria.length > 0){
           <div className="subContCat">
             <span style={{fontWeight:"bolder"}}>{cat.nombreCat}</span>
             <Checkbox
-      name={cat.nombreCat}
-      onChange={this.handleChangeCatMain}
+      name={cat}
+
+      onChange={()=>{this.handleChangeCatMain(cat)}}
       color="primary"
       />
           </div>
@@ -189,6 +191,7 @@ if(cat.subCategoria.length > 0){
     </button>
     <button className="botonesDuales btn-success"onClick={()=>{
       this.Onsalida()
+      
     this.props.setCat(this.state)
      
       

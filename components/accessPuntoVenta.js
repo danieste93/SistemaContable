@@ -3949,7 +3949,7 @@ post_add
                </Animate>
                      </div>
                
-                <div style={{display:"flex"}}>
+                <div style={{display:"none"}}>
                 <div  className="Areaimpresion" ref={this.componentRef}>  
                    
                    <img className='logoPrint'src={logogen} alt="logotipo empresa"/>

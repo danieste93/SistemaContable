@@ -54,7 +54,7 @@ class ModalSelectIcon extends Component {
      }).then(res => res.json()).then(response =>{
        console.log(response)
 
-       this.setState({matrizIcons: response.Icons.concat(this.state.matrizIcons)
+       this.setState({matrizIcons: response.Icons[0].Data.concat(this.state.matrizIcons)
        })
         
       })

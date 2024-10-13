@@ -6,18 +6,24 @@ import InggasSearcher from './SubCompos/inggasSearcher';
 import {  KeyboardDatePicker,  MuiPickersUtilsProvider } from "@material-ui/pickers";
 import moment from "moment";
 import "moment/locale/es";
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
+import {connect} from 'react-redux';
 import Checkbox from '@material-ui/core/Checkbox';
 import MomentUtils from '@date-io/moment';
+import { CircularProgress } from '@material-ui/core';
 import TransrenderSearcher from './SubCompos/transrenderSearcher';
-export default class homepp1 extends Component {
+ class searcher extends Component {
     state={
+      Alert:{Estado:false},
       incProducts:false,
+      regsBackend:[],
       tiempo: new Date(),
       tiempomensual: new Date(),
       tiempoperiodoini: new Date(),
       tiempoperiodofin: this.periodofin(),
       TiempoFilter:"",
-      filters:true,
+      filters:false,
       searcherIn:"",
       searcherOut:"",
       addcount:false,
@@ -33,6 +39,7 @@ export default class homepp1 extends Component {
       AccionFilter:"",
       superIng:0,
       superGas:0,
+      loading:false,
     }
 
     periodofin(){
@@ -431,11 +438,11 @@ FilterSistem=(regs)=>{
 }
 
 displayIngresos =()=>{
-  let registros = this.props.SendRegs.Regs
-  let  registrosenseñar = this.FilterSistem(registros)
-  
-  if(this.state.CuentasElegidas.length > 0 || this.state.searcherIn !="" ||this.state.UserFilter !=""||this.state.Categorias.length >0||this.state.subCategorias.length >0||this.state.minImport > 0 ||this.state.maxImport >0||this.state.TiempoFilter !=""||this.state.AccionFilter !=""){
+  let registros = this.state.regsBackend
 
+  
+  if(registros.length >0){
+    let  registrosenseñar = this.FilterSistem(registros)
   let misregs2ing = registrosenseñar.filter(regsing => regsing.Accion == "Ingreso")
   let sumaing = 0
               if(misregs2ing.length > 0){
@@ -454,10 +461,10 @@ displayIngresos =()=>{
 
 }
 displayGastos =()=>{
-  let registros = this.props.SendRegs.Regs
-  let  registrosenseñar = this.FilterSistem(registros)
+  let registros = this.state.regsBackend
 
-  if(this.state.CuentasElegidas.length > 0 || this.state.searcherIn !="" ||this.state.UserFilter !=""||this.state.Categorias.length >0||this.state.subCategorias.length >0||this.state.minImport > 0 ||this.state.maxImport >0||this.state.TiempoFilter !=""||this.state.AccionFilter !=""){
+  if(registros.length >0){
+    let  registrosenseñar = this.FilterSistem(registros)
 
   let misregsgas = registrosenseñar.filter(regsgas => regsgas.Accion == "Gasto")
   let sumagas = 0
@@ -524,10 +531,11 @@ jsonToCsv=(items)=> {
   return csv;
 }
 displayRegs=()=>{
-  let registros = this.props.SendRegs.Regs
-
+  let registros = this.state.regsBackend
+  console.log("EN DISPLAY REGS")
+  if(registros.length > 0){
 let  registrosenseñar = this.FilterSistem(registros)
-if(this.state.CuentasElegidas.length > 0 || this.state.searcherIn !="" ||this.state.UserFilter !=""||this.state.Categorias.length >0||this.state.subCategorias.length >0||this.state.minImport > 0 ||this.state.maxImport >0||this.state.TiempoFilter !=""||this.state.AccionFilter !=""){
+
 
   if(registrosenseñar.length >0){
    
@@ -600,6 +608,101 @@ let  registrosenseñar = this.FilterSistem(registros)
   link.click();
 
 }
+
+getIcons=()=>{
+  let lol = JSON.stringify({  
+    Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
+    iDgeneral:9999996
+    })
+       
+
+
+ let url = "/public/geticons"   
+fetch(url, {
+method: 'POST', // or 'PUT'
+body: lol, // data can be `string` or {object}!
+headers:{
+ 'Content-Type': 'application/json',
+ "x-access-token": this.props.state.userReducer.update.usuario.token
+}
+}).then(res => res.json()).then(response =>{
+ console.log(response)
+
+ this.setState({matrizIcons: response.Icons[0].Data.concat(this.state.matrizIcons)
+ })
+  
+})
+}
+
+sendSearch=()=>{
+  if(this.state.loading == false){
+this.setState({loading:true})
+if(this.state.searcherOut.trim() == "" &&
+   this.state.CuentasElegidas.length == 0 &&
+   this.state.Categorias.length == 0 &&    
+   this.state.maxImport == 0 &&      
+   this.state.minImport == 0 &&   
+   this.state.TiempoFilter == "" &&   
+   this.state.UserFilter == "" &&   
+   this.state.AccionFilter == ""){
+  let add = {
+    Estado:true,
+    Tipo:"info",
+    Mensaje:"Campo de busqueda y filtros vacios"
+}
+this.setState({Alert: add, loading:false })
+}else if(this.state.searcherOut.length <= 1 &&
+  this.state.CuentasElegidas.length == 0 &&
+  this.state.Categorias.length == 0 &&    
+  this.state.maxImport == 0 &&      
+  this.state.minImport == 0 &&   
+  this.state.TiempoFilter == "" &&   
+  this.state.UserFilter == "" &&   
+  this.state.AccionFilter == ""
+){
+  let add = {
+    Estado:true,
+    Tipo:"info",
+    Mensaje:"Ingrese Minimo 2 caracteres de busqueda o un filtro"
+}
+this.setState({Alert: add,loading:false })
+}
+
+else{
+  let datatosend = JSON.stringify({  
+    Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
+    Tipo:{DBname:this.props.state.userReducer.update.usuario.user.Tipo}, 
+    ...this.state
+    })
+       
+ let url = "/public/sendSearch"   
+
+fetch(url, {
+method: 'POST', // or 'PUT'
+body: datatosend, // data can be `string` or {object}!
+headers:{
+ 'Content-Type': 'application/json',
+ "x-access-token": this.props.state.userReducer.update.usuario.token
+}
+}).then(res => res.json()).then(response =>{
+
+
+ this.setState({regsBackend:response.Regs, loading:false })
+})
+}
+}else{
+  let add = {
+    Estado:true,
+    Tipo:"info",
+    Mensaje:"Cargando... espere porfavor"
+}
+this.setState({Alert: add })
+
+}
+
+
+}
+
 handleChangeGeneraltougle=(e)=>{
    this.setState({
   [e.target.name]:!this.state[e.target.name]
@@ -623,7 +726,7 @@ var exists = !hash[user.UserID]
 hash[user.UserID] = true;
 return exists;
   })
-
+  console.log(sinRepetidos)
  optionUser = sinRepetidos.map((optiUser,i)=>(
     <option key={i} value={optiUser.UserID}>{optiUser.Username} </option>
   ))
@@ -639,7 +742,7 @@ return exists;
 }
 
     render() {
-       
+       console.log(this.state)
            let Cactive = this.state.cuentas?"cdc2active2":""
            let Catactive = this.state.cat?"cdc2active2":""
            let subCatactive = this.state.subCategorias.length >0?"cdc2active2":""
@@ -651,6 +754,15 @@ return exists;
            let valy = this.state.Categorias.length > 0?<div className="xCont" onClick={()=>{this.setState({Categorias:[],CategoriasRender:""})}}>x</div>:""
            let valSubCat = this.state.subCategorias.length > 0?<div className="xCont" onClick={()=>{this.setState({subCategorias:[],SubCatRender:""})}}>x</div>:""
            
+           const handleClose = (event, reason) => {
+            let AleEstado = this.state.Alert
+            AleEstado.Estado = false
+            this.setState({Alert:AleEstado})
+           
+        }
+           const Alert=(props)=> {
+            return <MuiAlert elevation={6} variant="filled" {...props} />;
+          }
         
          
 
@@ -664,11 +776,7 @@ return exists;
 
   <div className="react-autosuggest__container">
 <input name="searcherOut" className="react-autosuggest__input" onChange={this.handleChangeGeneral} placeholder="Busca tus registros" /> 
-<div className='contSearcher'>
-<i className={`material-icons  `} onClick={()=>{this.setState({searcherIn:this.state.searcherOut})}}>
-search
-</i>
-</div>
+
   </div>
 </div> 
 <div className='contOptions'>
@@ -683,7 +791,17 @@ search
   </div>
 
 </div>
+<div className='jwFlex contLupa'>
+<div className='contSearcher'>
+<i className={`material-icons  `} onClick={this.sendSearch}>
+search
+</i>
+</div>
+<Animate show={this.state.loading}>
+  <CircularProgress/>
+</Animate>
 
+</div>
   </div> 
 <Animate show={this.state.filters}>
 <div className="contFilters">
@@ -896,7 +1014,7 @@ search
 </ Animate>
 <div className="renderFilter" >
   
-   <div onClick={()=>{this.setState({filters:!this.state.filters})}}>   {flechaval}</div>
+   <div onClick={()=>{this.setState({filters:!this.state.filters})}}>   {flechaval} <span style={{fontSize:"15px",fontStyle:"italic"}}>Filtros</span></div>
 
    <button style={{color:"white", borderRadius:"36px",  background:"black", paddingTop:"5px"}} onClick={this.donwloaddata} >       <span className="material-icons">
                download
@@ -943,7 +1061,7 @@ if(e.Categorias.length > 0){
     let cat =""
   for(let i =0; i< e.Categorias.length;i++){
 
-cat = cat + "/ " + e.Categorias[i]
+cat = cat + "/ " + e.Categorias[i].nombreCat
   }
 
   this.setState({Categorias:e.Categorias, CategoriasRender:cat})
@@ -968,7 +1086,12 @@ this.displayGastos()
 }} Flecharetro={()=>{this.setState({addcat:false})}} />
 
 </ Animate>
-
+<Snackbar open={this.state.Alert.Estado} autoHideDuration={5000} onClose={handleClose}>
+    <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
+        <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>
+    
+    </Alert>
+  </Snackbar>
 <style>     
      {`
      .contfiltrosTiempo{
@@ -1077,7 +1200,7 @@ flex-flow: column;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 18px;
+   
     border: 1px solid #7f0000;
     padding: 0px;
     font-size: 11px;
@@ -1091,9 +1214,12 @@ flex-flow: column;
     align-items: center;
     width: 80%;
     max-width: 800px;
-    flex-flow: column;
+     flex-wrap: wrap;
+         height: 110px;
    }
-
+.contLupa{
+margin-left:20px;
+}
 
     .react-autosuggest__container{
       position: relative;
@@ -1236,3 +1362,12 @@ margin: 10px 0px;
         )
     }
 }
+const mapStateToProps = state=>  {
+  let regC =   state.RegContableReducer
+  return {
+    regC,
+    state
+  }
+};
+
+export default connect(mapStateToProps, null)(searcher);

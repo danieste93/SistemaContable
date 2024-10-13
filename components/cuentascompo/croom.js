@@ -122,10 +122,25 @@ InventarioVal:0,
 componentDidMount(){
   this.channelCroom = postal.channel();
   this.channelCroom.subscribe('UpdateCount', (data) => {
-   console.log(data)
+ 
+   if(this.state.cuentaSelect._id == data.cuenta._id)[
     this.setState({cuentaSelect:data.cuenta})
+   ]
+   
      
    });
+   this.channelCroom.subscribe('UpdateCounts', (data) => {
+   data.cuentas.forEach(x=>{
+    if(x._id == this.state.cuentaSelect._id ){
+      this.setState({cuentaSelect:x})
+    }
+
+   })
+    
+      
+    });
+
+   
 
   let interFun = ()=>{
     newitems = this.props.regC.Tipos.map((x,i)=>{
@@ -2102,9 +2117,7 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
                          </div>
                          <div className="minigen">
                              <div style={{fontWeight:"Bolder"}}>Saldo </div>
-                          <button onClick={()=>{
-                            this.forceUpdate()
-                          }}>new </button>
+                          
                              <div style={{fontWeight:"Bolder"}}> ${saldoRender} </div>
                        
                          </div>

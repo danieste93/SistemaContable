@@ -48,8 +48,11 @@ state={
       
 
       getCuentas=()=>{
+        
         if(this.props.state.RegContableReducer.Cuentas){
-        let cuentasFiltradas = this.props.state.RegContableReducer.Cuentas.filter(x => x.FormaPago == this.state.formaPagoAdd && x.Tipo != "Inventario" )
+        let cuentasFiltradas = this.props.state.RegContableReducer.Cuentas.filter(x => x.FormaPago == this.state.formaPagoAdd &&
+                                                                                       x.Tipo != "Inventario" && 
+                                                                                       x.Permisos.includes(this.props.state.userReducer.update.usuario.user.Tipo))
 
         if(cuentasFiltradas.length > 0){
           let cuentasrender = cuentasFiltradas.map((c, i)=>{
