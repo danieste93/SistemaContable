@@ -45,7 +45,7 @@ export default class inggas extends Component {
          this.sendEdit(this.props.reg)
        }} >  edit</i>
       }else{
-        console.log("here")
+       
         return( this.props.reg.CatSelect.idCat != 18  && <i className="material-icons i3D" onClick={(e)=>{
           e.stopPropagation(); 
          this.sendEdit(this.props.reg)
@@ -266,7 +266,7 @@ subcat = dataProvider.CatSelect.subCatSelect != ""? dataProvider.CatSelect.subCa
      
 <div className= {`jwPointer contDetalleING  ${estiloreg} ${ampliado}`} key={this.props.in} onClick={()=>{
     
-console.log(this.props)
+
   this.setState({masDetalles:!this.state.masDetalles})
   if(this.state.masDetalles == true){
     this.setState({ version:"Act", filtersUsers:false})
