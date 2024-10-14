@@ -67,18 +67,18 @@ class Contacto extends Component {
         } 
         else{
           this.props.dispatch(deleteReg(response.registro))
-          this.props.dispatch(addRegsDelete(response.newRegDelete))
+        
       if (response.message == "Registro Eliminado"){
       
         this.props.dispatch(updateCuenta(response.cuenta))
-
+        this.props.dispatch(addRegsDelete(response.newRegDelete))
       }
       else if(response.message == "Transferencia Eliminado"){
         this.props.dispatch(updateCuenta(response.cuenta1))
       
      
         this.props.dispatch(updateCuenta(response.cuenta2))
- 
+        this.props.dispatch(addRegsDelete(response.newRegDelete))
       }  else if(response.message == "Registro de baja Eliminado"){
       
         this.props.dispatch(updateCuenta(response.cuenta))

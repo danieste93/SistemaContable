@@ -995,15 +995,9 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
           try {
          let regdel = await RegModelSass.findByIdAndDelete(req.body.reg._id,{session})
         
-            let newDeleteReg={
-              ...req.body.reg,
-              TiempoDelete:req.body.TiempoDel,
-              UsuarioDelete:req.body.UsuarioDelete
-            }
-
-            let newRegDelete = await RegModelSassDelete.create([newDeleteReg],{session})
+            
          if(!regdel) throw new Error('Registro no se pudo eliminar');
-         const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.reg.Importe).toFixed(2))
+         const fixedImport = new mongoose.Types.Decimal128(JSON.stringify(parseFloat(req.body.reg.Importe)))
   
          if(req.body.reg.CatSelect.idCat == 18){
 
@@ -1015,8 +1009,6 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
               throw new Error("articulo no encontrado")
             }
             
-
-            const fixedImport= new mongoose.Types.Decimal128(JSON.stringify(parseFloat(req.body.reg.Importe)))
             let updateInv = { $inc: { DineroActual:fixedImport } }
             let cuentaUpdate=  await CuentasModelSass.findByIdAndUpdate(req.body.reg.CuentaSelec.idCuenta,updateInv,{session, new:true})
            
@@ -1028,13 +1020,20 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
             session.endSession(); 
 
             return res.json({status: "Ok", message: "Registro de baja Eliminado", registro:regdel, cuenta:cuentaUpdate,
-              newRegDelete:newRegDelete[0], articulo:artInve})
+               articulo:artInve})
 
           }
          }else{
+          let newDeleteReg={
+            ...req.body.reg,
+            TiempoDelete:req.body.TiempoDel,
+            UsuarioDelete:req.body.UsuarioDelete
+          }
+
+          let newRegDelete = await RegModelSassDelete.create([newDeleteReg],{session})
           if(req.body.reg.Accion =="Ingreso" ||req.body.reg.Accion =="Gasto"  ){
             let valorvariable = req.body.reg.Accion =="Ingreso"?fixedImport* -1:
-            req.body.reg.Accion =="Gasto"?fixedImport * 1:0
+            req.body.reg.Accion =="Gasto"?fixedImport:0
             let update = { $inc: { DineroActual: valorvariable } }
             let options = {new:true, session} 
              let SelecIDcuenta = req.body.reg.CuentaSelec.idCuenta
