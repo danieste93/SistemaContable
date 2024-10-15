@@ -39,11 +39,11 @@ export default class inggas extends Component {
       }
     }
     genEditMode=(n)=>{
-      if(this.props.reg.Accion == "Trans"){
-        <i className="material-icons i3D" onClick={(e)=>{
+      if(this.props.reg.Accion == "Trans"){//es necesario xq las trans no tienen categoria
+       return(<i className="material-icons i3D" onClick={(e)=>{
           e.stopPropagation(); 
          this.sendEdit(this.props.reg)
-       }} >  edit</i>
+       }} >  edit</i>)
       }else{
        
         return( this.props.reg.CatSelect.idCat != 18  && <i className="material-icons i3D" onClick={(e)=>{
@@ -266,7 +266,7 @@ subcat = dataProvider.CatSelect.subCatSelect != ""? dataProvider.CatSelect.subCa
      
 <div className= {`jwPointer contDetalleING  ${estiloreg} ${ampliado}`} key={this.props.in} onClick={()=>{
     
-
+console.log(this.props)
   this.setState({masDetalles:!this.state.masDetalles})
   if(this.state.masDetalles == true){
     this.setState({ version:"Act", filtersUsers:false})

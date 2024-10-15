@@ -531,8 +531,9 @@ jsonToCsv=(items)=> {
   return csv;
 }
 displayRegs=()=>{
+
   let registros = this.state.regsBackend
-  console.log("EN DISPLAY REGS")
+
   if(registros.length > 0){
 let  registrosenseñar = this.FilterSistem(registros)
 
@@ -626,7 +627,7 @@ headers:{
  "x-access-token": this.props.state.userReducer.update.usuario.token
 }
 }).then(res => res.json()).then(response =>{
- console.log(response)
+ 
 
  this.setState({matrizIcons: response.Icons[0].Data.concat(this.state.matrizIcons)
  })
@@ -726,7 +727,7 @@ var exists = !hash[user.UserID]
 hash[user.UserID] = true;
 return exists;
   })
-  console.log(sinRepetidos)
+ 
  optionUser = sinRepetidos.map((optiUser,i)=>(
     <option key={i} value={optiUser.UserID}>{optiUser.Username} </option>
   ))

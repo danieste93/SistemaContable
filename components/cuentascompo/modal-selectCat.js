@@ -133,7 +133,7 @@ if(cat.subCategoria.length > 0){
            <Checkbox
       name={cat.nombreCat}
  
-        onChange={this.handleChangeCatMain}
+      onChange={()=>{this.handleChangeCatMain(cat)}}
         color="secondary"
       />
          </div>
