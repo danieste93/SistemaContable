@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Animate } from "react-animate-mount";
 import CuentaSelect from "./modal-selectCount"
 import CatSelect from "./modal-selectCat"
-import InggasSearcher from './SubCompos/inggasSearcher';
+import Inggas from './SubCompos/inggasCuentas';
 import {  KeyboardDatePicker,  MuiPickersUtilsProvider } from "@material-ui/pickers";
 import moment from "moment";
 import "moment/locale/es";
@@ -10,6 +10,7 @@ import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import {connect} from 'react-redux';
 import Checkbox from '@material-ui/core/Checkbox';
+import postal from 'postal';
 import MomentUtils from '@date-io/moment';
 import { CircularProgress } from '@material-ui/core';
 import TransrenderSearcher from './SubCompos/transrenderSearcher';
@@ -41,7 +42,7 @@ import TransrenderSearcher from './SubCompos/transrenderSearcher';
       superGas:0,
       loading:false,
     }
-
+    channel1 = null;
     periodofin(){
    
      
@@ -59,8 +60,25 @@ import TransrenderSearcher from './SubCompos/transrenderSearcher';
   }
 
 componentDidMount(){
-  
+  this.channel1 = postal.channel();
+  this.channel1.subscribe('updateSearcher', (reg) => {
+
+    if(this.state.regsBackend.length > 0){
+    
+      let findIndex = this.state.regsBackend.findIndex(x=> x._id == reg.reg._id)
+      console.log(findIndex)
+      if(findIndex > -1){
+console.log()
+let toeditRegs = this.state.regsBackend.slice()
+
+toeditRegs[findIndex] = reg.reg
+
+this.setState({regsBackend:toeditRegs})
+
+      }
       
+    }
+   });
 }  
 handleChangeGeneral=(e)=>{
 
@@ -543,15 +561,7 @@ let  registrosenseñar = this.FilterSistem(registros)
 
 
     let asdx = registrosenseñar.map((reg, i)=>{
-      let elegido
-      if(reg.Accion =="Ingreso" || reg.Accion =="Gasto" ){
-        elegido = <InggasSearcher reg={reg} in={i} />
-    
-    }else if(reg.Accion =="Trans"){
-      
-      elegido = <TransrenderSearcher reg={reg} in={i} />
-    }
-
+      let   elegido = <Inggas reg={reg} in={i} cuentaActual={{_id:0}}  />
 return(elegido)
     })
    

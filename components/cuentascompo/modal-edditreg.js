@@ -82,7 +82,7 @@ class Contacto extends Component {
   refScroll = React.createRef();
   refScroll2 = React.createRef();
     componentDidMount(){
-   console.log(this.props)
+   
       this.channel1 = postal.channel();
 
       setTimeout(function(){ 
@@ -94,7 +94,7 @@ class Contacto extends Component {
   if(this.props.CuentaEdit){
 
 let send = this.props.CuentaEdit.reg
-console.log(send)
+
 
 
 
@@ -491,6 +491,9 @@ ingresador=(mival)=>{
       
         this.props.dispatch(updateReg(response.registro))
       
+        this.channel1.publish('updateSearcher', {
+          reg: response.registro
+       });
       
         this.onFlechaRetro()
       }
@@ -532,7 +535,7 @@ ingresadorTrans=(mival)=>{
    }
 
    if(this.state.cuentaSelec != "" && this.state.cuentaSelec2 != "" && this.state.Importe > 0 && this.state.Importe != ""){
-    console.log("listo para trans")
+   
     
       let datatosendTrans={
         idMongo:this.state.idMongo,
@@ -558,7 +561,7 @@ ingresadorTrans=(mival)=>{
       }
  
       let Transdata = JSON.stringify(datatosendTrans)
-      console.log(datatosendTrans)
+      
       let url = "/cuentas/edittreg"   
     fetch(url, {
     method: 'PUT', // or 'PUT'
@@ -577,7 +580,7 @@ ingresadorTrans=(mival)=>{
       this.setState({Alert: add, loading:false, waiting:false, waiting2:false, waitingtrans:false, waitingtrans2:false}) 
       } 
       else {
-      console.log(response)
+    
  
      this.props.dispatch(updateReg(response.registro)) 
      this.props.dispatch(updateCuenta(response.cuenta1))
@@ -623,7 +626,7 @@ openCategoria=()=>{
   document.getElementById('cDc2Categoria').classList.add("cdc2active2")
 }
     render () {
-      console.log(this.state)
+   
       const handleClose = (event, reason) => {
         let AleEstado = this.state.Alert
         AleEstado.Estado = false
@@ -647,7 +650,7 @@ openCategoria=()=>{
       let ingresoval = this.state.Ingreso?"bingreso":"";
       let gastoval = this.state.Gasto?"bgasto":"";
       let transval = this.state.Trans?"btrans":"";
-      console.log(this.state)
+   
       let User = this.props.state.userReducer.update.usuario
       let now = new Date()
       let año = now.getFullYear()
