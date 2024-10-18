@@ -94,7 +94,7 @@ handleChangeGeneral=(e)=>{
     }
 findRegisters=(regs)=>{
 
-let valor = this.state.searcherIn
+let valor = this.state.searcherOut
 if(valor !=""){
   if(regs.length > 0){
 
@@ -186,12 +186,14 @@ this.displayGastos()
   
 }
 micatFilter=(registros)=>{
+  console.log(this.state)
   if(this.state.Categorias.length > 0){
     let acc =[]
     let inggas = registros.filter(x => x.Accion == "Ingreso" || x.Accion =="Gasto")
+    console.log(inggas)
     for(let i=0; i<this.state.Categorias.length;i++){
- let asd = inggas.filter(x => x.CatSelect.nombreCat === this.state.Categorias[i])
-
+ let asd = inggas.filter(x => x.CatSelect._id === this.state.Categorias[i]._id)
+ console.log(asd)
  acc=acc.concat(asd); 
   }
 
@@ -433,10 +435,13 @@ FilterSistem=(regs)=>{
   let registros = regs
 
   let filtradospornombre =  this.findRegisters(registros)
-  
+ 
   let FiltradoPorCuentas = this.miFiltrocuentas(filtradospornombre)
+  //console.log(FiltradoPorCuentas)
   let FiltradoPorUsuario= this.miFiltoUsuario(FiltradoPorCuentas)
+  //console.log(FiltradoPorUsuario)
   let FiltradoPorCategoria = this.micatFilter(FiltradoPorUsuario)
+  console.log(FiltradoPorCategoria)
   let FiltradoPorSubcategoria = this.miSubcatFilter(FiltradoPorCategoria)
   
   let FiltradoPorMinimo = this.miMinimoFilter(FiltradoPorSubcategoria)
@@ -551,17 +556,18 @@ jsonToCsv=(items)=> {
 displayRegs=()=>{
 
   let registros = this.state.regsBackend
-
+  console.log("displayregs")
   if(registros.length > 0){
+    console.log("Dentro")
 let  registrosenseñar = this.FilterSistem(registros)
 
-
+console.log(registrosenseñar)
   if(registrosenseñar.length >0){
    
 
 
     let asdx = registrosenseñar.map((reg, i)=>{
-      let   elegido = <Inggas reg={reg} in={i} cuentaActual={{_id:0}}  />
+      let   elegido = <Inggas reg={reg} key={i} in={i} cuentaActual={{_id:0}}  />
 return(elegido)
     })
    

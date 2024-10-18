@@ -1,6 +1,3 @@
-
-
-
 const { DOMParser, XMLSerializer } = require('@xmldom/xmldom')
 const comprasSchema= require("../models/comprasSass")
 const pdf = require('html-pdf');
@@ -1348,11 +1345,26 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
     const options = { session};
     let tiempoActual = new Date().getTime()
     let Counterx =   await CounterModelSass.find({iDgeneral:9999999},null, {session} )
+    function calcularMeses(fechaInicio, fechaFin) {
+      // Obtener año y mes de las fechas
+      const añoInicio = fechaInicio.getFullYear();
+      const mesInicio = fechaInicio.getMonth(); // Recuerda que los meses empiezan desde 0 (enero = 0)
+      
+      const añoFin = fechaFin.getFullYear();
+      const mesFin = fechaFin.getMonth();
+  
+      // Calcular la diferencia de años y meses
+      const diferenciaAños = añoFin - añoInicio;
+      const diferenciaMeses = mesFin - mesInicio;
+  
+      // Calcular el total de meses considerando el año
+      const totalMeses = (diferenciaAños * 12) + diferenciaMeses;
+  
+      return totalMeses;
+  }
 
-
-        let tiempoRegistro = req.body.Tiempo
         let datareg= { Accion:req.body.Accion,   
-          Tiempo:tiempoRegistro,
+         
           IdRegistro:Counterx[0].ContRegs,
           Nota:req.body.Nota,
           Descripcion:req.body.Descripcion,
@@ -1402,11 +1414,14 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
       
 
           let mes = new Date(req.body.Tiempo).getMonth()
+       
           let mesActual = new Date().getMonth()
-           console.log("mes actual " + mesActual)
-           console.log( "mes "+mes)
+    
+         
+     
 
-                   let mesesExtra = (mesActual - mes) + 1
+                   let mesesExtra = calcularMeses(new Date(req.body.Tiempo), new Date()) + 1
+                   console.log("mesesExtra" + mesesExtra)
                   let fechacambio = new Date(req.body.Tiempo)
                   let  cantidadRegistros = 0 
                     if(req.body.Valrep ==="Cada Día"){      
@@ -1467,10 +1482,8 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
                         cantidadRegistros= repeticion}
                     }
                     else if(req.body.Valrep == "Cada Mes"){
-  
-                    
-                    
-                      cantidadRegistros= ( mesesExtra )
+
+                      cantidadRegistros=  mesesExtra 
 
                     }
                     else if(req.body.Valrep == "Cada Año"){
@@ -1485,7 +1498,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
            
            console.log(cantidadRegistros)
                     for(let i = 0; i < cantidadRegistros; i++){
-
+                      let nuevafechamensual = new Date(req.body.TiempoReg).setMonth(mes + i)
                       let tiempoEXE =    0
                       let ids = parseInt(Counterx[0].ContRegs) + parseInt(i)
                       let fechaset = new Date(req.body.Tiempo).getTime()  
@@ -1571,11 +1584,9 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
                       { 
                         ...datareg,
                         ...datosEspecificos,
-                      Tiempo:fechaset,
+                      Tiempo:nuevafechamensual,
                       TiempoEjecucion:tiempoEXE,
                       IdRegistro:ids,
-                    
-                        
                       Descripcion:req.body.Descripcion+"Repetición "+req.body.Valrep,
            
                   }], opts2)
