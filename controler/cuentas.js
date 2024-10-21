@@ -12,7 +12,6 @@ const counterSchema= require("../models/counterSass")
 const userModelSchema = require('../models/usersSass');
 const tipoSchemaSass = require('../models/tiposSass');
 const ArticuloSchema = require("../models/articuloSass")
-
 const ventasSchema = require("../models/ventaSass")
 const distriSchema = require('../models/ditribuidorSass');
 const jwt = require('jsonwebtoken');
@@ -28,9 +27,10 @@ const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 const moment = require('moment');
 
+
+
 async function addReg (req, res){
 
-  
   let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
       let CuentasModelSass = await conn.model('Cuenta', accountSchema);
       let RegModelSass = await conn.model('Reg', regSchema);
@@ -287,10 +287,9 @@ async function addReg (req, res){
                   let fechaeje = 0
            
                   let fechabase = new Date(req.body.Tiempo)
-                  let DiaAumento = fechabase.getDate() + 1
-                  let fechaAumentoDia = fechabase.setDate(DiaAumento)
+                
               
-                  let sethorames =new Date(fechaAumentoDia).setHours(0,5,0)
+                  let sethorames =new Date(fechabase).setHours(0,5,0)
                   
                   fechaeje = sethorames
                 
@@ -299,8 +298,7 @@ async function addReg (req, res){
                     reg: {
                       ...datareg,
                       ...datosEspecificos
-                     
-
+                    
                   },
                     fechaEjecucion: fechaeje
       
@@ -433,6 +431,11 @@ async function addReg (req, res){
                                 fechacambio.setMonth(nuevomes)   
                                 fechaset= new Date(fechacambio).getTime() 
                             
+        
+                              }else if(req.body.Valrep == "Cada Año"){
+                                let nuevoanio = fechafija.getFullYear() + i                            
+                                fechacambio.setFullYear(nuevoanio)   
+                                fechaset= new Date(fechacambio).getTime() 
         
                               }
                                                   
@@ -1344,9 +1347,12 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
     const opts2 = { session, new:true };
     const options = { session};
     let tiempoActual = new Date().getTime()
+    
     let Counterx =   await CounterModelSass.find({iDgeneral:9999999},null, {session} )
     function calcularMeses(fechaInicio, fechaFin) {
       // Obtener año y mes de las fechas
+    //  console.log(fechaInicio)
+    //  console.log(fechaFin)
       const añoInicio = fechaInicio.getFullYear();
       const mesInicio = fechaInicio.getMonth(); // Recuerda que los meses empiezan desde 0 (enero = 0)
       
@@ -1382,8 +1388,6 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
         }
 
 
-        let yearCurrent =     new Date().getFullYear()
-        let yearRegister = new Date(req.body.Tiempo).getFullYear()
         let datosEspecificos 
         if(req.body.Accion === "Ingreso" || req.body.Accion === "Gasto"){
           datosEspecificos={
@@ -1413,115 +1417,82 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
         } 
       
 
-          let mes = new Date(req.body.Tiempo).getMonth()
-       
-          let mesActual = new Date().getMonth()
-    
-         
-     
-
                    let mesesExtra = calcularMeses(new Date(req.body.Tiempo), new Date()) + 1
                    console.log("mesesExtra" + mesesExtra)
+                   console.log("tiempoServer "+new Date())
                   let fechacambio = new Date(req.body.Tiempo)
                   let  cantidadRegistros = 0 
                     if(req.body.Valrep ==="Cada Día"){      
-             
-                          if(mes < mesActual){
-                            let fechaconver = new Date(req.body.Tiempo)
-                   
-                            for(let x=0;x<mesesExtra;x++){                    
-                                            
-                              if(x > 0){
+                      let fechaconver = new Date(req.body.Tiempo)
+                      
                             
-                                let fechapormodi = fechaconver.setMonth(fechaconver.getMonth() + x )
-                                let fechamodi = new Date(fechapormodi).setDate(1)
+                
+                            for(let x=0;x<mesesExtra;x++){    }                
+                                            
+
+                                let fechapormodi = fechaconver.setMonth(fechaconver.getMonth()  )
+                                let fechamodi = new Date(fechapormodi).setDate(fechaconver.getDate())
                           
-                          let dateFechamodi = new Date(fechamodi)
+                                let dateFechamodi = new Date(fechamodi)
                                 var ultimoDia = new Date(dateFechamodi.getFullYear(), dateFechamodi.getMonth() + 1, 0)
                                 let diaActual = dateFechamodi.getDate() 
                                 let Diasestemes = ultimoDia.getDate()  - diaActual
                              
                                 cantidadRegistros += Diasestemes+1
-                              }else{
-                                var ultimoDia = new Date(fechaconver.getFullYear(), fechaconver.getMonth() + 1, 0)
-                                let diaActual = fechaconver.getDate() 
-      
-                                let Diasestemes = ultimoDia.getDate() - diaActual
                              
-                                cantidadRegistros += Diasestemes+1
-                            
-      
-                              }
                               
-                            }
-                          }else{
-                    
-                            var ultimoDia = new Date(fechacambio.getFullYear(), fechacambio.getMonth() + 1, 0)
-                            let cantidadDias = ultimoDia.getDate() - fechacambio.getDate()
-                            let cantidadDiasFor = cantidadDias + 1
-                                cantidadRegistros = cantidadDiasFor
-                          }
+                            
+                          
 
                    
                     }
                     else if(req.body.Valrep == "Cada Semana"){
-                      if(mes < mesActual){
-                        throw Error("Sin soporte");
-                      }
-                      else{
+
+                      for(let x=0;x<mesesExtra;x++){ }  
+                   
                         let fechafind = new Date(req.body.Tiempo)
-                        var year=fechafind.getFullYear();
-                        var mesdeSem= fechafind.getMonth() + 1;
-                        var dia= fechafind.getDate()
+                        let fechaDinamica = new Date(fechafind.setMonth(fechafind.getMonth()))
+                        
+                        var year=fechaDinamica.getFullYear();
+                        var mesdeSem= fechaDinamica.getMonth() + 1 ;
+                        var dia= fechaDinamica.getDate()
                         var cantidadDias = new Date(year, mesdeSem, 0).getDate()
  
                         var diasrestantes = (cantidadDias- dia) + 1
                     
                         var repeticion = Math.ceil(diasrestantes/7)
   
-                        cantidadRegistros= repeticion}
-                    }
+                        cantidadRegistros+= repeticion
+                    
+                  }
                     else if(req.body.Valrep == "Cada Mes"){
 
                       cantidadRegistros=  mesesExtra 
 
                     }
                     else if(req.body.Valrep == "Cada Año"){
-                      if(yearRegister < yearCurrent){
-                        throw Error("Sin soporte");
-                      }else{
+                 
                       cantidadRegistros= 1
-                      }
+                      
                     }
               
            let allCreatedRegs=[]
            
            console.log(cantidadRegistros)
+                      let cuenta1 =""
+                      let cuenta2=""
                     for(let i = 0; i < cantidadRegistros; i++){
-                      let nuevafechamensual = new Date(req.body.TiempoReg).setMonth(mes + i)
+
                       let tiempoEXE =    0
                       let ids = parseInt(Counterx[0].ContRegs) + parseInt(i)
-                      let fechaset = new Date(req.body.Tiempo).getTime()  
-                  
-                      if(i >0){
+               
                         const  fechafija = new Date(req.body.Tiempo)
                         if(req.body.Valrep ==="Cada Día"){  
                      
-                          let nuevodia = fechafija.getDate() + i  
-                       
-                          if(mes <= mesActual){
-                        
-                            let getval =   new Date(req.body.Tiempo).setDate(nuevodia)   
-                              fechaset= new Date(getval).getTime()   
-                           
-                          }else{
-                        
-                            fechafija.setDate(nuevodia)   
-                            fechaset= new Date(fechacambio).getTime() 
-                          }
-
-                       
-                                                  
+                          let nuevodia = fechafija.getDate() + i   
+                               
+                            fechaset= fechafija.setDate(nuevodia) 
+                          
                       }
                       else if(req.body.Valrep == "Cada Semana"){
                         let nuevodiasem = fechafija.getDate() + (7*i)  
@@ -1529,20 +1500,23 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
                         fechaset= new Date(fechacambio).getTime() 
 
                       } else if(req.body.Valrep == "Cada Mes"){
-                     
-                
-                        let nuevomes = fechafija.getMonth() + i                            
-                        fechacambio.setMonth(nuevomes)   
-                        fechaset= new Date(fechacambio).getTime() 
+                                 
+                        let nuevomes = fechafija.getMonth() + i  
+                        let diaReg = new Date(req.body.TiempoReg).getDate()                          
+                        console.log(diaReg)
+                        fechaset= new Date(fechacambio.setMonth(nuevomes)).setDate(diaReg)   
+                         
                     
+                      } else if(req.body.Valrep == "Cada Año"){
+                        let nuevoanio = fechafija.getFullYear() + i                            
+                        fechacambio.setFullYear(nuevoanio)   
+                        fechaset= new Date(fechacambio).getTime() 
 
                       }
                                           
-
-                      }
-                      let cuentaUpdate = ""
-                      let cuenta1 =""
-                      let cuenta2=""
+                      
+                     
+                    
                       if(fechaset <= tiempoActual ){
                    
                     let update =""
@@ -1556,13 +1530,9 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
                      
                     }
                     else if(req.body.Accion === "Gasto"){
-                  
-                  
                    update = { $inc: { DineroActual: valornegativo } }
                     }   
 
-                    
-                  
                     else if(req.body.Accion === "Trans"){
                        update = { $inc: { DineroActual: valornegativo } }
                       let update2 = { $inc: { DineroActual: fixedImport } }
@@ -1579,12 +1549,14 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
                       throw new Error("Cuentas no Encontradas en trans repeticion, Contacte a soporte")
                     } 
                     
-                  }
+                       }
+
+       
                     const resultreg = await  RegModelSass.create([
                       { 
                         ...datareg,
                         ...datosEspecificos,
-                      Tiempo:nuevafechamensual,
+                      Tiempo:fechaset,
                       TiempoEjecucion:tiempoEXE,
                       IdRegistro:ids,
                       Descripcion:req.body.Descripcion+"Repetición "+req.body.Valrep,
@@ -1596,11 +1568,12 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
                     if(i === (cantidadRegistros-1)){
                   
                       let fechaeje = 0
-                      let fechaRep = new Date(req.body.Tiempo)
+                      let fechaRep = new Date()
                     
                       if(req.body.Valrep == "Cada Semana" ){
+                        
                         let ultimafecha =new Date(fechaset)
-      
+
                         let setdia = ultimafecha.setDate(ultimafecha.getDate() + 7)
                   
                         let sethora =new Date(setdia).setHours(0,5,0)
@@ -1611,7 +1584,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
                         let setdia = new Date(setmes).setDate(1)
                         let sethora =new Date(setdia).setHours(0,5,0)
                         fechaeje = sethora
-                      }        else if(  req.body.Valrep ==="Cada Día" ){
+                      }else if(  req.body.Valrep ==="Cada Día" ){
    
                         let setmes = fechaRep.setMonth(fechaRep.getMonth() + 1)
                         let sethora =new Date(setmes).setHours(0,5,0)

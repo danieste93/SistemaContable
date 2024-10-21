@@ -439,7 +439,7 @@ downloadCuentaRegs = ()=> {
     }).then(res => res.json())
     .catch(error => {console.error('Error:', error);
     })  .then(response => {  
-    console.log(response,"getmontregs")
+
     if(response.status == 'error'){
     alert("error al actualizar registros")
    
@@ -1263,8 +1263,7 @@ if(this.props.regC.Regs.length > 0 && this.state.cuentaSelect != ""){
 
       let balancePeriod = parseFloat(this.generadorBalanceGeneral(getPeriodRegs))
       let balanceMesSistema= parseFloat(this.generadorBalanceGeneral(DetallesPorrender))
-   console.log(balancePeriod)
-   console.log(balanceMesSistema)
+ 
       
       let saldoGenerado = ((valorActualCuenta - balancePeriod) + balanceMesSistema).toFixed(2)
       

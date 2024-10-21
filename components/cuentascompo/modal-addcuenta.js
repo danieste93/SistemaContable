@@ -563,7 +563,7 @@ const Alert=(props)=> {
               </Animate>
      
            <div className="jwContCenter">
-  <button  onClick={this.comprobador} id="botonadd"  className="botoncontact ">Agregar</button>
+  <button  onClick={this.comprobador} id="botonadd"  className="botoncontact jwPointer ">Agregar</button>
 </div>
 </div>
         </div>

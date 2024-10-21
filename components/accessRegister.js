@@ -30,7 +30,8 @@ class RegistroContable extends Component {
         modaldelete:false,
         DeleteReg:{},
         cuentaToAdd:{},
-        idReg:0
+        idReg:0,
+        loadingReps:false,
 
     }
     channel1 = null;
@@ -51,7 +52,7 @@ setTimeout(()=>{
 
   if(this.props.state.RegContableReducer.Reps && this.props.state.configRedu.loading == false ){
 
-    this.exeReps()
+   // this.exeReps()
   }
   
 },5000)
@@ -88,9 +89,6 @@ this.startData()
         }//findid
 
 
-     
-     
-      
 
         getMaindata=()=>{
           console.log("ejecutando Get Main DATA")
@@ -226,83 +224,99 @@ this.startData()
           
         }
 
-        exeReps=()=>{
-          console.log("exereps")
-          
-   
-          let repsExecutadas= this.props.state.RegContableReducer.Reps
-          if(repsExecutadas){
-       
-        console.log(repsExecutadas)
-          if(repsExecutadas.length > 0){
+        exeReps = () => {
+          console.log("exereps");
+        
+          let repsExecutadas = this.props.state.RegContableReducer.Reps;
+          if (repsExecutadas && repsExecutadas.length > 0) {
             const limit = repsExecutadas.length;
-           console.log('START!');
-            let fechaactual = new Date().getTime()  
+            console.log('START!');
             let i = 0;
-  
-            let limitedInterval = setInterval(() => {
-            console.log("comprobando" + i)
-              if(fechaactual >=  repsExecutadas[i].fechaEjecucion ){    
-                let data = {...repsExecutadas[i].reg }  
-                console.log("ejecutando" + i)
-                data.iDReg = this.props.state.RegContableReducer.Contador.ContRegs              
-                data.Repid = repsExecutadas[i]._id
-                data.Usuario = {
-                  DBname:this.props.state.userReducer.update.usuario.user.DBname,
-                  Usuario:this.props.state.userReducer.update.usuario.user.Usuario,
-                 _id:this.props.state.userReducer.update.usuario.user._id,
-                 Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
+        
+            const executeReps = async () => {
+              if (i < limit) {
+                let fechaactual = new Date().getTime();
+                console.log("comprobando " + i);
+                console.log(new Date(repsExecutadas[i].fechaEjecucion));
+                if (fechaactual >= repsExecutadas[i].fechaEjecucion) {
+                  if (!this.state.loadingReps) {
+                    this.setState({ loadingReps: true });
+                    let data = { ...repsExecutadas[i].reg };
+                    console.log("ejecutando " + i);
+              
+                    data.Repid = repsExecutadas[i]._id;
+                    data.Usuario = {
+                      DBname: this.props.state.userReducer.update.usuario.user.DBname,
+                      Usuario: this.props.state.userReducer.update.usuario.user.Usuario,
+                      _id: this.props.state.userReducer.update.usuario.user._id,
+                      Tipo: this.props.state.userReducer.update.usuario.user.Tipo,
+                    };
+                    data.Tiempo = repsExecutadas[i].fechaEjecucion;
+                    data.TiempoReg = repsExecutadas[i].reg.Tiempo;
+        
+                    let lol = JSON.stringify(data);
+        
+                    try {
+                      let res = await fetch("/cuentas/addrepeticiones", {
+                        method: 'PUT',
+                        body: lol,
+                        headers: {
+                          'Content-Type': 'application/json',
+                          "x-access-token": this.props.state.userReducer.update.usuario.token
+                        }
+                      });
+                      let responsex2 = await res.json();
+                      console.log(responsex2);
+        
+                      if (responsex2.message === "error al registrar") {
+                        alert("Error al Generar Repeticion");
+                      } else if (responsex2.message === "Transferencia genereda") {
+                        let micuenta2 = responsex2.cuenta2;
+                        this.props.dispatch(updateCuenta(micuenta2));
+                      }
+        
+                      let micuenta1 = responsex2.cuenta1;
+                      let micont = responsex2.contador;
+                      let repe = responsex2.repUpdate;
+        
+                      this.props.dispatch(updateCuenta(micuenta1));
+                      this.props.dispatch(updateCounter(micont));
+                      this.props.dispatch(updateRepsAddreps(repe));
+                      this.props.dispatch(addRegs(responsex2.registrosGenerados));
+                    } catch (error) {
+                      console.error("Error during fetch:", error);
+                    } finally {
+                      this.setState({ loadingReps: false });
+                      i++;
+                      console.log(`message ${i}, appeared after ${i} seconds`);
+        
+                      if (i < limit) {
+                        // Volvemos a llamar a la función con un timeout para esperar
+                        setTimeout(executeReps, 1000);
+                      } else {
+                        this.props.dispatch(loadingReps());
+                        console.log('Execution complete');
+                      }
+                    }
+                  }
+                }else {
+                  // Si la condición no se cumple, simplemente incrementa `i` y pasa a la siguiente repetición
+                  i++;
+                  console.log(`Fecha no cumplida, saltando a la siguiente repetición: ${i}`);
+                  if (i < limit) {
+                    setTimeout(executeReps, 1000);  // Llama de nuevo para continuar con la siguiente
+                  } else {
+                    this.props.dispatch(loadingReps());
+                    console.log('Execution complete');
+                  }
                 }
-                data.Tiempo = repsExecutadas[i].fechaEjecucion
-                data.TiempoReg = repsExecutadas[i].reg.Tiempo
-                let lol = JSON.stringify(data)
-               
-  
-                fetch("/cuentas/addrepeticiones", {
-                  method: 'PUT', // or 'PUT'
-                  body: lol, // data can be `string` or {object}!
-                  headers:{
-                  'Content-Type': 'application/json',
-                  "x-access-token": this.props.state.userReducer.update.usuario.token
-  
-                  }
-                }).then(res => res.json()).then(responsex2 =>{
-                  console.log(responsex2)
-                  if(responsex2.message=="error al registrar"){
-                    alert("Error al Generar Repeticion")
-                  }
-                  else{
-                  if(responsex2.message=="Transferencia genereda")
-                  {
-                    let micuenta2 = responsex2.cuenta2                            
-                    this.props.dispatch(updateCuenta(micuenta2))
-                  }
-                  let micuenta1 = responsex2.cuenta1
-                  let micont = responsex2.contador
-                  let repe = responsex2.repUpdate
-                  this.props.dispatch(updateCuenta(micuenta1))
-                  this.props.dispatch(updateCounter(micont))
-                  this.props.dispatch(updateRepsAddreps(repe))
-                  this.props.dispatch(addRegs(responsex2.registrosGenerados));
-               
-                     }
-                })
-  
+              
               }
-  
-             console.log(`message ${i}, appeared after ${i++} seconds`)   
-  
-  
-              if (i == limit) {
-                this.props.dispatch(loadingReps())
-               console.log('interval cleared!');           
-                clearInterval(limitedInterval);          
-              }
-  
-            }, 1000)//fin intervalo 
-  
+            };
+        
+            // Inicia la ejecución
+            executeReps();
           }
-        }
         }
 
   
