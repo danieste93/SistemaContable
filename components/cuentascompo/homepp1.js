@@ -15,8 +15,8 @@ import { install } from "resize-observer";
  class Stats extends Component {
     state={
    
-      Cuentas:true,
-      Categorias:false,
+      Cuentas:false,
+      Categorias:true,
       Pie:true, 
       Line:false,
       Pieview:false,
@@ -586,7 +586,7 @@ if(this.state.diario){
      if(this.state.Cuentas){
       sumaTotal = sumaTotaling -sumaTotalgas
      }else if(this.state.Categorias){
-      sumaTotal = sumaTotaling +sumaTotalgas
+      sumaTotal = sumaTotaling -sumaTotalgas
      }
     
 
@@ -931,12 +931,9 @@ if(this.state.Categorias){
       }
 
 
-        
-
-
 
         if(datoTouP.length >0){
-            stats = datoTouP.map((item, i)=>{
+            stats = datoTouP.sort((a, b) => b.Cantidad - a.Cantidad).map((item, i)=>{
           
                 let bcolor = item.Color
                 return(<div className="contstat" key={i} onClick={()=>{this.setState({CategoriaElegida:item,allData:false, catdetail:true});console.log("sii aqui")}}>
@@ -1297,7 +1294,7 @@ index: 1,
                 .contpercent{
                     display: flex;
                     width: 60%;
-                    justify-content: space-between;
+                   
                     max-width: 250px;  
                     
                 }
@@ -1387,20 +1384,24 @@ index: 1,
                     max-width: 500px
                 }
                    .percent{
-                    display: flex;
-                    align-items: center;
-                    border: 1px solid black;
-                    border-radius: 19px;
-                    font-weight: bold;
-                    padding: 5px;
-                    justify-content: center;
-                    width: 40%;
-                    margin-left: 15px;
-                    margin-right: 15px;
+                  display: flex;
+                  align-items: center;
+                  border: 1px solid black;
+                  border-radius: 19px;
+                  font-weight: bold;
+                  padding: 5px;
+                  justify-content: center;
+                  width: 30%;
+                  max-width: 65px;
+                  margin-left: 15px;
                    }
+                  .npercent{
+                   margin-left: 25px;
+                  }
                    .minigen{
                     text-align: center;
                  }
+                    
                  .minifilterCont{
                   display: flex;
                   width: 45%;

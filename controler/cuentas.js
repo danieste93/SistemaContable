@@ -1228,7 +1228,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
     }
   
     async function editRep(req,res){
-  
+  console.log(req.body)
       let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
       let RepModelSass = await conn.model('Repeticion', repeticionSchema);
   
@@ -1240,13 +1240,13 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
             Accion:req.body.Accion,   
             Tiempo:req.body.Tiempo,
          
-            CuentaSelec:{idCuenta:req.body.CuentaSelect._id,
-              nombreCuenta: req.body.CuentaSelect.NombreC,
+            CuentaSelec:{idCuenta:req.body.CuentaSelect.idCuenta,
+              nombreCuenta: req.body.CuentaSelect.nombreCuenta,
            },
            CatSelect:{idCat:req.body.CatSelect.idCat,
             urlIcono:req.body.CatSelect.urlIcono,
               nombreCat:req.body.CatSelect.nombreCat,
-            subCatSelect:req.body.SubCatSelect,
+            subCatSelect:req.body.CatSelect.subCatSelect,
           _id:req.body.CatSelect._id
           },
                    
@@ -1278,13 +1278,13 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
             Accion:req.body.Accion,   
             Tiempo:req.body.Tiempo,
     
-            CuentaSelec:{idCuenta:req.body.CuentaSelect1._id,
-              nombreCuenta: req.body.CuentaSelect1.NombreC,
+            CuentaSelec:{idCuenta:req.body.CuentaSelect1.idCuenta,
+              nombreCuenta: req.body.CuentaSelect1.nombreCuenta,
               },
     
       
-            CuentaSelec2:{idCuenta:req.body.CuentaSelect2._id,
-                        nombreCuenta: req.body.CuentaSelect2.NombreC,
+            CuentaSelec2:{idCuenta:req.body.CuentaSelect2.idCuenta,
+                        nombreCuenta: req.body.CuentaSelect2.nombreCuenta,
                       },
                    
             Nota:req.body.Nota,

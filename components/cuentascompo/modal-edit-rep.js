@@ -136,7 +136,7 @@ console.log(send)
       this.setState({Trans:true,
         Accion:"Trans",
         cuentaSelect:send.CuentaSelec,
-        cuentaSelec2:send.CuentaSelec2,
+        cuentaSelect2:send.CuentaSelec2,
         CuentaRenderT2:send.CuentaSelec2.nombreCuenta,
         CuentaRenderT1:send.CuentaSelec.nombreCuenta,
           
@@ -424,7 +424,7 @@ ingresador=(mival)=>{
      Id:this.props.id
       }
            
-  
+      console.log(datatosend)
       let lol = JSON.stringify(datatosend)
                 
       let url = "/cuentas/edittrep"   
@@ -462,7 +462,7 @@ ingresadorTrans=(mival)=>{
   if(this.state.cuentaSelect== ""){
     this.setState({trans1err:true, waitingtrans:false})
   }
-  if(this.state.cuentaSelec2 == ""){
+  if(this.state.cuentaSelect2 == ""){
     this.setState({trans2err:true,waitingtrans:false})
   }
   if(this.state.Importe == "" ||this.state.Importe <= 0){
@@ -471,7 +471,7 @@ ingresadorTrans=(mival)=>{
    
    }
 
-   if(this.state.cuentaSelect != "" && this.state.cuentaSelec2 != "" && this.state.Importe > 0 && this.state.Importe != ""){
+   if(this.state.cuentaSelect != "" && this.state.cuentaSelect2 != "" && this.state.Importe > 0 && this.state.Importe != ""){
  
    
 
@@ -480,8 +480,8 @@ ingresadorTrans=(mival)=>{
         Accion:this.state.Accion,
         Tiempo:this.state.tiempo.getTime(),
         iDReg:this.state.idReg,
-        CuentaSelect1:this.state.cuentaSelectT1,
-        CuentaSelect2:this.state.cuentaSelectT2,
+        CuentaSelect1:this.state.cuentaSelect,
+        CuentaSelect2:this.state.cuentaSelect2,
         Importe:parseFloat(this.state.Importe),
         ImporteAntes:parseFloat( this.state.ImporteAntes),
         Nota:this.state.Nota,
@@ -498,8 +498,8 @@ ingresadorTrans=(mival)=>{
       },
       Id:this.props.id
       }
-           
-    
+      console.log(this.state)       
+    console.log(datatosend)
       let lol = JSON.stringify(datatosend)
      
       let url = "/cuentas/edittrep"   

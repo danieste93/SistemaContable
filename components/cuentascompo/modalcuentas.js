@@ -91,7 +91,10 @@ channel1 = null;
     let lapizctive= this.state.editmode?"lapizctive":""
       if(this.props.regC.Cuentas.length > 0){
        
-let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario" && x._id != this.props.cuentaEnviada._id)
+let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario" 
+  
+ // && x._id != this.props.cuentaEnviada._id
+)
 
       generadorDeCuentas = this.filtroCuentas(cuentasFiltradas).map((cuenta,i)=>{
         if(cuenta.Visibility){

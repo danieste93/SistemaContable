@@ -142,8 +142,8 @@ console.log(this.props)
             
              let generadorRegistros = registrosInvetidos.map((detail,i)=>{
 
-                let   elegido = <Inggas reg={detail} in={i} cuentaActual={this.props.cuentaSelect} saldoActive={false} />
-                                  
+
+                let   elegido = <Inggas reg={detail} in={i} cuentaActual={this.props.cuentaSelect} saldoActive={this.props.datosGene.saldoActive} />               
    
                   return(elegido)
     })

@@ -52,7 +52,7 @@ setTimeout(()=>{
 
   if(this.props.state.RegContableReducer.Reps && this.props.state.configRedu.loading == false ){
 
-   // this.exeReps()
+    this.exeReps()
   }
   
 },5000)
