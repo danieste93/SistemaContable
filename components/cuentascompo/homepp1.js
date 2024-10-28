@@ -36,7 +36,8 @@ import { install } from "resize-observer";
         tiempoperiodoini: this.periodoini(),
         tiempoperiodofin: this.periodofin(),
         ingCatRender:{},
-        bundleSubCat:"Todo"
+        bundleSubCat:"Todo",
+        excluidos:[]
 
     }
     periodofin(){
@@ -218,10 +219,22 @@ import { install } from "resize-observer";
            return order
           } 
     render() {
+      console.log(this.state)
       const defaultLegendClickHandler = Chart.defaults.plugins.legend.onClick;
       const pieDoughnutLegendClickHandler =  Chart.overrides.pie.plugins.legend.onClick
    
-
+      let toggleObjeto =(array, objeto)=> {
+        const index = array.findIndex(item => item.CategoriaN === objeto.CategoriaN);
+      
+        if (index !== -1) {
+          // Si el objeto existe, lo eliminamos
+          array.splice(index, 1);
+        } else {
+          // Si no existe, lo agregamos
+          array.push(objeto);
+        }
+        return array
+      }
       let getRandomInt =(max)=> {
         return Math.floor(Math.random() * max);
       }
@@ -263,7 +276,7 @@ let linedata = {labels: [],
         
 //modulo sub cats
 let balance = superIng +superGas
-console.log(this.state)
+
 for(let i = 0;i<this.state.CategoriaElegida.RegistrosF.length;i++){
 
 
@@ -469,9 +482,19 @@ if(this.state.diario){
     DetallesPorrender = this.PeriodoFilter(displayRegs)
   }
 
-    DetallesIng = DetallesPorrender.filter(x => x.Accion=="Ingreso"  ) 
+  if(this.state.Categorias){
 
-    console.log(DetallesIng)
+     DetallesIng  = DetallesPorrender.filter(obj2 => 
+      !this.state.excluidos.some(obj1 => obj1.CategoriaN === obj2.CatSelect.nombreCat) &&
+      obj2.Accion=="Ingreso"  
+    );
+
+  }
+
+   console.log(DetallesIng)
+
+    
+  
     DetallesGas = DetallesPorrender.filter(x => x.Accion=="Gasto"  ) 
  
     
@@ -510,7 +533,7 @@ if(this.state.diario){
     });
 
     if(DetallesIng.length > 0){
-      console.log(DetallesIng)
+   
       for(let z=0;z<DetallesIng.length ;z++){
     
         let cat = DetallesIng[z].CatSelect
@@ -548,7 +571,7 @@ if(this.state.diario){
         cuentasGasRegistros.push(cuenta)
       }
     }
-   console.log(categoriasGasRegistros)
+   
 
     let CategoriasGasSR= categoriasGasRegistros.filter((value, index, self) => {
           return(            
@@ -583,11 +606,9 @@ if(this.state.diario){
       sumaTotalgas = sumaTotalgas + DetallesGas[x].Importe
     }
    
-     if(this.state.Cuentas){
+
       sumaTotal = sumaTotaling -sumaTotalgas
-     }else if(this.state.Categorias){
-      sumaTotal = sumaTotaling -sumaTotalgas
-     }
+     
     
 
     let Colores = [
@@ -659,6 +680,11 @@ if(this.state.diario){
    }
 
 
+let filteredCats = gruposCats.filter(obj2 => 
+  !this.state.excluidos.some(obj1 => obj1.CategoriaN === obj2.nombreCat)
+);
+
+
    if(this.state.Ingreso && CuentasIngSR.length > 0  && this.state.Cuentas  ){
     gruposCuentas= CuentasIngSR
    }else if(this.state.Gasto && CuentasGasSR.length > 0  && this.state.Cuentas ){
@@ -682,14 +708,14 @@ if(this.state.diario){
         let dataSetGen = []
    
 if(this.state.Categorias){
-        for(let i = 0; i < gruposCats.length; i++){
+        for(let i = 0; i < filteredCats.length; i++){
 
           if(this.state.Ingreso){
-            regsCat = DetallesIng.filter(x=> x.CatSelect.nombreCat == gruposCats[i].nombreCat)
+            regsCat = DetallesIng.filter(x=> x.CatSelect.nombreCat == filteredCats[i].nombreCat)
           }else if(this.state.Gasto){
-            regsCat = DetallesGas.filter(x=> x.CatSelect.nombreCat == gruposCats[i].nombreCat)
+            regsCat = DetallesGas.filter(x=> x.CatSelect.nombreCat == filteredCats[i].nombreCat)
           }else if(this.state.TotalData){
-            regsCat = DetallesPorrender.filter(x=> x.CatSelect.nombreCat == gruposCats[i].nombreCat)
+            regsCat = DetallesPorrender.filter(x=> x.CatSelect.nombreCat == filteredCats[i].nombreCat)
           }
 
         
@@ -698,14 +724,13 @@ if(this.state.Categorias){
             if(regsCat.length > 0){
               let ValsLine = []
               let dataConf =""
-                titulos.push(gruposCats[i].nombreCat)
+                titulos.push(filteredCats[i].nombreCat)
                 coloresUsados.push(Colores[i])
                 let sumaRegistros = 0
                 for (let i=0; i < regsCat.length; i++ ){
                
                   sumaRegistros += regsCat[i].Importe
-                
-              
+
                          }
 
               
@@ -758,10 +783,10 @@ if(this.state.Categorias){
             
             
               
-              let newarr = {CategoriaN:gruposCats[i].nombreCat, Cantidad:sumaRegistros, Color:Colores[i],Porcentaje:percent.toFixed(2), RegistrosF:regsCat}
+              let newarr = {CategoriaN:filteredCats[i].nombreCat, Cantidad:sumaRegistros, Color:Colores[i],Porcentaje:percent.toFixed(2), RegistrosF:regsCat}
               vals.push(sumaRegistros)
               datoTouP.push(newarr)
-              dataConf=  {label: gruposCats[i].nombreCat,
+              dataConf=  {label: filteredCats[i].nombreCat,
                 data: ValsLine,
                 backgroundColor: Colores[i],
                 borderColor: Colores[i],
@@ -936,9 +961,22 @@ if(this.state.Categorias){
             stats = datoTouP.sort((a, b) => b.Cantidad - a.Cantidad).map((item, i)=>{
           
                 let bcolor = item.Color
-                return(<div className="contstat" key={i} onClick={()=>{this.setState({CategoriaElegida:item,allData:false, catdetail:true});console.log("sii aqui")}}>
+                return(<div className="contstat" key={i} onClick={(e)=>{
+                  
+                  e.stopPropagation();
+                  this.setState({CategoriaElegida:item,allData:false, catdetail:true})}}>
                     <div className="contpercent" >
-                        <div className="percent" style={{background:bcolor}}>{item.Porcentaje}%</div>
+                        <div className="percent"
+                         onClick={(e)=>{
+                          e.stopPropagation();
+                        
+                          let filterCats= toggleObjeto(this.state.excluidos, item)
+                  
+                          this.setState({excluidos:filterCats})
+                        
+                      }}
+                        
+                        style={{background:bcolor}}>{item.Porcentaje}%</div>
                         <div className="npercent">{item.CategoriaN}</div>
         
                     </div>
