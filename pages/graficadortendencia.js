@@ -8,7 +8,7 @@ import {Chart} from"chart.js"
 import 'chart.js/auto';
 import Head from 'next/head';
 import { io } from "socket.io-client";
-import TrendBox from './trendBox';
+//import TrendBox from './trendBox';
 
 class purdata extends Component {
 
@@ -727,7 +727,7 @@ let PendienteRenderEdit = pendienteEditConUmbral > 0?  'Alcista' :
           return(
             <div className='mainGrafic' style={{marginTop:"15vh"}}>
              <p>Bienvenidos</p>
-            <TrendBox data={this.state.inidata}/>
+   
             <div className='contindexes'>
             <p> Operando con </p>
             <div className='contInput'>
