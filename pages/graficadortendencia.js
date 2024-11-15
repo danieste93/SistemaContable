@@ -8,7 +8,7 @@ import {Chart} from"chart.js"
 import 'chart.js/auto';
 import Head from 'next/head';
 import { io } from "socket.io-client";
-//import TrendBox from './trendBox';
+import TrendBox from './trendBox';
 
 class purdata extends Component {
 
@@ -18,7 +18,7 @@ state={
   indicesOperativos:50,
   iniciales:[],
   newIndex:[],
-
+  identicalData:[],
   inidata:[],
   superdata:{
     labels:[],
@@ -340,16 +340,16 @@ this.setState({ARIMA:fixedArg})
      // world
   });
   socket.on("finaldata", (arg) => {
-    console.log(arg)
+    
   let igualarray = arg.reverse()
-  console.log(igualarray)
+ 
  // let sliceIndex= igualarray.slice(-(this.state.indicesOperativos))
  
 let indicesTranformados =this.TranformIndex(igualarray, 0,"blue")
 
 //let modifiedArg = igualarray.map(x=> x>10?10:x)
-let indicesIniciales =this.setterData(arg, indicesTranformados)
-
+let indicesIniciales =this.setterData(igualarray.slice(-this.state.indicesOperativos), indicesTranformados)
+//let indicesIniciales =this.setterData(igualarray, indicesTranformados)
 
 let rsiData = this.calculateRSI(indicesIniciales.datasets[0].data, 14);
 let rsiData2 = this.calculateRSI(igualarray, 14);
@@ -357,6 +357,8 @@ let newArrRSI = this.setterRSI(rsiData)
 let newArrRSI2 = this.setterRSI(rsiData2)
 
 this.setState({
+
+           
                 inidata:igualarray,
               
                superdata:indicesIniciales,
@@ -368,6 +370,7 @@ this.setState({
 
     
   });
+
   socket.on("newindex", (arg) => {
     this.setState({loadingData:true})
     let igualarg = arg
@@ -387,9 +390,6 @@ this.setState({
   superColor.push(this.getColor(igualarg))
 
 
-
-
-    
 
   let newEstate = {
     labels: Array.from({ length: superData.length +3 }, (v, k) => k + 1), 
@@ -417,19 +417,21 @@ this.setState({
 
 
   let rsiData = this.calculateRSI(superData, 14);
-  let rsiData2 = this.calculateRSI( tempVar, 14);
+
 
   let newArrRSI = this.setterRSI(rsiData)
-  let newArrRSI2 = this.setterRSI(rsiData2)
-  
+ 
     this.setState({
       inidata:tempVar,
      superdata:newEstate,
      superRSIdata:newArrRSI,
-     superRSIdata2:newArrRSI2,
+  
     loadingData:false
 })
   });
+  
+
+
 
     }
     calculateRSI =(data, period = 14) =>{
@@ -611,7 +613,7 @@ getLineStyle=(value, levels)=> {
             max: this.state.superdata.datasets[0].data.length + 5, // Ajusta el máximo para hacer espacio arriba si lo deseas
             ticks: {
               font: {
-                  size: 12, // Tamaño de fuente constante para prueba
+                  size: 8, // Tamaño de fuente constante para prueba
               },
               color: 'black', // Cambia a un color visible para verificar
           }
@@ -727,7 +729,7 @@ let PendienteRenderEdit = pendienteEditConUmbral > 0?  'Alcista' :
           return(
             <div className='mainGrafic' style={{marginTop:"15vh"}}>
              <p>Bienvenidos</p>
-   
+            <TrendBox data={this.state.inidata}/>
             <div className='contindexes'>
             <p> Operando con </p>
             <div className='contInput'>
@@ -752,10 +754,10 @@ let PendienteRenderEdit = pendienteEditConUmbral > 0?  'Alcista' :
             </div>
             
              <div className='contLineas'>
-             <div style={{ height: '300px', width: '100%' }}>
+             <div style={{ height: '350px', width: '100%' }}>
              <Line data={this.state.superdata} 
               plugins = {[yellowLinePlugin]}
-             height={300} 
+             
 options = {LineOptions}
  />
  </div>

@@ -11,14 +11,13 @@ import ModalDeleteVentas from './modal-delete-ventas';
 import {updateVenta,getVentas} from "../../reduxstore/actions/regcont"
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ViewVenta from "../modal-viewventas"
-import ReactToPrint from "react-to-print";
-import Button from '@material-ui/core/Button';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
+
 import ViewCreds from "../modal-viewCreds"
 import "./mediaprint.css"
+import DropdownButtonVentas from './usefull/dropdownbuttonVentas';
 import DoubleScrollbar from "react-double-scrollbar";
 import Estadisticas from './modal-estadisticasArticulos';
+
 class Listvent extends Component {
   state={
     chartModal:false,
@@ -865,7 +864,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
   
       if(this.props.state.RegContableReducer.Ventas){
        filtrados = this.FilterSistem(this.props.state.RegContableReducer.Ventas)
-        console.log(filtrados)
+    
         if(filtrados){
         listComp =filtrados.map((comp, i)=>{
       
@@ -898,6 +897,8 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
     const handleClose = () => {
       this.setState({anchorEl:null});
     };
+
+
         return ( 
 
        
@@ -913,22 +914,19 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
                 
             <p> Listado Ventas</p>
             <div>
-            <Button aria-controls="simple-menu" aria-haspopup="true" onClick={handleClick}>
-        Reportes
-      </Button>
-      <Menu
-        id="simple-menu"
-        anchorEl={this.state.anchorEl}
-        keepMounted
-        open={Boolean(this.state.anchorEl)}
-        onClose={handleClose}
-      >
-        <MenuItem onClick={handleClose}>   <ReactToPrint 
-                        trigger={() => <span className=''> Reporte Ventas</span>}
-                        content={() => this.componentRef.current}       /></MenuItem>
-        <MenuItem onClick={()=>{handleClose();this.downloadFactReport()}}>Reporte de Facturas</MenuItem>
-
-      </Menu>
+          <DropdownButtonVentas arrData={filtrados} 
+          img={this.props.state.userReducer.update.usuario.user.Factura.logoEmp}
+          state={{
+            diario:this.state.diario,
+            mensual:this.state.mensual,
+            periodo:this.state.periodo,
+            tiempo:this.state.tiempo,
+            tiempoperiodofin:this.state.tiempoperiodofin,
+              estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab ,
+          ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision ,
+          nombreComercial:this.props.state.userReducer.update.usuario.user.Factura.nombreComercial
+           }}
+          />
       </div>
          
          

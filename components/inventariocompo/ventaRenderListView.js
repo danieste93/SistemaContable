@@ -7,7 +7,7 @@ const ArtRender = ({datos, deleteVentaList,user,resendProcess,downloadFact,sendV
   const [backGroundVent, setbackGroundVent] = useState("");
   const [visualProcess, setvisualProcess] = useState(false);
 useEffect(() => {
-console.log(datos)
+
 if(datos.TipoVenta == "Credito"){
   setvisualCred(true)
   if(datos.FormasCredito.length > 0){

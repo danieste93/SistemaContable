@@ -48,6 +48,7 @@
     "isomorphic-unfetch": "^3.1.0",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^8.5.1",
+    "jspdf": "^2.5.2",
     "mathjs": "^13.1.1",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.33",
@@ -100,6 +101,7 @@
     "url-loader": "^4.1.1",
     "web-push": "^3.4.4",
     "workbox-window": "^6.1.5",
+    "xlsx": "^0.18.5",
     "xml-parse": "^0.4.0",
     "xml2js": "^0.4.23"
   }

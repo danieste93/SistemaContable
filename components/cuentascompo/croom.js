@@ -142,42 +142,14 @@ componentDidMount(){
 
    
 
-  let interFun = ()=>{
-    newitems = this.props.regC.Tipos.map((x,i)=>{
-      let ramdonNUm =  Math.floor(Math.random() * 100000);
-    return({
-      id:ramdonNUm,
-      name:x
-    })
-    })
-    this.setState({ArrTipos:newitems})  
-  }
+  
 
 
      this.channel1 = postal.channel();
  
-     let newitems = []
-
-     if( this.props.regC.Tipos){
-
-      interFun()
-
-}else{
-
- let nuevointervalo = setInterval(()=>{
-  if( this.props.regC.Tipos){
-    interFun()
-}
-
-if(newitems.length >0){
-
-  clearInterval(nuevointervalo);
-  nuevointervalo = null;
-}
-}, 1000)
+   
 
 
-}
 
 
         }
@@ -266,50 +238,37 @@ fetch("/cuentas/getcuentas", {
           // dropped outside the list
           if (!destination) return;
       
-          const newItems = reorder(this.state.ArrTipos, source.index, destination.index);
-      
-       
-          // Create a new array here!
-          const newItemSequence = newItems.map(
-            (el, index) => (el[index] = { ...el,  })
-          );
-        
-            
-          let genToUp =  newItemSequence.map(
-            (el) => el.name 
-          );
-        
-
+          const newItems = reorder(this.props.regC.Tipos, source.index, destination.index);
+ 
+          this.props.dispatch(addTipo(newItems))
           let dataTosend = {
-          Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
-          genToUp
-        }
-          fetch("/users/uploadArrorder", {
-            method: 'POST', // or 'PUT'
-            body: JSON.stringify(dataTosend), // data can be `string` or {object}!
-            headers:{
-              'Content-Type': 'application/json',
-              "x-access-token": this.props.state.userReducer.update.usuario.token
-            }
-          }).then(res => res.json())
-          .catch(error => console.error('Error:', error))
-          .then(response => {
-           
-            if(response.message=="error al registrar"){
-              let add = {
-                Estado:true,
-                Tipo:"error",
-                Mensaje:"Error en el sistema, porfavor intente en unos minutos"
-            }
-            this.setState({Alert: add, loading:false}) 
-            }else{
-              this.props.dispatch(addTipo(response.tipes.Tipos))
-            }
-          })
+            Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
+            genToUp:newItems
+          }
+            fetch("/users/uploadArrorder", {
+              method: 'POST', // or 'PUT'
+              body: JSON.stringify(dataTosend), // data can be `string` or {object}!
+              headers:{
+                'Content-Type': 'application/json',
+                "x-access-token": this.props.state.userReducer.update.usuario.token
+              }
+            }).then(res => res.json())
+            .catch(error => console.error('Error:', error))
+            .then(response => {
+             
+              if(response.message=="error al registrar"){
+                let add = {
+                  Estado:true,
+                  Tipo:"error",
+                  Mensaje:"Error en el sistema, porfavor intente en unos minutos"
+              }
+              this.setState({Alert: add, loading:false}) 
+              }else{
+                this.setState({newdata:""})
+              }
+            })
 
-          this.setState({ArrTipos:newItemSequence})
-
-           
+          
 
         };
     
@@ -796,6 +755,18 @@ return saldofinal.toFixed(2)
 
     render() {
 
+      let ArrTipos = []
+      if(this.props.regC){
+      if( this.props.regC.Tipos){
+           ArrTipos = this.props.regC.Tipos
+          }
+      
+  
+  }
+
+  console.log(ArrTipos)
+  console.log(this.state)
+
       let flechaCuentasP = this.state.cuentaExpand == "Posesion"?"expand_less":"expand_more" 
       let flechaCuentasNoP = this.state.cuentaExpand == "NoPosesion"?"expand_less":"expand_more" 
       let flechaCuentasPsinT = this.state.cuentaExpand == "PosesionSinTotal"?"expand_less":"expand_more" 
@@ -1088,12 +1059,12 @@ if(this.props.regC.Tipos){
 
 
 if(this.props.regC.Regs){
-if(this.state.ArrTipos.length > 0){
-DragableContent = this.state.ArrTipos.map((item, index) => (
+if(ArrTipos.length > 0){
+DragableContent = ArrTipos.map((item, index) => (
   <Draggable
-    draggableId={`${item.id}`}
+    draggableId={`${item}`}
     index={index}
-    key={item.id}
+    key={item}
   >
     {(provided, snapshot) => {
 
@@ -1107,7 +1078,7 @@ DragableContent = this.state.ArrTipos.map((item, index) => (
           if(this.props.regC.Cuentas.length > 0){
       
       
-    let cuentasfiltradas = this.props.regC.Cuentas.filter(cuentaper => cuentaper.Tipo === item.name  ).sort((a, b) =>parseFloat(b.DineroActual.$numberDecimal)  - parseFloat(a.DineroActual.$numberDecimal))
+    let cuentasfiltradas = this.props.regC.Cuentas.filter(cuentaper => cuentaper.Tipo === item  ).sort((a, b) =>parseFloat(b.DineroActual.$numberDecimal)  - parseFloat(a.DineroActual.$numberDecimal))
      
     if(this.state.cuentas0){
       cuentasrender = cuentasfiltradas.filter(x=> x.DineroActual.$numberDecimal != "0" && x.DineroActual.$numberDecimal != "0.00")
@@ -1135,7 +1106,7 @@ DragableContent = this.state.ArrTipos.map((item, index) => (
         }
 
 
-        let flechaCuentas = this.state.cuentaExpand == item.id?"expand_less":"expand_more" 
+        let flechaCuentas = this.state.cuentaExpand == item?"expand_less":"expand_more" 
        
         let cantidadCuentas = cuentasrender.length 
         visible = cantidadCuentas == 0?"invisiblex":""
@@ -1160,7 +1131,7 @@ DragableContent = this.state.ArrTipos.map((item, index) => (
       className={`contFlexSpaceB  customDragbar ${isDragging}`}
      
      >  
-<div className="tituloPrin">{item.name.toUpperCase()}</div> 
+<div className="tituloPrin">{item.toUpperCase()}</div> 
 <div className='AnimateCont'>
 <Animate show={this.state.ValorCuenta}>
 <div className={`valorcuentas  ${color} `}>
@@ -1185,10 +1156,10 @@ ${parseFloat(ResultCuentas).toFixed(2)}
 <div className="confiltroCuentra">
 <i className="material-icons" onClick={(e)=>{
 
-  if(this.state.cuentaExpand == item.id){
+  if(this.state.cuentaExpand == item){
     this.setState({cuentaExpand:""})
   }else{
-    this.setState({cuentaExpand:item.id})
+    this.setState({cuentaExpand:item})
   }
   
 
@@ -1197,7 +1168,7 @@ ${parseFloat(ResultCuentas).toFixed(2)}
 </i>
 </div>
 </div>
-<Animate show={this.state.cuentaExpand != item.id}>
+<Animate show={this.state.cuentaExpand != item}>
 <div className="contcuentas">
 <Tabs
          
@@ -1213,7 +1184,7 @@ ${parseFloat(ResultCuentas).toFixed(2)}
 
 </Tabs>
 </div></Animate>
-<Animate show={this.state.cuentaExpand == item.id}>
+<Animate show={this.state.cuentaExpand == item}>
 <div className='contcuentaslista'>
 
 { generadorCuentas(cuentasrender,"lista")
@@ -2164,14 +2135,14 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
        <Animate show={this.state.EditCuenta}>
          < Editcuenta
           datosUsuario={this.props.datosUsuario._id}
-     
+          agregarTipo={()=>{
+   
+            this.setState({addmitipo:true})}}
+                  
             CuentaEditar={this.state.CuentaEditar}
-            Flecharetro4={
-     
-     ()=>{
-     
-      this.setState({EditCuenta:false, })}} 
+            Flecharetro4={()=>{ this.setState({EditCuenta:false})}} 
             />
+
           </Animate >
           <Animate show={this.state.ModalDeleteC}>
          <ModalDeleteC CuentaDelete={this.state.CuentaPorDel} Flecharetro={()=>{this.setState({ModalDeleteC:false})}}/>
