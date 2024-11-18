@@ -1,13 +1,15 @@
 
 import {Animate} from "react-animate-mount"
 import React, { useState,useEffect } from 'react';
-const ArtRender = ({datos, deleteVentaList,user,resendProcess,downloadFact,sendView,viewCreds}) => {
+const ArtRender = ({ datos,getNota, deleteVentaList,user,resendProcess,downloadFact,sendView,viewCreds}) => {
   const [visual, setvisual] = useState(false );
   const [visualCred, setvisualCred] = useState(false );
   const [backGroundVent, setbackGroundVent] = useState("");
   const [visualProcess, setvisualProcess] = useState(false);
+  const [visualNota, setvisualNota] = useState(false);
+
 useEffect(() => {
-console.log(datos)
+
 if(datos.TipoVenta == "Credito"){
   setvisualCred(true)
   if(datos.FormasCredito.length > 0){
@@ -37,7 +39,14 @@ if(datos.TipoVenta == "Credito"){
   if(user == "administrador" || user == "tesorero" ){
     setvisual(true)
   }
-});
+
+  if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != ""){
+  
+    setvisualNota(true)
+  }
+});// fin del set Visual
+
+
 let ganancia=0
 let valtotal =0
 let valorinvertido =0
@@ -186,6 +195,11 @@ get_app
 <Animate show={visualProcess}>
                     <button  className="btn btn-warning mybtn " onClick={(e)=>{ e.stopPropagation();resendProcess(datos)}}><span className="material-icons">
 send
+</span></button>
+</Animate>
+<Animate show={visualNota}>
+                    <button  className="btn btn-warning info " onClick={(e)=>{ e.stopPropagation();getNota(datos)}}><span className="material-icons">
+                    receipt
 </span></button>
 </Animate>
 </div>

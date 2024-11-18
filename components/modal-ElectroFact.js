@@ -121,10 +121,7 @@ console.log(this.state)
      let GeneratedURL = this.getSignature(urlf, 
             process.env.REACT_CLOUDY_SECRET, 
             this.props.state.userReducer.update.usuario.user.Firmdata.publicId)
-         
-       
-  
-         
+    
             fetch(GeneratedURL, {
     method: 'GET',
     headers: {

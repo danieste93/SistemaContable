@@ -13,6 +13,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import ViewVenta from "../modal-viewventas"
 import ReactToPrint from "react-to-print";
 import Button from '@material-ui/core/Button';
+import ViewNotas from "./modal-genNotas"
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import ViewCreds from "../modal-viewCreds"
@@ -26,11 +27,13 @@ class Listvent extends Component {
     searcherOut:"",
     filtrosTiempo:true,
     viewCreds:false,
+    viewNota:false,
     vista:"listmode",
     diario:true,
     mensual:false,
     periodo:false,
     VentaSelected:{},
+    dataNota:{},
     deleteVenta:false,
     listmode:true,
     pickmode:false,
@@ -882,6 +885,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
         return(<VentaRenderList 
           key={comp._id} 
           datos={comp} 
+          getNota={(datos)=>{ this.setState({viewNota:true, dataNota:datos})}} 
           viewCreds={(datos)=>{ this.setState({viewCreds:true, dataCred:datos})}} 
           sendView={(datos)=>{ this.setState({viewVenta:true, dataventa:datos})}} 
             
@@ -1318,14 +1322,17 @@ search
         </Animate>
 
         <Animate show={this.state.chartModal}>
-<Estadisticas datos={filtrados} tipo={"ventas"} Flecharetro={()=>{this.setState({chartModal:false})}} />
+        <Estadisticas datos={filtrados} tipo={"ventas"} Flecharetro={()=>{this.setState({chartModal:false})}} />
+        </Animate>
 
+<Animate show={this.state.viewNota}>
+<ViewNotas datos={this.state.dataNota} Flecharetro={()=>{this.setState({viewNota:false})}} />
 </Animate>
 
            <style jsx>{`
          .conFiltroNombres{
           display:flex;
-         }
+           }
          .ContFiltrosgeneral{
           display:flex;
           justify-content: space-around;
