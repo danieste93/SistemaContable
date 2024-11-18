@@ -729,7 +729,7 @@ let PendienteRenderEdit = pendienteEditConUmbral > 0?  'Alcista' :
           return(
             <div className='mainGrafic' style={{marginTop:"15vh"}}>
              <p>Bienvenidos</p>
-            <TrendBox data={this.state.inidata}/>
+          
             <div className='contindexes'>
             <p> Operando con </p>
             <div className='contInput'>
