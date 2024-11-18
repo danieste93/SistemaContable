@@ -32,6 +32,7 @@ export const FETCH_REGS_SUCCESS   = 'FETCH_REGS_SUCCESS';
 export const FETCH_REGS_BEGIN   = 'FETCH_REGS_BEGIN';
 export const FETCH_REGS_FAILURE = 'FETCH_REGS_FAILURE';
 export const ADD_FIRST_REGS = "ADD_FIRST_REGS"
+export const    ADD_FIRST_REGS_DELETE = "  ADD_FIRST_REGS_DELETE"
 
 export const UPDATE_REP_ADDREPS = 'UPDATE_REP_ADDREPS';
 
@@ -153,6 +154,12 @@ export const getCounter = counters => ({
 export const addRegs = registros => ({
   type: ADD_REGS,
   payload: { registros }
+});
+
+
+export const addFirstRegsDelete = regs => ({
+  type: ADD_FIRST_REGS_DELETE,
+  payload: { regs }
 });
 export const addRegsDelete = registros => ({
   type: ADD_REGS_DELETE,

@@ -8,7 +8,7 @@ import { ValidatorForm, TextValidator} from 'react-material-ui-form-validator';
 import FormasdePagoList from "../reusableComplex/formasPagoRender"
 import { addArt, addCompra,addRegs, updateCuentas } from '../../reduxstore/actions/regcont';
 import Cat from "./modalCategoriasArticulos"
-
+import ModalComprobacionGeneral from './usefull/modal-comprobacion-general';
 import DropFileInput from "../drop-file-input/DropFileInput"
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
@@ -70,7 +70,7 @@ class Contacto extends Component {
         Precio_Alt: 1,
         urlImg:"",
         Caduca:false,
-        Iva:true,
+        Iva:false,
      
         Vunitario:true,
         Vtotal:false,
@@ -78,10 +78,21 @@ class Contacto extends Component {
         Categoria:"",
         subCatSelect:"",
         catSelect:"",
+        modalComprobacion:false,
 
       
   }
     componentDidMount(){
+
+let populares =  this.props.state.userReducer.update.usuario.user.Factura.populares== "true"?true:false 
+
+if(populares){
+  this.setState({Iva:false})
+}else{
+  this.setState({Iva:true})
+}
+
+
     
       setTimeout(function(){ 
         
@@ -429,9 +440,26 @@ this.setState({CuentasInv:response.cuentasHabiles})
         handleChangeSwitch=(e)=>{
        
              let switchmame = e.target.name
-       
+       if(switchmame == "Iva"){
+        let populares =  this.props.state.userReducer.update.usuario.user.Factura.populares== "true"?true:false 
+        if(populares && this.state.Iva==false){
+          this.setState({modalComprobacion:true,
+            mensajeComprobacion:"Usted esta registrado como Negocios Populares, Seguro desea agregar el IVA?"
+          })
+
+        }else if(!populares && this.state.Iva==true){
+          this.setState({modalComprobacion:true,
+            mensajeComprobacion:"Usted esta registrado como Rimpe Emprendedores, Seguro desea quitar el IVA?"
+          })
+        }else{
+          this.setState({[switchmame]:!this.state[switchmame]})
+        }
+      
+       }else{
+        this.setState({[switchmame]:!this.state[switchmame]})
+       }
            
-              this.setState({[switchmame]:!this.state[switchmame]})
+           
             
       
         }
@@ -534,7 +562,7 @@ let buttonactivevtotal= this.state.Vtotal?"buttonactive":""
       };
       let dataModel ={
         Iva: this.state.Iva,
-        Caduca: this.state.Caduca,
+       // Caduca: this.state.Caduca,
         EqId: {requerido:true,Tipo:"text"},
         Titulo: {requerido:true,Tipo:"text"},
         Categoria: {requerido:true,Tipo:"text"},
@@ -612,6 +640,10 @@ else if(datillos[0]=="Categoria"){
   value={this.state[datillos[0]]}
   validators={requerido }
   errorMessages={errmessage }
+  InputProps={{
+    readOnly: true, // Hace que el campo no sea editable
+  }}
+  style={{ cursor: 'pointer' }} 
  /> 
                 <style >{`  
              .boxp{
@@ -655,7 +687,10 @@ else if(datillos[0]=="SubCategoria"){
     
      validators={ requerido }
      errorMessages={errmessage }
-    
+     InputProps={{
+      readOnly: true, // Hace que el campo no sea editable
+    }}
+    style={{ cursor: 'pointer' }} 
  /> 
                 <style >{`  
              .boxp{
@@ -1141,7 +1176,20 @@ add_circle_outline
        />
         </Animate >             
                     
+       <Animate show={this.state.modalComprobacion}>
+        <ModalComprobacionGeneral 
+        Flecharetro={()=>{this.setState({modalComprobacion:false})}}
+        Mensaje={this.state.mensajeComprobacion}
+        SendOk={()=>{
+          this.setState({Iva:!this.state.Iva,
+
+
+          })
+
+        }}
         
+        />
+        </Animate> 
 
 
            <style jsx>{`

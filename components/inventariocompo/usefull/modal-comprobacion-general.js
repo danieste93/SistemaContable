@@ -1,24 +1,23 @@
 import React, { Component } from 'react'
 import {connect} from 'react-redux';
-import postal from 'postal';
-import {updateArt,updateCuenta,deleteReg, addRegsDelete} from "../../reduxstore/actions/regcont"
-import Snackbar from '@material-ui/core/Snackbar';
-import MuiAlert from '@material-ui/lab/Alert';
+
+
 class Contacto extends Component {
    
   state={
     Alert:{Estado:false},
     loading:false
   }
-  channel2 = null;
     componentDidMount(){
+
+
       setTimeout(function(){ 
         
         document.getElementById('maindeletecaut').classList.add("entradaaddc")
 
-       }, 500);
-       this.channel2 = postal.channel();
-     
+       }, 100);
+        
+       
 
       
       }
@@ -30,107 +29,18 @@ class Contacto extends Component {
         }, 500);
       }
         
-      DeleteReg=(regdata)=>{
-      
-        let reg ={...regdata, 
-          Usuario:{DBname:this.props.state.userReducer.update.usuario.user.DBname},
-          TiempoDel:new Date().getTime(),
-          UsuarioDelete:{
-            
-              Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
-              Id:this.props.state.userReducer.update.usuario.user._id,
-              Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
-          
-          }         
-
-        }
-        let lol = JSON.stringify(reg)
-        var url = '/cuentas/deletereg';
-    
-        fetch(url, {
-          method: 'POST', // or 'PUT'
-          body: lol, // data can be `string` or {object}!
-          headers:{
-            'Content-Type': 'application/json',
-            "x-access-token": this.props.state.userReducer.update.usuario.token
-          }
-        }).then(res => res.json())
-        .catch(error => console.error('Error:', error))
-        .then(response => {console.log('DeleteReg:', response)
-
-        if(response.status =='Error'){
-          let add = {
-            Estado:true,
-            Tipo:"error",
-            Mensaje:response.message
-        }
-        this.setState({Alert: add, loading:false}) 
-        } 
-        else{
-          this.props.dispatch(deleteReg(response.registro))
-        
-      if (response.message == "Registro Eliminado"){
-      
-        this.props.dispatch(updateCuenta(response.cuenta))
-        this.props.dispatch(addRegsDelete(response.newRegDelete))
-        this.channel2.publish('UpdateCounts', {
-          message: 'enviado desde reset',
-          cuentas:[response.cuenta]
-       });
-            
-
-      }
-      else if(response.message == "Transferencia Eliminado"){
-        this.props.dispatch(updateCuenta(response.cuenta1))
-      
-        this.props.dispatch(updateCuenta(response.cuenta2))
-        this.props.dispatch(addRegsDelete(response.newRegDelete))
-        this.channel2.publish('UpdateCounts', {
-          message: 'enviado desde reset',
-          cuentas:[response.cuenta1,response.cuenta2]
-       });
-            
-      }  else if(response.message == "Registro de baja Eliminado"){
-      
-        this.props.dispatch(updateCuenta(response.cuenta))
-      
-        this.props.dispatch(updateArt(response.articulo))
-        this.channel2.publish('UpdateCounts', {
-          message: 'enviado desde reset',
-          cuentas:[response.cuenta]
-       });
-            
-
-
-    } 
-    this.Onsalida()
-  
-  }
    
-      })
-    
-          
-
-      }
 
     render () {
-      console.log(this.props.DeleteReg)
-      const handleClose = (event, reason) => {
-        let AleEstado = this.state.Alert
-        AleEstado.Estado = false
-        this.setState({Alert:AleEstado})
-       
-    }
-    const Alert=(props)=> {
-        return <MuiAlert elevation={6} variant="filled" {...props} />;
-      }
+    
+  
    
         return ( 
 
          <div >
 
 <div className="maincontacto" id="maindeletecaut" >
-            <div className="contcontacto"  >
+            <div className="contcontactoModalDelete"  >
         
             <div className="headercontact">
                 <img src="/static/flecharetro.png" alt="" className="flecharetro" 
@@ -138,8 +48,8 @@ class Contacto extends Component {
                 />
               <div className="titulogen">
                 
-            <p> Seguro quieres eliminar el registro  Nº <span style={{fontWeight:"bolder"}}> {this.props.DeleteReg.reg.IdRegistro}</span>  </p>
-            <p>con acción de:<span style={{fontWeight:"bolder"}}>{this.props.DeleteReg.reg.Accion}</span></p>
+            <p> {this.props.Mensaje}  <span style={{fontWeight:"bolder"}}> </span>  </p>
+           
 
                    </div>
              </div>
@@ -153,8 +63,11 @@ class Contacto extends Component {
       e.stopPropagation(); 
 if(this.state.loading == false){
 this.setState({loading:true})
-console.log("llamando")
-this.DeleteReg(this.props.DeleteReg)
+
+this.props.SendOk()
+
+this.Onsalida()
+
 }
     }}>
  Aceptar 
@@ -165,12 +78,7 @@ this.DeleteReg(this.props.DeleteReg)
      
         </div>
         </div>
-        <Snackbar open={this.state.Alert.Estado} autoHideDuration={5000} onClose={handleClose}>
-    <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
-        <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>
-    
-    </Alert>
-  </Snackbar>
+   
            <style jsx>{`
            .titulogen{
             font-size: 22px;
@@ -254,7 +162,7 @@ this.DeleteReg(this.props.DeleteReg)
    
         
         .maincontacto{
-          z-index: 1299;
+          z-index: 1303;
          width: 100vw;
          height: 100vh;
          background-color: rgba(0, 0, 0, 0.7);
@@ -267,9 +175,13 @@ this.DeleteReg(this.props.DeleteReg)
          transition:0.5s;
          
        }
-       .contcontacto{
+       .contcontactoModalDelete{
         border-radius: 30px;
-     
+        display: flex;
+        flex-flow: column;
+        justify-content: center;
+        align-items: center;
+        padding: 5px;
          width: 90%;
          background-color: white;
       
@@ -334,14 +246,14 @@ this.DeleteReg(this.props.DeleteReg)
                .marginador{
                 margin: 0px 2px 15px 2px;
                }
-         .contcontacto{
+         .contcontactoModalDelete{
           width: 95%;
          }
           }
           @media only screen and (min-width: 600px) { 
          
 
-              .contcontacto{
+              .contcontactoModalDelete{
        
          width: 70%;
       

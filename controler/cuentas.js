@@ -1744,7 +1744,7 @@ return res.status(200).send({status: "Ok", message: "getCuentasRegs", regsHabile
    async function getMontRegs (req, res) {
     let conn = await mongoose.connection.useDb(req.body.User.DBname);
     let RegModelSass = await conn.model('Reg', regSchema);
- 
+    let RegModelSassDelete = await conn.model('RegDelete', regSchemaDelete);
 
     let fechamensual = new Date(req.body.tiempo);
     
@@ -1758,8 +1758,15 @@ return res.status(200).send({status: "Ok", message: "getCuentasRegs", regsHabile
           {Tiempo: {$lte : tiempoFin}}
         ]
       }).sort({ $natural: -1 })
+
+      let regsHabilesDelete = await RegModelSassDelete.find({
+        $and: [
+          {Tiempo: {$gte : tiempoIni}},
+          {Tiempo: {$lte : tiempoFin}}
+        ]
+      }).sort({ $natural: -1 })
     
-      return res.status(200).send({status: "Ok", message: "getMontRegs", regsHabiles});
+      return res.status(200).send({status: "Ok", message: "getMontRegs", regsHabiles, regsHabilesDelete});
     
   }
 
@@ -3094,7 +3101,61 @@ let nuevosFC = getVenta.FormasCredito.concat(arrpagos)
 
 
   }
+  
+
+  async function getRegsDeleteTime (req, res) {
+
+    let conn = await mongoose.connection.useDb(req.body.User.DBname);
+    
+    let RegModelSass = await conn.model('RegDelete', regSchemaDelete);
+    let regsHabiles= []
+    let regs1= []
+    let regs2= []
+
+    if(req.body.diario){
+  
+      let tiempoIni = new Date(req.body.tiempo).setHours(0,0,0,0);
+      let tiempoFin =new Date(req.body.tiempo).setHours(23,59,59,999);
+    
+      regsHabiles = await RegModelSass.find({
+        $and: [
+          {Tiempo: {$gte : tiempoIni}},
+          {Tiempo: {$lte : tiempoFin}},
+         
+        ]
+      })
+    
+
+    }else if(req.body.mensual){
+      let fechamensual = new Date(req.body.tiempo);
+      let tiempoIni = new Date(fechamensual.getFullYear(), fechamensual.getMonth(), 1).setHours(0,0,0,0);
+      let tiempoFin = new Date(fechamensual.getFullYear(), fechamensual.getMonth() + 1, 0).setHours(23,59,59,999);
+      regsHabiles = await RegModelSass.find({
+        $and: [
+          {Tiempo: {$gte : tiempoIni}},
+          {Tiempo: {$lte : tiempoFin}},
+         
+        ]
+      })
+    
+
+    }else if(req.body.periodo){
+      let tiempoIni = new Date(req.body.tiempoperiodoini).setHours(0,0,0,0);
+      let tiempoFin =new Date(req.body.tiempoperiodofin).setHours(23,59,59,999);
+      regsHabiles = await RegModelSass.find({
+        $and: [
+          {Tiempo: {$gte : tiempoIni}},
+          {Tiempo: {$lte : tiempoFin}},
+         
+        ]
+      })
+    
+
+    }
+    
+    return res.status(200).send({status: "Ok", message: "getTimeRegsDelete", regsHabilesDelete:regsHabiles});
+  }
 
 
 
-module.exports = {getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs,getCuentaRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};
+module.exports = {getRegsDeleteTime,getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs,getCuentaRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};

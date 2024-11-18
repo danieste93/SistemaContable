@@ -1,5 +1,6 @@
 import {
   ADD_FIRST_REGS,
+  ADD_FIRST_REGS_DELETE,
   GET_REPETICIONES, 
   FETCH_REGS_BEGIN,
     FETCH_REGS_SUCCESS ,
@@ -96,6 +97,16 @@ import {
           ...state,
       
           Regs: action.payload.regs
+        };
+
+        case    ADD_FIRST_REGS_DELETE:
+          let RegsDelete = action.payload.regs
+
+        // All done: set loading "false".
+        // Also, replace the items with the ones from the server
+        return {
+          ...state,
+         RegsDelete
         };
         
         case DELETE_CUENTA:
@@ -422,7 +433,7 @@ let misregs = state.Regs?state.Regs:[]
   
           let misregsDelete = state.RegsDelete?state.RegsDelete:[]
           
-                  let RegsDelete = misregsDelete.concat(action.payload.registros)
+                   RegsDelete = misregsDelete.concat(action.payload.registros)
                  
                  
                     return {

@@ -3,44 +3,43 @@ import { Pie, Line } from 'react-chartjs-2';
 import {Chart} from"chart.js"
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import 'chart.js/auto';
-
+import GenGroupRegs from '../SubCompos/GenGroupRegsCuentasNuevas';
 
 class Stats extends Component {
     state={
         Ingreso:true,
         Gasto:false,
-        excluidos:[]
-
+        excluidos:[],
+        subCuentaSelect:{}
     }
 
     componentDidMount(){
      
-     
+     console.log(this.props)
   
         }
 
-        filtrarVentasUnicasPorNota=(registros)=> {
-            const ventasFiltradas = [];
-            const numerosVentaUnicos = new Set();
-          
-            registros.forEach((registro) => {
-              const match = registro.Nota.match(/Venta N°(\d+)/);
-              if (match) {
-                const numeroVenta = match[1];
-          
-                // Solo agregamos el registro si el número no ha sido registrado antes
-                if (!numerosVentaUnicos.has(numeroVenta)) {
-                  numerosVentaUnicos.add(numeroVenta);
-                  ventasFiltradas.push(registro);
-                }
-              }
-            });
-          
-            return ventasFiltradas;
-          }
+        
 
           render() {
+            console.log(this.props)
+    console.log(this.state)
+
+    let showData = []
+ 
+    if(this.props.data.regs){
+        showData = this.props.data.regs
+    }
+if(showData.length > 0){
+    if(Object.keys(this.state.subCuentaSelect).length>0){
+        showData = this.props.data.regs.filter(x => 
+            x.CuentaSelec.idCuenta == this.state.subCuentaSelect._id || 
+            (x.CuentaSelec2 && x.CuentaSelec2.idCuenta == this.state.subCuentaSelect._id)
+        )
     
+    }
+}
+ 
             let superdata = {labels: [],
                 datasets: [{
                    label: '',
@@ -50,7 +49,7 @@ class Stats extends Component {
             let DetallesPorrender = this.props.data
         
             let toggleObjeto =(array, objeto)=> {
-                const index = array.findIndex(item => item._id === objeto._id);
+                const index = array.findIndex(item => item.Tipo=== objeto.Tipo);
               
                 if (index !== -1) {
                   // Si el objeto existe, lo eliminamos
@@ -74,159 +73,159 @@ let activeB = this.state.Ingreso?"activeB":""
         
 
         let datoTouP =[]
-        if(this.props.data.length>0){
+        if(this.props.data.renderData){
+        if(this.props.data.renderData.length>0){
            
        // Arrays para acumular las categorías de ingreso y gasto
 const categoriasIngreso = [];
 const categoriasGasto = [];
 
 let Colores = [
-    "#66CC99", // Verde menta
-    "#FF6B6B", // Rojo coral fuerte
-    "#FF8A33", // Naranja cálido
-    "#FFD93D", // Amarillo intenso
-    "#6BCB77", // Verde brillante
- 
-    "#8A5FFF", // Morado vivo
-    "#FF5D8F", // Rosa fuerte
-    "#4DD2FF", // Turquesa claro
-    "#FF914D", // Naranja profundo
-    "#FFD36E", // Dorado cálido
-    "#5C80BC", // Azul medio
-    "#B15DFF", // Púrpura brillante
-    "#FF6DAA", // Rosa encendido
-    "#7AD7F0", // Cian claro
-    "#FF7878", // Rojo fresa claro
-    "#FFA07A", // Salmón
-    "#668FFF", // Azul cielo medio
+    "#57A773", // Verde bosque suave
+    "#E63946", // Rojo intenso
+    "#F4A261", // Naranja arena
+    "#F7B801", // Amarillo brillante
+    "#379683", // Verde agua profundo
 
-    "#FF9F9F", // Rosa suave
-    "#4DC9E0", // Azul turquesa
-    "#FFA860", // Naranja pastel fuerte
-    "#FFD700", // Amarillo dorado
-    "#FFC0CB", // Rosa
-    "#20B2AA", // Verde mar claro
-    "#FF4500", // Naranja rojo
-    "#32CD32", // Verde lima
-    "#1E90FF", // Azul dodger
-    "#FF69B4", // Rosa caliente
-    "#FFB6C1", // Rosa claro
-   
-    "#FF6347", // Tomate
-    "#FFF8DC", // Maíz
-    "#ADFF2F", // Verde amarillo
-    "#8B4513", // Marrón
-    "#DEB887", // Beige
-    "#D2691E", // Chocolate
-    "#B8860B", // Amarillo oscuro
-    "#A0522D", // Marrón rojizo
-    "#DAA520", // Amarillo dorado
-    "#7FFF00", // Verde chartreuse
-    "#FF1493", // Rosa profundo
-    "#CD5C5C", // Rojo indio
-    "#FFDAB9", // Durazno
-    "#D8BFD8", // Orquídea pálido
-    "#DCDCDC", // Gris claro
-    "#F08080", // Rojo claro
-    "#E6E6FA", // Lavanda
-    "#FFF0F5", // Lava
-]
+    "#6A4C93", // Morado oscuro
+    "#FF3E96", // Rosa fucsia
+    "#2EC4B6", // Turquesa marino
+    "#E76F51", // Naranja terracota
+    "#F4D06F", // Amarillo crema
+    "#3D5A80", // Azul océano
+    "#9C51E0", // Púrpura lavanda
+    "#FA7268", // Rosa coral suave
+    "#81E6D9", // Cian hielo
+    "#E63975", // Rojo frambuesa
+    "#FFA07A", // Melocotón claro
+    "#5A9FD4", // Azul niebla
+
+    "#E4A8A8", // Rosa pastel vintage
+    "#56B4D3", // Azul caribe
+    "#F48C06", // Naranja caramelo
+    "#FFD700", // Amarillo oro puro
+    "#FFB5C5", // Rosa bailarina
+    "#10AC84", // Verde esmeralda
+    "#FF2400", // Rojo escarlata
+    "#28A745", // Verde brillante
+    "#1565C0", // Azul real
+    "#FF77AA", // Rosa burbuja
+    "#FFC1CC", // Rosa algodón de azúcar
+
+    "#FA8072", // Coral salmón
+    "#FFFACD", // Limón claro
+    "#BFFF00", // Verde ácido
+    "#8B3A3A", // Marrón teja
+    "#BC8F8F", // Marrón rosado
+    "#8B4513", // Tierra quemada
+    "#8B0000", // Rojo oscuro
+    "#CC7722", // Ocre
+    "#FFA400", // Naranja vibrante
+    "#9AFF99", // Verde lima pastel
+    "#FF1493", // Rosa eléctrico
+    "#DC143C", // Carmesí profundo
+    "#FFE4C4", // Beige almendra
+    "#DA70D6", // Orquídea
+    "#B0B0B0", // Gris mediano
+    "#F2A0A0", // Rojo claro empolvado
+    "#C3B1E1", // Lavanda azulada
+    "#FFE6F7", // Rosa claro brumoso
+];
 // Variables para el total de ingresos y gastos
 
 
 // Objeto para almacenar categorías y evitar duplicados
-const categoriasMap = {};
+const CuentasMap = {};
 
+let DetallesPorrender = this.props.data
 // Iterar sobre los detalles
 let segundoCont = 0
-for (let z = 0; z < DetallesPorrender.length; z++) {
- 
-    let registro = DetallesPorrender[z];
-    let cat = registro.CatSelect;
-    let accion = registro.Accion;
-    let importe = registro.Importe;
-  
-    // Identificador único de la categoría
-    let catId = 0
-    if(cat){
-    catId = cat._id;
 
-    // Si la categoría aún no existe en el mapa, inicialízala con los campos requeridos
-    if (!categoriasMap[catId]) {
+
+const TiposMap = [];
+for (let z = 0; z < this.props.data.renderData.length; z++) {
+
+    let registro = this.props.data.renderData[z];
+    let Tipo = registro.nombre;
    
-        categoriasMap[catId] = {
-            idCat: cat.idCat,
-            nombreCat: cat.nombreCat,
-            totalImporte: 0,
-            porcentaje: 0,
-            _id: cat._id,
-            Color:Colores[segundoCont]
-        };
-        segundoCont ++
-    }
+    let importe = registro.totalImporte
 
-    // Sumar el importe a la categoría
-    categoriasMap[catId].totalImporte += importe;
-
-    // Dependiendo de la acción, agregar la categoría al array correspondiente y sumar el importe
-    if (accion === "Ingreso") {
-        const RegistroFilterCat = this.state.excluidos.find(obj => obj._id === registro.CatSelect._id);
-        if (!RegistroFilterCat) {
-            ingresosTotales += importe;
-        }
-     
-        // Verificar si ya está en el array de categorías de ingreso, si no, agregarla
-        if (!categoriasIngreso.some(c => c._id === cat._id)) {
-            categoriasIngreso.push(categoriasMap[catId]);
-        }
-    } else if (accion === "Gasto") {
-        const RegistroFilterCat = this.state.excluidos.find(obj => obj._id === registro.CatSelect._id);
-        if (!RegistroFilterCat) {
-            gastosTotales += importe;
-        }
-       
-
-        // Verificar si ya está en el array de categorías de gasto, si no, agregarla
-        if (!categoriasGasto.some(c => c._id === cat._id)) {
-            categoriasGasto.push(categoriasMap[catId]);
-        }
-    }
+   TiposMap.push({
+        Tipo,
+        Color:Colores[z],
+        _id:registro._id,
+        totalImporte:importe
+   })
     
+
 }
-}
+
+let objetTipoData = TiposMap
+
+
+objetTipoData.forEach(x=> {
+    if(x.totalImporte > 0){
+        categoriasIngreso.push(x)
+    }else{
+        categoriasGasto.push(x)
+    }
+
+})
+
+
+ ingresosTotales = categoriasIngreso.reduce((suma, obj) => {
+    const RegistroFilterCat = this.state.excluidos.find(exc => exc.Tipo === obj.Tipo);
+    if (!RegistroFilterCat) {
+        suma += obj.totalImporte ; // Corrige la suma aquí
+    }
+    return suma; // Asegúrate de retornar el acumulador
+}, 0);
+
+  
+gastosTotales = Math.abs(
+    categoriasGasto.reduce((suma, obj) => {
+        const RegistroFilterCat = this.state.excluidos.find(exc => exc.Tipo === obj.Tipo);
+        if (!RegistroFilterCat) {
+            suma += obj.totalImporte || 0; // Sumar el importe si no está excluido
+        }
+        return suma; // Retornar el acumulador
+    }, 0)
+);
+
 // Calcular el porcentaje de cada categoría respecto al total de ingresos o gastos
 categoriasIngreso.forEach(cat => {
     cat.porcentaje = ingresosTotales > 0 ? (cat.totalImporte / ingresosTotales) * 100 : 0;
 });
 
 categoriasGasto.forEach(cat => {
-    cat.porcentaje = gastosTotales > 0 ? (cat.totalImporte / gastosTotales) * 100 : 0;
+    cat.porcentaje = gastosTotales > 0 ? (Math.abs(cat.totalImporte) / gastosTotales) * 100 : 0;
 });
 // Mostrar el resultado con las categorías separadas en ingresos y gastos
   
-
+console.log(ingresosTotales)
 if(this.state.Ingreso){
+
+    
    datoTouP = categoriasIngreso
   }else if(this.state.Gasto){
     datoTouP = categoriasGasto
   }
 
-
-
-
   for (let i = 0; i < datoTouP.length; i++) {
-    const objetoConCategoriaN = this.state.excluidos.find(obj => obj._id === datoTouP[i]._id);
+    const objetoConCategoriaN = this.state.excluidos.find(obj => obj.Tipo === datoTouP[i].Tipo);
     if (objetoConCategoriaN) {
         datoTouP[i].excluido = true;
         datoTouP[i].porcentaje = 0;
     }
 }
 
+
 let graficData = datoTouP.filter(elem => 
-    !this.state.excluidos.some(excluido => excluido._id === elem._id)
+    !this.state.excluidos.some(excluido => excluido.Tipo === elem.Tipo)
 );
+
 superdata = {
-    labels: graficData.map(x=>x.nombreCat),
+    labels: graficData.map(x=>x.Tipo),
     datasets: [
         {label: 'asd',
         data:graficData.map(x=>x.totalImporte),
@@ -236,17 +235,20 @@ superdata = {
     ]
 }
 
-        }
+        }}
 let stats = ""
+
         if(datoTouP.length >0){
             stats = datoTouP.sort((a, b) => b.totalImporte - a.totalImporte).map((item, i)=>{
                 let excluido = item.excluido?"excluido":""
                 let bcolor = item.Color
                 return(<div className="crystal-rectangle" key={i} onClick={(e)=>{    
                   e.stopPropagation();
-                  this.props.sendData(item)}}
                   
-                  
+                  this.setState({subCuentaSelect:item})
+                
+                }}
+                
                   >
                     <div className="contpercent" >
                         <div className="percent"
@@ -260,7 +262,7 @@ let stats = ""
                       }}
                         
                         style={{background:bcolor}}>{item.porcentaje.toFixed(2)}%</div>
-                        <div className={`npercent ${excluido} `}  >{item.nombreCat}</div>
+                        <div className={`npercent ${excluido} `}  >{item.Tipo}</div>
         
                     </div>
                     <div className="contvalores">${item.totalImporte.toFixed(2)}</div>
@@ -303,12 +305,16 @@ let stats = ""
             },
             perspective: 200 // Ajustar la perspectiva
         };
+   
 return(
 <div>
+<img src="/static/flecharetro.png" alt="" className="flecharetro" 
+                onClick={  this.props.Flecharetro }
+                />
 <div className="inggasCont">
-          <span className={`base ${activeB} `} onClick={()=>{this.setState({Ingreso:true, Gasto:false,excluidos:[] })}}>   <div className="asd">Ingreso</div> ${ingresosTotales.toFixed(2)}</span>
+          <span className={`base ${activeB} `} onClick={()=>{this.setState({Ingreso:true, Gasto:false,excluidos:[] })}}>   <div className="asd">Positivo</div> ${ingresosTotales.toFixed(2)}</span>
           <span style={{fontSize:"40px"}}>|</span>
-          <span className={`base ${deactiveB} `} onClick={()=>{this.setState({Gasto:true, Ingreso:false,excluidos:[]})}} > <div className="asd">Gasto</div> ${gastosTotales.toFixed(2)}</span>
+          <span className={`base ${deactiveB} `} onClick={()=>{this.setState({Gasto:true, Ingreso:false,excluidos:[]})}} > <div className="asd">Negativo</div> ${gastosTotales.toFixed(2)}</span>
           <span style={{fontSize:"40px"}}>|</span>
           <span className={` baset`}  > <div className="asd">Total</div> ${(ingresosTotales - gastosTotales).toFixed(2)}</span>
   </div>
@@ -320,9 +326,17 @@ return(
     {stats}
 </div>
   </div>
+  <div className="supercontreg">
+  <GenGroupRegs Registros={showData} cuentaSelect={{_id:0}} datosGene={{saldo:0, balance:0,saldoActive:false}} />  
+  </div>
   <style jsx >
                 {                                
                 `
+                  .flecharetro{
+         height: 40px;
+         width: 40px;
+         padding: 5px;
+       }
  .baset{
                     margin-top:8px;
                 background-color: #f5f5f5; /* Gris claro neutro */

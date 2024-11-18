@@ -3,7 +3,7 @@ import {  KeyboardDatePicker,  MuiPickersUtilsProvider } from "@material-ui/pick
 import moment from "moment";
 import {connect} from 'react-redux';
 import "moment/locale/es";
-import {getcuentas,addFirstRegs,addTipo } from "../../reduxstore/actions/regcont";
+import {getcuentas,addFirstRegs,addTipo,addRegsDelete } from "../../reduxstore/actions/regcont";
 import MomentUtils from '@date-io/moment';
 import { Animate } from "react-animate-mount";
 import GenGroupRegs from './SubCompos/GenGroupRegsCuentasNuevas';
@@ -11,6 +11,27 @@ import RepCont from "./modal-repeticiones"
 import postal from 'postal';
 import Dropdown from 'react-bootstrap/Dropdown';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import fetchData from '../funciones/fetchdata';
+import { Switch, FormControlLabel } from '@material-ui/core';
+import { makeStyles, withStyles } from '@material-ui/core/styles';
+import DeleteIcon from '@material-ui/icons/Delete';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
+
+
+const RedSwitch = withStyles({
+  switchBase: {
+    color: '#f44336', // Rojo
+    '&$checked': {
+      color: '#f44336',
+    },
+    '&$checked + $track': {
+      backgroundColor: '#f44336',
+    },
+  },
+  checked: {},
+  track: {},
+})(Switch);
 
 
 class homepp1 extends Component {
@@ -19,6 +40,7 @@ class homepp1 extends Component {
         mensual:false,
         periodo:false,
         Regs:[],
+        Alert:{Estado:false},
         tiempo: new Date(),
         tiempomensual: new Date(),
         tiempoperiodoini: new Date(),
@@ -35,7 +57,8 @@ class homepp1 extends Component {
         Repeticiones:[],
         modalrep:false,
         deletedRegs:false,
-        downloadData:false
+        downloadData:false,
+        donwloadDeleteRegs:false,
     }
     channel1 = null;
     periodofin(){
@@ -74,8 +97,46 @@ class homepp1 extends Component {
   
         
         }
-        updateData= ()=> {
-          this.setState({downloadData:true})
+
+        getDeteleRegs  = async ()=> {
+          if(this.state.deletedRegs ==false){
+this.setState({donwloadDeleteRegs:true})
+let datos = {  diario:this.state.diario,
+  mensual:this.state.mensual,
+  periodo:this.state.periodo,
+  tiempoperiodoini:this.state.tiempoperiodoini,
+  tiempoperiodofin:this.state.tiempoperiodofin,
+  tiempo:this.state.tiempo,
+  tiempomensual:this.state.tiempomensual}
+
+let data = await fetchData(this.props.state.userReducer,
+                      "/cuentas/getregsdeletetime",
+                      datos)
+console.log(data)
+if(data.status =="Ok"){
+
+  if(data.regsHabiles.length > 0){
+    this.props.dispatch(addRegsDelete(data.regsHabiles))
+  }
+ 
+
+}
+this.setState({donwloadDeleteRegs:false, deletedRegs:true})
+
+}else{
+
+  this.setState({deletedRegs:false, })
+
+}
+         }
+
+
+
+
+
+
+
+        updateData= async ()=> {
           let datos = {
             User: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
             },
@@ -89,6 +150,10 @@ class homepp1 extends Component {
             tiempomensual:this.state.tiempomensual
           }
           let lol = JSON.stringify(datos)
+          if(!this.state.deletedRegs){
+          this.setState({downloadData:true})
+       
+    
           fetch("/cuentas/getregstime", {
             method: 'POST', // or 'PUT'
             body: lol, // data can be `string` or {object}!
@@ -117,10 +182,40 @@ class homepp1 extends Component {
                 )
           
                 });
+                console.log(sinRepetidosObjeto)
                 this.props.dispatch(addFirstRegs(sinRepetidosObjeto));
                 this.setState({downloadData:false})
               }
-          })
+          })}else{
+            this.setState({donwloadDeleteRegs:true})
+            let data = await fetchData(this.props.state.userReducer,
+              "/cuentas/getregsdeletetime",
+              datos)
+console.log(data)
+if(data.status =="Ok"){
+
+if(data.regsHabilesDelete.length > 0){
+  let misarrs = this.props.regC.RegsDelete.slice() 
+              
+  let finalars= misarrs.concat(response.regsHabilesDelete)
+let sinRepetidosObjeto= finalars.filter((value, index, self) => {
+    return(            
+      index === self.findIndex((t) => (
+        t._id === value._id && t._id === value._id
+      ))
+  )
+
+  });
+  
+this.props.dispatch(addRegsDelete(sinRepetidosObjeto))
+}
+
+}
+this.setState({donwloadDeleteRegs:false})
+      
+      
+            
+          }
          }
        
         getMonthName = ()=> {
@@ -167,7 +262,11 @@ periodo:false
             })
            }
           }
-          
+          handleToggle = () => {
+            this.setState((prevState) => ({
+              deletedRegs: !prevState.deletedRegs,
+            }));
+          };
 
           masunmes=()=>{
             let mesactual = this.state.tiempo.getMonth() + 1
@@ -227,7 +326,7 @@ periodo:false
             
             }
             PeriodoFilter=(regs)=>{
-              let fecha = new Date(this.state.tiempo)
+              let fecha = new Date(this.state.tiempoperiodoini)
               let fechafin = new Date(this.state.tiempoperiodofin)
           
               var primerDiaP = fecha.setHours(0,0,0)
@@ -290,12 +389,21 @@ periodo:false
                   }
 
     render() {
+      const handleClose = (event, reason) => {
+        let AleEstado = this.state.Alert
+        AleEstado.Estado = false
+        this.setState({Alert:AleEstado})
+       
+    }
+    const Alert=(props)=> {
+        return <MuiAlert elevation={6} variant="filled" {...props} />;
+      }
         let diarioval = this.state.diario?"activeval":"";
         let mensualval = this.state.mensual?"activeval":"";
         let periodoval = this.state.periodo?"activeval":"";
         let balanceinggas = 0
 
-      
+      console.log(this.state.donwloadDeleteRegs)
 let displayDetalles =[]
 let detallesrender= ""
 let detallesDeleterender= ""
@@ -304,11 +412,21 @@ let DetallesOrdenados  =""
 let  DetallesPorrender=[]
 let superIng= 0
      let superGas= 0
+     let response  = []
      if(this.props.regC){
 if(this.props.regC.Regs  || this.props.regC.RegsDelete ){
 
 
-let response  = this.state.deletedRegs? this.props.regC.RegsDelete: this.props.regC.Regs 
+  if(this.state.deletedRegs){
+
+      response  =  this.props.regC.RegsDelete
+    
+    
+  }else if(!this.state.deletedRegs){
+    response = this.props.regC.Regs 
+  }
+
+
 
 
 displayDetalles = this.OrderFilter(response)
@@ -440,12 +558,31 @@ superIng=  sumaing + sumatransing
      </button>
         </Dropdown.Item>
         <Dropdown.Item>
-        <button className=" btn  btn-danger btnDropDowmRegs" onClick={()=>{this.setState({deletedRegs:!this.state.deletedRegs})}}>
+        <button className=" btn  btn-info btnDropDowmRegs"
+         onClick={()=>{
+          if(this.props.regC.Reps){ 
+            this.setState({modalrep:true})
+          }else{
+            let add = {
+              Estado:true,
+              Tipo:"info",
+              Mensaje:"No hay repeticiones para mostar"
+          }
+          this.setState({Alert: add, })
+          
+
+          }
+          
+        
+        }
+        }
+          
+          >
        
         <span className="material-icons" style={{width:"45px"}}>
-       delete_sweep_icon
+   repeat
      </span>
-     <p>Eliminados</p>
+     <p>Repeticiones </p>
      </button>
         </Dropdown.Item>
 
@@ -455,11 +592,32 @@ superIng=  sumaing + sumatransing
      </Dropdown.Menu>
           
            </Dropdown>
+           <div className="glass-container">
+           <FormControlLabel
+          control={
+            <RedSwitch
+              checked={this.state.deletedRegs}
+              onChange={this.handleToggle}
+            />
+          }
+          label={
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              <DeleteIcon
+                style={{
+                  color: this.state.deletedRegs ? '#f44336' : 'gray',
+                  marginRight: '5px',
+                }}
+              />
+              {"Eliminados"}
+            </span>
+          }
+        />
+</div>
            <Animate show={this.state.downloadData}>
             <CircularProgress />
            </Animate>
 </div>
-{this.generadorRep()}
+
 </div>
 <div className="contTipos">
   
@@ -610,8 +768,10 @@ superIng=  sumaing + sumatransing
                 <div className="DeleteRegs">
                   Eliminados
                 </div>
+          
                 </Animate>
                    <div className="supercontreg">
+          {this.state.donwloadDeleteRegs &&  <CircularProgress />  }
                 {detallesrender}
                 </div>
                   
@@ -624,7 +784,12 @@ superIng=  sumaing + sumatransing
 <Animate show={this.state.modalrep}> 
 <RepCont rep={this.props.regC.Reps} Flecharetro={()=>{this.setState({modalrep:false})}}  />
 </Animate>
-
+<Snackbar open={this.state.Alert.Estado} autoHideDuration={10000} onClose={handleClose}>
+    <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
+        <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>
+    
+    </Alert>
+  </Snackbar>
 
 <style > {  `  
 
@@ -849,6 +1014,26 @@ justify-content: space-around;
                   
 }
  
+.glass-container {
+  background: rgba(255, 255, 255, 0.1); /* Fondo semi-transparente */
+  backdrop-filter: blur(10px); /* Efecto desenfoque */
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Bordes sutiles */
+  border-radius: 15px; /* Bordes redondeados */
+  padding: 5px 10px; /* Espaciado interno */
+  
+  max-width: 90%; /* Responsivo */
+  text-align: center; /* Centrado del contenido */
+
+  margin: 20px auto; /* Centrado vertical y horizontal */
+  font-family: 'Arial', sans-serif; /* Fuente limpia */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-container:hover {
+  transform: scale(1.05); /* Efecto de agrandamiento */
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2); /* Más sombra al hacer hover */
+}
 .separador{
     margin: 6px 14px  ;
   }

@@ -5,7 +5,7 @@ import moment from "moment";
 export default class GenGroupRegs extends Component {
     render() {
 
-console.log(this.props)
+
         let detallesrender=""
         let datex = this.props.Registros
        

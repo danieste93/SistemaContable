@@ -5,6 +5,10 @@ import {connect} from 'react-redux';
 import { Animate } from "react-animate-mount";
 import GraficadorPie from "./estadisticas/generadorPie"
 import GraficadorSubPie from "./estadisticas/generadorsubCats"
+import GraficadorPieCuentas from "./estadisticas/generadorPieCuentas"
+import GraficadorPieCuentasSub from "./estadisticas/generadorPieCuentasSub"
+
+
 import { Pie, Line } from 'react-chartjs-2';
 import {Chart} from"chart.js"
 import 'chart.js/auto';
@@ -23,12 +27,12 @@ import { install } from "resize-observer";
       Line:false,
       Pieview:false,
       allData:true,
+      subCuentaDetail:false,
       catdetail:false,
       CategoriaElegida:{RegistrosF:[]},
       InvOption:"categoria",
-        
+      subCuentadata:[],
         TotalData:false,
-
         diario:false,
         mensual:true,
         periodo:false,
@@ -257,10 +261,14 @@ import { install } from "resize-observer";
 
 
 
+let registros 
+if(this.state.Categorias){
+  registros  = this.props.regC.Regs? this.props.regC.Regs.filter(x=> x.Accion=="Ingreso"|| x.Accion=="Gasto" ):[]
+}else if(this.state.Cuentas){
+  registros  = this.props.regC.Regs
+}
 
 
-
-let registros  = this.props.regC.Regs? this.props.regC.Regs.filter(x=> x.Accion=="Ingreso"|| x.Accion=="Gasto" ):[]
 let DetallesPorrender=[]
 
 
@@ -286,6 +294,27 @@ if(this.state.diario){
         this.setState({ subCatRegs:getRegs, allData:false})
 
   }
+
+  const sendPiedataCuentas=(data)=>{
+console.log(data)
+let getRegs = DetallesPorrender.filter(x => 
+  data.some(d => 
+      x.CuentaSelec.idCuenta == d._id || 
+      (x.CuentaSelec2 && x.CuentaSelec2.idCuenta == d._id)
+  )
+);
+
+let subCuentadata ={
+  regs:getRegs,
+  renderData:data
+}
+    setTimeout(()=> {
+     this.setState({subCuentaDetail:true})
+
+     }, 400);
+     this.setState({ subCuentadata:subCuentadata, allData:false})
+
+}
 
         return (
             <div id="mainhomeapp"className="mainstats">
@@ -455,9 +484,18 @@ if(this.state.diario){
 </div>
 
   <Animate show={this.state.Pie}>  
+    
+  <Animate show={this.state.Categorias}>  
  <GraficadorPie data={DetallesPorrender}
                  criterio={"categoria"}
                    sendData={sendPiedata} />
+  </Animate>
+  <Animate show={this.state.Cuentas}>  
+ <GraficadorPieCuentas data={DetallesPorrender}
+                 criterio={"categoria"}
+                  Cuentas={this.props.regC.Cuentas}
+                   sendData={sendPiedataCuentas} />
+  </Animate>
 </Animate> 
 <Animate show={this.state.Line}> 
 <div className="centrar contLineChart">
@@ -492,13 +530,31 @@ if(this.state.diario){
 <GraficadorSubPie data={this.state.subCatRegs}
  Flecharetro={()=>{
   
-
   setTimeout(()=> {
     this.setState({allData:true})
 
     }, 400);
   
   this.setState( {catdetail:false, subCatRegs:[]})
+
+
+}
+ 
+ }
+/>
+</Animate>
+<Animate show={this.state.subCuentaDetail}>
+<GraficadorPieCuentasSub data={this.state.subCuentadata}
+ Flecharetro={()=>{
+  
+  setTimeout(()=> {
+    this.setState({allData:true})
+
+    }, 400);
+  
+  this.setState( {subCuentaDetail:false,
+    
+    subCuentadata:[]})
 
 
 }

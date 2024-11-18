@@ -54,6 +54,7 @@ router.post("/deleterepeticion",Authentication, cuentasController.deleteRepetici
 router.put('/addrepeticiones',Authentication, cuentasController.addRepeticiones);
 
 router.post('/getregs', Authentication, cuentasController.getRegs);
+router.post('/getregsdeletetime', Authentication, cuentasController.getRegsDeleteTime);
 router.post('/getmontregs', Authentication, cuentasController.getMontRegs);
 router.post('/gettipos', Authentication, cuentasController.getTipos);
 router.get('/getdataaaa', cuentasController.profesorAdd);

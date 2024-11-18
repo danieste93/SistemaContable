@@ -9,7 +9,7 @@ import Modal from "../../components/cuentascompo/modal-ingreso"
 import {Animate} from "react-animate-mount"
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
-import {getClients,getRepeticiones,addFirstRegs,getArts,getDistribuidor,getAllcuentas,getCompras,getcuentas,getCounter, getVentas, gettipos,getcats, updateRegs, } from "../../reduxstore/actions/regcont";
+import {getClients,addFirstRegsDelete,addFirstRegs,getArts,getDistribuidor,getAllcuentas,getCompras,getcuentas,getCounter, getVentas, gettipos,getcats, updateRegs, } from "../../reduxstore/actions/regcont";
 import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
@@ -76,6 +76,7 @@ alert("error al actualizar registros")
 else{
   let regsToSend = []
 this.props.dispatch(addFirstRegs(response.regsHabiles));
+this.props.dispatch(addFirstRegsDelete(response.regsHabilesDelete));
 this.exeRegs()
 }   
 })
