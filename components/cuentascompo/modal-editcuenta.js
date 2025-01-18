@@ -265,7 +265,9 @@ if(cuentaX.Permisos.includes("auxiliar")){
 
 
 </select>
-<i className="material-icons i3D"  >  add</i>
+<i className="material-icons i3D" onClick={()=>{
+  console.log("enaddtipo")
+  this.props.agregarTipo()}} >  add</i>
               </div>
               </div>
               <div className="grupoDatos">

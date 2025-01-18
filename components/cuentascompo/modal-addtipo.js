@@ -3,17 +3,22 @@ import React, { Component } from 'react'
 import { Animate } from "react-animate-mount";
 
 import TextField from '@material-ui/core/TextField';
-
+import ModalDeleteGeneral from './modal-delete-general';
 import {connect} from 'react-redux';
 import {addTipo} from "../../reduxstore/actions/regcont"
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
 class Contacto extends Component {
    state={
     err1:false,
  editmode:false,
  addactive:false,
+ modalDelete:false,
  helperText:"",
  newtipo:"",
- Tipos:[]
+ itemtodel:"",
+ Tipos:[],
+ Alert:{Estado:false},
  
    }
 
@@ -27,32 +32,28 @@ class Contacto extends Component {
       }
       deleteTipo=(tipo)=>{
 
-        let datos = {Id: this.props.datosUsuario,
-          Usuario:{DBname:this.props.state.userReducer.update.usuario.user.DBname},           
-          valores:tipo
-        }  
-        let lol = JSON.stringify(datos)
-        let url = "/cuentas/deletetipe"  
-        fetch(url, {
-          method: 'PUT', // or 'PUT'
-          body: lol, // data can be `string` or {object}!
-          headers:{
-            'Content-Type': 'application/json',
-            "x-access-token": this.props.state.userReducer.update.usuario.token
-          }
-        }).then(res => res.json())
-        .catch(error => console.error('Error:', error))
-        .then(response => {
-          console.log('Success AdminData:', response)
-          if(response.message=="error al registrar"){
-            alert("Error al registrar, intentelo en unos minutos")
-           }
-           else{
-          let arr = response.user.Tipos
-          this.props.dispatch(addTipo(arr))
-           }
-       
-        })
+
+let findTipos = this.props.state.RegContableReducer.Cuentas.filter(x=>x.Tipo == tipo)
+
+console.log(findTipos)
+
+if(findTipos.length == 0){
+  this.setState({modalDelete:true, itemtodel:tipo})
+
+}else{
+
+  let renderTiposRel = findTipos.map(x => `${x.NombreC}`)
+  console.log(renderTiposRel)
+  let add = {
+    Estado:true,
+    Tipo:"info",
+    Mensaje:`No se puede eliminar este tipo de cuenta, porque tiene las
+     siguientes cuentas relacionadas : ${renderTiposRel} `,
+}
+
+this.setState({Alert: add, })
+}
+        
    
       }
         
@@ -154,6 +155,16 @@ class Contacto extends Component {
         }
     render () {
 
+     const handleClose = (event, reason) => {
+        let AleEstado = this.state.Alert
+        AleEstado.Estado = false
+        this.setState({Alert:AleEstado})
+       
+    }
+    const Alert=(props)=> {
+        return <MuiAlert elevation={6} variant="filled" {...props} />;
+      }
+
       let lapizctive= this.state.editmode?"lapizctive":""
       let colorwhite= this.state.addactive?"lapizctive":""
    
@@ -229,7 +240,31 @@ class Contacto extends Component {
     
     
         </div>
- 
+    <Animate show ={this.state.modalDelete}>
+        <ModalDeleteGeneral
+         sendSuccess={(e)=>{
+          console.log(e)
+          let arr = e.user.Tipos
+          this.props.dispatch(addTipo(arr))
+
+
+          } }
+         sendError={()=>{console.log("deleteerror")}}
+        itemTodelete={this.state.itemtodel}
+         mensajeDelete={{mensaje:`Estas seguro quieres eliminar el Tipo : ${this.state.itemtodel} ?`,
+          url:"/cuentas/deletetipe" }}
+        Flecharetro={()=>this.setState({modalDelete:false})}
+  
+        />
+        </Animate>
+
+
+ <Snackbar open={this.state.Alert.Estado} autoHideDuration={10000} onClose={handleClose}>
+     <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
+         <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>
+     
+     </Alert>
+   </Snackbar>
            <style jsx>{`
            .contaddtipe{
             display: flex;
@@ -360,7 +395,7 @@ class Contacto extends Component {
   
         
         .maincontacto{
-          z-index: 9999;
+          z-index: 1302;
          width: 100vw;
          height: 100vh;
          background: #00f1e6;

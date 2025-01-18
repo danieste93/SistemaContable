@@ -1,11 +1,11 @@
 import React, { Component } from 'react'
 import Inggas from './inggasCuentas';
-
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import moment from "moment";
 export default class GenGroupRegs extends Component {
     render() {
 
-console.log(this.props)
+
         let detallesrender=""
         let datex = this.props.Registros
        
@@ -140,13 +140,30 @@ console.log(this.props)
          
               let registrosInvetidos = regist
             
-             let generadorRegistros = registrosInvetidos.map((detail,i)=>{
-
-
-                let   elegido = <Inggas reg={detail} in={i} cuentaActual={this.props.cuentaSelect} saldoActive={this.props.datosGene.saldoActive} />               
-   
-                  return(elegido)
-    })
+              let generadorRegistros = registrosInvetidos.length > 0 
+              ? registrosInvetidos.map((detail, i) => (
+                  <CSSTransition
+                    key={detail._id || i}
+                    timeout={500}
+                    classNames="fade"
+                  >
+                    <Inggas
+                      reg={detail}
+                      in={i}
+                      cuentaActual={this.props.cuentaSelect}
+                      saldoActive={this.props.datosGene.saldoActive}
+                    />
+                  </CSSTransition>
+                ))
+              : (
+                  <CSSTransition
+                    key="placeholder"
+                    timeout={500}
+                    classNames="fade"
+                  >
+                    <div className="placeholder">No hay registros</div> {/* Placeholder */}
+                  </CSSTransition>
+                );
              let superIng = sumaing + sumatransing
              let superGas = sumagas + sumatransgas
              return(<div className="SuperContGrupo" key ={i}>
@@ -160,7 +177,9 @@ console.log(this.props)
                 </div>
                 </div>
                 <div className="registrosConte">
-              {generadorRegistros}
+                <TransitionGroup>
+    {generadorRegistros}
+  </TransitionGroup>
                 </div>
               </div>)
             })
@@ -241,6 +260,28 @@ console.log(this.props)
 }
 .registrosConte{
   width: 99%;
+}
+
+
+.fade-enter {
+  opacity: 0;
+  transform: translateY(-10px); /* Efecto de desplazamiento */
+}
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 500ms, transform 500ms; /* Tiempo y tipo de transición */
+}
+
+/* Animación para los elementos que salen */
+.fade-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-exit-active {
+  opacity: 0;
+  transform: translateY(-10px); /* Efecto de desplazamiento al salir */
+  transition: opacity 500ms, transform 500ms;
 }
 
 ` }  </style>

@@ -13,6 +13,8 @@ import CompraR from "./compraRender"
 import ComprasRenderList from "./compraRenderListView"
 import ModalDeleteCompra from './modal-delete-compra';
 import Estadisticas from './modal-estadisticasArticulos';
+import DropdownButtonCompras from './usefull/dropdownbuttonCompras';
+
 
 class Contacto extends Component {
   state={
@@ -416,10 +418,10 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
       let listComp =""
       let listviewcomp =  <CircularProgress />
    let sendData = []
-      console.log(this.state)
+let filtrados=[]
     
       if(this.props.state.RegContableReducer.Compras){
-        let filtrados = this.FilterSistem(this.props.state.RegContableReducer.Compras)
+         filtrados = this.FilterSistem(this.props.state.RegContableReducer.Compras)
       
         if(filtrados){
           sendData = filtrados
@@ -451,6 +453,21 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
             <p> Listado Compras</p>
       
         </div>
+        <div>
+          <DropdownButtonCompras arrData={filtrados} 
+          img={this.props.state.userReducer.update.usuario.user.Factura.logoEmp}
+          state={{
+            diario:this.state.diario,
+            mensual:this.state.mensual,
+            periodo:this.state.periodo,
+            tiempo:this.state.tiempo,
+            tiempoperiodofin:this.state.tiempoperiodofin,
+              estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab ,
+          ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision ,
+          nombreComercial:this.props.state.userReducer.update.usuario.user.Factura.nombreComercial
+           }}
+          />
+      </div>
      
         </div>
 

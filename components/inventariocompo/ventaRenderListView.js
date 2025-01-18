@@ -1,14 +1,17 @@
 
 import {Animate} from "react-animate-mount"
+import Dropdown from 'react-bootstrap/Dropdown';
 import React, { useState,useEffect } from 'react';
-const ArtRender = ({ datos,getNota, deleteVentaList,user,resendProcess,downloadFact,sendView,viewCreds}) => {
+const ArtRender = ({ datos,getNota, watchNotaCredito, deleteVentaList,user,resendProcess,downloadFact,sendView,viewCreds}) => {
   const [visual, setvisual] = useState(false );
   const [visualCred, setvisualCred] = useState(false );
   const [backGroundVent, setbackGroundVent] = useState("");
   const [visualProcess, setvisualProcess] = useState(false);
   const [visualNota, setvisualNota] = useState(false);
+  const [watchNota, setwatchNota] = useState(false);
 
 useEffect(() => {
+
 
 if(datos.TipoVenta == "Credito"){
   setvisualCred(true)
@@ -40,11 +43,18 @@ if(datos.TipoVenta == "Credito"){
     setvisual(true)
   }
 
-  if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != ""){
+  if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != "" && (datos.NotaCredito == null || datos.NotaCredito == "")){
   
     setvisualNota(true)
   }
-});// fin del set Visual
+  if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != "" && datos.NotaCredito != null && datos.NotaCredito != ""){
+  
+    setwatchNota(true)
+  }
+
+
+
+});// fin del set effect
 
 
 let ganancia=0
@@ -107,7 +117,15 @@ var hora = addCero(tiempo.getHours())+" : "+   addCero(tiempo.getMinutes())
          
          <div className="contdetalleVenta">
                     
-                    <div className="valorD "> <p className="parrafoD eqIdart"> {datos.iDVenta}  </p></div>
+                    <div className="valorD "> <p className="parrafoD eqIdart"> 
+
+                      <Animate show={watchNota}>
+                      <span style={{fontSize:"12px", border:"1px solid blue", borderRadius:"5px", textAlign:"center" }}>Nota Cred.</span>  
+
+                      </Animate>
+                      {datos.iDVenta}  
+                      
+                      </p></div>
                     
                  
                     </div>
@@ -167,6 +185,11 @@ var hora = addCero(tiempo.getHours())+" : "+   addCero(tiempo.getMinutes())
                     <div className="contdetalleVenta">
                 
                     <div className="valorD miscien">
+
+
+
+
+
                     <Animate show={visual}>
                        <p className="parrafoD ">$ {ganancia.toFixed(2)}  </p>
                        </Animate>
@@ -181,27 +204,76 @@ var hora = addCero(tiempo.getHours())+" : "+   addCero(tiempo.getMinutes())
                  
                     </div>
                     <div className="contdetalleVenta miscien butondelete">
-                    <Animate show={visualCred}>
-                    <button  className="btn btn-warning mybtn " onClick={(e)=>{ e.stopPropagation();viewCreds(datos)}}><span className="material-icons">payments          
-</span></button>
-</Animate>
-                    <Animate show={visual}>
-                    <button  className="btn btn-danger mybtn " onClick={(e)=>{  e.stopPropagation(); deleteVentaList(datos)}}><span className="material-icons">delete
-</span></button>
-</Animate>
-<button  className="btn btn-info mybtn " onClick={(e)=>{ e.stopPropagation();downloadFact(datos)}}><span className="material-icons">
-get_app
-</span></button>
-<Animate show={visualProcess}>
-                    <button  className="btn btn-warning mybtn " onClick={(e)=>{ e.stopPropagation();resendProcess(datos)}}><span className="material-icons">
-send
-</span></button>
-</Animate>
-<Animate show={visualNota}>
-                    <button  className="btn btn-warning info " onClick={(e)=>{ e.stopPropagation();getNota(datos)}}><span className="material-icons">
+                    <Dropdown onClick={(e)=>{ e.stopPropagation(); console.log(datos)}}>
+        
+        <Dropdown.Toggle variant="primary" className="contDropdown" id="dropdownm" style={{marginRight:"15px"}}>
+        <span className="material-icons">
+          
+          </span>
+    </Dropdown.Toggle>
+  
+     <Dropdown.Menu>
+     <Dropdown.Item>
+     <button className=" btn btn-dark btnDropDowm" >
+            <span className="material-icons" onClick={(e)=>{ e.stopPropagation();downloadFact(datos)}}>
+            download
+          </span>
+          <p>Descargar</p>
+          </button>
+     </Dropdown.Item> 
+     <Animate show={visualNota}>
+<Dropdown.Item>
+                    <button  className="btn btn-warning btnDropDowm " onClick={(e)=>{ e.stopPropagation();getNota(datos)}}><span className="material-icons">
                     receipt
-</span></button>
+</span>
+<p>Nota de Crédito</p>
+</button>
+</Dropdown.Item>
 </Animate>
+
+<Animate show={watchNota}>
+<Dropdown.Item>
+                    <button  className="btn btn-info btnDropDowm " onClick={(e)=>{ e.stopPropagation();watchNotaCredito(datos)}}><span className="material-icons">
+                    receipt
+</span>
+<p> Visualizar Nota de Crédito</p>
+</button>
+</Dropdown.Item>
+</Animate>
+
+<Animate show={visualProcess}>
+<Dropdown.Item>
+                    <button  className="btn btn-warning btnDropDowm " onClick={(e)=>{ e.stopPropagation();resendProcess(datos)}}><span className="material-icons">
+send
+</span>
+<p>Re-enviar</p>
+
+</button>
+  </Dropdown.Item>
+</Animate>
+<Animate show={visualCred}>
+                    <Dropdown.Item>
+                    <button  className="btn btn-warning btnDropDowm " onClick={(e)=>{ e.stopPropagation();viewCreds(datos)}}><span className="material-icons">payments          
+</span>
+<p>Abonos</p>
+</button>
+</Dropdown.Item>
+</Animate>
+
+
+     <Animate show={visual}>
+                    <Dropdown.Item>
+                    <button  className="btn btn-danger btnDropDowm " onClick={(e)=>{  e.stopPropagation(); deleteVentaList(datos)}}><span className="material-icons">delete
+</span>
+<p>Eliminar</p>
+
+</button>
+</Dropdown.Item>
+</Animate>
+ 
+     </Dropdown.Menu>
+     </Dropdown>
+      
 </div>
                    
   
@@ -223,6 +295,8 @@ send
                    }
 
                 .eqIdart{
+                display:flex;
+                flex-flow:column;
                     width: 85px;  
                 }
                  .miscien{
@@ -232,7 +306,7 @@ send
                   .contVenta{
                     display: inline-flex;
 cursor:pointer;
-            overflow: hidden;
+       
 
             border-radius: 6px;
             margin-bottom:10px;

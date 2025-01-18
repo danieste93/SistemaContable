@@ -45,7 +45,7 @@ router.put('/editcat', Authentication, cuentasController.editCat);
 router.put('/deletecat', Authentication, cuentasController.deleteCat);
 
 router.put('/addnewtipe',Authentication, cuentasController.addNewTipe);
-router.put('/deletetipe',Authentication, cuentasController.deleteTipe);
+router.post('/deletetipe',Authentication, cuentasController.deleteTipe);
 
 router.put('/edittrep',Authentication, cuentasController.editRep);
 router.post("/deleterepeticion",Authentication, cuentasController.deleteRepeticion)
@@ -54,10 +54,11 @@ router.post("/deleterepeticion",Authentication, cuentasController.deleteRepetici
 router.put('/addrepeticiones',Authentication, cuentasController.addRepeticiones);
 
 router.post('/getregs', Authentication, cuentasController.getRegs);
+router.post('/getregsdeletetime', Authentication, cuentasController.getRegsDeleteTime);
 router.post('/getmontregs', Authentication, cuentasController.getMontRegs);
 router.post('/gettipos', Authentication, cuentasController.getTipos);
 router.get('/getdataaaa', cuentasController.profesorAdd);
-
+router.post('/agregarNotaCredito',Authentication, cuentasController.agregarNotaCredito);
 router.post('/generarfact', cuentasController.generarFact);
 
 router.post('/generarventa', cuentasController.generarVenta);

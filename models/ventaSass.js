@@ -136,6 +136,10 @@ const OrderSchema = new Schema({
             default:0
            },
            arrRegs:[],
+           NotaCredito:{
+
+        
+           },
            Html:{
             type: String,
            },

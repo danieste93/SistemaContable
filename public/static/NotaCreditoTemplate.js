@@ -2,10 +2,16 @@ import * as ReactDOMServer from 'react-dom/server'
 import Barcode  from 'react-barcode';
 
 
-const genProds = (arts)=>{
- 
+const genProds = (arts, Inf)=>{
+    console.log(Inf)
 let mapeador = arts.map((item)=>{
-
+  
+    let precioGenerado = item.Iva?((item.PrecioVendido / parseFloat(`1.${process.env.IVA_EC }`))).toFixed(2)
+    : (item.PrecioVendido).toFixed(2)
+   
+    let precioVentaFinal = item.Iva?(item.PrecioCompraTotal / parseFloat(`1.${process.env.IVA_EC }`)).toFixed(2)
+    : (item.PrecioCompraTotal).toFixed(2)
+  
     return(<div class="ContDetalle">
         <div class="divigualTitulo">
         {item.Titulo}
@@ -14,22 +20,23 @@ let mapeador = arts.map((item)=>{
         {item.CantidadCompra}
         </div>
         <div class="divigual">
-        {item.PrecioVendido.toFixed(2)}
+        {precioGenerado}
         </div>
         <div class="divigual">
-        {item.PrecioCompraTotal.toFixed(2)}
+        {precioVentaFinal}
         </div>
         <style> {`
         .divigual{
             width: 100px;
             text-align: center;
         }
-        .divigualData{
-            width: 200px;
-            text-align: center;
-        }
         .divigualTitulo{
             width: 250px; 
+            text-align: center;
+        }
+        
+        .divigualData{
+            width: 200px;
             text-align: center;
         }
         .ContDetalle{
@@ -41,16 +48,7 @@ let mapeador = arts.map((item)=>{
                 -ms-flex-pack: justify;
                     justify-content: space-between;
         }
-        .contDetailbajo{
-            display: -webkit-box;
-display: -ms-flexbox;
-display: flex;
-word-break: break-word;
-margin-top: 4px;
--webkit-box-pack: justify;
--ms-flex-pack: justify;
-justify-content: space-between;
-        }
+
         `}
         </style>
     </div>)
@@ -59,15 +57,15 @@ justify-content: space-between;
 }
 
 export const Bodygen = (data)=>{
- 
+   
     let Inf = data.data
-  
+    console.log(Inf)
 let Rimpeval =""
-if(Inf.rimpeval && !Inf.populares){
-    Rimpeval = "Contribuyente Régimen RIMPE"
-}else if(Inf.rimpeval && Inf.populares){
-    Rimpeval = "Contribuyente Negocio Popular - Régimen RIMPE"
-}
+    if(Inf.rimpeval && !Inf.populares){
+        Rimpeval = "Contribuyente Régimen RIMPE"
+    }else if(Inf.rimpeval && Inf.populares){
+        Rimpeval = "Contribuyente Negocio Popular - Régimen RIMPE"
+    }
 
     return( <div class="invoice-box">
         <div class="fondogen">
@@ -83,10 +81,10 @@ if(Inf.rimpeval && !Inf.populares){
          
             <div class="contdetail ContNumeracion">
             <div class="clave">
-            Nota de Venta Nº
+            Nota de Crédito Nº
             </div>
             <div class="valor">
-            <span>{`  ${Inf.idVenta}`}</span> 
+            <span>{`  ${Inf.estab} - ${Inf.ptoEmi} - ${Inf.secuencial}`}</span> 
             </div>
             </div>  
             <div class="contdetail">
@@ -141,30 +139,42 @@ if(Inf.rimpeval && !Inf.populares){
       Total
         </div>
         </div>
-    {genProds(Inf.ArticulosVendidos)}
+    {genProds(Inf.ArticulosVendidos, Inf)}
     <div class="MainContValues">
     <div class="ContDetalle contValues" >
         <div class="divigualData">
-        Subtotal {process.env.IVA_EC}%:
+         Subtotal {process.env.IVA_EC}%:
         </div>
      
         <div class="divigual">
     
         </div>
         <div class="divigual">
-   
+      $ {Inf.baseImpoConImpuestos.toFixed(2)}
         </div>
         </div>
         <div class="ContDetalle contValues" >
         <div class="divigualData">
+         Subtotal IVA 0%:
+        </div>
+     
+        <div class="divigual">
     
+        </div>
+        <div class="divigual">
+        $ {Inf.baseImpoSinImpuestos.toFixed(2)}
+        </div>
+        </div>
+        <div class="ContDetalle contValues" >
+        <div class="divigualData">
+        Valor {process.env.IVA_EC}%: 
         </div>
         
         <div class="divigual">
     
         </div>
         <div class="divigual">
-    
+      $   {Inf.IvaEC}
         </div>
         </div>
     <div class="ContDetalle contValues" >
@@ -181,15 +191,23 @@ if(Inf.rimpeval && !Inf.populares){
         </div>
         </div>
     </div>
+    
     <div class="Contfinal">
+    <div class="FinalData">
+<div class="Cont1">
+<p>Motivo:</p>
+<span>{Inf.Justificacion}</span>
+</div>
+
+</div>
 <div class="FinalData">
 <div class="Cont1">
 <p>Dirección Establecimiento:</p>
 <span>{Inf.dirEstablecimiento}</span>
 </div>
 <div class="Cont1">
-<p></p>
-<span> </span>
+<p>Estado:</p>
+<span> {Inf.Estado}</span>
 </div>
 </div>
 <div class="FinalData">
@@ -202,32 +220,62 @@ if(Inf.rimpeval && !Inf.populares){
 <div className="contExtraData">
 <div className="contDetailbajo">
     <span className=" subTitledetail Bolder ">
-      
+        Factura que se modifica:
     </span>
+    <div class="divigual">
+    </div>
     <span>
-   
+    {Inf.numDocModificado}
+    </span>
+    </div>
+    <div className="contDetailbajo">
+    <span className=" subTitledetail Bolder ">
+        Fecha Emision:(comprobante modificado):
+    </span>
+    <div class="divigual">
+    
+    </div>
+    <span>
+    {Inf.fechaEmisionDocSustento}
+    </span>
+    </div>
+
+<div className="contDetailbajo">
+    <span className=" subTitledetail Bolder ">
+        Fecha Autorización:
+    </span>
+    <div class="divigual">
+    </div>
+    <span>
+    {Inf.fechaAuto}
     </span>
     </div>
     <div className="contDetailbajo">
     <span className="subTitledetail Bolder">
-   
+        Numero Autorización: 
     </span>
+    <div class="divigual">
+    </div>
     <span>
-  
+    {Inf.numeroAuto}
     </span>
 </div>
 <div className="contDetailbajo">
     <span className="subTitledetail Bolder">
-      
+        Clave Acceso: 
     </span>
+    <div class="divigual">
+    </div>
     <span>
- 
+    {Inf.ClaveAcceso}
     </span>
 </div>
 <div className="contDetailbajo">
     <span className=" subTitledetail Bolder">
         OBLIGADO A LLEVAR CONTABILIDAD: 
     </span>
+    <div class="divigual">
+    </div>
     <span>
     {Inf.obligadoContabilidad}
     </span>
@@ -245,14 +293,13 @@ if(Inf.rimpeval && !Inf.populares){
 
     </div>
     <div className="Creditos">
-    NOTA DE VENTA GENERADA EN ACTIVOS.EC® 2024 - 2025
+ NOTA DE CREDITO GENERADA EN ACTIVOS.EC ® 2024 - 2025
 </div>
 </div>
 <style> {`
 
-.subTitledetail{
-    width: 30%;
-} 
+
+
       
        
          `}
@@ -281,8 +328,10 @@ return `
         }
         .contExtraData{
             font-size: 11px;
+            margin-top:10px;
         }
         .Cont1{
+            width: 300px;
             max-width: 600px;
             display:flex;
             -webkit-box-orient:vertical;
@@ -292,7 +341,8 @@ return `
                     text-align: center;
         }
         .subTitledetail{
-            width: 30%;
+         
+             margin-right: 10px;
         }
         .FinalData{
             display: -webkit-box;
@@ -345,15 +395,21 @@ return `
                 -ms-flex-pack: justify;
                     justify-content: space-between;
         }
-        .contDetailbajo{
-            display: -webkit-box;
-display: -ms-flexbox;
-display: flex;
+              .contDetailbajo{
+
 word-break: break-word;
-margin-top: 4px;
--webkit-box-pack: justify;
--ms-flex-pack: justify;
-justify-content: space-between;
+margin-top: 5px;
+
+  display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            width: 100%;
+            -webkit-box-pack: justify;
+                -ms-flex-pack: justify;
+                    justify-content: space-between;
+
+
+
         }
              .empresaLogo{
                 width:110px;
@@ -542,7 +598,7 @@ justify-content: space-between;
             flex-flow: column;
             -ms-flex-wrap: nowrap;
             flex-wrap: nowrap;
-            max-width: 600px;
+         
                         }
                         .Cont2FactTo{
                             display: -webkit-box;
@@ -555,18 +611,6 @@ justify-content: space-between;
             -ms-flex-wrap: nowrap;
             flex-wrap: nowrap;
            width: 300px;
-                        }
-                        .Cont1FactTo{
-                            display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-    -ms-flex-flow: column;
-            flex-flow: column;
-            -ms-flex-wrap: nowrap;
-            flex-wrap: nowrap;
-         
                         }
             }</style>
        </head>

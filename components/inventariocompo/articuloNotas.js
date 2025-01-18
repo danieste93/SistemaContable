@@ -118,7 +118,7 @@ setTimeout(()=>{
                     }
             }else{
                
-                return "0"
+                return 0
 
             }
         }
@@ -289,7 +289,7 @@ render(){
  type="number"
  validators={['requerido']}
  errorMessages={['Escribe la cantidad'] }
- value={this.state.precioRender}
+ value={this.state.precioRender }
 className="newstyle"
 />     
 </p>

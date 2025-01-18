@@ -14,15 +14,19 @@ import ViewVenta from "../modal-viewventas"
 import ReactToPrint from "react-to-print";
 import Button from '@material-ui/core/Button';
 import ViewNotas from "./modal-genNotas"
+import ViewNotasCred from "../modal-viewvNotaCred"
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import ViewCreds from "../modal-viewCreds"
 import "./mediaprint.css"
+import DropdownButtonVentas from './usefull/dropdownbuttonVentas';
 import DoubleScrollbar from "react-double-scrollbar";
 import Estadisticas from './modal-estadisticasArticulos';
+
 class Listvent extends Component {
   state={
     chartModal:false,
+    viewerNota:false,
     searcherIn:"",
     searcherOut:"",
     filtrosTiempo:true,
@@ -810,7 +814,7 @@ if(!this.props.state.RegContableReducer.Ventas){
          
 
         }
-        downloadFact=(e)=>{  console.log(e)
+        downloadFact=(e)=>{  
         
           let valorNumero = e.Doctype =="Factura"?e.Secuencial:e.iDVenta
           let datos = {User: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
@@ -855,7 +859,7 @@ if(!this.props.state.RegContableReducer.Ventas){
         }
       
     render () {
-    console.log(this.state)
+  
       let flechaval = this.state.filtrosTiempo?"▲":"▼"
       let diarioval = this.state.diario?"activeval":"";
       let mensualval = this.state.mensual?"activeval":"";
@@ -868,7 +872,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
   
       if(this.props.state.RegContableReducer.Ventas){
        filtrados = this.FilterSistem(this.props.state.RegContableReducer.Ventas)
-        console.log(filtrados)
+    
         if(filtrados){
         listComp =filtrados.map((comp, i)=>{
       
@@ -886,9 +890,11 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
           key={comp._id} 
           datos={comp} 
           getNota={(datos)=>{ this.setState({viewNota:true, dataNota:datos})}} 
+          watchNotaCredito={(datos)=>{ this.setState({viewerNota:true, viewerdataNota:datos})}}
           viewCreds={(datos)=>{ this.setState({viewCreds:true, dataCred:datos})}} 
           sendView={(datos)=>{ this.setState({viewVenta:true, dataventa:datos})}} 
             
+
           user={this.props.state.userReducer.update.usuario.user.Tipo}
            deleteVentaList={(datos)=>{this.deleteVentaList(datos)}}
            downloadFact={(datos)=>{this.downloadFact(datos)}}
@@ -902,6 +908,8 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
     const handleClose = () => {
       this.setState({anchorEl:null});
     };
+
+
         return ( 
 
        
@@ -917,22 +925,19 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
                 
             <p> Listado Ventas</p>
             <div>
-            <Button aria-controls="simple-menu" aria-haspopup="true" onClick={handleClick}>
-        Reportes
-      </Button>
-      <Menu
-        id="simple-menu"
-        anchorEl={this.state.anchorEl}
-        keepMounted
-        open={Boolean(this.state.anchorEl)}
-        onClose={handleClose}
-      >
-        <MenuItem onClick={handleClose}>   <ReactToPrint 
-                        trigger={() => <span className=''> Reporte Ventas</span>}
-                        content={() => this.componentRef.current}       /></MenuItem>
-        <MenuItem onClick={()=>{handleClose();this.downloadFactReport()}}>Reporte de Facturas</MenuItem>
-
-      </Menu>
+          <DropdownButtonVentas arrData={filtrados} 
+          img={this.props.state.userReducer.update.usuario.user.Factura.logoEmp}
+          state={{
+            diario:this.state.diario,
+            mensual:this.state.mensual,
+            periodo:this.state.periodo,
+            tiempo:this.state.tiempo,
+            tiempoperiodofin:this.state.tiempoperiodofin,
+              estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab ,
+          ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision ,
+          nombreComercial:this.props.state.userReducer.update.usuario.user.Factura.nombreComercial
+           }}
+          />
       </div>
          
          
@@ -1305,7 +1310,9 @@ search
                             Acc
                         </div>
                     </div>
-                    {listviewcomp} 
+                    <div style={{marginBottom:"100px"}}>
+                    {listviewcomp}
+                    </div> 
                           </DoubleScrollbar>
                   </Animate>
                    </div>
@@ -1328,9 +1335,17 @@ search
 <Animate show={this.state.viewNota}>
 <ViewNotas datos={this.state.dataNota} Flecharetro={()=>{this.setState({viewNota:false})}} />
 </Animate>
+<Animate show={this.state.viewerNota}>
+<ViewNotasCred updateNotaCred={(e)=>{console.log(e);
+  
+  this.props.dispatch(updateVenta(e.updatedVenta))}} 
+ 
+  
+  userData={this.props.state.userReducer.update} datos={this.state.viewerdataNota} Flecharetro={()=>{this.setState({viewerNota:false})}} />
+</Animate>
 
            <style jsx>{`
-         .conFiltroNombres{
+         .conFiltroNombres{R
           display:flex;
            }
          .ContFiltrosgeneral{

@@ -48,6 +48,7 @@
     "isomorphic-unfetch": "^3.1.0",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^8.5.1",
+    "jspdf": "^2.5.2",
     "mathjs": "^13.1.1",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.33",
@@ -85,6 +86,7 @@
     "react-redux": "^7.2.2",
     "react-responsive-carousel": "^3.2.11",
     "react-to-print": "^2.14.7",
+    "react-transition-group": "^4.4.5",
     "react-use-draggable-scroll": "^0.4.7",
     "react-xml-parser": "^1.1.8",
     "redux": "^4.0.5",
@@ -99,6 +101,7 @@
     "url-loader": "^4.1.1",
     "web-push": "^3.4.4",
     "workbox-window": "^6.1.5",
+    "xlsx": "^0.18.5",
     "xml-parse": "^0.4.0",
     "xml2js": "^0.4.23"
   }

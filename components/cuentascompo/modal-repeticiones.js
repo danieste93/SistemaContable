@@ -362,7 +362,7 @@ this.getRep()
             <Animate show={generadorGasAnual.length > 0}>
             <div className="contarriba">
               <p className='subtituloreps'>Gastos Anuales</p>
-              <span className="sumstylesub">${sumaGasAnual}</span> 
+              <span className="sumstylesub">${sumaGasAnual.toFixed(2)}</span> 
               </div>
             {generadorGasAnual}
             </Animate>

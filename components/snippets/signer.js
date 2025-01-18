@@ -30,7 +30,7 @@ try{
     let pkcs8 
    
    var signaturesQuantity = certBags[Forge.oids.certBag];
-   console.log(signaturesQuantity)
+
 
 for (let z = 0 ;z<signaturesQuantity.length;z++){
   
@@ -78,14 +78,14 @@ for (let z = 0 ;z<signaturesQuantity.length;z++){
     pkcs8 = pkcs8bags[Forge.oids.pkcs8ShroudedKeyBag][0];
 
     if(signaturesQuantity[z].cert.extensions[0].digitalSignature == true){
-       console.log(z)
+   
         cert = certBags[Forge.oids.certBag][z].cert;
         pkcs8 = pkcs8bags[Forge.oids.pkcs8ShroudedKeyBag][z];
       break
      }
 }
 
-console.log(cert)
+
     let key = pkcs8.key;
     let X509SerialNumber = converter.hexToDec(cert.serialNumber)  
 

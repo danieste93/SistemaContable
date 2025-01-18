@@ -3,11 +3,17 @@ import {  KeyboardDatePicker,  MuiPickersUtilsProvider } from "@material-ui/pick
 import moment from "moment";
 import {connect} from 'react-redux';
 import { Animate } from "react-animate-mount";
+import GraficadorPie from "./estadisticas/generadorPie"
+import GraficadorSubPie from "./estadisticas/generadorsubCats"
+import GraficadorPieCuentas from "./estadisticas/generadorPieCuentas"
+import GraficadorPieCuentasSub from "./estadisticas/generadorPieCuentasSub"
+
 
 import { Pie, Line } from 'react-chartjs-2';
 import {Chart} from"chart.js"
 import 'chart.js/auto';
-import GenGroupRegs from './SubCompos/GenGroupRegsCuentasNuevas';
+
+
 import MomentUtils from '@date-io/moment';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import "moment/locale/es";
@@ -21,13 +27,12 @@ import { install } from "resize-observer";
       Line:false,
       Pieview:false,
       allData:true,
+      subCuentaDetail:false,
       catdetail:false,
       CategoriaElegida:{RegistrosF:[]},
-
-        Ingreso:true,
-        Gasto:false,
+      InvOption:"categoria",
+      subCuentadata:[],
         TotalData:false,
-
         diario:false,
         mensual:true,
         periodo:false,
@@ -36,8 +41,9 @@ import { install } from "resize-observer";
         tiempoperiodoini: this.periodoini(),
         tiempoperiodofin: this.periodofin(),
         ingCatRender:{},
-        bundleSubCat:"Todo"
-
+        bundleSubCat:"Todo",
+        excluidos:[],
+        subCatRegs:[]
     }
     periodofin(){
    
@@ -85,7 +91,7 @@ import { install } from "resize-observer";
             return days[this.state.tiempo.getDay()];
             
             }
-
+      
         getMonthName = ()=> {
             var monthNames = [ "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" ];
@@ -212,211 +218,30 @@ import { install } from "resize-observer";
             }
           
           }
+          handleOptionChange = (event) => {
+            this.setState({ InvOption: event.target.value });
+          };
           OrderFilter=(regs)=>{
             let order = regs.sort((a, b) => b.Tiempo - a.Tiempo)
         
            return order
           } 
+
+
+
+
     render() {
-      const defaultLegendClickHandler = Chart.defaults.plugins.legend.onClick;
-      const pieDoughnutLegendClickHandler =  Chart.overrides.pie.plugins.legend.onClick
-   
-
-      let getRandomInt =(max)=> {
-        return Math.floor(Math.random() * max);
-      }
-      let superIng= 0
-      let superGas= 0
-      let sumaing = 0
-      let sumagas = 0
-      let detallesrender= ""
-
-let subcats = []
-let arrToDisplay = []
-let linedata = {labels: [],
-  datasets: [{
-     label: '',
-     data: [],
-  } ]  }
-      if(this.state.CategoriaElegida.RegistrosF.length > 0){
-
-        let misregs2ing = this.state.CategoriaElegida.RegistrosF.filter(regsing => regsing.Accion == "Ingreso")
-        
-                if(misregs2ing.length > 0){
-                  for (let i=0; i < misregs2ing.length; i++ ){
-                    sumaing = sumaing + misregs2ing[i].Importe
-                }
-              }
-              let misregsgas = this.state.CategoriaElegida.RegistrosF.filter(regsgas => regsgas.Accion == "Gasto")
-             
-        
-                if(misregsgas.length > 0){
-                for (let i=0; i < misregsgas.length; i++ ){
-                    sumagas = sumagas + misregsgas[i].Importe
-                   }
-                  } 
-        
-        
-        superIng=  sumaing 
-        superGas= sumagas 
-        
-        
-//modulo sub cats
-let balance = superIng +superGas
-console.log(this.state)
-for(let i = 0;i<this.state.CategoriaElegida.RegistrosF.length;i++){
-
-
-
-
-  subcats.push(this.state.CategoriaElegida.RegistrosF[i].CatSelect.subCatSelect)  
-
-}
-
-let sinRepetidos = subcats.filter((valor, indiceActual, arreglo) => arreglo.indexOf(valor) === indiceActual);
-sinRepetidos.push("Otros")
-let cleanarr = sinRepetidos.filter(x => x != '')
-
-let coloresUsados= []
-let arrToRender =[]
-let alldatasets=[]
-for(let x=0;x<cleanarr.length;x++){
- 
-  let misSubcat =""
-  if(cleanarr[x] == "Otros"){
-    misSubcat= this.state.CategoriaElegida.RegistrosF.filter(regs => regs.CatSelect.subCatSelect == "")
+      console.log(this.state)
     
-  }else{
-    misSubcat= this.state.CategoriaElegida.RegistrosF.filter(regs => regs.CatSelect.subCatSelect == cleanarr[x])
-  }
-  let Colores = [
-    'rgba(255, 99, 132, 0.2)',
-    'rgba(54, 162, 235, 0.2)',
-    'rgba(255, 206, 86, 0.2)',
-    '#9ae599',
-    "red",
-    "yellow",
-    "lightblue",
-    "cyan",
-    "orange",
-    "lightblue",
-    "lighred",
-    "lighgreen",
-    "grey",
-    "aquamarine",
-    "coral",
-    "lightcoral",
-    "honeydew",
-    "deepskyblue",
-    "magenta",
-    "dimgrey",
-    "lemonchiffon",
-    "indigo",
-    "cadetblue",
-    "floralwhite",
-    "forestgreen",
-    "burlywood",
-    "darksalmon",
-    "chocolate",
-    
-    
-]
+
+      
 
 
-  let acc = 0
-  let vals = []
-misSubcat.forEach((element,i) => {
-
-  if(element.Accion == "Ingreso"){
-acc = acc + element.Importe
-
-  }else{
-    acc-= element.Importe
-  }
-  vals.push(element.Importe)
-
-});
-
-  let data = {
-              nombreSubCat: cleanarr[x],
-              valorTotal: acc,
-              porcentaje: parseFloat(((acc * 100) / balance).toFixed(2))
-  }
-  
-let customdataset={
-  label:cleanarr[x],
-  data:vals,
-  backgroundColor:Colores[x],
-  borderWidth: 1,
-}
-
-  arrToRender.push(data)
-
-  alldatasets.push(customdataset)
-
-}
-
-linedata = {labels: ["Enero, Febrero"],
-  datasets: alldatasets  }
-
-
-arrToRender.push({
-  nombreSubCat: "Todo",
-  valorTotal: balance,
-  porcentaje: 100
-})
-arrToRender.reverse()
-
-
- arrToDisplay = arrToRender.map(item=>{
-
- 
-
-
-  let setClass = ""
- if(item.nombreSubCat == this.state.bundleSubCat){
-    setClass= "contSubCatSelect"
-  }
-
-return(<div className={`contSubCat ${setClass} `} 
-              onClick={()=>{
-                           this.setState({bundleSubCat:item.nombreSubCat})
-                }} > 
-    <div className="contSubCatName"> 
-    {item.nombreSubCat}
-    </div>
-    <div className="contSubCatporcentaje"> 
-    {item.porcentaje}%
-    </div>
-    <div className="contSubCatvalor"> 
-   $ {item.valorTotal.toFixed(2)}
-    </div>
-    
-   </div>)
-
-})
-let allRegs =""
-if(this.state.bundleSubCat =="Todo"){
-allRegs = this.state.CategoriaElegida.RegistrosF
-}
-else if(this.state.bundleSubCat =="Otros"){
-  allRegs = this.state.CategoriaElegida.RegistrosF.filter(x=>x.CatSelect.subCatSelect == "")
-}
-else{
-  allRegs = this.state.CategoriaElegida.RegistrosF.filter(x=>x.CatSelect.subCatSelect == this.state.bundleSubCat)
-}
-
-detallesrender = <GenGroupRegs Registros={allRegs} cuentaSelect={{_id:0}} datosGene={{saldo:0, balance:0,saldoActive:false}} />  
-
-
-        }
         let displayRegs =[]
         let diarioval = this.state.diario?"activeval":"";
         let mensualval = this.state.mensual?"activeval":"";
         let periodoval = this.state.periodo?"activeval":"";
-        let activeB = this.state.Ingreso?"activeB":""
-        let deactiveB = this.state.Gasto?"deactiveB":""
-        let activeTotalB = this.state.TotalData?"activeBgreen":""
+        
         let pieActive = this.state.Pie?"activeB":""
         let lineActive = this.state.Line?"activeB":""
         let cuentasActive = this.state.Cuentas?"activeB":""
@@ -433,527 +258,63 @@ detallesrender = <GenGroupRegs Registros={allRegs} cuentaSelect={{_id:0}} datosG
                  data: [],
               } ]  }
       
-let data = this.state.CatIng
-let stats =""
-
-
-let response  = this.props.regC.Regs? this.props.regC.Regs.filter(x=> x.Accion=="Ingreso"|| x.Accion=="Gasto" ):[]
-
-let cuentasCapital = this.props.regC.Cuentas.filter(x =>  x.CheckedA && x.CheckedP)
 
 
 
-let RegistrosRecopilados = []
-
-if(this.props.regC.Cuentas.length>0){
-for(let j = 0; j<this.props.regC.Cuentas.length; j++){
-  let cap = response.filter(x=> x.CuentaSelec.idCuenta == this.props.regC.Cuentas[j]._id )
-
-  RegistrosRecopilados.push(...cap)
-}
+let registros 
+if(this.state.Categorias){
+  registros  = this.props.regC.Regs? this.props.regC.Regs.filter(x=> x.Accion=="Ingreso"|| x.Accion=="Gasto" ):[]
+}else if(this.state.Cuentas){
+  registros  = this.props.regC.Regs
 }
 
 
-let  DetallesPorrender=[]
-let  DetallesIng=[]
-let  DetallesGas=[]
+let DetallesPorrender=[]
 
-displayRegs = this.OrderFilter(RegistrosRecopilados)
+
+displayRegs = this.OrderFilter(registros)
 if(this.state.diario){
     DetallesPorrender = this.DiaryFilter(displayRegs)
   }else if(this.state.mensual){
     DetallesPorrender = this.MensualFilter(displayRegs)
-    
   }
   else if(this.state.periodo){
     DetallesPorrender = this.PeriodoFilter(displayRegs)
   }
 
-    DetallesIng = DetallesPorrender.filter(x => x.Accion=="Ingreso"  ) 
-
-    console.log(DetallesIng)
-    DetallesGas = DetallesPorrender.filter(x => x.Accion=="Gasto"  ) 
- 
-    
-    let categoriasRegistros =[]
-    let cuentasRegistros =[]
   
-    let cuentasGasRegistros =[]
-    let categoriasGasRegistros =[]
+ const sendPiedata=(data)=>{
 
+       let getRegs = DetallesPorrender.filter(x=> x.CatSelect._id == data._id)     
 
-    let cuentasRegistrosTotal =[]
-    let categoriaRegistrosTotal =[]
-    for(let z=0;z<DetallesPorrender.length ;z++){
-      let cat = DetallesPorrender[z].CatSelect
-      let cuenta = DetallesPorrender[z].CuentaSelec
-      categoriaRegistrosTotal.push(cat)
-      cuentasRegistrosTotal.push(cuenta)
-    }
-   
-    let CategoriasTotalesSR= categoriaRegistrosTotal.filter((value, index, self) => {
-      return(            
-        index === self.findIndex((t) => (
-          t.nombreCat === value.nombreCat && t.nombreCat === value.nombreCat
-        ))
-    )
-    
-    });
+       setTimeout(()=> {
+        this.setState({catdetail:true})
 
-    let CuentasTotalesSR= cuentasRegistrosTotal.filter((value, index, self) => {
-      return(            
-        index === self.findIndex((t) => (
-          t.nombreCuenta === value.nombreCuenta && t.nombreCuenta === value.nombreCuenta
-        ))
-    )
-    
-    });
+        }, 400);
+        this.setState({ subCatRegs:getRegs, allData:false})
 
-    if(DetallesIng.length > 0){
-      console.log(DetallesIng)
-      for(let z=0;z<DetallesIng.length ;z++){
-    
-        let cat = DetallesIng[z].CatSelect
-      let cuenta = DetallesIng[z].CuentaSelec
-        categoriasRegistros.push(cat)
-        cuentasRegistros.push(cuenta)
-      }
-    }
-    let CategoriasIngSR= categoriasRegistros.filter((value, index, self) => {
-          return(            
-            index === self.findIndex((t) => (
-              t.nombreCat === value.nombreCat && t.nombreCat === value.nombreCat
-            ))
-      )
-    
-    });
-
-    let CuentasIngSR= cuentasRegistros.filter((value, index, self) => {
-      return(            
-        index === self.findIndex((t) => (
-          t.nombreCuenta === value.nombreCuenta && t.nombreCuenta === value.nombreCuenta
-        ))
-  )
-
-});
-
-
-
-
-    if(DetallesGas.length > 0){
-      for(let z=0;z<DetallesGas.length ;z++){
-        let cat = DetallesGas[z].CatSelect
-        let cuenta = DetallesGas[z].CuentaSelec
-        categoriasGasRegistros.push(cat)
-        cuentasGasRegistros.push(cuenta)
-      }
-    }
-   console.log(categoriasGasRegistros)
-
-    let CategoriasGasSR= categoriasGasRegistros.filter((value, index, self) => {
-          return(            
-            index === self.findIndex((t) => (
-              t.nombreCat === value.nombreCat && t.nombreCat === value.nombreCat
-            ))
-      )
-    
-    });
-    let CuentasGasSR= cuentasGasRegistros.filter((value, index, self) => {
-      return(            
-        index === self.findIndex((t) => (
-          t.nombreCuenta === value.nombreCuenta && t.nombreCuenta === value.nombreCuenta
-        ))
-    )
-    
-    });
-  
-
-
-  let sumaTotaling=0
-  let sumaTotalgas=0
-  let sumaTotal = 0
-  if(DetallesPorrender.length>0){
-
-    
-    for(let x = 0; x < DetallesIng.length; x++){
-      sumaTotaling = sumaTotaling + DetallesIng[x].Importe
-    }
-
-    for(let x = 0; x < DetallesGas.length; x++){
-      sumaTotalgas = sumaTotalgas + DetallesGas[x].Importe
-    }
-   
-     if(this.state.Cuentas){
-      sumaTotal = sumaTotaling -sumaTotalgas
-     }else if(this.state.Categorias){
-      sumaTotal = sumaTotaling -sumaTotalgas
-     }
-    
-
-    let Colores = [
-        'rgba(255, 99, 132, 0.2)',
-        'rgba(54, 162, 235, 0.2)',
-        "forestgreen",
-        '#9ae599',
-       
-        "red",
-        "yellow",
-        "lightblue",
-        "cyan",
-        "orange",
-  
-        "grey",
-        "aquamarine",
-        "coral",
-        "lightcoral",
-        "honeydew",
-        "deepskyblue",
-        "magenta",
-        "dimgrey",
-        "lemonchiffon",
-        "indigo",
-        "cadetblue",
-        "floralwhite",
-     
-        "burlywood",
-        "darksalmon",
-        "chocolate",
-        'rgba(255, 206, 86, 0.2)',
-        
-    ]
-    let LabelsLine = []
-
-    let DetallesDataLabel = ""
-    if(this.state.Ingreso){
-      DetallesDataLabel = DetallesIng
-    }else if(this.state.Gasto){
-      DetallesDataLabel = DetallesGas
-    }else if(this.state.TotalData){
-      DetallesDataLabel = DetallesPorrender
-    }
-    for(let x = 0; x < DetallesDataLabel.length; x++){
-      if(this.state.diario){
-      let newtime = new Date(DetallesDataLabel[x].Tiempo).getHours()
-      LabelsLine.push(newtime)
-    }else if(this.state.mensual){
-      let newtime = new Date(DetallesDataLabel[x].Tiempo).getDate() 
-      LabelsLine.push(newtime)
-    }else if(this.state.periodo){
-      let newtime = new Date(DetallesDataLabel[x].Tiempo).getMonth() 
-    
-      LabelsLine.push(newtime)
-    }
-    }
-
-    let sinRepetidosLabels = LabelsLine.filter((valor, indiceActual, arreglo) => arreglo.indexOf(valor) === indiceActual);
-    let OrderLabels = sinRepetidosLabels.sort((a,b) => a - b) 
-
-    let gruposCuentas = []
-   let gruposCats = []
-   if(this.state.Ingreso && CategoriasIngSR.length > 0 && this.state.Categorias  ){
-    gruposCats= CategoriasIngSR
-   }else if(this.state.Gasto && CategoriasGasSR.length > 0  && this.state.Categorias  ){  
-    gruposCats = CategoriasGasSR
-   }else if(this.state.TotalData && this.state.Categorias ){
-    gruposCats = CategoriasTotalesSR
-   }
-
-
-   if(this.state.Ingreso && CuentasIngSR.length > 0  && this.state.Cuentas  ){
-    gruposCuentas= CuentasIngSR
-   }else if(this.state.Gasto && CuentasGasSR.length > 0  && this.state.Cuentas ){
-    gruposCuentas = CuentasGasSR
- 
-   }else if(this.state.TotalData && this.state.Cuentas ){
-    gruposCuentas = CuentasTotalesSR
-   }
-   
-  
- 
-
-        let regsCat = []
-
-        let regsCuenta = []
-        let titulos=[]
-        let datoTouP =[]
-        let vals = []
-        let coloresUsados= []
-
-        let dataSetGen = []
-   
-if(this.state.Categorias){
-        for(let i = 0; i < gruposCats.length; i++){
-
-          if(this.state.Ingreso){
-            regsCat = DetallesIng.filter(x=> x.CatSelect.nombreCat == gruposCats[i].nombreCat)
-          }else if(this.state.Gasto){
-            regsCat = DetallesGas.filter(x=> x.CatSelect.nombreCat == gruposCats[i].nombreCat)
-          }else if(this.state.TotalData){
-            regsCat = DetallesPorrender.filter(x=> x.CatSelect.nombreCat == gruposCats[i].nombreCat)
-          }
-
-        
-        
-
-            if(regsCat.length > 0){
-              let ValsLine = []
-              let dataConf =""
-                titulos.push(gruposCats[i].nombreCat)
-                coloresUsados.push(Colores[i])
-                let sumaRegistros = 0
-                for (let i=0; i < regsCat.length; i++ ){
-               
-                  sumaRegistros += regsCat[i].Importe
-                
-              
-                         }
-
-              
-         
-              for (let x=0; x < OrderLabels.length; x++ ){
-               let finddata =[]
-                           
-             
-                   finddata = regsCat.filter((cat)=>{
-                    let timeregis
-                    if(this.state.diario){
-                      timeregis = new Date(cat.Tiempo).getHours()
-                  }else if(this.state.mensual){
-                    timeregis = new Date(cat.Tiempo).getDate()
-                  }else if(this.state.periodo){
-                    timeregis = new Date(cat.Tiempo).getMonth() 
-                  }
-                    if(timeregis == OrderLabels[x]){
-                      return true                      
-                    }else{
-                      return false
-                    }
-
-
-                  } )
-              
-                  if(finddata.length > 0){
-                   let accum = 0
-                   finddata.forEach(x => accum += x.Importe)
-                   ValsLine.push(accum)
-                  }else{
-                    ValsLine.push(0)
-                  }
-                
- 
-              }
-          
-
-           
-              let percent = 0
-              if(sumaRegistros > 0){
-              if(this.state.Ingreso){
-                percent = (sumaRegistros *100) / sumaTotaling
-               
-              }else if(this.state.Gasto){
-                percent = (sumaRegistros *100) / sumaTotalgas
-              }else if(this.state.TotalData){
-                percent = (sumaRegistros *100) / sumaTotal
-              }}
-            
-            
-              
-              let newarr = {CategoriaN:gruposCats[i].nombreCat, Cantidad:sumaRegistros, Color:Colores[i],Porcentaje:percent.toFixed(2), RegistrosF:regsCat}
-              vals.push(sumaRegistros)
-              datoTouP.push(newarr)
-              dataConf=  {label: gruposCats[i].nombreCat,
-                data: ValsLine,
-                backgroundColor: Colores[i],
-                borderColor: Colores[i],
-                borderWidth: 6,}
-  
-                dataSetGen.push(dataConf)
-            }
-    
-        
-        }//fin for
-      
-      }
-
-      else if(this.state.Cuentas){
-
-        for(let i = 0; i < gruposCuentas.length; i++){
-         
-          if(this.state.Ingreso){
-            
-            regsCuenta = DetallesIng.filter(x=> x.CuentaSelec.idCuenta == gruposCuentas[i].idCuenta)
-          }else if(this.state.Gasto){
-           
-            regsCuenta = DetallesGas.filter(x=> x.CuentaSelec.idCuenta == gruposCuentas[i].idCuenta)
-          }else if(this.state.TotalData){
-            regsCuenta = DetallesPorrender.filter(x=> x.CuentaSelec.idCuenta == gruposCuentas[i].idCuenta)
-          }
-          
-         
-          if(regsCuenta.length > 0){
-          
-            let ValsLine = []
-            let dataConf =""
-           
-            titulos.push(gruposCuentas[i].nombreCuenta)
-                      coloresUsados.push(Colores[i])
-                      let sumaRegistros = 0
-                      for (let i=0; i < regsCuenta.length; i++ ){
-                     if (this.state.TotalData){
-                      if(regsCuenta[i].Accion == "Ingreso"){
-                        sumaRegistros += regsCuenta[i].Importe
-                      }else if(regsCuenta[i].Accion == "Gasto"){
-                        sumaRegistros -= regsCuenta[i].Importe
-                      }
-                     
-
-                     }else{
-                        sumaRegistros += regsCuenta[i].Importe
-                      }
-                    
-                               }
-                    for (let x=0; x < OrderLabels.length; x++ ){
-                      let finddata =[]
-                                 
-                   
-                      finddata = regsCuenta.filter((cat)=>{
-                       let timeregis
-                       if(this.state.diario){
-                         timeregis = new Date(cat.Tiempo).getHours()
-                     }else if(this.state.mensual){
-                       timeregis = new Date(cat.Tiempo).getDate()
-                     }else if(this.state.periodo){
-                       timeregis = new Date(cat.Tiempo).getMonth() 
-                     }
-                       if(timeregis == OrderLabels[x]){
-                         return true                      
-                       }else{
-                         return false
-                       }
-      
-      
-                     } )
-                     if(finddata.length > 0){
-
-                      let accum = 0
-                    
-                      finddata.forEach(x => {
-                        if(x.Accion == "Ingreso"){
-                          return accum += x.Importe
-                        }else if(x.Accion == "Gasto"){
-                          return accum -= x.Importe
-                        }
-                      })
-                   
-                      ValsLine.push(accum)
-                     }else{
-                       ValsLine.push(0)
-                     }
-      
-      
-                             }
-      
-                             let percent = 0
-                       
-                         
-                             if(this.state.Ingreso){
-                              percent = (sumaRegistros *100) / sumaTotaling
-                             
-                            }else if(this.state.Gasto){
-                              percent = (sumaRegistros *100) / sumaTotalgas
-                            }
-                            else if(this.state.TotalData){
-                              percent = (sumaRegistros *100) / sumaTotal
-                     
-                            }
-                          
-                             let newarr = {CategoriaN:gruposCuentas[i].nombreCuenta, Cantidad:sumaRegistros, Color:Colores[i],Porcentaje:percent.toFixed(2), RegistrosF:regsCuenta}
-                          
-                         
-                              vals.push(sumaRegistros)
-                           
-                             datoTouP.push(newarr)
-                         
-                             dataConf=  {label: gruposCuentas[i].nombreCuenta,
-                               data: ValsLine,
-                               backgroundColor: Colores[i],
-                               borderColor: Colores[i],
-                               borderWidth: 6,} 
-                                     
-                               dataSetGen.push(dataConf)
-                             
-          }
-        
-        }
-      
-      
-    
-      }
-
-
-   
-
-
-      
-        superdata = {
-            labels: titulos,
-            datasets: [
-                {label: 'asd',
-                data:vals,
-                backgroundColor:coloresUsados,
-                borderWidth: 1,
-             
-              
-              }
-            ]
-        }
-       let addCero=(n)=>{
-          if (n<10){
-            return ("0"+n)
-          }else{
-            return n
-          }
-        }
-    let superLabels2 = []
-    var monthNames = [ "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" ];
-          if(this.state.diario){
-            superLabels2 = OrderLabels.map(x=>x +":00")
-          }else if(this.state.mensual){
-            superLabels2 = OrderLabels.map(x=>addCero(x) )
-          }else if(this.state.periodo){
-            superLabels2 = OrderLabels.map(x=>monthNames[x] )
-          }
-        
-        superdata2 = {
-          labels:superLabels2,
-          datasets: dataSetGen
-      }
-
-
-
-        if(datoTouP.length >0){
-            stats = datoTouP.sort((a, b) => b.Cantidad - a.Cantidad).map((item, i)=>{
-          
-                let bcolor = item.Color
-                return(<div className="contstat" key={i} onClick={()=>{this.setState({CategoriaElegida:item,allData:false, catdetail:true});console.log("sii aqui")}}>
-                    <div className="contpercent" >
-                        <div className="percent" style={{background:bcolor}}>{item.Porcentaje}%</div>
-                        <div className="npercent">{item.CategoriaN}</div>
-        
-                    </div>
-                    <div className="contvalores">${item.Cantidad.toFixed(2)}</div>
-                </div>)
-             }) 
-        }
-
-    
-
-   
   }
 
- 
+  const sendPiedataCuentas=(data)=>{
+console.log(data)
+let getRegs = DetallesPorrender.filter(x => 
+  data.some(d => 
+      x.CuentaSelec.idCuenta == d._id || 
+      (x.CuentaSelec2 && x.CuentaSelec2.idCuenta == d._id)
+  )
+);
 
+let subCuentadata ={
+  regs:getRegs,
+  renderData:data
+}
+    setTimeout(()=> {
+     this.setState({subCuentaDetail:true})
+
+     }, 400);
+     this.setState({ subCuentadata:subCuentadata, allData:false})
+
+}
 
         return (
             <div id="mainhomeapp"className="mainstats">
@@ -1121,81 +482,20 @@ if(this.state.Categorias){
                   </Animate>   
 </div>
 </div>
-<div className="inggasCont">
-          <span className={`base ${activeB} `} onClick={()=>{this.setState({Ingreso:true, Gasto:false, TotalData:false })}}>   <div className="asd">Ingreso</div> ${sumaTotaling.toFixed(2)}</span>
-          <span style={{fontSize:"40px"}}>|</span>
-          <span className={`base ${deactiveB} `} onClick={()=>{this.setState({Gasto:true, Ingreso:false,TotalData:false,})}} > <div className="asd">Gasto</div> ${sumaTotalgas.toFixed(2)}</span>
-          <span style={{fontSize:"40px"}}>|</span>
-          <span className={`base ${activeTotalB} `} onClick={()=>{this.setState({Gasto:false, Ingreso:false, TotalData:true})}} > <div className="asd">Total</div> ${sumaTotal.toFixed(2)}</span>
-  </div>
+
   <Animate show={this.state.Pie}>  
-  <div className="centrar contMainDataChart">
- <div className="cont-Prin">
- <Pie data={superdata} plugins={[ChartDataLabels]}  options={{
-  
-  responsive: true,
-      cutoutPercentage: 80,
-      legend: { display: false},
-      plugins: {
-        legend : {
-          display: false,
-          onClick:   (e, legendItem, legend) =>{
-           
-  
-           
-            const index = legendItem.datasetIndex;
-            const type = legend.chart.config.type;
-          
-            if (type === 'pie' || type === 'doughnut') {
-              pieDoughnutLegendClickHandler({}, {
-            
-  
-index: 1,
-
-
-
-              }, )
-            } else {
-              defaultLegendClickHandler(e, legendItem, legend);
-            }
-          
-            
-      
-          }
-          },
-        datalabels: {
-            backgroundColor: function(context) {
-                return "white";
-              },
-            formatter: (value, ctx) => {
-                let sum = 0;
-                let ci = ctx.chart;
-             
-                let dataArr = ctx.chart.data.datasets[0].data;
-                let acc = 0
-                dataArr.forEach((d, i) => {
-                  if (ci.getDataVisibility(i)) {
-                    acc += d;
-                  }
-                });
-                let percentage = (value*100 / acc).toFixed(0)+"%";
-                return percentage;
-            },
-            color: 'black',
-            borderRadius: 25,
-            padding: 5,
-            font: {
-                size:"15px",
-                weight: 'bold'
-              },
-        }}
-   
-    }} />
-</div>
-<div className="contStatics">
-    {stats}
-</div>
-</div>
+    
+  <Animate show={this.state.Categorias}>  
+ <GraficadorPie data={DetallesPorrender}
+                 criterio={"categoria"}
+                   sendData={sendPiedata} />
+  </Animate>
+  <Animate show={this.state.Cuentas}>  
+ <GraficadorPieCuentas data={DetallesPorrender}
+                 criterio={"categoria"}
+                  Cuentas={this.props.regC.Cuentas}
+                   sendData={sendPiedataCuentas} />
+  </Animate>
 </Animate> 
 <Animate show={this.state.Line}> 
 <div className="centrar contLineChart">
@@ -1227,28 +527,40 @@ index: 1,
 </div>
 <div className="contcatdetail">
 <Animate show={this.state.catdetail}>
-<div className="contGnCroom">
-<div className="headercroom">
-  <img src="/static/flecharetro.png" alt="" className="flecharetro" 
-                  onClick={()=>{this.setState({catdetail:false, allData:true})}  }
-                  />
-  <div className="tituloArt">Detalles de {this.state.CategoriaElegida.CategoriaN} </div>
-  </div>
+<GraficadorSubPie data={this.state.subCatRegs}
+ Flecharetro={()=>{
   
+  setTimeout(()=> {
+    this.setState({allData:true})
 
-    <div className="contSubCats">
-    {arrToDisplay}
+    }, 400);
+  
+  this.setState( {catdetail:false, subCatRegs:[]})
 
-    </div>
-   
-    <div className="cont-Prin2">
 
-    </div>
+}
+ 
+ }
+/>
+</Animate>
+<Animate show={this.state.subCuentaDetail}>
+<GraficadorPieCuentasSub data={this.state.subCuentadata}
+ Flecharetro={()=>{
+  
+  setTimeout(()=> {
+    this.setState({allData:true})
 
-                     <div className="supercontreg">
-                  {detallesrender}
-                  </div>
-</div>
+    }, 400);
+  
+  this.setState( {subCuentaDetail:false,
+    
+    subCuentadata:[]})
+
+
+}
+ 
+ }
+/>
 </Animate>
 </div>
 </div>
@@ -1256,7 +568,9 @@ index: 1,
 
 <style >
                 {                                
-                ` 
+                ` .excluido{
+                color:red
+                }
                 .fullw{
                   width: 100%;  
               }
@@ -1273,15 +587,7 @@ index: 1,
                   width: 90%;
                   margin-left: 5%;
                 }
-                .inggasCont{
-                    display: flex;
-                      width: 100%;
-                      justify-content: space-around;
-                      padding: 5px;
-                      font-size: 17px;
-                      flex-wrap: wrap;
-                      border-radius: 11px;
-                  }
+               
                 .fechacentral{
                     width: 60%;
                   }
@@ -1293,9 +599,9 @@ index: 1,
                   } 
                 .contpercent{
                     display: flex;
-                    width: 60%;
-                   
-                    max-width: 250px;  
+                    width: 70%;
+                   align-items: center
+                      
                     
                 }
                 .activeB{
@@ -1323,11 +629,7 @@ index: 1,
                   border-radius: 11px;
                   margin: 3px 0px;
                   }
-                  .flecharetro{
-                    height: 40px;
-                    width: 40px;
-                    padding: 5px;
-                  }
+                  
                   .flechalateral{
                     display: flex;
                     align-items: center;
@@ -1394,9 +696,12 @@ index: 1,
                   width: 30%;
                   max-width: 65px;
                   margin-left: 15px;
+                      min-width: 60px;
+    height: 30px;
                    }
                   .npercent{
                    margin-left: 25px;
+                       word-break: break-all;
                   }
                    .minigen{
                     text-align: center;
@@ -1470,9 +775,9 @@ index: 1,
                   display: flex;
                   flex-flow: column;
                   width: 100%;
-                  background: #ddeef6;
+               
                   margin: 20px;
-                  border-top: 1px solid black;
+                 
                   max-width: 450px;
                   border-radius: 14px;
                   padding: 10px;
@@ -1488,28 +793,9 @@ index: 1,
                   padding: 10px;
                   box-shadow: inset 0px -2px 4px black;
                  }
-                 .base{
-                  margin-top:8px;
-                  transition: 1s;
-                  cursor: pointer;
-                  border: 1px solid;
+                
                  
-                  border-radius: 17px;
-                  box-shadow: inset 1px -1px 2px black;
-                  min-width: 125px;
-                  display: flex;
-                  flex-flow: column;
-                  justify-content: center;
-                  align-items: center;              
-                  }
-                  .basealt{
-                    margin-top:5px;
-                   
-                    flex-flow: row;
-                    justify-content: space-around;
-                    height: 30px;
-                    
-                  }
+               
 
                  .conttitulo{
                     border-radius: 30px;
@@ -1539,6 +825,78 @@ index: 1,
             cursor: pointer;
             background-color: #59c6f812
            }
+              .crystal-rectangle {
+      width: 100%;
+      height: auto;
+        margin: 10px 0px;
+                    min-height: 40px;
+          padding: 12px 0px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 15px;
+      box-shadow: 
+        inset 5px 5px 10px rgba(255, 255, 255, 0.2),
+        inset -5px -5px 10px rgba(0, 0, 0, 0.15),
+        5px 5px 15px rgba(0, 0, 0, 0.3),
+        -5px -5px 15px rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+ 
+    
+                  cursor:pointer;
+     
+    }
+
+
+
+
+    .contSubCat {
+  padding: 15px;
+  margin: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.contSubCatSelect {
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+.contSubCatBloqueado {
+  opacity: 0.5;
+  pointer-events: none; /* Desactiva el clic si está bloqueado */
+}
+
+.contSubCatHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.blockButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: color 0.3s;
+}
+
+.blockButton:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+.contSubCatporcentaje, .contSubCatvalor {
+  font-weight: bold;
+  font-size: 14px;
+  color: black;
+}
            .contSubCatporcentaje{
             width: 30%;
             text-align: center;
@@ -1567,9 +925,7 @@ index: 1,
             padding: 15px 9px 0px 8px;
             width: 99%;
            }
-                 p{
-
-                 }
+               
                     
                    .contdetails{
                     display: flex;
@@ -1577,7 +933,94 @@ index: 1,
                     flex-wrap: wrap;
                    }
 
-      
+      .contSubCat {
+  padding: 20px;
+  margin: 15px;
+  border-radius: 12px;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.3s ease;
+  color: #ffffff;
+}
+
+.contSubCatSelect {
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.contSubCatBloqueado {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+ .base{
+                  margin-top:8px;
+                  transition: 1s;
+                  cursor: pointer;
+                  border: 1px solid;
+                 
+                  border-radius: 17px;
+                  box-shadow: inset 1px -1px 1px black;
+                  min-width: 125px;
+                  display: flex;
+                  flex-flow: column;
+                  justify-content: center;
+                  align-items: center;              
+                  }
+                      .basealt{
+                    margin-top:5px;
+                   
+                    flex-flow: row;
+                    justify-content: space-around;
+                    height: 30px;
+                    
+                  }
+
+.contSubCatHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.contSubCatName {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.blockButton {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 5px;
+  padding: 5px;
+  color: #ffffff;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.blockButton:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.contSubCatInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1em;
+  margin-top: 10px;
+}
+
+.contSubCatporcentaje {
+  font-weight: bold;
+}
+
+.contSubCatvalor {
+  font-size: 1em;
+}
+
                 
                 ` }
     </style>

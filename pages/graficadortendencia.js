@@ -8,7 +8,7 @@ import {Chart} from"chart.js"
 import 'chart.js/auto';
 import Head from 'next/head';
 import { io } from "socket.io-client";
-
+import TrendBox from './trendBox';
 
 class purdata extends Component {
 
@@ -18,7 +18,7 @@ state={
   indicesOperativos:50,
   iniciales:[],
   newIndex:[],
-
+  identicalData:[],
   inidata:[],
   superdata:{
     labels:[],
@@ -163,67 +163,7 @@ let datos = this.TranformIndex(indicesIniciales, iniIndex,iniColor)
     
    return inidata
 }
-setterData2 = (indicesIniciales) =>{
 
- 
- // Extraer los datos previos (rondas, indices, colores) de prevData
-  let rondas = this.state.superdata.labels.slice();  // Clonamos para evitar modificar el original
- let indices = this.state.inidata.slice()
- let valorDelIndex = indices[indices.length - this.state.indicesOperativos  ]
-
- let indiceInicial= valorDelIndex >= 2?1:-1
-
- let nuevosIndices=[indiceInicial]
- let nuevosColores=["red"]
- indicesIniciales.map((x,i)=>{
-
- let valorActual =nuevosIndices[i]
-  if(x==1){
-    nuevosColores.push("fuchsia")
-  let newval = valorActual-1
-  nuevosIndices.push(newval)
-  }else if(x<2){
-    nuevosColores.push("lightblue")
-    let newval = valorActual-1
-    nuevosIndices.push(newval)
-  }
-  
-  else{
-    let newval = valorActual+1
-    nuevosIndices.push(newval)
-   if(x>=2 && x<3){
-    nuevosColores.push("green")
-   }else if(x>=3 && x<10){
-    nuevosColores.push("purple")
-   }else if(x>=10 ){
-    nuevosColores.push("fuchsia")
-   }
-  }
-
-
-  
-  })
-
-  let inidata = {
-    labels:rondas ,
-   datasets: [{
-      label: 'My First Dataset',
-      data: nuevosIndices,
-      fill: false,
-      borderColor: 'grey',
-      backgroundColor:nuevosColores,
-  
-      borderWidth:1,
-      tension: 0,
-      pointRadius:6,
-    }]
-  }
-
-
-
-
-   return inidata
-}
  getColor = (x) =>{
 
   let nuevosColores=[]
@@ -341,15 +281,15 @@ this.setState({ARIMA:fixedArg})
   });
   socket.on("finaldata", (arg) => {
     
-  let igualarray = arg
-
+  let igualarray = arg.reverse()
+ 
  // let sliceIndex= igualarray.slice(-(this.state.indicesOperativos))
  
 let indicesTranformados =this.TranformIndex(igualarray, 0,"blue")
 
 //let modifiedArg = igualarray.map(x=> x>10?10:x)
-let indicesIniciales =this.setterData(arg, indicesTranformados)
-
+//let indicesIniciales =this.setterData(igualarray.slice(-this.state.indicesOperativos), indicesTranformados)
+let indicesIniciales =this.setterData(igualarray, indicesTranformados)
 
 let rsiData = this.calculateRSI(indicesIniciales.datasets[0].data, 14);
 let rsiData2 = this.calculateRSI(igualarray, 14);
@@ -357,6 +297,8 @@ let newArrRSI = this.setterRSI(rsiData)
 let newArrRSI2 = this.setterRSI(rsiData2)
 
 this.setState({
+
+           
                 inidata:igualarray,
               
                superdata:indicesIniciales,
@@ -368,6 +310,7 @@ this.setState({
 
     
   });
+
   socket.on("newindex", (arg) => {
     this.setState({loadingData:true})
     let igualarg = arg
@@ -387,9 +330,6 @@ this.setState({
   superColor.push(this.getColor(igualarg))
 
 
-
-
-    
 
   let newEstate = {
     labels: Array.from({ length: superData.length +3 }, (v, k) => k + 1), 
@@ -417,19 +357,21 @@ this.setState({
 
 
   let rsiData = this.calculateRSI(superData, 14);
-  let rsiData2 = this.calculateRSI( tempVar, 14);
+
 
   let newArrRSI = this.setterRSI(rsiData)
-  let newArrRSI2 = this.setterRSI(rsiData2)
-  
+ 
     this.setState({
       inidata:tempVar,
      superdata:newEstate,
      superRSIdata:newArrRSI,
-     superRSIdata2:newArrRSI2,
+  
     loadingData:false
 })
   });
+  
+
+
 
     }
     calculateRSI =(data, period = 14) =>{
@@ -557,9 +499,46 @@ getLineStyle=(value, levels)=> {
   return { color: 'rgba(75, 192, 192, 1)', width: 2 }; // Color y grosor por defecto
 }
     render() {
+      const yellowLinePlugin = {
+        id: 'yellowLinePlugin',
+        afterEvent: (chart, args) => {
+            const {ctx, tooltip} = chart;
+    
+            // Si el tooltip está activo y está mostrando un punto específico
+            if (tooltip._active && tooltip._active.length) {
+                const activePoint = tooltip._active[0];
+                const y = activePoint.element.y;
+    
+                // Limpiar el canvas y dibujar la línea horizontal
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(chart.chartArea.left, y);
+                ctx.lineTo(chart.chartArea.right, y);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'yellow';
+                ctx.stroke();
+                ctx.restore();
+            } else {
+                // Si el cursor no está sobre un punto, limpia el gráfico para ocultar la línea
+                chart.draw();
+            }
+        },
+    };
+
+
       console.log(this.state)
-      let getmin = Math.min(...this.state.superdata.datasets[0].data) - 3 || 30
-      let getmax = Math.max(...this.state.superdata.datasets[0].data) + 2 || 30
+      let dataLength = this.state.superdata.datasets[0].data.length;
+      let indicesOperativos = this.state.indicesOperativos;
+      
+      // Determinar cuántos elementos tomar (el mínimo entre indicesOperativos y dataLength)
+      let sliceCount = Math.min(indicesOperativos, dataLength);
+      
+      // Obtener los últimos datos
+      let recentData = this.state.superdata.datasets[0].data.slice(-sliceCount);
+      
+      // Calcular getmin y getmax
+      let getmin = Math.min(...recentData) - 3;
+      let getmax = Math.max(...recentData) + 2;
    
       let LineOptions ={
         animation: {
@@ -580,12 +559,35 @@ getLineStyle=(value, levels)=> {
            
           },
           x:{
-            min: this.state.superdata.datasets[0].data.length - this.state.indicesOperativos , // Ajusta el mínimo para hacer espacio debajo del último valor
+            min: Math.max(
+              0,
+              this.state.superdata.datasets[0].data.length - this.state.indicesOperativos
+            ),
             max: this.state.superdata.datasets[0].data.length + 5, // Ajusta el máximo para hacer espacio arriba si lo deseas
-
+            ticks: {
+              font: {
+                  size: 8, // Tamaño de fuente constante para prueba
+              },
+              color: 'black', // Cambia a un color visible para verificar
           }
-        }
+          },
+       
+        },
       
+
+        plugins: {
+          tooltip: {
+              mode: 'nearest', // Modo de interacción
+              intersect: false // Permite mostrar el tooltip al acercarse a un punto
+          }
+      },
+      interaction: {
+          mode: 'nearest', // Modo de interacción
+          intersect: false // Permite mostrar la interacción sin intersectar directamente un punto
+      }
+
+
+        
       
       }
    
@@ -674,48 +676,13 @@ let PendienteRenderEdit = pendienteEditConUmbral > 0?  'Alcista' :
                                     'Neutra'
 
 
-                                    const resultEMA = this.calculateEMAWithTrend(this.state.inidata, 8 );
+                                    const resultEMA = this.calculateEMAWithTrend(this.state.inidata, 5 );
                                     const resultEMASuperData = this.calculateEMAWithTrend(this.state.superdata.datasets[0].data, 8);
-console.log(resultEMA)
+
           return(
             <div className='mainGrafic' style={{marginTop:"15vh"}}>
              <p>Bienvenidos</p>
-             <div className='jwFlex'>
-             <div className=''>
-             <p>La tendencia en Pendiente con indices es :{PendienteRender}</p>
-             <p>Pendite ={pendiente}</p>
-              </div>
-              <div className=''>
-              <p>La tendencia en PendienteEditada con indices es :{PendienteRenderEdit}</p>
-              <p>Pendite ={pendienteEdit}</p>
-              </div>
-             
-             </div>
-             <div className='jwFlex'>
-              <div>
-                <p >Predccion ARIMA</p>
-                {this.state.ARIMA}
-              </div>
-              <div>
-                <p >Predccion MA</p>
-                {prediccionMA}
-              </div>
-             </div>
-          
-              <div className='jwFlex'>
-              <p>La tendencia en Pendiente con datos transformados:{PendienteRendersuperdata }...-----</p>
-              <p>{pendienteEstadistica.toFixed(4)}</p>
-              </div>
-              <div className=''>
-              <div className='jwFlex'>
-              <p>La tendencia en EMA :{resultEMA.ema }//---</p>
-              <p>{resultEMA.trend }</p>
-              </div>
-              <div className='jwFlex'>
-              <p>La tendencia en EMA con datos transformados:{resultEMASuperData.ema  }//---</p>
-              <p>{resultEMASuperData.trend}</p>
-              </div>
-              </div>
+            <TrendBox data={this.state.inidata}/>
             <div className='contindexes'>
             <p> Operando con </p>
             <div className='contInput'>
@@ -740,9 +707,13 @@ console.log(resultEMA)
             </div>
             
              <div className='contLineas'>
+             <div style={{ height: '350px', width: '100%' }}>
              <Line data={this.state.superdata} 
+              plugins = {[yellowLinePlugin]}
+             
 options = {LineOptions}
  />
+ </div>
  </div>
  <div className='contLineas2'>
  <Line data={this.state.superRSIdata} 
@@ -800,62 +771,7 @@ plugins: {
 }
  />
  </div>
- <div className='contLineas2'>
- <Line data={this.state.superRSIdata2} 
-options={{
-  responsive: true, 
-        maintainAspectRatio: false, 
-  scales: {
-    y: {
-        min: 0,
-        max: 100,
-        title: {
-            display: true,
-            text: 'RSI'
-        },
-        ticks: {
-            stepSize: 10  // Intervalo de las marcas en el eje Y
-        },
-        grid: {
-            drawBorder: true,
-            color: function(context) {
-                // Dibujar líneas de sobrecompra y sobreventa
-                if (context.tick.value === 70) {
-                    return 'red';  // Línea de sobrecompra
-                } else if (context.tick.value === 30) {
-                    return 'green';  // Línea de sobreventa
-                }
-                return 'rgba(0, 0, 0, 0.1)';  // Otras líneas
-            },
-            lineWidth: function(context) {
-                // Ajustar el ancho de las líneas de sobrecompra y sobreventa
-                if (context.tick.value === 70 || context.tick.value === 30) {
-                    return 2;
-                }
-                return 1;  // Ancho de otras líneas
-            }
-        }
-    },
-    x: {
-      min: this.state.superdata.datasets[0].data.length - this.state.indicesOperativos , // Ajusta el mínimo para hacer espacio debajo del último valor
-      max: this.state.superdata.datasets[0].data.length + 5, // Ajusta el máximo para hacer espacio arriba si lo deseas
 
-        title: {
-            display: true,
-            text: 'Data Points'
-        }
-    }
-},
-plugins: {
-    legend: {
-        display: true,
-        position: 'top'
-    }
-
-}}
-}
- />
- </div>
 
  <div className='contDatos'>
              {indicesRender}
@@ -865,7 +781,7 @@ plugins: {
      .contLineas{
             width: 90vw;
     margin-left: 5vw;
-    height: 500px;
+
 
      }
        .contLineas2{

@@ -89,13 +89,15 @@ let send = this.props.reg
 console.log(send)
     if(send.Accion =="Ingreso"){
      
+let categoriaToshow = send.CatSelect.subCatSelect == ""? send.CatSelect.nombreCat: send.CatSelect.nombreCat + "  //  " + send.CatSelect.subCatSelect
+
       this.setState({Ingreso:true,
         Accion:"Ingreso",
         cuentaSelect:send.CuentaSelec,
         catSelect:send.CatSelect,
       
         CuentaRender:send.CuentaSelec.nombreCuenta,
-        CategoriaRender:send.CatSelect.nombreCat,
+        CategoriaRender:categoriaToshow,
         subCatSelect:send.CatSelect.subCatSelect,
         catSelect:send.CatSelect,
         tiempo:new Date(send.Tiempo),      
@@ -111,6 +113,9 @@ console.log(send)
       })
 
     }else if(send.Accion =="Gasto"){
+    
+      let categoriaToshow = send.CatSelect.subCatSelect == ""? send.CatSelect.nombreCat: send.CatSelect.nombreCat + "  //  " + send.CatSelect.subCatSelect
+
       this.setState({Gasto:true,
         Accion:"Gasto",
         cuentaSelect:send.CuentaSelec,
@@ -118,7 +123,7 @@ console.log(send)
        
        
         CuentaRender:send.CuentaSelec.nombreCuenta,
-        CategoriaRender:send.CatSelect.nombreCat,
+        CategoriaRender:categoriaToshow,
         subCatSelect:send.CatSelect.subCatSelect,
         catSelect:send.CatSelect,
         tiempo:new Date(send.Tiempo),      
@@ -407,6 +412,7 @@ ingresador=(mival)=>{
         iDReg:this.state.idReg,
         CuentaSelect:this.state.cuentaSelect,
         CatSelect:this.state.catSelect,
+        subCatSelect:this.state.subCatSelect,
         Importe:parseFloat(this.state.Importe),
         ImporteAntes:parseFloat( this.state.ImporteAntes),
         Nota:this.state.Nota,
@@ -480,8 +486,8 @@ ingresadorTrans=(mival)=>{
         Accion:this.state.Accion,
         Tiempo:this.state.tiempo.getTime(),
         iDReg:this.state.idReg,
-        CuentaSelect1:this.state.cuentaSelect,
-        CuentaSelect2:this.state.cuentaSelect2,
+        CuentaSelect1:this.state.cuentaSelectT1,
+        CuentaSelect2:this.state.cuentaSelectT2,
         Importe:parseFloat(this.state.Importe),
         ImporteAntes:parseFloat( this.state.ImporteAntes),
         Nota:this.state.Nota,

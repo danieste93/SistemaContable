@@ -485,8 +485,14 @@ ingresador=(mival)=>{
       this.setState({Alert: add, loading:false, waiting:false, waiting2:false, waitingtrans:false, waitingtrans2:false}) 
       } 
       else{
-  
-        this.props.dispatch(updateCuenta(response.cuentaA))
+        console.log(response)
+     
+        this.channel1.publish('UpdateCount', {
+          message: 'enviado desde reset',
+          cuenta:response.cuenta
+       });
+    
+        
         this.props.dispatch(updateCuenta(response.cuenta))
       
         this.props.dispatch(updateReg(response.registro))

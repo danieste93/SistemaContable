@@ -33,6 +33,7 @@ router.post('/deleteicon', AdminControl.deleteIcon);
 
 router.get('/masiveApplyTemplate', AdminControl.masiveApplyTemplate);
 router.get('/updatedtcarts', AdminControl.updateDTCarts);
+
 router.get('/updatesistemcats', AdminControl.updateVersionSistemCats);
 router.get('/updatesistemcuentas', AdminControl.updateVersionSistemCuentas);
 router.get('/updatesistemarts', AdminControl.updateVersionSistemArts);
@@ -48,6 +49,8 @@ router.post('/savetemplate',Authentication, AdminControl.saveTemplate);
 router.post('/gettemplates',Authentication, AdminControl.getTemplates);
 router.post('/enviarcoti',Authentication, AdminControl.enviarCoti);
 router.post('/generate-only-art',Authentication, AdminControl.genOnlyArt);
+router.post('/getclientData',Authentication, AdminControl.getClientData);
+router.post('/deleteNotaCredito',Authentication, AdminControl.deleteNotaCredito);
 router.get('/testingsend', AdminControl.testingsend);
 router.get('/datainv', AdminControl.dataInv);
 
@@ -57,6 +60,9 @@ router.post('/researchart',Authentication, AdminControl.researchArt);
 router.post('/generatecompra', Authentication, AdminControl.generateCompra);
 router.post('/deleteventa',Authentication, AdminControl.deleteVenta);
 router.post('/deletecompra',Authentication, AdminControl.deleteCompra);
+
+
+router.post('/downloadPDFbyHTML',Authentication, AdminControl.downloadPDFbyHTML);
 
 
 router.post('/upload-firmdata',Authentication, AdminControl.uploadFirmdata);
