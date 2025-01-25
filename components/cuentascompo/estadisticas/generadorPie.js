@@ -15,8 +15,6 @@ class Stats extends Component {
 
     componentDidMount(){
      
-     
-  
         }
 
         filtrarVentasUnicasPorNota=(registros)=> {

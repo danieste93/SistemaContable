@@ -164,7 +164,7 @@ this.setState({donwloadDeleteRegs:false, deletedRegs:true})
             }).then(res => res.json())
             .catch(error => {console.error('Error:', error);
             })  .then(response => {  
-            console.log(response,"gettimeregs")
+        
             if(response.status == 'error'){
               alert("error al actualizar registros")
              
@@ -182,7 +182,7 @@ this.setState({donwloadDeleteRegs:false, deletedRegs:true})
                 )
           
                 });
-                console.log(sinRepetidosObjeto)
+               
                 this.props.dispatch(addFirstRegs(sinRepetidosObjeto));
                 this.setState({downloadData:false})
               }

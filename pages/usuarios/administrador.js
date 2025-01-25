@@ -396,7 +396,7 @@ let DetallesFilterGas =[]
     detallesGenerales=DetallesFilterGas
   }
 
-  let sinRepetidosCats =    arrCatGeneral.filter((valor, indiceActual, arreglo) => arreglo.indexOf(valor) === indiceActual);
+  let sinRepetidosCats = arrCatGeneral.filter((valor, indiceActual, arreglo) => arreglo.indexOf(valor) === indiceActual);
 
  
   let Colores = [
@@ -408,8 +408,6 @@ let DetallesFilterGas =[]
     '#00457E',
     
     "#2F70AF",
-  
-   
     "#806491",
   ]
   let ColoresIngresos = [

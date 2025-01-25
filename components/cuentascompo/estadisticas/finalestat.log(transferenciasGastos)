@@ -1,0 +1,50 @@
+ console.log(transferenciasGastos)
+    transferenciasGastos.forEach(elem => {
+      elem.Accion = "Gasto";
+    });
+
+    transferenciasIngresos.forEach(elem => {
+      elem.Accion = "Ingreso";
+    });
+
+    console.log(transferenciasIngresos)
+   
+
+  let FinalArr = RegsPosesion.concat(transferenciasGastos).concat(transferenciasIngresos)
+  let labels = [];
+  let datasets = [];
+    
+
+    if (tiempo === 'diario') {
+      FinalArr.forEach((item) => {
+        const time = new Date(item.Tiempo);
+        const label = time.getHours();
+        if (!labels.includes(label)) {
+          labels.push(label); // Añadir solo horas con datos
+        }
+      });
+    } else if (tiempo === 'mensual' || tiempo === 'periodo') {
+    
+      const balancePorDia = FinalArr.reduce((acc, reg) => {
+        const fecha = new Date(reg.Tiempo);
+        const dia = fecha.getDate(); // Extraer el día del registro
+      
+        // Si no existe aún, inicializamos con 0
+        if (!acc[dia]) {
+          acc[dia] = 0;
+        }
+      
+        // Acumulamos según el tipo de acción
+        if (reg.Accion === "Ingreso") {
+          acc[dia] += parseFloat(reg.Importe || 0);
+        } else if (reg.Accion === "Gasto") {
+          acc[dia] -= parseFloat(reg.Importe || 0);
+        }
+      
+        return acc;
+      }, {});
+
+      console.log(balancePorDia)
+
+     
+    }
