@@ -19,12 +19,11 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { reorder } from "../reusableComplex/herlperDrag"
 import Tabs from '@material-ui/core/Tabs';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Switch from '@material-ui/core/Switch';
+
 import ReactToPrint from "react-to-print";
-import {addRegs} from "../../reduxstore/actions/regcont"
+import ModalBalance from "./SubCompos/modal-balance"
 import Dropdown from 'react-bootstrap/Dropdown';
-import { Button } from 'react-bootstrap';
+
 
 class Croom extends Component {
     state={
@@ -78,6 +77,7 @@ cuentascla:false,
 ModalDeleteC:false,
 CuentaPorDel:"",
 InventarioVal:0,
+modalBalance:false
     }
 
     channel1 = null;
@@ -1596,7 +1596,7 @@ if(cuentasrenderNoPosesion.length > 0){
           
           </div>
       </div>
-      <div className="mainText">
+      <div className="mainText boton3d" onClick={()=>{this.setState({modalBalance:true})}}>
         <div className="mainData">Balance</div>
         <div className="mainData">
      
@@ -2156,6 +2156,10 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
          <ModalDeleteC CuentaDelete={this.state.CuentaPorDel} Flecharetro={()=>{this.setState({ModalDeleteC:false})}}/>
           </Animate>
 
+          <Animate show={this.state.modalBalance}>
+         <ModalBalance balance={balanceTotal} Flecharetro={()=>{this.setState({modalBalance:false})}}/>
+          </Animate>
+
           <Snackbar open={this.state.Alert.Estado} autoHideDuration={5000} onClose={handleClose}>
     <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
         <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>
@@ -2248,6 +2252,7 @@ cDc2x p{
   box-shadow: 0px 1px 1px black;
   margin-top: 65px;
   margin-bottom: 11px;
+  align-items: center;
 }
 .contFull100{
   width: 100%;
@@ -2942,6 +2947,35 @@ cursor:pointer
 }
 .draggingListItem: {
   background: "rgb(235,235,235)"
+}
+
+.boton3d {
+ background: linear-gradient(321deg, #666, #333);
+    color: white;
+    border: none;
+    padding: 6px 25px;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2), 0px 0px 25px rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    outline: none;
+    transform: translateY(0);
+    width: 65px;
+}
+
+.boton3d:hover {
+  transform: translateY(-4px);
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.boton3d:active {
+  transform: translateY(2px);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.boton3d:focus {
+  outline: none;
 }
 
                    

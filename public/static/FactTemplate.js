@@ -223,6 +223,8 @@ let Rimpeval =""
     <span className=" subTitledetail Bolder ">
         Fecha Autorización:
     </span>
+    <div class="divigual">
+    </div>
     <span>
     {Inf.fechaAuto}
     </span>
@@ -231,6 +233,8 @@ let Rimpeval =""
     <span className="subTitledetail Bolder">
         Numero Autorización: 
     </span>
+    <div class="divigual">
+    </div>
     <span>
     {Inf.numeroAuto}
     </span>
@@ -239,6 +243,8 @@ let Rimpeval =""
     <span className="subTitledetail Bolder">
         Clave Acceso: 
     </span>
+    <div class="divigual">
+    </div>
     <span>
     {Inf.ClaveAcceso}
     </span>
@@ -247,6 +253,8 @@ let Rimpeval =""
     <span className=" subTitledetail Bolder">
         OBLIGADO A LLEVAR CONTABILIDAD: 
     </span>
+    <div class="divigual">
+    </div>
     <span>
     {Inf.obligadoContabilidad}
     </span>

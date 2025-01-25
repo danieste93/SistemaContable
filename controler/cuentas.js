@@ -26,6 +26,7 @@ const userModel = require('../models/users');
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 const moment = require('moment');
+const { update } = require('./usercontrol');
 
 
 
@@ -1210,20 +1211,20 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
     }
   
     async function deleteTipe (req, res){
-  
-      let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
+      console.log(req.body)
+      let conn = await mongoose.connection.useDb(req.body.User.DBname);
       let TiposModelSass = await conn.model('tiposmodel', tipoSchemaSass);
       let Tipodata = await TiposModelSass.findOne({iDtipe:9999999}, null)
       if (!Tipodata)  return res.json({status: "Error", message: "error al registrar" });
     
       let updateval =`Tipos`
-      let update = {$pull: {[updateval]: req.body.valores}}
+      let update = {$pull: {[updateval]: req.body.item}}
       let options = {new:true} 
       TiposModelSass.findByIdAndUpdate(Tipodata._id, update, options, (err,user)=>{
          
         if(err)  return res.json({status: "Error", message: "error al registrar", err });
      
-        res.status(200).send({user})
+        res.status(200).send({status: "Ok", message: "eliminado exitosamente", user })
       })
     }
   
@@ -1240,13 +1241,13 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
             Accion:req.body.Accion,   
             Tiempo:req.body.Tiempo,
          
-            CuentaSelec:{idCuenta:req.body.CuentaSelect.idCuenta,
-              nombreCuenta: req.body.CuentaSelect.nombreCuenta,
+            CuentaSelec:{idCuenta:req.body.CuentaSelect._id,
+              nombreCuenta: req.body.CuentaSelect.NombreC,
            },
            CatSelect:{idCat:req.body.CatSelect.idCat,
             urlIcono:req.body.CatSelect.urlIcono,
               nombreCat:req.body.CatSelect.nombreCat,
-            subCatSelect:req.body.CatSelect.subCatSelect,
+            subCatSelect:req.body.subCatSelect,
           _id:req.body.CatSelect._id
           },
                    
@@ -1278,13 +1279,13 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
             Accion:req.body.Accion,   
             Tiempo:req.body.Tiempo,
     
-            CuentaSelec:{idCuenta:req.body.CuentaSelect1.idCuenta,
-              nombreCuenta: req.body.CuentaSelect1.nombreCuenta,
+            CuentaSelec:{idCuenta:req.body.CuentaSelect1._id,
+              nombreCuenta: req.body.CuentaSelect1.NombreC,
               },
     
       
-            CuentaSelec2:{idCuenta:req.body.CuentaSelect2.idCuenta,
-                        nombreCuenta: req.body.CuentaSelect2.nombreCuenta,
+            CuentaSelec2:{idCuenta:req.body.CuentaSelect2._id,
+                        nombreCuenta: req.body.CuentaSelect2.NombreC,
                       },
                    
             Nota:req.body.Nota,
@@ -3155,7 +3156,222 @@ let nuevosFC = getVenta.FormasCredito.concat(arrpagos)
     
     return res.status(200).send({status: "Ok", message: "getTimeRegsDelete", regsHabilesDelete:regsHabiles});
   }
+  async function agregarNotaCredito (req, res) {
+    console.log("agregarNotas")
+    let conn = await mongoose.connection.useDb(req.body.Userdata.DBname)
+
+    let VentaModelSass = await conn.model('Venta', ventasSchema);
+    let CounterModelSass = await conn.model('Counter', counterSchema);
+    const session = await mongoose.startSession();   
+    session.startTransaction();
+
+    try{
+
+
+let update={NotaCredito: req.body.PDFdata}
+
+      let updateVenta = await VentaModelSass.findByIdAndUpdate(req.body.PDFdata.IDVenta, update, {session, new:true})
+
+      let updatecounter = { $inc: { ContSecuencial: 1 } }
+      await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session} )
+
+      pdf.create(req.body.Html, {
+   
+        border: {
+            top: "0px",            // default is 0, units: mm, cm, in, px
+            right: "0px",
+            bottom: "0px",
+            left: "0px"
+          },
+          childProcessOptions: { env: { OPENSSL_CONF: '/dev/null' }}}).toBuffer((err, buffer) => {
+        
+           if (err) {console.log(err); throw new Error("error al crear pdf")}
+            var transporter = nodemailer.createTransport({
+              service: 'gmail',
+              auth: {
+                
+                      user: 'iglassmailer2020@gmail.com',
+                      pass: process.env.REACT_MAILER_PASS,
+                 
+            
+              }
+            })
+           
+            let subjectsting = `Nota de Crédito ${req.body.PDFdata.nombreComercial} Nº ${req.body.PDFdata.secuencial}  `;
+            
+            
+            
+            let adjuntosFactura = [
+            {
+                filename: `${req.body.PDFdata.nombreComercial}-Nota de crédito-${req.body.PDFdata.secuencial}.pdf`, // <= Here: made sure file name match
+                content: buffer,
+                contentType: 'application/pdf'
+            },
+            {
+              filename: `${req.body.PDFdata.nombreComercial}-Nota de crédito-${req.body.PDFdata.secuencial}.xml`, // <= Here: made sure file name match
+              content: Buffer.from(req.body.docFirmado),
+              contentType: 'application/xml'
+          },
+        
+        ]
+        
+    
+     let adjuntos = adjuntosFactura
+        
+            let textstingdevFactura =
+            `<table width="90%" border="1">
+            <tbody>
+            <tr>
+            <td align="center">Estimad@ informamos que su comprobante electronico ha sido emitido exitosamente</td>
+            </tr>
+            </tbody>
+            </table>
+            <table width="90%" border="0" cellpadding="0" cellspacing="5">
+            <tbody>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            <tr>
+            <th align="right">Razón Social:</th>
+            <td>${req.body.PDFdata.razon}</td>
+            </tr>
+            <tr>
+            <th align="right">RUC:</th>
+            <td>${req.body.PDFdata.ruc}</td>
+            </tr>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            <tr>
+            <th align="right">Cliente:</th>
+            <td>${req.body.PDFdata.razonSocialComprador}</td>
+            </tr>
+            <tr>
+            <th align="right">Identificaci&oacute;n Cliente:</th>
+            <td>${req.body.PDFdata.identificacionComprador}</td>
+            </tr>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            <tr>
+            <th align="right">Ambiente:</th>
+            <td>Produccion</td>
+            </tr>
+            <tr>
+            <th align="right">Tipo de Comprobante:</th>
+            <td>Nota de Crédito</td>
+            </tr>
+            <tr>
+            <th align="right">Fecha de Emisi&oacute;n:</th>
+            <td>${req.body.PDFdata.fechaAuto}</td>
+            </tr>
+            <tr>
+            <th align="right">Nro. de Comprobante:</th>
+            <td>${req.body.PDFdata.estab}${req.body.PDFdata.ptoEmi}-${req.body.PDFdata.secuencial}</td>
+            </tr>
+            <tr>
+            <th align="right">Valor Total:</th>
+            <td>${parseFloat(req.body.PDFdata.SuperTotal).toFixed(2)}</td>
+            </tr>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            <tr>
+            <th align="right">Nro. Autorizacion SRI:</th>
+            <td>${req.body.PDFdata.numeroAuto}</td>
+            </tr>
+            <tr>
+            <th align="right">Clave de Acceso:</th>
+            <td>${req.body.PDFdata.ClaveAcceso}</td>
+            </tr>
+             <tr>
+            <th align="right">Factura Modificada:</th>
+            <td>${req.body.PDFdata.numDocModificado}</td>
+            </tr>
+             <tr>
+            <th align="right">Fecha emision factura modificada:</th>
+            <td>${req.body.PDFdata.fechaEmisionDocSustento}</td>
+            </tr>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            </tbody>
+            </table>
+            <table width="90%" border="1">
+            <tbody>
+            <tr>
+            <td align="center">Documento Generado por Activos ® 2025</td>
+            </tr>
+            </tbody>
+            </table>`
+         
+            let textstingdev = textstingdevFactura
+            if(req.body.PDFdata.Estado == "EN PROCESO"){
+        
+              subjectsting = `Comprobante temporal ${req.body.PDFdata.nombreComercial} Nº ${req.body.PDFdata.estab}${req.body.PDFdata.ptoEmi}-${req.body.PDFdata.secuencial}  `;
+        
+              textstingdev = `<table width="90%" border="1">
+              <tbody>
+              <tr>
+              <td align="center">Estimad@ cliente, su nota de crédito se encuentra "EN PROCESO ", con prontitud se le enviara la autorizada</td>
+              </tr>
+              </tbody>
+              </table>`
+        
+              adjuntos =  [
+                {
+                    filename: `${req.body.PDFdata.nombreComercial}-${req.body.PDFdata.secuencial}.pdf`, // <= Here: made sure file name match
+                    content: buffer,
+                    contentType: 'application/pdf'
+                },
+              
+        
+            ]
+        
+            }   
+            var mailOptions = {
+              from: 'iglassmailer2020@gmail.com',
+              to: req.body.PDFdata.correoComprador,
+              subject: subjectsting,
+              html: textstingdev,
+              attachments: adjuntos
+            }
+            
+            transporter.sendMail(mailOptions, function (err, res) {
+              if(err){
+               if (err) {console.log(err)}
+              } else {
+                  console.log('Email Sent');
+              }
+            })
+        
+          });
 
 
 
-module.exports = {getRegsDeleteTime,getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs,getCuentaRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};
+
+      await session.commitTransaction();    
+      session.endSession();                 
+      return res.send({status: "Ok", message: "nota Credito Agregada", updateVenta });
+      
+
+     }
+     catch(error){
+      await session.abortTransaction();
+      session.endSession();
+      console.log(error, "errr")
+      return res.json({status: "Error", message: error.name, error:error.message });
+    }
+
+
+
+   }
+
+
+
+module.exports = {agregarNotaCredito,getRegsDeleteTime,getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs,getCuentaRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};

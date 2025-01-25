@@ -50,13 +50,13 @@ var dateexe = time2.getFullYear()+'-'+(this.addCero(time2.getMonth()+1))+'-'+thi
 
 
   
-
+  let cat    =""
   let subcat =""
   let estiloreg = this.props.reg.Accion =="Ingreso"?"ecingreso":
   this.props.reg.Accion=="Gasto"?"ecgasto":
   this.props.reg.Accion=="Trans"?"ectrans":""
   if(this.props.reg.Accion == "Ingreso"|| this.props.reg.Accion == "Gasto" ){
-
+    cat = <p className="subcuentareg">{this.props.reg.CatSelect.nombreCat}</p>
     inggastrans =  <p className="cuentareg">{this.props.reg.CuentaSelec.nombreCuenta}</p>
   if(this.props.reg.CatSelect.subCatSelect != ""){
 subcat = <p className="subcuentareg">{this.props.reg.CatSelect.subCatSelect}</p>
@@ -77,6 +77,7 @@ else if(this.props.reg.Accion == "Trans"){
 <div className="regcentral">
 <p>{this.props.reg.Nota}</p>
 {inggastrans}
+{cat}
 {subcat}
 </div>
 <div className="regfinal">

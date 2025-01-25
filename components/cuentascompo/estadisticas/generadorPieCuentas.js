@@ -127,6 +127,8 @@ for (let z = 0; z < DetallesPorrender.length; z++) {
  
     let registro = DetallesPorrender[z];
     let cuenta = registro.CuentaSelec;
+    console.log(registro)
+    console.log(cuenta)
     let cuenta2 = registro.CuentaSelec2;
     let importe = registro.Importe;
     let accion = registro.Accion;
@@ -136,7 +138,7 @@ for (let z = 0; z < DetallesPorrender.length; z++) {
 
     if (!CuentasMap[cuentaId]) { 
         let Cuentafind = this.props.Cuentas.find(cuenta =>cuenta._id == cuentaId )
-
+console.log(Cuentafind)
         CuentasMap[cuentaId] = {
             nombre: cuenta.nombreCuenta,
             Tipo:Cuentafind.Tipo,

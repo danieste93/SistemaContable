@@ -11,7 +11,12 @@ import ModalDeleteVentas from './modal-delete-ventas';
 import {updateVenta,getVentas} from "../../reduxstore/actions/regcont"
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ViewVenta from "../modal-viewventas"
-
+import ReactToPrint from "react-to-print";
+import Button from '@material-ui/core/Button';
+import ViewNotas from "./modal-genNotas"
+import ViewNotasCred from "../modal-viewvNotaCred"
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
 import ViewCreds from "../modal-viewCreds"
 import "./mediaprint.css"
 import DropdownButtonVentas from './usefull/dropdownbuttonVentas';
@@ -21,15 +26,18 @@ import Estadisticas from './modal-estadisticasArticulos';
 class Listvent extends Component {
   state={
     chartModal:false,
+    viewerNota:false,
     searcherIn:"",
     searcherOut:"",
     filtrosTiempo:true,
     viewCreds:false,
+    viewNota:false,
     vista:"listmode",
     diario:true,
     mensual:false,
     periodo:false,
     VentaSelected:{},
+    dataNota:{},
     deleteVenta:false,
     listmode:true,
     pickmode:false,
@@ -806,7 +814,7 @@ if(!this.props.state.RegContableReducer.Ventas){
          
 
         }
-        downloadFact=(e)=>{  console.log(e)
+        downloadFact=(e)=>{  
         
           let valorNumero = e.Doctype =="Factura"?e.Secuencial:e.iDVenta
           let datos = {User: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
@@ -851,7 +859,7 @@ if(!this.props.state.RegContableReducer.Ventas){
         }
       
     render () {
-    console.log(this.state)
+  
       let flechaval = this.state.filtrosTiempo?"▲":"▼"
       let diarioval = this.state.diario?"activeval":"";
       let mensualval = this.state.mensual?"activeval":"";
@@ -881,9 +889,12 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
         return(<VentaRenderList 
           key={comp._id} 
           datos={comp} 
+          getNota={(datos)=>{ this.setState({viewNota:true, dataNota:datos})}} 
+          watchNotaCredito={(datos)=>{ this.setState({viewerNota:true, viewerdataNota:datos})}}
           viewCreds={(datos)=>{ this.setState({viewCreds:true, dataCred:datos})}} 
           sendView={(datos)=>{ this.setState({viewVenta:true, dataventa:datos})}} 
             
+
           user={this.props.state.userReducer.update.usuario.user.Tipo}
            deleteVentaList={(datos)=>{this.deleteVentaList(datos)}}
            downloadFact={(datos)=>{this.downloadFact(datos)}}
@@ -1299,7 +1310,9 @@ search
                             Acc
                         </div>
                     </div>
-                    {listviewcomp} 
+                    <div style={{marginBottom:"100px"}}>
+                    {listviewcomp}
+                    </div> 
                           </DoubleScrollbar>
                   </Animate>
                    </div>
@@ -1316,14 +1329,25 @@ search
         </Animate>
 
         <Animate show={this.state.chartModal}>
-<Estadisticas datos={filtrados} tipo={"ventas"} Flecharetro={()=>{this.setState({chartModal:false})}} />
+        <Estadisticas datos={filtrados} tipo={"ventas"} Flecharetro={()=>{this.setState({chartModal:false})}} />
+        </Animate>
 
+<Animate show={this.state.viewNota}>
+<ViewNotas datos={this.state.dataNota} Flecharetro={()=>{this.setState({viewNota:false})}} />
+</Animate>
+<Animate show={this.state.viewerNota}>
+<ViewNotasCred updateNotaCred={(e)=>{console.log(e);
+  
+  this.props.dispatch(updateVenta(e.updatedVenta))}} 
+ 
+  
+  userData={this.props.state.userReducer.update} datos={this.state.viewerdataNota} Flecharetro={()=>{this.setState({viewerNota:false})}} />
 </Animate>
 
            <style jsx>{`
-         .conFiltroNombres{
+         .conFiltroNombres{R
           display:flex;
-         }
+           }
          .ContFiltrosgeneral{
           display:flex;
           justify-content: space-around;

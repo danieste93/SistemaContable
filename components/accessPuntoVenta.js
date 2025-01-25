@@ -129,51 +129,7 @@ this.startPuntoVentaData()
        
      }
 
-     downloadFirmData=()=>{
-
-        if(this.props.state.userReducer.update.usuario.user.Factura.validateFact && this.props.state.userReducer.update.usuario.user.Firmdata.valiteFirma){                
-                               
-            const baseData = localStorage.getItem("base64data")
-   
-            if(baseData == null){
-
-               
-            let urlf = this.props.state.userReducer.update.usuario.user.Firmdata.url
-        let GeneratedURL = this.getSignature(urlf, 
-        process.env.REACT_CLOUDY_SECRET, 
-        this.props.state.userReducer.update.usuario.user.Firmdata.publicId)
      
-        fetch(GeneratedURL, {
-  method: 'GET',
-  headers: {
-    'Content-Type': "application/x-pkcs12",
-  },
-})
-.then((response) => response.blob())
-.then((blob) => {
-  // Create blob link to download
-
-  let readerSave = new FileReader();
-  readerSave.readAsDataURL(blob); 
-  readerSave.onloadend = ()=> {
-    let base64data = readerSave.result;                
-
-    const dataEncripted = CryptoJS.AES.encrypt(
-        JSON.stringify(base64data),
-        process.env.REACT_CLOUDY_SECRET
-      ).toString();
-
-   
-    localStorage.setItem("base64data", dataEncripted)
-  
-
-    }
-  
-  
-});}
-        
-        }
-     }
      handleKeyDown = (event) => {
      
      }
@@ -348,7 +304,7 @@ this.startPuntoVentaData()
     }
 
     comprobadorVenta=(IvaEC,valSinIva)=>{
-
+        if(this.state.adduser == false){
         if(this.state.loading == false){
             this.setState({loading:true})
                 let TotalSum = 0
@@ -839,7 +795,15 @@ this.startPuntoVentaData()
                 this.setState({Alert: add,loading:false}) 
             }
         
+        } 
+    }else{
+        let add = {
+            Estado:true,
+            Tipo:"info",
+            Mensaje:"Porfavor, acepte o cancele el registro del cliente"
         }
+        this.setState({Alert: add, loading:false}) 
+    }
     }
   
      handleChangeform=(e)=>{
@@ -2116,7 +2080,7 @@ this.setState({ data:nuevoval})
                                 ciudadComprador:this.state.UserSelect?this.state.ciudad:'',
                                 ArticulosVendidos:this.state.ArtVent,
                                 LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
-                        
+                                populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
                                  Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
                                  Estado:"AUTORIZADO",
                                  detalles:mimapper.map((x)=>  x +" ")
@@ -2400,20 +2364,10 @@ this.setState({ data:nuevoval})
                              })
                }
             });
-            
-    
-    
-    
 
            }
       
-      
 
-
-    
-    
-    
-    
            }
           
            addCaducadoCombo = () => {
@@ -2695,12 +2649,8 @@ if(e.Tipo == "Producto"){
 }
 
 
-
-
            setTitulo=(e, props)=>{
-           
-              
-             
+ 
          let testFind =  this.state.ArtVent.find(x => x.Eqid == props.Eqid)
      
          if(testFind) {
@@ -3035,7 +2985,7 @@ if(this.props.state.RegContableReducer.Clients){
     SuggesterReady =  <Autosuggest placeholder="Busca Clientes" sendClick={this.setUserData}   sugerencias={this.props.state.RegContableReducer.Clients} resetData={this.resetUserData}  />  
 }
 let logogen = ""
-if(this.props.state.userReducer.update.usuario.user){
+if(this.props.state.userReducer){
     logogen = this.props.state.userReducer.update.usuario.user.Factura.logoEmp != ""?
     this.props.state.userReducer.update.usuario.user.Factura.logoEmp:"/logomin.png"
 }
@@ -3045,7 +2995,7 @@ let CheckReadOnly = this.state.readOnly?true:false
         
         let UserCont = {Usuario:""}
 
-        if(this.props.state.userReducer.update.usuario.user){
+        if(this.props.state.userReducer){
             UserCont =this.props.state.userReducer.update.usuario.user
         }
         let tiempo = new Date()     
@@ -4124,7 +4074,7 @@ post_add
     {generarRimpeNota}
 </p>
 <p>
-Documento electrónico generado en contaluxe.com
+Documento electrónico generado en activos.ec
 </p>
 </div>
 

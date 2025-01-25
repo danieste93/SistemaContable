@@ -14,6 +14,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import {updateUser2} from "../reduxstore/actions/myact"
 import Head from 'next/head';
 import CryptoJS from "crypto-js";
+import SecureFirm from './snippets/getSecureFirm';
 class Contacto extends Component {
    state={
 
@@ -100,7 +101,7 @@ console.log(this.state)
 
       }
 
-      valAlldata=()=>{
+      valAlldata= async()=>{
         console.log(this.state)
         if(this.state.loading == false){
           this.setState({loading:true})
@@ -116,36 +117,15 @@ console.log(this.state)
         
         ){
          
-       
-          let urlf = this.props.state.userReducer.update.usuario.user.Firmdata.url
-     let GeneratedURL = this.getSignature(urlf, 
-            process.env.REACT_CLOUDY_SECRET, 
-            this.props.state.userReducer.update.usuario.user.Firmdata.publicId)
-         
-       
-  
-         
-            fetch(GeneratedURL, {
-    method: 'GET',
-    headers: {
-      'Content-Type': "application/x-pkcs12",
-    },
-  })
-  .then((response) => response.blob())
-  .then((blob) => {
-    // Create blob link to download
 
-    let reader = new FileReader();
-        reader.readAsArrayBuffer(blob)
-        reader.addEventListener("loadend", (event) => {
-            let bufferfile = event.target.result
-       
-   
-       this.genfact(1.15, 1, 0.15,bufferfile )
-      
-        });
+       try {
+        const bufferfile = await SecureFirm(this.props.state.userReducer.update.usuario.user.Firmdata)
+        console.log('Bufferfile obtenido:', bufferfile);
+        this.genfact(1.15, 1, 0.15,bufferfile )
 
-  });
+      } catch (error) {
+        console.error('Error al obtener bufferfile:', error);
+      }
   
         }
         else{

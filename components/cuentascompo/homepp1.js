@@ -1,23 +1,20 @@
 import React, { Component } from 'react'
-import {  KeyboardDatePicker,  MuiPickersUtilsProvider } from "@material-ui/pickers";
-import moment from "moment";
+
+
 import {connect} from 'react-redux';
 import { Animate } from "react-animate-mount";
 import GraficadorPie from "./estadisticas/generadorPie"
 import GraficadorSubPie from "./estadisticas/generadorsubCats"
 import GraficadorPieCuentas from "./estadisticas/generadorPieCuentas"
 import GraficadorPieCuentasSub from "./estadisticas/generadorPieCuentasSub"
+import GeneradorLine from "./estadisticas/GeneradorLine"
 
-
-import { Pie, Line } from 'react-chartjs-2';
-import {Chart} from"chart.js"
-import 'chart.js/auto';
-
-
-import MomentUtils from '@date-io/moment';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import "moment/locale/es";
 import { install } from "resize-observer";
+import Filtrostiempo from './SubCompos/filtrostiempo';
+ 
+
  class Stats extends Component {
     state={
    
@@ -33,42 +30,15 @@ import { install } from "resize-observer";
       InvOption:"categoria",
       subCuentadata:[],
         TotalData:false,
-        diario:false,
-        mensual:true,
-        periodo:false,
-        tiempo: new Date(),
-        tiempomensual: new Date(),
-        tiempoperiodoini: this.periodoini(),
-        tiempoperiodofin: this.periodofin(),
+       tiempo:"mensual",
         ingCatRender:{},
         bundleSubCat:"Todo",
         excluidos:[],
-        subCatRegs:[]
+        subCatRegs:[],
+        downloadData:false,
+filteredTimeRegs:[],
     }
-    periodofin(){
    
-      
-
-        let nuevo = new Date()
-        let asd  = nuevo.getDate() + 30
-        let add = nuevo.setDate(asd)
-       
-       
-        let fechareturn = new Date(add)
-        return(fechareturn)
-   
-    }
-    periodoini(){ 
-
-      let nuevo = new Date()
-      let asd  = nuevo.getDate() - 60
-      let add = nuevo.setDate(asd)
-     
-     
-      let fechareturn = new Date(add)
-      return(fechareturn)
- 
-  }
     componentDidMount(){
      
      
@@ -85,207 +55,37 @@ import { install } from "resize-observer";
  
         
         }
-        getDayName = ()=> {
-            var days = ['Domingo.','Lunes.', 'Martes.', 'Miercoles.', 'Jueves.', 'Viernes.', 'Sabado.' ];
-            
-            return days[this.state.tiempo.getDay()];
-            
-            }
-      
-        getMonthName = ()=> {
-            var monthNames = [ "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
-            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" ];
-            return monthNames[this.state.tiempo.getMonth()];
-        }
-        buttonsp=(e)=>{
-  
-            let namex = e.target.id
-                this.setState({
-                diario:false,
-    mensual:false,
-    periodo:false
-              })
-              setTimeout(()=>{this.setState({
-                [namex]:true
-              })},10)
-                
-    
-                }
-                
-      
-        handleChangeTiempo=(e)=>{
-            if(e){
-          this.setState({
-           tiempo:e._d
-          })
-         }
-        }
-            
-    
-        handleChangeTiempoPeriodofin=(e)=>{
-          if(e){ 
-          this.setState({
-            tiempoperiodofin:e._d
-          })
-         }
-        }
-        handleChangeTiempoini=(e)=>{
-          if(e){ 
-          this.setState({
-            tiempoperiodoini:e._d
-          })
-         }
-        }
-        
-        masunmes=()=>{
-          let mesactual = this.state.tiempo.getMonth() + 1
-          let nuevomes = this.state.tiempo.setMonth(mesactual)
-          let newdate = new Date(nuevomes)
+        configData = (event) => {
 
-          this.setState({tiempo:newdate})
-        
-        
-        }
-        menosunmes=()=>{
-            let mesactual = this.state.tiempo.getMonth() - 1
-            let nuevomes = this.state.tiempo.setMonth(mesactual)
-            let newdate = new Date(nuevomes)
-      
-            this.setState({tiempo:newdate})
-          
-          
-          }
-        
-        menosundia=()=>{
-          let asd  = this.state.tiempo.getDate() - 1
-          let add = this.state.tiempo.setDate(asd)
-        
-          let nuevafecha = new Date(add)
-          this.setState({tiempo:nuevafecha})
-         
-        
-          }
-          masundia=()=>{
-              let asd  = this.state.tiempo.getDate() + 1
-              let add = this.state.tiempo.setDate(asd)
-        
-              let nuevafecha = new Date(add)
-              this.setState({tiempo:nuevafecha})
-                          
-        
-          }
-  
-          DiaryFilter=(regs)=>{
-              let fecha = new Date(this.state.tiempo)
-                      let fechaini = fecha.setHours(0, 0, 0)
-                      let fechafin = fecha.setHours(23, 59, 59)
-                     
-                      if(regs.length >0){
-                        let misregs = regs.filter(regs=> regs.Tiempo >= fechaini && regs.Tiempo <= fechafin  )
-                        return misregs
-                      }else{
-                        return regs
-                      }
-            }
-          MensualFilter=(regs)=>{
-     
-            let fecha = new Date(this.state.tiempo)
-                      var primerDia = new Date(fecha.getFullYear(), fecha.getMonth(), 1).getTime()
-                      var ultimoDia = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0)
-                      var ultimahora = new Date(ultimoDia.setHours(23, 59, 59)).getTime()
-                      if(regs.length >0){
-                        let misregfiltrados = regs.filter(regs=> regs.Tiempo >= primerDia && regs.Tiempo <= ultimahora  )
-                      return misregfiltrados
-                      }else{
-                        return regs
-                      }
-          
-          }
-          PeriodoFilter=(regs)=>{
-            let fecha = new Date(this.state.tiempoperiodoini)
-            let fechafin = new Date(this.state.tiempoperiodofin)
-        
-            var primerDiaP = fecha.setHours(0,0,0)
-            var ultimoDiaP = fechafin.setHours(23,59,59)
-          
-            let fechainix = new Date(primerDiaP).getTime()
-            let fechafinx = new Date(ultimoDiaP).getTime()
-            if(regs.length >0){
-              let misregsP = regs.filter(regs=> regs.Tiempo >= fechainix && regs.Tiempo <= fechafinx) 
-              return misregsP
-            }else{
-              return regs
-            }
-          
-          }
+          this.setState({filteredTimeRegs:event})
+
+         }
+
+         paramTimeData = (event) => {
+
+          this.setState({tiempo:event})
+
+         }
           handleOptionChange = (event) => {
             this.setState({ InvOption: event.target.value });
           };
-          OrderFilter=(regs)=>{
-            let order = regs.sort((a, b) => b.Tiempo - a.Tiempo)
-        
-           return order
-          } 
-
-
-
+          
 
     render() {
-      console.log(this.state)
-    
-
-      
-
-
-        let displayRegs =[]
-        let diarioval = this.state.diario?"activeval":"";
-        let mensualval = this.state.mensual?"activeval":"";
-        let periodoval = this.state.periodo?"activeval":"";
+     
+     
         
         let pieActive = this.state.Pie?"activeB":""
         let lineActive = this.state.Line?"activeB":""
         let cuentasActive = this.state.Cuentas?"activeB":""
         let categoriasActive = this.state.Categorias?"activeB":""
         
-        let superdata = {labels: [],
-            datasets: [{
-               label: '',
-               data: [],
-            } ]  }
-            let superdata2 = {labels: [],
-              datasets: [{
-                 label: '',
-                 data: [],
-              } ]  }
-      
+    
 
 
-
-let registros 
-if(this.state.Categorias){
-  registros  = this.props.regC.Regs? this.props.regC.Regs.filter(x=> x.Accion=="Ingreso"|| x.Accion=="Gasto" ):[]
-}else if(this.state.Cuentas){
-  registros  = this.props.regC.Regs
-}
-
-
-let DetallesPorrender=[]
-
-
-displayRegs = this.OrderFilter(registros)
-if(this.state.diario){
-    DetallesPorrender = this.DiaryFilter(displayRegs)
-  }else if(this.state.mensual){
-    DetallesPorrender = this.MensualFilter(displayRegs)
-  }
-  else if(this.state.periodo){
-    DetallesPorrender = this.PeriodoFilter(displayRegs)
-  }
-
-  
  const sendPiedata=(data)=>{
 
-       let getRegs = DetallesPorrender.filter(x=> x.CatSelect._id == data._id)     
+       let getRegs = this.state.filteredTimeRegs.filter(x=>x.Accion != "Trans").filter(x=> x.CatSelect._id == data._id)     
 
        setTimeout(()=> {
         this.setState({catdetail:true})
@@ -296,8 +96,8 @@ if(this.state.diario){
   }
 
   const sendPiedataCuentas=(data)=>{
-console.log(data)
-let getRegs = DetallesPorrender.filter(x => 
+
+let getRegs = this.state.filteredTimeRegs.filter(x => 
   data.some(d => 
       x.CuentaSelec.idCuenta == d._id || 
       (x.CuentaSelec2 && x.CuentaSelec2.idCuenta == d._id)
@@ -342,156 +142,29 @@ let subCuentadata ={
 </div>
 <div className="minifilterCont">
 <span className={`base basealt ${cuentasActive} `} onClick={()=>{this.setState({Cuentas:true, Categorias:false, })}}>   <div className="">Cuentas</div> 
-
-
 </span>
 <span style={{fontSize:"30px"}}>|</span>
-          <span className={`base basealt ${categoriasActive} `} onClick={()=>{this.setState({Categorias:true, Cuentas:false,})}} > <div className="asd">Categorias</div> 
-          
-         
-          
+          <span className={`base basealt ${categoriasActive} `} onClick={()=>{this.setState({Categorias:true, Cuentas:false,})}} > <div className="asd">Categorias</div>          
           </span>
 
 
 </div>
 </div> 
+ 
+<Filtrostiempo getData={this.configData}
+ paramTimeData={this.paramTimeData} />
+
 <Animate show={this.state.allData}> 
-<div className="organizador">
-<div className="cont-Bt2">
-
-<div  id="diario" className={`botongeneral jwPointer ${diarioval}  `}onClick={ this.buttonsp}>Diario</div>
-<div id="mensual" className={`botongeneral jwPointer ${mensualval} `}onClick={ this.buttonsp}>Mensual</div>
-<div id="periodo" className={`botongeneral jwPointer ${periodoval} `}onClick={ this.buttonsp}> Periodo</div>
-
-
-</div>
-<div className="contfiltros">
-<Animate show={this.state.mensual}>
-<div className="contfiltromensual jwContFlexCenter">
-                     <div className="subtituloArt">
-                       {this.getMonthName()}
-                     </div>
-                   <div className="contmensual " >
-    <div className="flechalateral" onClick={this.menosunmes}> {'<'}</div>
-    <div className="fechacentral">
-<MuiPickersUtilsProvider libInstance={moment} utils={MomentUtils}>
-               <KeyboardDatePicker
-          disableToolbar
-          format="DD/MM/YYYY"
-          margin="normal"
-          views={["month"]}
-          id="date-picker-inline"
-          label="Selecciona la fecha"
-          value={this.state.tiempo}
-          onChange={this.handleChangeTiempo}
-          KeyboardButtonProps={{
-            'aria-label': 'change date',
-          }}
-        />
-            
-          
-               </MuiPickersUtilsProvider>
-               </div>
-               <div className="flechalateral" onClick={this.masunmes}> {'>'}</div>
-               </div>
-                     
-                   </div>
-
-                   </Animate>   
-                   <Animate show={this.state.diario}>
-                <div className="contfiltromensual jwContFlexCenter">
-                <div className="subtituloArt">
-                       {this.getDayName()}
-                     </div>
-                   <div className="contmensual " >
-    <div className="flechalateral" onClick={this.menosundia}> {'<'}</div>
-    <div className="fechacentral">
-<MuiPickersUtilsProvider libInstance={moment} utils={MomentUtils}>
-               <KeyboardDatePicker
-          disableToolbar
-          format="DD/MM/YYYY"
-          margin="normal"
-          id="date-picker-inline"
-          label="Selecciona la fecha"
-          value={this.state.tiempo}
-          onChange={this.handleChangeTiempo}
-          KeyboardButtonProps={{
-            'aria-label': 'change date',
-          }}
-        />
-            
-          
-               </MuiPickersUtilsProvider>
-               </div>
-               <div className="flechalateral" onClick={this.masundia}> {'>'}</div>
-               </div>
-                     
-                   </div>
-          
-                  
-           
-           
-           
-           
-           
-                  </Animate>    
-                  <Animate show={this.state.periodo}>
-                  <div className="contfiltromensual jwContFlexCenter">
-                       <div className="contmensual">
-                       <div className="separador">
-<MuiPickersUtilsProvider libInstance={moment} utils={MomentUtils}>
-               <KeyboardDatePicker
-          disableToolbar
-          format="D/MM/YYYY"
-          margin="normal"
-          id="date-picker-inline"
-          label="Fecha de inicio "
-          value={this.state.tiempoperiodoini}
-          onChange={this.handleChangeTiempoini}
-          KeyboardButtonProps={{
-            'aria-label': 'change date',
-          }}
-        />
-            
-          
-               </MuiPickersUtilsProvider>
-               </div>
-               <div className="separador">
-               <MuiPickersUtilsProvider libInstance={moment} utils={MomentUtils}>
-               <KeyboardDatePicker
-          disableToolbar
-           format="DD/MM/YYYY"
-          margin="normal"
-          id="date-picker-inline"
-          label="Fecha fin "
-          value={this.state.tiempoperiodofin}
-          onChange={this.handleChangeTiempoPeriodofin}
-          KeyboardButtonProps={{
-            'aria-label': 'change date',
-          }}
-        />
-            
-          
-               </MuiPickersUtilsProvider>
-
-               </div>
-               </div>
-                     
-                   </div>
-
-                  </Animate>   
-</div>
-</div>
 
   <Animate show={this.state.Pie}>  
     
   <Animate show={this.state.Categorias}>  
- <GraficadorPie data={DetallesPorrender}
+ <GraficadorPie data={this.state.filteredTimeRegs}
                  criterio={"categoria"}
                    sendData={sendPiedata} />
   </Animate>
   <Animate show={this.state.Cuentas}>  
- <GraficadorPieCuentas data={DetallesPorrender}
+ <GraficadorPieCuentas data={this.state.filteredTimeRegs}
                  criterio={"categoria"}
                   Cuentas={this.props.regC.Cuentas}
                    sendData={sendPiedataCuentas} />
@@ -499,49 +172,23 @@ let subCuentadata ={
 </Animate> 
 <Animate show={this.state.Line}> 
 <div className="centrar contLineChart">
-<Line data={superdata2}   options={{
-  
-  responsive: true,
-  maintainAspectRatio: false,
-  
-      legend: { display: true},
-      plugins: {
-        datalabels: {
-            backgroundColor: function(context) {
-                return "white";
-              },
-           
-            color: 'black',
-            borderRadius: 25,
-            padding: 5,
-            font: {
-                size:"15px",
-                weight: 'bold'
-              },
-        }}
-   
-    }} />
+<GeneradorLine data={this.state.filteredTimeRegs}
+                criterio={this.state.Categorias?"categorias":"cuentas"} 
+                tiempo={this.state.tiempo}
+                 />
 </div>
 </Animate> 
-</Animate> 
-</div>
+</Animate>
+
 <div className="contcatdetail">
 <Animate show={this.state.catdetail}>
 <GraficadorSubPie data={this.state.subCatRegs}
  Flecharetro={()=>{
-  
   setTimeout(()=> {
     this.setState({allData:true})
-
     }, 400);
-  
   this.setState( {catdetail:false, subCatRegs:[]})
-
-
-}
- 
- }
-/>
+}}/>
 </Animate>
 <Animate show={this.state.subCuentaDetail}>
 <GraficadorPieCuentasSub data={this.state.subCuentadata}
@@ -565,10 +212,12 @@ let subCuentadata ={
 </div>
 </div>
 
+</div>
+
 
 <style >
                 {                                
-                ` .excluido{
+                `     .excluido{
                 color:red
                 }
                 .fullw{
@@ -584,8 +233,11 @@ let subCuentadata ={
                   min-height: 350px;
                 }
                 .contfiltros{
-                  width: 90%;
-                  margin-left: 5%;
+                     width: 90%;
+    margin-left: 5%;
+    display: flex;
+    flex-flow:column;
+    justify-content: space-between;
                 }
                
                 .fechacentral{
@@ -619,16 +271,7 @@ let subCuentadata ={
                     color: red;
                       font-weight: bolder;
                   }
-                .contmensual{
-                  display: flex;
-                  justify-content: space-around;
-                  align-items: center;
-                  max-width: 500px;
-                  border: 3px outset;
-                  height: 57px;
-                  border-radius: 11px;
-                  margin: 3px 0px;
-                  }
+              
                   
                   .flechalateral{
                     display: flex;
@@ -849,7 +492,14 @@ let subCuentadata ={
      
     }
 
-
+.downloadbutton{
+    color: white;
+    border-radius: 36px;
+    background: #5253ff;
+    /* padding-top: 5px; */
+    height: 44px;
+ 
+   }
 
 
     .contSubCat {
@@ -1022,7 +672,7 @@ let subCuentadata ={
 }
 
                 
-                ` }
+                 }  ` }
     </style>
 </div>
 

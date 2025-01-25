@@ -163,67 +163,7 @@ let datos = this.TranformIndex(indicesIniciales, iniIndex,iniColor)
     
    return inidata
 }
-setterData2 = (indicesIniciales) =>{
 
- 
- // Extraer los datos previos (rondas, indices, colores) de prevData
-  let rondas = this.state.superdata.labels.slice();  // Clonamos para evitar modificar el original
- let indices = this.state.inidata.slice()
- let valorDelIndex = indices[indices.length - this.state.indicesOperativos  ]
-
- let indiceInicial= valorDelIndex >= 2?1:-1
-
- let nuevosIndices=[indiceInicial]
- let nuevosColores=["red"]
- indicesIniciales.map((x,i)=>{
-
- let valorActual =nuevosIndices[i]
-  if(x==1){
-    nuevosColores.push("fuchsia")
-  let newval = valorActual-1
-  nuevosIndices.push(newval)
-  }else if(x<2){
-    nuevosColores.push("lightblue")
-    let newval = valorActual-1
-    nuevosIndices.push(newval)
-  }
-  
-  else{
-    let newval = valorActual+1
-    nuevosIndices.push(newval)
-   if(x>=2 && x<3){
-    nuevosColores.push("green")
-   }else if(x>=3 && x<10){
-    nuevosColores.push("purple")
-   }else if(x>=10 ){
-    nuevosColores.push("fuchsia")
-   }
-  }
-
-
-  
-  })
-
-  let inidata = {
-    labels:rondas ,
-   datasets: [{
-      label: 'My First Dataset',
-      data: nuevosIndices,
-      fill: false,
-      borderColor: 'grey',
-      backgroundColor:nuevosColores,
-  
-      borderWidth:1,
-      tension: 0,
-      pointRadius:6,
-    }]
-  }
-
-
-
-
-   return inidata
-}
  getColor = (x) =>{
 
   let nuevosColores=[]
@@ -348,8 +288,8 @@ this.setState({ARIMA:fixedArg})
 let indicesTranformados =this.TranformIndex(igualarray, 0,"blue")
 
 //let modifiedArg = igualarray.map(x=> x>10?10:x)
-let indicesIniciales =this.setterData(igualarray.slice(-this.state.indicesOperativos), indicesTranformados)
-//let indicesIniciales =this.setterData(igualarray, indicesTranformados)
+//let indicesIniciales =this.setterData(igualarray.slice(-this.state.indicesOperativos), indicesTranformados)
+let indicesIniciales =this.setterData(igualarray, indicesTranformados)
 
 let rsiData = this.calculateRSI(indicesIniciales.datasets[0].data, 14);
 let rsiData2 = this.calculateRSI(igualarray, 14);
@@ -587,8 +527,18 @@ getLineStyle=(value, levels)=> {
 
 
       console.log(this.state)
-      let getmin = Math.min(...this.state.superdata.datasets[0].data) - 3 || 30
-      let getmax = Math.max(...this.state.superdata.datasets[0].data) + 2 || 30
+      let dataLength = this.state.superdata.datasets[0].data.length;
+      let indicesOperativos = this.state.indicesOperativos;
+      
+      // Determinar cuántos elementos tomar (el mínimo entre indicesOperativos y dataLength)
+      let sliceCount = Math.min(indicesOperativos, dataLength);
+      
+      // Obtener los últimos datos
+      let recentData = this.state.superdata.datasets[0].data.slice(-sliceCount);
+      
+      // Calcular getmin y getmax
+      let getmin = Math.min(...recentData) - 3;
+      let getmax = Math.max(...recentData) + 2;
    
       let LineOptions ={
         animation: {
@@ -609,7 +559,10 @@ getLineStyle=(value, levels)=> {
            
           },
           x:{
-            min: this.state.superdata.datasets[0].data.length - this.state.indicesOperativos , // Ajusta el mínimo para hacer espacio debajo del último valor
+            min: Math.max(
+              0,
+              this.state.superdata.datasets[0].data.length - this.state.indicesOperativos
+            ),
             max: this.state.superdata.datasets[0].data.length + 5, // Ajusta el máximo para hacer espacio arriba si lo deseas
             ticks: {
               font: {

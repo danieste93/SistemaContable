@@ -2938,6 +2938,34 @@ async function  downLoadFact (req, res){
       }
 
 }
+
+async function  downloadPDFbyHTML (req, res){
+
+
+  if( req.body.Html  ){
+ pdf.create(req.body.Html, {
+ 
+ 
+   border: {
+       top: "0px",            // default is 0, units: mm, cm, in, px
+       right: "0px",
+       bottom: "0px",
+       left: "0px"
+     },
+     childProcessOptions: { env: { OPENSSL_CONF: '/dev/null' }}}).toBuffer(async (err, buffer) => {
+   
+       if (err) {console.log(err); throw new Error("error al crear pdf")}
+ 
+      
+       res.status(200).send({status: "Ok", message: "Factok", buffer});
+ 
+     
+     })}else{
+       res.status(200).send({status: "error", message: "Ingrese el HTML"});
+     }
+
+}
+
 async function  enviarCoti (req, res){
   let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
  
@@ -4399,12 +4427,35 @@ res.status(200).send({message:"Iconos Actualizados", updadatedIcons })
             
                 res.status(200).send({ status: "Ok", message: "SendSearch", Regs: respuestaRegs });
            
-              
-           
-
-                
-                
+  
             }
 
+            const getClientData = async (req,res)=>{
 
-module.exports = {sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,uploadSignedXmlTest, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };
+              let conn = await mongoose.connection.useDb(req.body.User.DBname);
+              let ClienteModelSass = await conn.model('Cliente', clientSchema);
+              let CounterModelSass = await conn.model('Counter', counterSchema);
+              let contadoresHabiles = await CounterModelSass.find({iDgeneral:9999999})
+              let findClient = await ClienteModelSass.findById(req.body.datos)
+              console.log(findClient)
+
+              res.status(200).send({ status: "Ok", message: "findClient",Client:findClient, Counters:contadoresHabiles[0].ContSecuencial  });
+              
+            }
+            const deleteNotaCredito = async (req,res)=>{
+
+              
+
+            let conn = await mongoose.connection.useDb(req.body.User.DBname);
+            let VentaModelSass = await conn.model('Venta', ventasSchema);
+            let ventac = await VentaModelSass.findByIdAndUpdate(req.body.item._id,{NotaCredito:""}, {new:true})
+            if(ventac == null){
+              throw new Error("Venta no encontrado")
+            }
+            
+            res.status(200).send({ status: "Ok", message: "findClient", updatedVenta:ventac  });
+
+              
+            }
+
+module.exports = {deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,uploadSignedXmlTest, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };

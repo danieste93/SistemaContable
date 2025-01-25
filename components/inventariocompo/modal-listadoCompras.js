@@ -915,6 +915,7 @@ let filtrados=[]
     height: 44px;
  
    }
+   
   
    .centerti{
     text-align: center;
@@ -1090,6 +1091,9 @@ let filtrados=[]
             width: 80%;
             max-width: 300px;
           }
+             .marginator{
+    margin:0px 10px
+    }
              @media only screen and (max-width: 320px) { 
                .subtituloArt{
                 margin-top:2px;
