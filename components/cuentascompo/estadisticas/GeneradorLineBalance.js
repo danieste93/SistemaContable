@@ -4,123 +4,165 @@ import { Chart } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import 'chart.js/auto';
 import {connect} from 'react-redux';
-
 class Stats extends Component {
-  state = {};
+  state = {
+    historyData: {}, // Almacena el historial de datos procesados por mes
+  };
 
-  componentDidMount() {
-
-
-
+  componentDidUpdate(prevProps) {
+    const { data, tiempo } = this.props;
+console.log(this.props)
+    // Verificar si los datos o el tiempo han cambiado
+    if(data.length >0){
+    if (prevProps.data !== data ){
+      const getData = this.generarDatapoints();
+      const mesSeleccionado = new Date(data[0]?.Tiempo) // Obtener el mes actual
+      let codigoMes = `${mesSeleccionado.getMonth()}` + `${mesSeleccionado.getFullYear()}`
+      // Actualizar el estado con los nuevos datos procesados
+      this.setState((prevState) => ({
+        historyData: {
+          ...prevState.historyData, // Mantener el historial existente
+          [codigoMes]: {
+            labels: getData.labels,
+            datasets: getData.datasets,
+          },
+        },
+      }));
+    }}
   }
 
-  render() {
+  generarDatapoints() {
     const { data, balance, tiempo } = this.props;
 
-    
-  let labels = [];
-  let datasets = [];
-    console.log(this.props)
+    let labels = [];
+    let datasets = [];
+    let RegsPosesion = [];
 
-    let regsIngGas = data.filter(x=>x.Accion != "Trans") 
+    const regsIngGas = data.filter((x) => x.Accion !== "Trans");
+    const regsTrans = data.filter((x) => x.Accion === "Trans");
 
-    let regsTrans = data.filter(x=>x.Accion == "Trans")
+    const CuentasPosesion = this.props.Cuentas.filter((cuenta) => cuenta.CheckedP === true);
 
-    
-    let RegsPosesion = []
-if(this.props.Cuentas){
-let CuentasPosesion = this.props.Cuentas.filter(cuenta => cuenta.CheckedP === true)
-let CuentasNoPosesion = this.props.Cuentas.filter(cuenta => cuenta.CheckedP === false)
-  
-CuentasPosesion.forEach(cuenta => {
-    // Filtrar los registros que correspondan a la cuenta
-    const registrosRelacionados = regsIngGas.filter(
-      registro => registro.CuentaSelec.idCuenta === cuenta._id
+    CuentasPosesion.forEach((cuenta) => {
+      const registrosRelacionados = regsIngGas.filter(
+        (registro) => registro.CuentaSelec.idCuenta === cuenta._id
+      );
+      RegsPosesion.push(...registrosRelacionados);
+    });
+
+    const transIngreso = regsTrans.filter(
+      (transferencia) =>
+        this.props.Cuentas.some((cuenta) => cuenta.CheckedP === false && cuenta._id === transferencia.CuentaSelec.idCuenta) &&
+        this.props.Cuentas.some((cuenta) => cuenta.CheckedP === true && cuenta._id === transferencia.CuentaSelec2.idCuenta)
     );
 
-    // Almacenar los registros relacionados en el objeto usando el id de la cuenta como clave
-  RegsPosesion.push(...registrosRelacionados)
-  });
- 
+    const transGastos = regsTrans.filter(
+      (transferencia) =>
+        this.props.Cuentas.some((cuenta) => cuenta.CheckedP === true && cuenta._id === transferencia.CuentaSelec.idCuenta) &&
+        this.props.Cuentas.some((cuenta) => cuenta.CheckedP === false && cuenta._id === transferencia.CuentaSelec2.idCuenta)
+    );
 
-  let transIngreso=  regsTrans.filter(transferencia =>
-      this.props.Cuentas.some(cuenta => cuenta.CheckedP === false && cuenta._id === transferencia.CuentaSelec.idCuenta) &&
-      this.props.Cuentas.some(cuenta => cuenta.CheckedP === true && cuenta._id === transferencia.CuentaSelec2.idCuenta)
-    ); 
-    let transGastos=  regsTrans.filter(transferencia =>
-      this.props.Cuentas.some(cuenta => cuenta.CheckedP === true  && cuenta._id === transferencia.CuentaSelec.idCuenta) &&
-      this.props.Cuentas.some(cuenta => cuenta.CheckedP === false && cuenta._id === transferencia.CuentaSelec2.idCuenta)
-    ); 
-
-    const transferenciasGastosConAccion = transGastos.map(elem => ({
+    const transferenciasGastosConAccion = transGastos.map((elem) => ({
       ...elem,
       Accion: "Gasto",
     }));
-    
-    const transferenciasIngresosConAccion = transIngreso.map(elem => ({
+
+    const transferenciasIngresosConAccion = transIngreso.map((elem) => ({
       ...elem,
       Accion: "Ingreso",
     }));
-    console.log(transferenciasGastosConAccion)
-    console.log(transferenciasIngresosConAccion)
+
+    const FinalArr = RegsPosesion.concat(transferenciasGastosConAccion).concat(transferenciasIngresosConAccion);
+
+    if (tiempo === "mensual" || tiempo === "periodo") {
+      const balancePorDia = FinalArr.reduce((acc, reg) => {
+        const fecha = new Date(reg.Tiempo);
+        const dia = fecha.getDate();
+
+        if (!acc[dia]) {
+          acc[dia] = 0;
+        }
+
+        if (reg.Accion === "Ingreso") {
+          acc[dia] += parseFloat(reg.Importe || 0);
+        } else if (reg.Accion === "Gasto") {
+          acc[dia] -= parseFloat(reg.Importe || 0);
+        }
+
+        return acc;
+      }, {});
+
+      console.log(balancePorDia)
+
+      const diasOrdenados = Object.keys(balancePorDia).map(Number).sort((a, b) => b - a);
+      const mesSeleccionado = new Date(data[0]?.Tiempo) 
+      let balanceActual = 0
+      if(mesSeleccionado.getMonth()== new Date().getMonth()){
+        balanceActual = balance;
+      } 
+      else{
+        const primerDiaMesPosterior = new Date(mesSeleccionado.getFullYear(), mesSeleccionado.getMonth() + 1, 1);
+      let codigoMes = `${primerDiaMesPosterior.getMonth()}` + `${primerDiaMesPosterior.getFullYear()}`
+      let balancePrimerMes = this.state.historyData[codigoMes].datasets[0];
    
-    let FinalArr = RegsPosesion.concat(transferenciasGastosConAccion).concat(transferenciasIngresosConAccion)
-
-
-
     
-  if (tiempo === 'diario') {
-  
-  } else if (tiempo === 'mensual' || tiempo === 'periodo') {
-  
-    const balancePorDia = FinalArr.reduce((acc, reg) => {
-      const fecha = new Date(reg.Tiempo);
-      const dia = fecha.getDate(); // Extraer el día del registro
-    
-      // Si no existe aún, inicializamos con 0
-      if (!acc[dia]) {
-        acc[dia] = 0;
+      balanceActual = parseFloat(balancePrimerMes)
+      
       }
-    
-      // Acumulamos según el tipo de acción
-      if (reg.Accion === "Ingreso") {
-        acc[dia] += parseFloat(reg.Importe || 0);
-      } else if (reg.Accion === "Gasto") {
-        acc[dia] -= parseFloat(reg.Importe || 0);
-      }
-    
-      return acc;
-    }, {});
 
-    
-    const diasOrdenados = Object.keys(balancePorDia)
-    .map(Number)
-    .sort((a, b) => b - a); // Orden descendente por día
-  
-console.log(diasOrdenados)
 
-  let balanceActual = balance; // Balance inicial (ejemplo: fecha actual)
-  const balanceAcumulado = {};
-  
-  // Iterar desde el día actual hacia atrás, ajustando balances acumulados
-  diasOrdenados.forEach((dia) => {
-    balanceAcumulado[dia] = balanceActual; // Asignar el balance acumulado al día actual
-    balanceActual -= balancePorDia[dia]; // Ajustar el balance actual restando el balance del día
-  });
-  
-  // Convertir balance acumulado en un formato adecuado para los puntos del gráfico
-   labels = diasOrdenados.reverse().map((dia) => ` ${dia}`); // Etiquetas ordenadas cronológicamente
-   datasets = diasOrdenados.map((dia) => balanceAcumulado[dia].toFixed(2)); // Valores del gráfico
-  
-  console.log({ labels, datasets });
-   
+      const balanceAcumulado = {};
+
+      diasOrdenados.forEach((dia) => {
+        balanceAcumulado[dia] = balanceActual;
+     
+       let acc = 1;
+let valorArestar = balancePorDia[parseFloat(dia) - acc];
+
+// Verificamos si el valor es nulo y si es así, seguimos buscando
+if (valorArestar == null) {
+  while (valorArestar == null && acc <= 31) {
+    acc++;  // Aumentamos el índice para buscar más atrás
+    valorArestar = balancePorDia[parseFloat(dia) - acc];  // Intentamos con el nuevo índice
+  }
+}
+
+// Si encontramos un valor válido, restamos
+if (valorArestar != null) {
+  balanceActual -= valorArestar;
+}
+
+       
+      });
+
+      labels = diasOrdenados.reverse().map((dia) => `${dia}`);
+      datasets = diasOrdenados.map((dia) => balanceAcumulado[dia].toFixed(2));
+    }
+
+    return { labels, datasets };
   }
 
-  
-  }
+  render() {
+    const { historyData } = this.state;
+    const { data, balance, tiempo } = this.props;
+    let labels =[]
+    let datasets = []
+
+    console.log("Historial de datos:", historyData);
+    
+    if (this.props.data.length > 0 && Object.keys(this.state.historyData).length > 0) {
+
+      const mesSeleccionado = new Date(this.props.data[0]?.Tiempo) // Obtener el mes actual
+      let codigoMes = `${mesSeleccionado.getMonth()}` + `${mesSeleccionado.getFullYear()}`
+      if(this.state.historyData[codigoMes]){
+      labels  = this.state.historyData[codigoMes].labels
+      datasets  = this.state.historyData[codigoMes].datasets
+    }
+    }
+    
     return (
       <div className="centrar contMainDataChart">
-      <Line
+         <Line
                 data={{
                   labels,
                   datasets:[{
@@ -177,6 +219,7 @@ console.log(diasOrdenados)
                 }}
               />
         <style jsx>
+       
           {`
             .centrar {
               display: flex;
@@ -197,11 +240,11 @@ console.log(diasOrdenados)
   }
 }
 
-const mapStateToProps = state=>  {
-  let Cuentas =   state.RegContableReducer.Cuentas
+const mapStateToProps = (state) => {
+  let Cuentas = state.RegContableReducer.Cuentas;
   return {
-    Cuentas
-  }
+    Cuentas,
+  };
 };
 
 export default connect(mapStateToProps, null)(Stats);

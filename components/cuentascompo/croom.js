@@ -765,15 +765,6 @@ return saldofinal.toFixed(2)
   }
   
 
-let regsTrans = this.props.regC.Regs.filter(x=>x.Accion == "Trans")
-console.log(regsTrans)
-console.log(this.props)
- let transgastos = regsTrans.filter(transferencia =>
-  this.props.regC.Cuentas.some(cuenta => cuenta.CheckedP === false && cuenta._id === transferencia.CuentaSelec.idCuenta) &&
-  this.props.regC.Cuentas.some(cuenta => cuenta.CheckedP === true && cuenta._id === transferencia.CuentaSelec2.idCuenta)
-  );
-
-  console.log(transgastos)
 
       let flechaCuentasP = this.state.cuentaExpand == "Posesion"?"expand_less":"expand_more" 
       let flechaCuentasNoP = this.state.cuentaExpand == "NoPosesion"?"expand_less":"expand_more" 

@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import Filtrostiempo from './filtrostiempo';
+import Filtrostiempo from './filtrostiempoLim';
 import GeneradorLineBalance from "../estadisticas/GeneradorLineBalance"
 
 class Contacto extends Component {
@@ -44,7 +44,7 @@ class Contacto extends Component {
       console.log(this.state)
         return ( 
 
-         <div >
+         
 
 <div className="maincontacto" id="mainxx" >
 <div className="contcontacto"  >
@@ -68,40 +68,42 @@ getData={this.configData}
 paramTimeData={this.paramTimeData} />
 
 <GeneradorLineBalance
-data={this.state.filteredTimeRegs}
+data={this.state.filteredTimeRegs.filter(x=>x.TiempoEjecucion != 0)}
 tiempo={this.state.tiempo}
 balance={this.props.balance}
 />
 
 </div>
 </div>
-        </div>
+       
         <style jsx >{`
            .maincontacto{
-            z-index: 12;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 0.7);
-            left: -100%;
-            position: fixed;
-            top: 0px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition:0.5s;
-            
-            }
+      z-index: 1000;
+         width: 98.5vw;
+         height: 100vh;
+         background-color: rgba(0, 0, 0, 0.7);
+         left: -100%;
+         position: fixed;
+         top: 0px;
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         transition:0.5s;
+         overflow-y: scroll;  
+         
+       }
 
             .contcontacto{
               border-radius: 30px;
-              
-              width: 90%;
-              background-color: white;
-              display: flex;
-              flex-flow: column;
-              justify-content: space-around;
-              align-items: center;
-              
+    
+          border-radius: 9px;
+        width: 95%;
+        max-width:800px;
+        background-color: whitesmoke;
+        padding: 5px 10px;
+        position:absolute;
+        top:0px;
+        overflow: hidden;
               }
               .flecharetro{
                 height: 40px;
@@ -132,7 +134,7 @@ balance={this.props.balance}
                     }
                     .Scrolled{
  
-                      overflow-y: scroll;
+             
                       width: 98%;
                       display: flex;
                       flex-flow: column;
@@ -144,9 +146,9 @@ balance={this.props.balance}
                   
            `}</style>
         
-
+        </div>
           
-           </div>
+         
         )
     }
 }
