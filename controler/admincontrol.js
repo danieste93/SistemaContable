@@ -4458,4 +4458,24 @@ res.status(200).send({message:"Iconos Actualizados", updadatedIcons })
               
             }
 
-module.exports = {deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,uploadSignedXmlTest, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };
+            async function getDatabaseSize(req,res) {
+            
+              try {
+                  let conn = await mongoose.connection.useDb(req.body.User.DBname);
+                  const stats = await conn.db.command({ dbStats: 1, scale: 1024 * 1024 }); // Escala a MB
+            
+                let data = {
+                  storage:stats.storageSize,
+                  datasize:stats.dataSize,
+                  indexSize:stats.indexSize,
+
+                }
+
+                  res.status(200).send({ status: "Ok", message: "basesdeDatos", data  });
+
+              } catch (error) {
+                  console.error("❌ Error obteniendo stats:", error);
+              }
+          }
+
+module.exports = {getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,uploadSignedXmlTest, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };

@@ -29,7 +29,7 @@ router.post('/addnewicons', AdminControl.addNewIcons);
 router.post('/geticons', AdminControl.getIcons);
 router.post('/deleteicon', AdminControl.deleteIcon);
 
-
+router.post('/getDatabaseSize',Authentication, AdminControl.getDatabaseSize);
 
 router.get('/masiveApplyTemplate', AdminControl.masiveApplyTemplate);
 router.get('/updatedtcarts', AdminControl.updateDTCarts);

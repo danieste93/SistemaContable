@@ -2,8 +2,8 @@ import React, { Component } from 'react'
 import Header from "../components/header";
 
 import ComponentAcess from "../components/accessConfig";
-
-
+import {connect} from 'react-redux';
+import fetchData from "../components/funciones/fetchdata"
 
 
 
@@ -19,6 +19,8 @@ class Repuestouploader extends Component {
 
   componentDidMount () {
 
+    let databaseSize = this.getDatabase()
+    console.log(databaseSize)
 
     if(localStorage.length !== 0){
 
@@ -45,7 +47,12 @@ class Repuestouploader extends Component {
   
 
   }
-
+  getDatabase=async()=>{
+    let data = await fetchData(this.props.state.userReducer,
+      "/public/getDatabaseSize",
+      {})
+      return(data)
+    }
   
   render () {
 
@@ -63,4 +70,12 @@ class Repuestouploader extends Component {
     }
 }
 
-export default Repuestouploader
+
+
+ const mapStateToProps = state=>  {
+   
+  return {
+      state
+  }
+};
+ export default connect(mapStateToProps)(Repuestouploader)

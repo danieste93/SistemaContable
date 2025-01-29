@@ -18,6 +18,7 @@ import { Pie, Line, Bar } from 'react-chartjs-2';
 import {Chart} from"chart.js"
 import 'chart.js/auto';
 import AddCero from '../../components/funciones/addcero';
+
 //import "../../styles/macbutton.scss"
 /**
 * @author
@@ -35,8 +36,8 @@ class admins extends Component {
    }
    channel2 = null;
    componentDidMount(){
- 
-   
+
+
     if(!this.props.state.RegContableReducer.Regs){
    
        this.getMontRegs()
@@ -48,6 +49,7 @@ class admins extends Component {
     }
 
    }
+
    getMontRegs=()=>{
   let datos = {
     User: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
