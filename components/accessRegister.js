@@ -25,7 +25,7 @@ class RegistroContable extends Component {
         detalles:false,
         searcher:false,
         cuentas:false,
-        estadisticas:true,
+        estadisticas:false,
         EditReg:{},
         modaldelete:false,
         DeleteReg:{},

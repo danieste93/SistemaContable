@@ -2941,18 +2941,20 @@ cursor:pointer
 }
 
 .boton3d {
- background: linear-gradient(321deg, #666, #333);
-    color: white;
-    border: none;
-    padding: 6px 25px;
-    font-size: 18px;
-    cursor: pointer;
-    border-radius: 12px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2), 0px 0px 25px rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
-    outline: none;
-    transform: translateY(0);
-    width: 65px;
+
+background: linear-gradient(353deg, #666, #333);
+color: white;
+border: none;
+
+font-size: 17px;
+cursor: pointer;
+border-radius: 12px;
+box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2), 0px 0px 25px rgba(255, 255, 255, 0.2);
+transition: all 0.3s ease;
+outline: none;
+transform: translateY(0);
+width: 100px;
+padding: 2px;
 }
 
 .boton3d:hover {
