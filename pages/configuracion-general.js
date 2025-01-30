@@ -19,8 +19,7 @@ class Repuestouploader extends Component {
 
   componentDidMount () {
 
-    let databaseSize = this.getDatabase()
-    console.log(databaseSize)
+  
 
     if(localStorage.length !== 0){
 
@@ -47,12 +46,7 @@ class Repuestouploader extends Component {
   
 
   }
-  getDatabase=async()=>{
-    let data = await fetchData(this.props.state.userReducer,
-      "/public/getDatabaseSize",
-      {})
-      return(data)
-    }
+ 
   
   render () {
 
@@ -72,10 +66,5 @@ class Repuestouploader extends Component {
 
 
 
- const mapStateToProps = state=>  {
-   
-  return {
-      state
-  }
-};
- export default connect(mapStateToProps)(Repuestouploader)
+ 
+ export default Repuestouploader

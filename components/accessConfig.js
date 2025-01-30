@@ -8,7 +8,8 @@ import MuiAlert from '@material-ui/lab/Alert';
 import ElectroFact from "./modal-ElectroFact"
 import Trabajadores from "./modal-Trabajadores"
 import Clientes from "./modal-Clientes"
-
+import fetchData from './funciones/fetchdata';
+import DatabaseUsageBar from './cuentascompo/SubCompos/dataBarUsage';
  class accessPuntoVenta extends Component {
  
      state={
@@ -18,16 +19,35 @@ import Clientes from "./modal-Clientes"
       passClient:null,
       ElectroFact:false,
       Trabajadores:false,
+      docsSize:{
+        storage:0,
+        datasize:0,
+        indexSize:0
+      }
      }
   
-     componentDidMount(){
-
+     async componentDidMount(){
+      let databaseSize = await this.getDatabase()
+    
+  console.log(databaseSize)
+      if(databaseSize.status =='Ok'){
+        this.setState({docsSize:databaseSize.data})
+  
+      }
    
     }
      
-     
+       getDatabase=async()=>{
+         let data = await fetchData(this.props.state.userReducer,
+           "/public/getDatabaseSize",
+           {})
+           console.log(data)
+           return(data)
+         }
  
 render(){
+
+  console.log(this.state)
 
   const handleClose = (event, reason) => {
     let AleEstado = this.state.Alert
@@ -96,7 +116,12 @@ min-width: 160px;
     <ClickFunctionItem icono="post_add" titulo="Facturacion Electrónica" func={()=>{this.setState({ElectroFact:true})}} />
     <ClickFunctionItem icono="people" titulo="Trabajadores" func={()=>{this.setState({Trabajadores:true})}} />
     <ClickFunctionItem icono="emoji_people" titulo="Clientes" func={()=>{this.setState({Clientes:true})}} />
+   
+    <div style={{ marginTop:"10px", display: "flex", justifyContent: "center", alignItems: "center",  backgroundColor: "#f5f5f5" }}>
+            <DatabaseUsageBar dbSize={this.state.docsSize.datasize} userSize={300} />
+        </div>
     </div>
+   
     </div>
 
 
@@ -110,6 +135,9 @@ min-width: 160px;
   <Animate show={this.state.Clientes}>
   <Clientes Flecharetro ={()=>this.setState({Clientes:false})} />
   </Animate>
+
+ 
+
   <Snackbar open={this.state.Alert.Estado} autoHideDuration={5000} onClose={handleClose}>
     <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
         <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>
