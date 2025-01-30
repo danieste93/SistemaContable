@@ -214,8 +214,8 @@ var hora = addCero(tiempo.getHours())+" : "+   addCero(tiempo.getMinutes())
   
      <Dropdown.Menu>
      <Dropdown.Item>
-     <button className=" btn btn-dark btnDropDowm" >
-            <span className="material-icons" onClick={(e)=>{ e.stopPropagation();downloadFact(datos)}}>
+     <button className=" btn btn-dark btnDropDowm" onClick={(e)=>{ e.stopPropagation();downloadFact(datos)}} >
+            <span className="material-icons" >
             download
           </span>
           <p>Descargar</p>
