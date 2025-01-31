@@ -1547,7 +1547,7 @@ i{
        }
        .contcontactoCompras{
         border-radius: 9px;
-        width: 98%;
+      width: 90vw;
         background-color: whitesmoke;
         padding: 5px 10px;
         position:absolute;
@@ -1694,16 +1694,14 @@ i{
                .marginador{
                 margin: 0px 2px 15px 2px;
                }
-         .contcontactoCompras{
-          width: 95%;
-         }
+        
           }
           @media only screen and (min-width: 600px) { 
          
 
               .contcontactoCompras{
        
-         width: 70%;
+      //   width: 70%;
       
       
        }
