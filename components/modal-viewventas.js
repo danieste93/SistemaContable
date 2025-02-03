@@ -1,6 +1,10 @@
 import React, { Component } from 'react'
 
 import CircularProgress from '@material-ui/core/CircularProgress';
+import NotaVentaTemplate from "../public/static/NotaTemplate"
+import FacturaTemplate from "../public/static/FactTemplate"
+import { teal } from '@material-ui/core/colors';
+
 
 class Contacto extends Component {
   state={
@@ -14,35 +18,81 @@ Html:""
 
        }, 500);
 
-       let datos = {
-        User: {DBname:this.props.usuarioDBname,
-              },
-              ...this.props
-        
+      console.log(this.props)
+      console.log("enview")
 
+      let TemplateAsignado 
+
+      if(this.props.datos.Doctype == "Nota de venta"){
+TemplateAsignado = NotaVentaTemplate
+
+      }else{
+        TemplateAsignado = FacturaTemplate
       }
-       let settings = {
-        method: 'POST', // or 'PUT'
-        body: JSON.stringify(datos), // data can be `string` or {object}!
-        headers:{
-          'Content-Type': 'application/json',
-          "x-access-token": this.props.token
+
+      let artImpuestos  = this.props.datos.articulosVendidos.filter(x=>x.Iva)
+      let artSinImpuestos = this.props.datos.articulosVendidos.filter(x=>x.Iva == false)
+      let totalSinImpuestos = 0
+      let baseImpoConImpuestos = 0
+      let baseImpoSinImpuestos = 0
+      if(artImpuestos.length > 0){
+          for(let i=0;i<artImpuestos.length;i++){
+             
+              baseImpoConImpuestos += (artImpuestos[i].PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`))
+          }
+          
+      }
+      if(artSinImpuestos.length > 0){
+          for(let i=0;i<artSinImpuestos.length;i++){
+              totalSinImpuestos += artSinImpuestos[i].PrecioCompraTotal
+              baseImpoSinImpuestos += artSinImpuestos[i].PrecioCompraTotal
+          }
+      }
+
+      let tiempo = new Date(this.props.datos.tiempo) 
+      let mes = this.addCero(tiempo.getMonth()+1)
+      let dia = this.addCero(tiempo.getDate())
+      var date = dia+ "/"+ mes+"/"+tiempo.getFullYear()
+
+      let viewHTML = TemplateAsignado({...this.props.datos,
+        baseImpoConImpuestos,
+        baseImpoSinImpuestos,
+        totalSinImpuestos,
+       SuperTotal:this.props.datos.PrecioCompraTotal,
+        ArticulosVendidos:this.props.datos.articulosVendidos,
+        razonSocialComprador:this.props.datos.nombreCliente == ""?"CONSUMIDOR FINAL":this.props.datos.nombreCliente,
+        identificacionComprador:this.props.datos.cedulaCliente==""?"9999999999999":this.props.datos.cedulaCliente,
+        correoComprador:this.props.datos.correoCliente,
+        direccionComprador:this.props.datos.direccionCliente,
+        ciudadComprador:this.props.datos.ciudadCliente,
+        LogoEmp:this.props.usuario.user.Factura.logoEmp,
+        rimpeval:this.props.usuario.user.Factura.rimpe,
+        populares:JSON.parse(this.props.usuario.user.Factura.populares),
+        estab:this.props.usuario.user.Factura.codigoEstab,
+        ptoEmi:this.props.usuario.user.Factura.codigoPuntoEmision,
+        secuencial:this.props.datos.Secuencial,
+        fechaEmision:date,
+        ruc:this.props.usuario.user.Factura.ruc,
+        dirEstablecimiento:this.props.usuario.user.Factura.dirEstab,
+        fechaAuto:this.props.datos.FactFechaAutorizacion,
+        numeroAuto:this.props.datos.FactAutorizacion,
+        obligadoContabilidad:this.props.usuario.user.Factura.ObligadoContabilidad?"Si":"No",
+        idVenta:this.props.datos.iDVenta
+
+
+      })
+  
+      this.setState({Html:viewHTML})
+      
+      
+      }
+      addCero=(n)=>{
+        if (n<10){
+          return ("0"+n)
+        }else{
+          return n
         }
       }
-       fetch("/cuentas/getVentasHtml", settings).then(res => res.json())
-        .catch(error => {console.error('Error:', error);
-        this.setState({loadingData:false})        
-      
-      })
-        .then(response => {  
-        console.log(response)
-         this.setState({Html:response.ventasHabiles.Html})
-      
-        })
-
-      
-      }
-   
       Onsalida=()=>{
         document.getElementById('mainViewVentas').classList.remove("entradaaddc")
         setTimeout(()=>{ 
@@ -54,7 +104,7 @@ Html:""
 
     render () {
 console.log(this.state)
-
+console.log(this.props)
         return ( 
 
          <div >

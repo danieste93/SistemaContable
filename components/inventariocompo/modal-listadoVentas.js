@@ -1322,7 +1322,7 @@ search
         <ModalDeleteVentas DeleteReg={this.state.VentaSelected} Flecharetro={()=>{this.setState({deleteVenta:false, VentaSelected:{}});this.props.updateArt()}  }/>
         </Animate>
         <Animate show={this.state.viewVenta}>
-        <ViewVenta token={this.props.state.userReducer.update.usuario.token} usuarioDBname={this.props.state.userReducer.update.usuario.user.DBname}datos={this.state.dataventa} Flecharetro={()=>{this.setState({viewVenta:false, dataventa:""})}  }/>
+        <ViewVenta token={this.props.state.userReducer.update.usuario.token} usuario={this.props.state.userReducer.update.usuario}datos={this.state.dataventa} Flecharetro={()=>{this.setState({viewVenta:false, dataventa:""})}  }/>
         </Animate>
         <Animate show={this.state.viewCreds}>
         <ViewCreds datos={this.state.dataCred} Flecharetro={()=>{this.setState({viewCreds:false, dataCred:""})}  }/>

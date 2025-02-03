@@ -2,17 +2,14 @@ import React, { Component } from 'react'
 import postal from 'postal';
 import {connect} from 'react-redux';
 
-import { Animate } from 'react-animate-mount/lib/Animate';
-import Pagination from "./Pagination";
-import {paginationPipe} from "../reduxstore/pipes/paginationFilter";
+
 
 import { ValidatorForm, TextValidator} from 'react-material-ui-form-validator';
 import moment from "moment";
 import "moment/locale/es";
 import MomentUtils from '@date-io/moment';
 import {  KeyboardDatePicker,  MuiPickersUtilsProvider } from "@material-ui/pickers";
-import Snackbar from '@material-ui/core/Snackbar';
-import MuiAlert from '@material-ui/lab/Alert';
+
 import VentaR from "./inventariocompo/ventaRender"
 
  class accessPuntoVenta extends Component {

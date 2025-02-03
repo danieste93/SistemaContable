@@ -9,6 +9,7 @@ import { addArt} from '../../reduxstore/actions/regcont';
 import DropFileInput from "../drop-file-input/DropFileInput"
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
+import ModalComprobacionGeneral from './usefull/modal-comprobacion-general';
 import Cat from "./modalCategoriasArticulos"
 class Contacto extends Component {
    
@@ -18,7 +19,7 @@ class Contacto extends Component {
     EqId:"",
     PrecioCompraServ:0,
   tiempo: new Date().getTime(),
-    
+  modalComprobacion:false,
     Alert:{Estado:false},
     Vendedor:{  Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
       Id:this.props.state.userReducer.update.usuario.user._id,
@@ -39,6 +40,14 @@ class Contacto extends Component {
      catSelect:"",  
   }
     componentDidMount(){
+
+      let populares =  this.props.state.userReducer.update.usuario.user.Factura.populares== "true"?true:false 
+
+if(populares){
+  this.setState({Iva:false})
+}else{
+  this.setState({Iva:true})
+}
 
       setTimeout(function(){ 
         
@@ -87,11 +96,32 @@ class Contacto extends Component {
         });
       
       }
-      handleChangeSwitch=(e)=>{    
-           let switchmame = e.target.name                    
-            this.setState({[switchmame]:!this.state[switchmame]})
-             
-      }
+      handleChangeSwitch=(e)=>{
+       console.log(e)
+        let switchmame = e.target.name
+  if(switchmame == "Iva"){
+   let populares =  this.props.state.userReducer.update.usuario.user.Factura.populares== "true"?true:false 
+   if(populares && this.state.Iva==false){
+     this.setState({modalComprobacion:true,
+       mensajeComprobacion:"Usted esta registrado como Negocios Populares, Seguro desea agregar el IVA?"
+     })
+
+   }else if(!populares && this.state.Iva==true){
+     this.setState({modalComprobacion:true,
+       mensajeComprobacion:"Usted esta registrado como Rimpe Emprendedores, Seguro desea quitar el IVA?"
+     })
+   }else{
+     this.setState({[switchmame]:!this.state[switchmame]})
+   }
+ 
+  }else{
+   this.setState({[switchmame]:!this.state[switchmame]})
+  }
+      
+      
+       
+ 
+   }
       onFileChange = (files) => {
         console.log(files);
         this.setState({archivos:files})
@@ -426,7 +456,20 @@ add
        } 
        />
         </Animate >  
-                    
+                 <Animate show={this.state.modalComprobacion}>
+                        <ModalComprobacionGeneral 
+                        Flecharetro={()=>{this.setState({modalComprobacion:false})}}
+                        Mensaje={this.state.mensajeComprobacion}
+                        SendOk={()=>{
+                          this.setState({Iva:!this.state.Iva,
+                
+                
+                          })
+                
+                        }}
+                        
+                        />
+                        </Animate>     
            <style jsx>{`
            .datarenderCont{
         

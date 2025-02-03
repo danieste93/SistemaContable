@@ -2287,7 +2287,7 @@ res.status(200).send({cuenta})
          IvaEC:data.IvaEC,
          baseImponible:data.baseImponible,
          Estado:data.Estado,
-         Html:data.html
+     
        }
      
        let ventac = await VentaModelSass.create([dataventa],{session})
@@ -2825,7 +2825,7 @@ let idExtra = 0
       IvaEC:data.IvaEC,
       baseImponible:data.baseImponible,
     
-      Html:data.html
+    
     }], {session})
 
 

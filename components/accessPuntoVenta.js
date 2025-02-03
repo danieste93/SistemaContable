@@ -2977,8 +2977,9 @@ if(e.Tipo == "Producto"){
 
 
 console.log(this.state)
-
-
+let nombreComercial = ""
+let dirEstab =""
+let generarRimpeNota = ""
 let SuggesterReady =    <CircularProgress  />              
 if(this.props.state.RegContableReducer.Clients){
   
@@ -2988,6 +2989,9 @@ let logogen = ""
 if(this.props.state.userReducer){
     logogen = this.props.state.userReducer.update.usuario.user.Factura.logoEmp != ""?
     this.props.state.userReducer.update.usuario.user.Factura.logoEmp:"/logomin.png"
+    generarRimpeNota = this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?"RIMPE NEGOCIOS POPULARES":"CONTRIBUYENTE REGIMEN RIMPE"
+    nombreComercial =this.props.state.userReducer.update.usuario.user.Factura.nombreComercial
+    dirEstab = this.props.state.userReducer.update.usuario.user.Factura.dirEstab
 }
 
     
@@ -3175,7 +3179,6 @@ if(this.state.descuentoPer > 0){
                                                                 />))
 let generadorFormasdeCredito =0
 let creditRest =  SuperTotal - this.state.creditoCantidadIni
-let generarRimpeNota = this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?"RIMPE NEGOCIOS POPULARES":"CONTRIBUYENTE REGIMEN RIMPE"
         return (
             <div style={{marginTop:"10vh"}} >
              <Head>
@@ -3904,8 +3907,8 @@ post_add
                    
                    <img className='logoPrint'src={logogen} alt="logotipo empresa"/>
                   
-                                <p className="tituloArtEdit">{this.props.state.userReducer.update.usuario.user.Factura.nombreComercial}</p>
-                                <p className="subtituloArtPrint">{this.props.state.userReducer.update.usuario.user.Factura.dirEstab}</p>
+                                <p className="tituloArtEdit">{nombreComercial}</p>
+                                <p className="subtituloArtPrint">{dirEstab}</p>
                                 <p className="textoArt">--------------------------------------------------</p>
                                 <div className="dataarea" >
                                 <div className="grupoDatosPrint" >
