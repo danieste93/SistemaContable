@@ -307,7 +307,7 @@ return `
             margin-right: 19px;
         }
         .contExtraData{
-            font-size: 11px;
+            font-size: 10px;
         }
         .Cont1{
             width: 300px;
