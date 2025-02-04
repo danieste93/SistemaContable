@@ -433,7 +433,7 @@ justify-content: space-between;
                   justify-content: space-between;
          }
          .invoice-box {
-            max-width: 700px;
+            max-width: 850px;
             margin: auto;
             padding: 5px;
             border: 1px solid #eee;

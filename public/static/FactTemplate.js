@@ -311,7 +311,7 @@ return `
         }
         .Cont1{
             width: 300px;
-            max-width: 600px;
+            max-width: 700px;
             display:flex;
             -webkit-box-orient:vertical;
             -webkit-box-direction:normal;
@@ -461,7 +461,7 @@ justify-content: space-between;
                   justify-content: space-between;
          }
          .invoice-box {
-            max-width: 700px;
+            max-width: 850px;
             margin: auto;
             padding: 5px;
             border: 1px solid #eee;
