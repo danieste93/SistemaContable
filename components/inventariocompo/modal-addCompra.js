@@ -233,7 +233,7 @@ this.setState({ArtAddCalc:deepClone})
       this.setState({ArtAddCalc:deepClone})
               }
         comprobadorGenCompra=( TotalValorCompra, TotalPago)=>{
-       
+       console.log(TotalValorCompra, TotalPago)
           if(this.state.loading == false){
             this.setState({loading:true})
           let arrErrCant=[]
@@ -377,7 +377,7 @@ return (data)
 
         for(let i = 0; i<this.state.Fpago.length;i++){
         
-            TotalPago = TotalPago + this.state.Fpago[i].Cantidad
+            TotalPago += parseFloat(this.state.Fpago[i].Cantidad)
         }
         
     }

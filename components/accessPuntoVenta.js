@@ -3035,7 +3035,7 @@ if(this.state.Fpago.length > 0){
 
     for(let i = 0; i<this.state.Fpago.length;i++){
     
-        TotalPago = TotalPago + parseFloat(this.state.Fpago[i].Cantidad)
+         TotalPago += parseFloat(this.state.Fpago[i].Cantidad)
     }
     
 }

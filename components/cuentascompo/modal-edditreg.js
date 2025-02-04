@@ -341,6 +341,9 @@ handleChangeTiempo=(e)=>{
   }
 uploadimages=(mival,trans)=>{
 const miFormaData = new FormData()
+let DBname = this.props.state.userReducer.update.usuario.user.DBname
+
+const userFolder = DBname ? `${DBname}/Registros` : "uploads/default";
 let sumaimagenes = this.state.archivos.length + this.state.urlImg.length
 console.log(sumaimagenes)
 for(let i=0; i<=this.state.archivos.length;i++){
@@ -348,6 +351,7 @@ for(let i=0; i<=this.state.archivos.length;i++){
 
 
 miFormaData.append("upload_preset","perpeis7")
+miFormaData.append("folder", userFolder); // Aquí se define la carpeta del usuario
 const options = {
   method: 'POST',
   body: miFormaData,

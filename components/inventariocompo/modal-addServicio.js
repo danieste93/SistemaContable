@@ -127,7 +127,10 @@ if(populares){
         this.setState({archivos:files})
       }
       comprobadorAddInd=()=>{
-        console.log("en add")
+        let DBname = this.props.state.userReducer.update.usuario.user.DBname
+
+        const userFolder = DBname ? `${DBname}/Articulos` : "uploads/default";
+ 
         if(this.state.loading == false){
           if(this.state.archivos.length>0){
             const miFormaData = new FormData()
@@ -136,6 +139,8 @@ if(populares){
             
             
             miFormaData.append("upload_preset","perpeis7")
+            miFormaData.append("folder", userFolder); // Aquí se define la carpeta del usuario
+            
             const options = {
               method: 'POST',
               body: miFormaData,

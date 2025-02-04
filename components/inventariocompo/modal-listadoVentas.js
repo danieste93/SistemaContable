@@ -859,7 +859,7 @@ if(!this.props.state.RegContableReducer.Ventas){
         }
       
     render () {
-  
+ 
       let flechaval = this.state.filtrosTiempo?"▲":"▼"
       let diarioval = this.state.diario?"activeval":"";
       let mensualval = this.state.mensual?"activeval":"";
@@ -897,7 +897,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
 
           user={this.props.state.userReducer.update.usuario.user.Tipo}
            deleteVentaList={(datos)=>{this.deleteVentaList(datos)}}
-           downloadFact={(datos)=>{this.downloadFact(datos)}}
+        
            resendProcess={(datos)=>{this.resendProcess(datos)}} 
            />)
       })}

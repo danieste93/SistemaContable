@@ -18,9 +18,7 @@ Html:""
 
        }, 500);
 
-      console.log(this.props)
-      console.log("enview")
-
+console.log(this.props)
       let TemplateAsignado 
 
       if(this.props.datos.Doctype == "Nota de venta"){
@@ -86,6 +84,60 @@ TemplateAsignado = NotaVentaTemplate
       
       
       }
+      downloadFact=()=>{  
+        console.log("en download")
+       
+        let datos = {
+      Html:this.state.Html
+    }
+ 
+
+
+        fetch("/public/downloadPDFbyHTML", {
+          method: 'POST', // or 'PUT'
+          body: JSON.stringify(datos), // data can be `string` or {object}!
+          headers:{
+            'Content-Type': 'application/json',
+            "x-access-token": this.props.token
+          }
+        }).then(res => res.json())
+        .catch(error => console.error('Error:', error))
+        .then(response => {
+       
+          if(response.status == "Ok"){
+
+            let genTitulo = ""
+            if(this.props.datos.Doctype == "Factura-Electronica"){
+
+              genTitulo = `Factura Nº ${this.props.datos.Secuencial} ${this.props.usuario.user.Factura.nombreComercial}`
+            }else{
+  genTitulo = `Nota de Venta Nº ${this.props.datos.iDVenta} ${this.props.usuario.user.Factura.nombreComercial} `
+
+            }
+         
+
+            const url = window.URL.createObjectURL(
+              new Blob([Buffer.from(response.buffer)], { type: "application/pdf"}),
+            );
+          let link = document.createElement('a');
+          link.href = url;
+          link.setAttribute(
+            'download',
+            genTitulo,
+          );
+          link.click()
+          
+          let add = {
+            Estado:true,
+            Tipo:"success",
+            Mensaje:"Operacion exitosa, espere unos segundos"
+        }
+        this.setState({Alert: add })
+        }
+        })
+      
+      
+      }
       addCero=(n)=>{
         if (n<10){
           return ("0"+n)
@@ -120,7 +172,12 @@ console.log(this.props)
 {this.props.datos.TipoVenta} - {this.props.datos.iDVenta} 
 
 </div>
-
+<button className=" btn btn-dark " onClick={this.downloadFact} >
+            <span className="material-icons" >
+            download
+          </span>
+          <p>Descargar</p>
+          </button>
 
 
 </div> 

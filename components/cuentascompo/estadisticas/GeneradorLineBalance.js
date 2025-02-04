@@ -111,32 +111,37 @@ console.log(this.props)
       }
 
 
-      const balanceAcumulado = {};
+console.log(balanceActual)
 
-      diasOrdenados.forEach((dia) => {
-        balanceAcumulado[dia] = balanceActual;
-     
-       let acc = 1;
-let valorArestar = balancePorDia[parseFloat(dia) - acc];
 
-// Verificamos si el valor es nulo y si es así, seguimos buscando
-if (valorArestar == null) {
-  while (valorArestar == null && acc <= 31) {
-    acc++;  // Aumentamos el índice para buscar más atrás
-    valorArestar = balancePorDia[parseFloat(dia) - acc];  // Intentamos con el nuevo índice
-  }
+const reversedArray = Object.entries(balancePorDia)
+  .sort((a, b) => b[0] - a[0]) // Ordena de mayor a menor por clave
+  .map(([key, value]) => value); // Mapea solo los valores
+
+ console.log(reversedArray) 
+
+ let balanceAcum = balanceActual
+ let DataPoints = []
+
+      diasOrdenados.forEach((dia,i) => {
+  
+     console.log(i)
+let valorArestar = reversedArray[parseFloat(i)];
+if(mesSeleccionado.getMonth()== new Date().getMonth() && i == 0){ 
+  
+}else
+{
+  balanceAcum -= valorArestar
 }
 
-// Si encontramos un valor válido, restamos
-if (valorArestar != null) {
-  balanceActual -= valorArestar;
-}
-
-       
+console.log(balanceAcum)
+   DataPoints.push(balanceAcum.toFixed(2))
+  
       });
+      console.log(DataPoints)
 
       labels = diasOrdenados.reverse().map((dia) => `${dia}`);
-      datasets = diasOrdenados.map((dia) => balanceAcumulado[dia].toFixed(2));
+      datasets = DataPoints.reverse();
     }
 
     return { labels, datasets };

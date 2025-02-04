@@ -358,8 +358,9 @@ class Contacto extends Component {
 
         for(let i = 0; i<this.state.Fpago.length;i++){
         
-            TotalPago = TotalPago + this.state.Fpago[i].Cantidad
+          TotalPago += parseFloat(this.state.Fpago[i].Cantidad)
         }
+        
         
     }
       

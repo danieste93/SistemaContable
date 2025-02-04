@@ -436,11 +436,14 @@ console.log(this.state)
       
       uploadFacdata=async (e)=>{
         let newState = {...this.state}
-   
+        let DBname = this.props.state.userReducer.update.usuario.user.DBname
+        const userFolder = DBname ? `${DBname}/FactData` : "uploads/default";
+
             if(this.state.logoemp){
         const miFormaData = new FormData()
         miFormaData.append("file", this.state.logoemp)
         miFormaData.append("upload_preset","perpeis7")
+        miFormaData.append("folder", userFolder); // Aquí se define la carpeta del usuario
         const options = {
           method: 'POST',
           body: miFormaData,        

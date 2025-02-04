@@ -213,10 +213,15 @@ class Contacto extends Component {
          }
         uploadimages=(TotalPP, TotalPago,cantidadEgreso)=>{
           const miFormaData = new FormData()
+          let DBname = this.props.state.userReducer.update.usuario.user.DBname
+
+          const userFolder = DBname ? `${DBname}/Articulos` : "uploads/default";
+   
           for(let i=0; i<=this.state.archivos.length;i++){
             miFormaData.append("file", this.state.archivos[i])
 
           miFormaData.append("upload_preset","perpeis7")
+          miFormaData.append("folder", userFolder); // Aquí se define la carpeta del usuario
           const options = {
             method: 'POST',
             body: miFormaData,
@@ -254,10 +259,15 @@ class Contacto extends Component {
            justUploadimages=()=>{
           
             const miFormaData = new FormData()
+            let DBname = this.props.state.userReducer.update.usuario.user.DBname
+
+            const userFolder = DBname ? `${DBname}/Articulos` : "uploads/default";
+     
             for(let i=0; i<=this.state.archivos.length;i++){
               miFormaData.append("file", this.state.archivos[i])
   
             miFormaData.append("upload_preset","perpeis7")
+            miFormaData.append("folder", userFolder); // Aquí se define la carpeta del usuario
             const options = {
               method: 'POST',
               body: miFormaData,
@@ -412,8 +422,7 @@ class Contacto extends Component {
             this.setState({editFormaPago:true, SelectFormaPago:e})
         }
           ingresadorEdirArt=(TotalPP, TotalPago, cantidadEgreso)=>{
-
-
+console.log(TotalPP, TotalPago)
                         if(this.state.ContContado  && this.state.ContEgreso == false){
 
            
@@ -598,7 +607,7 @@ this.setState({urlImg:newimg})
 
         for(let i = 0; i<this.state.Fpago.length;i++){
         
-            TotalPago = TotalPago + this.state.Fpago[i].Cantidad
+             TotalPago += parseFloat(this.state.Fpago[i].Cantidad)
         }
       }
      let cantidadComprar = this.state.Existencia - this.props.data.Existencia

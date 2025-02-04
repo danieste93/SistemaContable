@@ -61,11 +61,14 @@ class ModalSelectIcon extends Component {
     }
       uploadimages=()=>{
         const miFormaData = new FormData()
+        let DBname = this.props.state.userReducer.update.usuario.user.DBname
+        const userFolder = DBname ? `${DBname}/Personalizacion` : "uploads/default";
         for(let i=0; i<=this.state.archivos.length;i++){
           miFormaData.append("file", this.state.archivos[i])
         
         
         miFormaData.append("upload_preset","perpeis7")
+        miFormaData.append("folder", userFolder);
         const options = {
           method: 'POST',
           body: miFormaData,

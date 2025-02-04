@@ -2,7 +2,7 @@
 import {Animate} from "react-animate-mount"
 import Dropdown from 'react-bootstrap/Dropdown';
 import React, { useState,useEffect } from 'react';
-const ArtRender = ({ datos,getNota, watchNotaCredito, deleteVentaList,user,resendProcess,downloadFact,sendView,viewCreds}) => {
+const ArtRender = ({ datos,getNota, watchNotaCredito, deleteVentaList,user,resendProcess,sendView,viewCreds}) => {
   const [visual, setvisual] = useState(false );
   const [visualCred, setvisualCred] = useState(false );
   const [backGroundVent, setbackGroundVent] = useState("");
@@ -213,14 +213,7 @@ var hora = addCero(tiempo.getHours())+" : "+   addCero(tiempo.getMinutes())
     </Dropdown.Toggle>
   
      <Dropdown.Menu>
-     <Dropdown.Item>
-     <button className=" btn btn-dark btnDropDowm" onClick={(e)=>{ e.stopPropagation();downloadFact(datos)}} >
-            <span className="material-icons" >
-            download
-          </span>
-          <p>Descargar</p>
-          </button>
-     </Dropdown.Item> 
+
      <Animate show={visualNota}>
 <Dropdown.Item>
                     <button  className="btn btn-warning btnDropDowm " onClick={(e)=>{ e.stopPropagation();getNota(datos)}}><span className="material-icons">
