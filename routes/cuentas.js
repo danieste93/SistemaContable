@@ -6,7 +6,7 @@ const Authentication = require("../controler/middleware/auth")
 
 
 router.post('/getmaindata',Authentication, cuentasController.getMainData);
-router.post('/getcuentaregs',Authentication, cuentasController.getCuentasRegs);
+router.post('/getcuentasregs',Authentication, cuentasController.getCuentasRegs);
 router.post('/getregstime',Authentication, cuentasController.getRegsTime);
 router.post('/getInvs',Authentication, cuentasController.getInvs);
 router.post('/getarts',Authentication, cuentasController.getArts);
@@ -77,7 +77,7 @@ router.post('/rtyhgf456/updatecounter/compra', Counter.updateCounterCompra);
 router.post('/rtyhgf456/updatecounter/compraindividual', Counter.updateCounterCompraIndividual);
 
 router.post('/getcuentas', cuentasController.getCuentas);
-router.post('/getcuentaregs', cuentasController.getCuentaRegs);
+
 router.get('/gettipocuentas', cuentasController.getTipoCuentas);
 
 router.get('/getcat', cuentasController.getCat);

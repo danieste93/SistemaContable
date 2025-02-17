@@ -2322,7 +2322,7 @@ let dataregSI= { Accion:"Gasto",
   
     }
   }
-  console.log(dataregSI)
+
   let updateSI = { $inc: { DineroActual: valEgresado *-1  } }
 
     await RegModelSass.create([dataregSI],{session} )
@@ -2419,14 +2419,21 @@ function  resendAuthFact (req, res){
       
           if (err) {console.log(err); throw new Error("error al crear pdf")}
     
+          let datafind = await CounterModelSass.find({ iDgeneral:9999990})
+          let usermail ='iglassmailer2020@gmail.com'
+          let userpass =process.env.REACT_MAILER_PASS
+               if(datafind.length > 0){
+                usermail = datafind[0].Data[0].user
+                userpass = datafind[0].Data[0].pass
+               }
+    
           var transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
               
-                    user: 'iglassmailer2020@gmail.com',
-                    pass: process.env.REACT_MAILER_PASS,
+                    user: usermail,
+                    pass: userpass,
                
-          
             }
           })
     
@@ -2983,13 +2990,21 @@ pdf.create(req.body.html, {
   
       if (err) {console.log(err); throw new Error("error al crear pdf")}
 
+      let datafind = await CounterModelSass.find({ iDgeneral:9999990})
+      let usermail ='iglassmailer2020@gmail.com'
+      let userpass =process.env.REACT_MAILER_PASS
+           if(datafind.length > 0){
+            usermail = datafind[0].Data[0].user
+            userpass = datafind[0].Data[0].pass
+           }
+
       if(req.body.cotiToClient){
         var transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
             
-                  user: 'iglassmailer2020@gmail.com',
-                  pass: process.env.REACT_MAILER_PASS,
+                  user: usermail,
+                  pass: userpass,
              
         
           }
@@ -4478,4 +4493,77 @@ res.status(200).send({message:"Iconos Actualizados", updadatedIcons })
               }
           }
 
-module.exports = {getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,uploadSignedXmlTest, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };
+          async function correoConfigVerify(req, res) {
+            try {
+              
+              let conn = await mongoose.connection.useDb(req.body.User.DBname);
+              let CounterModelSass = await conn.model('Counter', counterSchema);
+
+              const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                  user: req.body.datos.senderEmail,
+                  pass: req.body.datos.token,
+                },
+              });
+          
+              let subjectString = `Envio de prueba`;
+          
+              const mailOptions = {
+                from: req.body.datos.senderEmail,
+                to: "iglassmailer2020@gmail.com",
+                subject: subjectString,
+                text: "testmail",
+              };
+          
+              const info = await transporter.sendMail(mailOptions);
+     
+     let datafind = await CounterModelSass.find({ iDgeneral:9999990})
+console.log(datafind)
+     if(datafind.length == 0){
+              await CounterModelSass.create([{
+  Data:{
+    user: req.body.datos.senderEmail,
+    pass: req.body.datos.token,
+  },
+  iDgeneral:9999990
+ }])
+                        }else{
+
+                          await CounterModelSass.findByIdAndUpdate(datafind._id,
+                           {  Data:{
+                            user: req.body.datos.senderEmail,
+                            pass: req.body.datos.token,
+                          },}   
+                          )
+
+                        }
+              res.status(200).send({ status: "Ok", message: "Correo enviado", info });
+            } catch (error) {
+              console.error("Error al enviar el correo:", error);
+              res.status(500).send({ status: "Error", error: error.message });
+            }
+          }
+
+          async function getCorreoConfig(req,res) {
+            let conn = await mongoose.connection.useDb(req.body.User.DBname);
+            let CounterModelSass = await conn.model('Counter', counterSchema);
+
+            let dataconfig = await CounterModelSass.find({iDgeneral:9999990})
+
+            res.status(200).send({ status: "Ok", message: "Correo enviado", dataconfig });
+
+           }
+
+           async function deleteCorreoConfigurado(req,res) {
+            console.log(req.body)
+            let conn = await mongoose.connection.useDb(req.body.User.DBname);
+            let CounterModelSass = await conn.model('Counter', counterSchema);
+            await CounterModelSass.findByIdAndDelete(req.body.item._id)
+            
+            res.status(200).send({ status: "Ok", message: "Correo eliminado" });
+
+
+             }
+
+module.exports = {deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,uploadSignedXmlTest, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };

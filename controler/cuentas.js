@@ -1704,37 +1704,50 @@ let RegModelSass = await conn.model('Reg', regSchema);
 let regsHabiles= []
 let regs1= []
 let regs2= []
+
+let tiempoIni
+let tiempoFin
+let fecha
 console.log(req.body)
 if(req.body.mensual){
-  let fechamensual = new Date(req.body.tiempo);
-  let tiempoIni = new Date(fechamensual.getFullYear(), fechamensual.getMonth(), 1).setHours(0,0,0,0);
-  let tiempoFin = new Date(fechamensual.getFullYear(), fechamensual.getMonth() + 1, 0).setHours(23,59,59,999);
-  console.log(tiempoIni)
-  console.log(tiempoFin)
-
-  regs1 = await RegModelSass.find({
-    $and: [
-      {Tiempo: {$gte : tiempoIni}},
-      {Tiempo: {$lte : tiempoFin}},
-      {"CuentaSelec.idCuenta": req.body.cuentaid},
-    ]
-  })
-
-  regs2 = await RegModelSass.find({
-    $and: [
-      {Tiempo: {$gte : tiempoIni}},
-      {Tiempo: {$lte : tiempoFin}},
-      {"CuentaSelec2.idCuenta": req.body.cuentaid},
-    ]
-  })
-  
- 
-
-   regsHabiles = regs1.concat(regs2)
+  fecha = new Date(req.body.tiempo);
+ tiempoIni = new Date(fecha.getFullYear(), fecha.getMonth(), 1).setHours(0,0,0,0);
+ tiempoFin = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0).setHours(23,59,59,999);
   
 
+}else if(req.body.diario){
 
+   fecha = new Date(req.body.tiempo);
+   tiempoIni = new Date(fecha).setHours(0,0,0,0);
+   tiempoFin = new Date(fecha).setHours(23,59,59,999);
+
+
+
+} else if(req.body.periodo){
+  tiempoIni =new Date(req.body.tiempoperiodoini).setHours(0,0,0,0);
+  tiempoFin =new Date(req.body.tiempoperiodofin).setHours(23,59,59,999);
 }
+console.log(tiempoIni)
+  console.log(tiempoFin)
+regs1 = await RegModelSass.find({
+  $and: [
+    {Tiempo: {$gte : tiempoIni}},
+    {Tiempo: {$lte : tiempoFin}},
+    {"CuentaSelec.idCuenta": req.body.cuentaid},
+  ]
+})
+
+regs2 = await RegModelSass.find({
+  $and: [
+    {Tiempo: {$gte : tiempoIni}},
+    {Tiempo: {$lte : tiempoFin}},
+    {"CuentaSelec2.idCuenta": req.body.cuentaid},
+  ]
+})
+
+
+
+ regsHabiles = regs1.concat(regs2)
 
 
 return res.status(200).send({status: "Ok", message: "getCuentasRegs", regsHabiles});
@@ -1773,6 +1786,7 @@ return res.status(200).send({status: "Ok", message: "getCuentasRegs", regsHabile
 
 
   async  function getTipos (req, res){
+    console.log(req.body)
     let conn = await mongoose.connection.useDb(req.body.User.DBname);
     let TiposModelSass = await conn.model('tiposmodel', tipoSchema);
     let tiposHabiles = await TiposModelSass.find({})
@@ -2005,27 +2019,7 @@ let comprasHabiles = await ComprasModelSass.find({})
     res.json({status: "Ok", message: "cuentas", cuentasgen});
   }
 
-  async function getCuentaRegs(req, res){
-    
-  let cuentas1 =[]
-  let cuentas2 =[]
-  let rutafind = "CuentaSelec.idCuenta"
-  let rutafind2 = "CuentaSelec2.idCuenta"
-  let conn = await mongoose.connection.useDb(req.body.User.DBname);
-  let RegModelSass = await conn.model('Reg', regSchema);
-
-  RegModelSass.find({[rutafind]:req.body.cuentaid},(err, cuentasgen)=>{
-      if (err) console.log(err)
-      
-      RegModelSass.find({[rutafind2]:req.body.cuentaid},(err, cuentasgen2)=>{
-        if (err) console.log(err)
-        const arrayt = cuentasgen.concat(cuentasgen2);
   
-        res.json({status: "Ok", message: "cuentas", arrayt});
-      })
-    })
-  
-  }
 
   function getTipoCuentas (req, res){
 
@@ -2095,8 +2089,6 @@ res.status(200).send({cuenta})
 
 
      async function generarVenta(req,res){
-   
-
    
        let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
        let CuentasModelSass = await conn.model('Cuenta', accountSchema);
@@ -2319,15 +2311,25 @@ res.status(200).send({cuenta})
        bottom: "0px",
        left: "0px"
      },
-     childProcessOptions: { env: { OPENSSL_CONF: '/dev/null' }}}).toBuffer((err, buffer) => {
+     childProcessOptions: { env: { OPENSSL_CONF: '/dev/null' }}}).toBuffer(async (err, buffer) => {
    
       if (err) {console.log(err); throw new Error("error al crear pdf")}
+
+      let datafind = await CounterModelSass.find({ iDgeneral:9999990})
+      let usermail ='iglassmailer2020@gmail.com'
+      let userpass =process.env.REACT_MAILER_PASS
+           if(datafind.length > 0){
+            usermail = datafind[0].Data[0].user
+            userpass = datafind[0].Data[0].pass
+           }
+
+
        var transporter = nodemailer.createTransport({
          service: 'gmail',
          auth: {
            
-                 user: 'iglassmailer2020@gmail.com',
-                 pass: process.env.REACT_MAILER_PASS,
+                 user: usermail,
+                 pass: userpass,
             
        
          }
@@ -2961,7 +2963,7 @@ await regis.remove()
 
   }
   async function getRegsbyCuentas(req,res){
-
+console.log(req.body)
 let conn = await mongoose.connection.useDb(req.body.User.DBname);
 let RegModelSass = await conn.model('Reg', regSchema);
 
@@ -3183,15 +3185,25 @@ let update={NotaCredito: req.body.PDFdata}
             bottom: "0px",
             left: "0px"
           },
-          childProcessOptions: { env: { OPENSSL_CONF: '/dev/null' }}}).toBuffer((err, buffer) => {
+          childProcessOptions: { env: { OPENSSL_CONF: '/dev/null' }}}).toBuffer(async (err, buffer) => {
         
            if (err) {console.log(err); throw new Error("error al crear pdf")}
-            var transporter = nodemailer.createTransport({
+           
+      let datafind = await CounterModelSass.find({ iDgeneral:9999990})
+      let usermail ='iglassmailer2020@gmail.com'
+      let userpass =process.env.REACT_MAILER_PASS
+           if(datafind.length > 0){
+            usermail = datafind[0].Data[0].user
+            userpass = datafind[0].Data[0].pass
+           }
+
+           
+           var transporter = nodemailer.createTransport({
               service: 'gmail',
               auth: {
                 
-                      user: 'iglassmailer2020@gmail.com',
-                      pass: process.env.REACT_MAILER_PASS,
+                      user: usermail,
+                      pass: userpass,
                  
             
               }
@@ -3374,4 +3386,4 @@ let update={NotaCredito: req.body.PDFdata}
 
 
 
-module.exports = {agregarNotaCredito,getRegsDeleteTime,getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs,getCuentaRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};
+module.exports = {agregarNotaCredito,getRegsDeleteTime,getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};

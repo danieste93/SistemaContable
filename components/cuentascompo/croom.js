@@ -388,7 +388,7 @@ downloadCuentaRegs = ()=> {
   }
   let lol = JSON.stringify(datos)
 
-  fetch("/cuentas/getcuentaregs", {
+  fetch("/cuentas/getcuentasregs", {
     method: 'POST', // or 'PUT'
     body: lol, // data can be `string` or {object}!
     headers:{
@@ -398,7 +398,7 @@ downloadCuentaRegs = ()=> {
     }).then(res => res.json())
     .catch(error => {console.error('Error:', error);
     })  .then(response => {  
-
+console.log(response)
     if(response.status == 'error'){
     alert("error al actualizar registros")
    
@@ -1915,6 +1915,7 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
     
   <div className="tipoMainDeta">
     <div className='ContTituloFiltros' style={{marginTop:this.state.marginTopDeta}}>
+      <div className='contAnimacion'>
     <Animate show={this.state.mensual}>
       <div className='centrar '>
         <div className='contmensualflechas'>
@@ -1925,10 +1926,30 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
                        </div>
                        <div className="flechalateral" onClick={this.masunmes}> {'>'}</div>
                        </div>
-                       <div className="Contdonwloadbutton">
+       
+                       </div>
+      </Animate>
+      <Animate show={this.state.diario}>
+      <div className='centrar'>
+    <div className="subtituloArt contmensualflechas">
+    <div className="flechalateral" onClick={this.menosundia}> {'<'}</div>
+    {this.getDayName()}
+    <div className="flechalateral" onClick={this.masundia}> {'>'}</div>
+                       </div>
+                       </div>
+      </Animate>
+      <Animate show={this.state.periodo}>
+      <div className='centrar'>
+      <div className="subtituloArt contmensualflechas">
+        Periodo
+      </div>
+      </div>
+      </Animate>
+      </div>
+      <div className="Contdonwloadbutton">
             <Animate show={!this.state.downloadData}>
             <button className="downloadbutton"onClick={this.downloadCuentaRegs} >       <span className="material-icons">
-               download
+             search
 </span></button>
 
 </Animate>
@@ -1936,16 +1957,6 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
 <CircularProgress />
 </Animate>
 </div>
-                       </div>
-      </Animate>
-      <Animate show={this.state.diario}>
-      <div className='centrar'>
-    <div className="subtituloArt contDonthide">
-    {this.getDayName()}
-                       </div>
-                       </div>
-      </Animate>
-
     </div>
   <Animate show={this.state.filtrosDetalles}>
     <div className='contFiltros'>
@@ -1991,7 +2002,7 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
                   <div className="contfiltromensual jwContFlexCenter">
                 
                      <div className="contmensual " >
-      <div className="flechalateral" onClick={this.menosundia}> {'<'}</div>
+     
       <div className="fechacentral">
   <MuiPickersUtilsProvider libInstance={moment} utils={MomentUtils}>
                  <KeyboardDatePicker
@@ -2010,7 +2021,7 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
             
                  </MuiPickersUtilsProvider>
                  </div>
-                 <div className="flechalateral" onClick={this.masundia}> {'>'}</div>
+                
                  </div>
                        
                      </div>
@@ -2784,22 +2795,17 @@ flex-wrap:wrap;
   justify-content: center;
   align-items: center;
 }
-.downloadbutton{
-  color: black;
-  border-radius: 36px;
-  height: 44px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-left: 10px;
-  background: #e8f6ff;
 
- }
+  .contAnimacion{
+  display:flex;
+  flex-flow:column
+  }
+
  .contmensualflechas{
   background: #fcfdff;
   display: flex;
-  width: 55%;
-  max-width: 300px;
+ 
+     min-width: 225px;
   justify-content: space-around;
   align-items: center;
   border-radius: 26px;
@@ -2970,7 +2976,11 @@ padding: 2px;
 .boton3d:focus {
   outline: none;
 }
-
+.ContTituloFiltros{
+    display: flex;
+    margin-top: 0px;
+    justify-content: center;
+}
                    
                 ` }
     </style>

@@ -30,6 +30,9 @@ router.post('/geticons', AdminControl.getIcons);
 router.post('/deleteicon', AdminControl.deleteIcon);
 
 router.post('/getDatabaseSize',Authentication, AdminControl.getDatabaseSize);
+router.post('/correoconfigverify',Authentication, AdminControl.correoConfigVerify);
+router.post('/getCorreoConfig',Authentication, AdminControl.getCorreoConfig);
+
 
 router.get('/masiveApplyTemplate', AdminControl.masiveApplyTemplate);
 router.get('/updatedtcarts', AdminControl.updateDTCarts);
@@ -51,6 +54,7 @@ router.post('/enviarcoti',Authentication, AdminControl.enviarCoti);
 router.post('/generate-only-art',Authentication, AdminControl.genOnlyArt);
 router.post('/getclientData',Authentication, AdminControl.getClientData);
 router.post('/deleteNotaCredito',Authentication, AdminControl.deleteNotaCredito);
+router.post('/deleteCorreoConfigurado',Authentication, AdminControl.deleteCorreoConfigurado);
 router.get('/testingsend', AdminControl.testingsend);
 router.get('/datainv', AdminControl.dataInv);
 

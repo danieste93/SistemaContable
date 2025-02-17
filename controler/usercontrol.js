@@ -39,14 +39,9 @@ module.exports = {
   let RegModelSass = await conn.model('Reg', regSchema);
   let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
 
-  UserModelSass.find({ Email: req.body.Correo }, async (err, previousUsers) => {
-    if (err) {
-      return res.send({
-        success: false,
-        status:"error",
-        message: 'Error: Server error'
-      });
-    }else if (previousUsers.length > 0) {
+  let previousUsers = await UserModelSass.find({ Email: req.body.Correo })
+  
+if (previousUsers.length > 0) {
       return res.status(200).send({
         success: false,
         status:"error",
@@ -564,7 +559,7 @@ transporter.sendMail(mailOptions, function (err, res) {
         return res.json({status: "error", message: "error al registrar", error });
       }
    
-  })
+
 
 
 

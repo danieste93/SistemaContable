@@ -93,7 +93,9 @@ let categoriaToshow = send.CatSelect.subCatSelect == ""? send.CatSelect.nombreCa
 
       this.setState({Ingreso:true,
         Accion:"Ingreso",
-        cuentaSelect:send.CuentaSelec,
+        cuentaSelect:{_id:send.CuentaSelec.idCuenta,
+                      NombreC:send.CuentaSelec.nombreCuenta
+        },
         catSelect:send.CatSelect,
       
         CuentaRender:send.CuentaSelec.nombreCuenta,
@@ -118,7 +120,9 @@ let categoriaToshow = send.CatSelect.subCatSelect == ""? send.CatSelect.nombreCa
 
       this.setState({Gasto:true,
         Accion:"Gasto",
-        cuentaSelect:send.CuentaSelec,
+        cuentaSelect:{_id:send.CuentaSelec.idCuenta,
+          NombreC:send.CuentaSelec.nombreCuenta
+},
         catSelect:send.CatSelect,
        
        
@@ -140,8 +144,12 @@ let categoriaToshow = send.CatSelect.subCatSelect == ""? send.CatSelect.nombreCa
      }else if(send.Accion =="Trans"){
       this.setState({Trans:true,
         Accion:"Trans",
-        cuentaSelect:send.CuentaSelec,
-        cuentaSelect2:send.CuentaSelec2,
+        cuentaSelectT1:{_id:send.CuentaSelec.idCuenta,
+          NombreC:send.CuentaSelec.nombreCuenta
+},
+cuentaSelectT2:{_id:send.CuentaSelec2.idCuenta,
+  NombreC:send.CuentaSelec2.nombreCuenta
+},
         CuentaRenderT2:send.CuentaSelec2.nombreCuenta,
         CuentaRenderT1:send.CuentaSelec.nombreCuenta,
           
@@ -465,10 +473,11 @@ ingresador=(mival)=>{
 }
 
 ingresadorTrans=(mival)=>{
-  if(this.state.cuentaSelect== ""){
+  console.log("Ingresador trans")
+  if(this.state.cuentaSelectT1== ""){
     this.setState({trans1err:true, waitingtrans:false})
   }
-  if(this.state.cuentaSelect2 == ""){
+  if(this.state.cuentaSelectT2 == ""){
     this.setState({trans2err:true,waitingtrans:false})
   }
   if(this.state.Importe == "" ||this.state.Importe <= 0){
@@ -477,7 +486,7 @@ ingresadorTrans=(mival)=>{
    
    }
 
-   if(this.state.cuentaSelect != "" && this.state.cuentaSelect2 != "" && this.state.Importe > 0 && this.state.Importe != ""){
+   if(this.state.cuentaSelectT1 != "" && this.state.cuentaSelectT2 != "" && this.state.Importe > 0 && this.state.Importe != ""){
  
    
 

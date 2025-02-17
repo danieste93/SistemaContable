@@ -492,15 +492,6 @@ let subCuentadata ={
      
     }
 
-.downloadbutton{
-    color: white;
-    border-radius: 36px;
-    background: #5253ff;
-    /* padding-top: 5px; */
-    height: 44px;
- 
-   }
-
 
     .contSubCat {
   padding: 15px;

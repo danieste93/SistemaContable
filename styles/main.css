@@ -10,6 +10,17 @@ body{
 padding: 10px;
 
 }
+
+
+.downloadbutton {
+  margin: 5px;
+  color: white;
+  border-radius: 16px;
+  background: #3c8ae0;
+  display: flex
+;
+  padding: 4px;
+    }
 .react-autosuggest__input {
 
   height: 30px;

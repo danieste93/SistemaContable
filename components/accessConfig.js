@@ -8,8 +8,10 @@ import MuiAlert from '@material-ui/lab/Alert';
 import ElectroFact from "./modal-ElectroFact"
 import Trabajadores from "./modal-Trabajadores"
 import Clientes from "./modal-Clientes"
+import Email from "./modal-CorreoConfig"
 import fetchData from './funciones/fetchdata';
 import DatabaseUsageBar from './cuentascompo/SubCompos/dataBarUsage';
+
  class accessPuntoVenta extends Component {
  
      state={
@@ -19,6 +21,7 @@ import DatabaseUsageBar from './cuentascompo/SubCompos/dataBarUsage';
       passClient:null,
       ElectroFact:false,
       Trabajadores:false,
+      Email:true,
       docsSize:{
         storage:0,
         datasize:0,
@@ -74,20 +77,20 @@ const Alert=(props)=> {
  .adminitem{
    color: black;
 border: 1px solid #2a28ff;
-padding: 20px;
+padding: 1px;
 margin: 15px;
 align-items: center;
 display: flex;
 flex-flow: column;
 justify-content: space-around;
 text-align: center;
-height: 148px;
+height: 100px;
 border-radius: 24px;
 box-shadow: inside 1px 1px grey;
 box-shadow: 0 8px 16px -6px black;
 background:snow;
 cursor:pointer;
-min-width: 160px;
+min-width: 120px;
 }
 .adminitem span{
 
@@ -116,7 +119,7 @@ min-width: 160px;
     <ClickFunctionItem icono="post_add" titulo="Facturacion Electrónica" func={()=>{this.setState({ElectroFact:true})}} />
     <ClickFunctionItem icono="people" titulo="Trabajadores" func={()=>{this.setState({Trabajadores:true})}} />
     <ClickFunctionItem icono="emoji_people" titulo="Clientes" func={()=>{this.setState({Clientes:true})}} />
-   
+    <ClickFunctionItem icono="email" titulo="Correo" func={()=>{this.setState({Email:true})}} />
     <div style={{ marginTop:"10px", display: "flex", justifyContent: "center", alignItems: "center",  backgroundColor: "#f5f5f5" }}>
             <DatabaseUsageBar dbSize={this.state.docsSize.datasize} userSize={300} />
         </div>
@@ -134,6 +137,9 @@ min-width: 160px;
   </Animate>
   <Animate show={this.state.Clientes}>
   <Clientes Flecharetro ={()=>this.setState({Clientes:false})} />
+  </Animate>
+  <Animate show={this.state.Email}>
+  <Email Flecharetro ={()=>this.setState({Email:false})} />
   </Animate>
 
  

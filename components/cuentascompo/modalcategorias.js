@@ -370,13 +370,15 @@ this.setState({subcatCont:false})
            }
 
 .nombrem{
-  font-weight: bold;
-  font-size: 18px;
-  margin: 0px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
+     font-weight: bold;
+    font-size: 13px;
+    margin: 0px;
+    width: 100%;
+    display: flex
+;
+    align-items: center;
+    word-break: break-word;
+    justify-content: space-around;
 }
 
 
@@ -398,8 +400,8 @@ this.setState({subcatCont:false})
   align-items: center;
 }
 .bordeazul{
-  box-shadow: -8px 7px 8px #031552;
-  min-height: 35%;
+ box-shadow: -3px 2px 4px #031552;
+    min-height: 35%;
 }
 .conticonos i{
   cursor:pointer;

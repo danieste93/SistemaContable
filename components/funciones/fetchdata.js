@@ -21,7 +21,7 @@ const fetchData = async (usuario, url, datos) => {
           'x-access-token': usuario.update.usuario.token,
         },
       });
-  console.log(responseData)
+  
       // Procesamos la respuesta
       const responseData = await response.json();
       return responseData; // Devolvemos la respuesta procesada

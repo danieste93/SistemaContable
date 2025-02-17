@@ -3,6 +3,9 @@ import {Animate} from "react-animate-mount"
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import {connect} from 'react-redux';
+import Cat from "../../components/cuentascompo/modalcategorias"
+import Addcat from '../cuentascompo/modal-addcat';
+import Edditcat from '../cuentascompo/modal-editcat';
 import Autosuggestjw from '../suggesters/jwsuggest-autorender';
 class ListVenta extends Component {
 
@@ -22,8 +25,23 @@ class ListVenta extends Component {
         iva:this.setIva(),
         insumo:false,
         selectItem:false,
+        catSelect:{
+            _id: "67a1b9a47be396edff3c53eb",
+            tipocat: "Articulo",
+            subCategoria: [],
+            nombreCat: "GENERAL",
+            imagen: [],
+            urlIcono: "/iconscuentas/compra.png",
+            idCat: 21,
+            sistemCat: false,
+        
+        },
+        subCatSelect:"",
         artSelected:"",
-        tituloArts:this.props.datos.descripcion[0]
+        tituloArts:this.props.datos.descripcion[0],
+        modalCat:false,
+        EditCat:false,
+        Addcat:false,
      
     }
     channel2 = null;
@@ -43,6 +61,16 @@ class ListVenta extends Component {
 
    
     }
+    sendCat=()=>{
+        let Cats = this.props.state.RegContableReducer.Categorias
+      if(Cats.length > 0){
+        let CatsArt = Cats.filter(x => x.tipocat == "Articulo")
+       
+    return CatsArt
+      }
+      }
+
+     
 
     setNombre=(e)=>{
 
@@ -90,6 +118,12 @@ setTimeout(()=>{
         ){
 
             return (parseFloat(this.props.datos.precioUnitario[0]) * 1.12).toFixed(2)
+        }else if(
+            parseInt(this.props.datos.impuestos[0].
+                impuesto[0].codigoPorcentaje[0]) ==   4
+        ){
+
+            return (parseFloat(this.props.datos.precioUnitario[0]) * 1.15).toFixed(2)
         }
         
  
@@ -518,12 +552,26 @@ return (
       }
       label=""
     />
-           </div>              
+           </div> 
+           <div className="Artic100Fpago"    >
+<div className='botonweb'
+            //generarcat
+            onClick={()=>this.setState({modalCat:true})}
+        >
+
+            {this.state.catSelect.nombreCat}
+         
+                        </div>
+  </div>              
            <div className="accClass">
   <span className="material-icons">
 {itemSelected}
     </span>
-  </div>            
+  </div>
+
+   
+
+           
   <div className="Artic100Fpago">
  
   <button id={item.Eqid} name={item.Eqid}  className="btn btn-primary mybtn " onClick={this.comprobadorSelect
@@ -538,7 +586,6 @@ send
       
       </button> 
     </div>
- 
 
        </div>
        <div  className="contAnimadores">
@@ -561,6 +608,49 @@ send
         <Autosuggestjw  sendClick={(e)=>{this.SelectArt(e)}} getvalue={(item)=>{console.log("")}} 
         sugerencias={this.getSugerencias()} resetData={this.resetArtData}   /> 
         </Animate>
+        <Animate show={this.state.modalCat}>
+        <Cat 
+         Addcat={()=>{this.setState({Addcat:true})}}
+               Categorias = {this.sendCat()}  
+               datosUsuario={this.props.state.userReducer.update.usuario._id}
+               editCat={(catae)=>{this.setState({EditCat:true, catEditar:catae})}}
+            
+               sendCatSelect={(cat)=>{
+        
+            this.setState({catSelect:cat, CategoriaRender:cat.nombreCat,modalCat:false,subCatSelect:""})
+               } }  
+               
+        
+               sendsubCatSelect={(cat)=>{
+        
+                this.setState({catSelect:cat.estado.catSelect, subCatSelect:cat.subcat,categoriaModal:false,})
+                   } }  
+        
+               Flecharetro3={()=>{ this.setState({modalCat:false,catSelect:"",subCatSelect:""})  }
+               } 
+            
+        
+        />
+                </Animate> 
+                 <Animate show={this.state.Addcat}>
+                        < Addcat datosUsuario={this.props.state.userReducer.update.usuario._id}     Flecharetro4={
+                         
+                         ()=>{
+                           console.log("enretro4")
+                          this.setState({Addcat:false})}
+                        } 
+                    
+                                />
+                        </Animate >
+                        <Animate show={this.state.EditCat}>
+                        < Edditcat datosUsuario={this.props.state.userReducer.update.usuario._id}   Flecharetro4={
+                              ()=>{
+                         
+                          this.setState({EditCat:false})}
+                        } 
+                          catToEdit={this.state.catEditar}
+                                />
+                        </Animate >
         </div>
     <style>
         {`.MuiFormControlLabel-root{
@@ -629,6 +719,7 @@ send
             .onSalida{
                 opacity:0;
             }
+           
                .inputCustom{   
                    width: 60%;           
                 border-radius: 11px;
@@ -723,6 +814,24 @@ send
         .parrafoD {
             margin-bottom:1px;
         }
+            .botonweb{
+  height: 70%;
+ 
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    border-radius: 20px;
+    font-size: 12px;
+    width: 70%;
+    margin-top: 3%;
+    margin-left: 15%;
+cursor: pointer;
+    box-shadow:  0px 1px 0px hsl(180,100%,40%),
+    0px 2px 0px hsl(180,100%,38%),
+    0px 3px 0px hsl(180,100%,37%)
+
+
+}
   
 
         .maincontDetalles{
@@ -760,11 +869,17 @@ send
             text-align: center;
             margin-top: 13px;
         }
-        .contlist{
+                  .contList{
             display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 1px;
             flex-flow: column;
-           
-        }
+            height: 100%;
+            width: 80%;
+            border:1px solid red;
+
+          }
         .artElegido{
             border: 3px solid #11d511;
     border-radius: 11px

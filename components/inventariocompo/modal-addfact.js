@@ -7,6 +7,7 @@ import Xml2js from 'xml2js';
 import ListCompraFact from "./listCompra2RenderFact";
 import Animate from 'react-animate-mount/lib/Animate';
 import {connect} from 'react-redux';
+import AddCero from "../../components/funciones/addcero"
 import HelperFormapagoPredit from '../reusableComplex/helperFormapagoPredit';
 import Prevent from "../cuentascompo/modal-prevent" 
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -211,8 +212,7 @@ class Contacto extends Component {
         this.setState({xmlData:{fechaAutorizacion:[""]},  Comprobante:"",})
         let selectedFile = this.componentRef.current.files[0];
         console.log(selectedFile)
-        if(selectedFile.type=="text/xml") 
-      {
+        if(selectedFile.type=="text/xml")  {
         let readXml=null;
 
         let reader = new FileReader();
@@ -221,48 +221,71 @@ class Contacto extends Component {
                   
             let parserX = new Xml2js.Parser();
         
-
-            parserX.parseString(
-              readXml,
-              (err, result) =>{
-                 
-                 let getData = ""
-                if(result["soap:Envelope"]){
-                
-                  getData = result["soap:Envelope"]["soap:Body"][0]["ns2:autorizacionComprobanteResponse"][0].RespuestaAutorizacionComprobante[0].autorizaciones[0].autorizacion[0]
-                 
-                  parserX.parseString(getData.comprobante[0],(err,xml)=>{
-                    console.log(xml)
-                    if(xml.factura.infoFactura[0].identificacionComprador[0] != this.props.state.userReducer.update.usuario.user.Factura.ruc ){
-                      this.setState({prevent1:true, preventData1:xml, preventxmlData:getData})
-                    }else{
-                    this.setState({xmlData:getData,Comprobante:xml})
+            const findComprobante = (obj) => {
+              if (typeof obj !== 'object' || obj === null) return false;
+              
+              // Obtiene el primer nivel de propiedades
+              const keys = Object.keys(obj);
+            
+              // Si no hay propiedades, retorna false
+              if (keys.length === 0) return false;
+            
+              // Toma la primera propiedad (sin importar el nombre)
+              const firstKey = keys[0];
+              const innerObj = obj[firstKey];
+            
+              // Verifica si es un objeto o array para continuar la búsqueda
+              if (typeof innerObj === 'object' && innerObj !== null) {
+                for (const key in innerObj) {
+                  // Verifica si la clave es "comprobante" y es un array con .length > 0
+                  if (key === 'comprobante' && Array.isArray(innerObj[key]) && innerObj[key].length > 0) {
+                    return innerObj;
                   }
-                   
-                  })
-                }else if(result["autorizacion"]){
+                }
+              }
+              
+              // Si no encuentra "comprobante", retorna false
+              return false;
+            };
+            
+            // Parseando el XML
+            parserX.parseString(readXml, (err, result) => {
+              if (err) {
+                console.error('Error al parsear XML:', err);
+                return;
+              }
+              
+              console.log(result);
+            
+              // Buscar cualquier objeto que tenga .comprobante[0]
+              const getData = findComprobante(result);
+            console.log(getData)
+              if (getData) {
+                parserX.parseString(getData.comprobante[0], (err, xml) => {
+                  if (err) {
+                    console.error('Error al parsear comprobante:', err);
+                    return;
+                  }
                   
-                  getData = result["autorizacion"]
-                  parserX.parseString(getData.comprobante[0],(err,xml)=>{
-                    console.log(xml)
-
-                    if(xml.factura.infoFactura[0].identificacionComprador[0] != this.props.state.userReducer.update.usuario.user.Factura.ruc ){
-                      this.setState({prevent1:true, preventData1:xml, preventxmlData:getData})
-                    }else{
-                    this.setState({xmlData:getData,Comprobante:xml})
+                  console.log(xml);
+            
+                  // Verificación del RUC del comprador
+                  if (xml.factura.infoFactura[0].identificacionComprador[0] !== this.props.state.userReducer.update.usuario.user.Factura.ruc) {
+                    this.setState({ prevent1: true, preventData1: xml, preventxmlData: getData });
+                  } else {
+                    this.setState({ xmlData: getData, Comprobante: xml });
                   }
-                  })
-                }else{
-                  let add = {
-                    Estado:true,
-                    Tipo:"error",
-                    Mensaje:"Archivo .XML incompatible, enviar el archivo al soporte tecnico para agregar compatibilidad"
-                }
-                this.setState({Alert: add}) 
-                }
-
-
-              })
+                });
+              } else {
+                // Si no encuentra comprobante, muestra un mensaje de error
+                let add = {
+                  Estado: true,
+                  Tipo: "error",
+                  Mensaje: "Archivo .XML incompatible, enviar el archivo al soporte tecnico para agregar compatibilidad"
+                };
+                this.setState({ Alert: add });
+              }
+            });
             
         }
         reader.readAsText(selectedFile);
@@ -348,9 +371,9 @@ class Contacto extends Component {
       let now = new Date(this.state.xmlData.fechaAutorizacion[0])
       let año = now.getFullYear()
       let dia = now.getDate()
-      let mes = now.getMonth()
+      let mes = now.getMonth() + 1
       
-      let fecha =  `${dia} / ${mes} / ${año} ` 
+      let fecha =  `${AddCero(dia)} / ${AddCero(mes)} / ${año} ` 
       
       let TotalPago = 0
       if(this.state.Fpago.length > 0){
@@ -400,8 +423,8 @@ let TotalValorCompra = 0
 
          <div >
 
-<div className="maincontacto" id="mainAddFact" >
-<div className="contcontacto"  >
+<div className="maincontactoFact" id="mainAddFact" >
+<div className="contcontactoFact"  >
 <div className="headercontact">
     <img src="/static/flecharetro.png" alt="" className="flecharetro" 
     onClick={  this.Onsalida       }
@@ -501,6 +524,9 @@ done
                         </div>
                         <div className="Artic100Fpago ">
                             Caduca
+                        </div>
+                        <div className="Artic100Fpago ">
+                            Categoria
                         </div>
                         <div className="accClass ">
                             Item
@@ -653,7 +679,7 @@ SendAceptar={()=>{   this.setState({xmlData:this.state.preventxmlData, Comproban
       /* width: 101px; */
       height: 37px;
   }
-           .maincontacto{
+           .maincontactoFact{
             z-index: 1298;
             width: 100vw;
             height: 100vh;
@@ -680,7 +706,7 @@ SendAceptar={()=>{   this.setState({xmlData:this.state.preventxmlData, Comproban
 .ContFlex{
   display:flex;
 }
-            .contcontacto{
+            .contcontactoFact{
               border-radius: 30px;
               
               width: 90%;

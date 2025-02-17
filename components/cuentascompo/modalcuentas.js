@@ -3,7 +3,8 @@ import { Animate } from "react-animate-mount";
 import {connect} from 'react-redux';
 import  {deleteCuenta} from "../../reduxstore/actions/regcont"
 import ModalDeleteC from "./modal-delete-cuenta";
-
+import fetchData from '../funciones/fetchdata';
+import {gettipos} from "../../reduxstore/actions/regcont"
 class Contacto extends Component {
    
 state={
@@ -16,8 +17,21 @@ state={
 ModalDeleteC:false,
 }
 channel1 = null;
-    componentDidMount(){
-    
+  async  componentDidMount(){
+   
+      if(!this.props.state.RegContableReducer.Tipos){
+  
+        let data = await fetchData(this.props.state.userReducer,
+          "/cuentas/gettipos",
+          {})
+          console.log(data)
+
+          if(data.status == 'Ok'){
+         
+                         this.props.dispatch(gettipos(data.tiposHabiles));
+                    }
+
+      }
    //   this.getCuentas()
 
      
@@ -651,7 +665,8 @@ let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario"
 const mapStateToProps = state=>  {
   let regC =   state.RegContableReducer
   return {
-    regC
+    regC,
+    state
   }
 };
 

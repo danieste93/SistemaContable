@@ -266,7 +266,7 @@ this.props.getData(DetallesPorrender)
 <div className="Contdonwloadbutton">
                               <Animate show={!this.state.downloadData}>
                               <button className="downloadbutton"onClick={this.downloadTimeRegs} >       <span className="material-icons">
-                                 download
+                                 search
                   </span></button>
                   
                   </Animate>
@@ -677,11 +677,7 @@ this.props.getData(DetallesPorrender)
     cursor: pointer;
 }
 
-.downloadbutton {
-    color: white;
-    border-radius: 36px;
-    background: #5253ff;
-      }
+
 
 
 `}
