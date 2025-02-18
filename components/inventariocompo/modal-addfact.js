@@ -267,10 +267,8 @@ class Contacto extends Component {
                     return;
                   }
                   
-                  console.log(xml);
-            
-                  // Verificación del RUC del comprador
-                  if (xml.factura.infoFactura[0].identificacionComprador[0] !== this.props.state.userReducer.update.usuario.user.Factura.ruc) {
+     // Verificación del RUC del comprador
+                  if (xml.factura.infoFactura[0].identificacionComprador[0] != this.props.state.userReducer.update.usuario.user.Factura.ruc) {
                     this.setState({ prevent1: true, preventData1: xml, preventxmlData: getData });
                   } else {
                     this.setState({ xmlData: getData, Comprobante: xml });
@@ -368,7 +366,16 @@ class Contacto extends Component {
 
     render () {
     console.log(this.state)
-      let now = new Date(this.state.xmlData.fechaAutorizacion[0])
+      let now 
+      if(this.state.Comprobante !== ""){
+       now = new Date(this.state.xmlData.fechaAutorizacion[0])
+      }
+      console.log(now)
+      if(now == "Invalid Date"){
+
+        now = new Date(this.state.Comprobante.factura.infoFactura[0].fechaEmision)
+      }
+
       let año = now.getFullYear()
       let dia = now.getDate()
       let mes = now.getMonth() + 1
@@ -546,10 +553,10 @@ done
       </div>
       <div className="contAddCompra">
                         <div className="grupoDatos totalcont">
-                    <div className="cDc1">
+                    <div className="">
               <p style={{fontWeight:"bolder"}} className='subtituloArt marginb'>  Total: </p>
                      </div>
-              <div className={`cDc2 inputDes `}>
+              <div className={` inputDes `}>
                 <p className="totalp">${parseFloat(TotalValorCompra).toFixed(2)}</p>
             
               </div>

@@ -7,6 +7,7 @@ import Cat from "../../components/cuentascompo/modalcategorias"
 import Addcat from '../cuentascompo/modal-addcat';
 import Edditcat from '../cuentascompo/modal-editcat';
 import Autosuggestjw from '../suggesters/jwsuggest-autorender';
+import ModalComprobacionGeneral from './usefull/modal-comprobacion-general';
 class ListVenta extends Component {
 
     state={
@@ -22,6 +23,7 @@ class ListVenta extends Component {
         pesoProducto:1,
         caducableInput:false,
         caduca:false,
+        mensajeComprobacion:"",
         iva:this.setIva(),
         insumo:false,
         selectItem:false,
@@ -98,6 +100,8 @@ setTimeout(()=>{
                     item:this.props.datos})  
             },200)
             return true
+        }else{
+            return false
         }
 
        
@@ -159,6 +163,30 @@ setTimeout(()=>{
 
     handleChangeSwitchCaduca=(e)=>{
         this.setState({caduca:!this.state.caduca})
+    }
+
+
+    handleChangeSwitchIva=(e)=>{     
+        let populares =  this.props.state.userReducer.update.usuario.user.Factura.populares== "true"?true:false 
+
+
+        if(populares && this.state.iva==false){
+            this.setState({modalComprobacion:true,
+              mensajeComprobacion:"Usted esta registrado como Negocios Populares, Seguro desea agregar el IVA?"
+            })
+  
+          }else if(!populares && this.state.iva==true){
+            this.setState({modalComprobacion:true,
+              mensajeComprobacion:"Usted esta registrado como Rimpe Emprendedores, Seguro desea quitar el IVA?"
+            })
+     }else{
+        this.setState({iva:!this.state.iva})
+     }
+     setTimeout(()=>{
+        this.props.sendSwich({...this.state,
+            item:this.props.datos})  
+    },200)
+
     }
 
 
@@ -528,7 +556,7 @@ return (
       control={
         <Switch
      
-        onChange={this.handleChangeSwitch}
+        onChange={this.handleChangeSwitchIva}
           name={"iva"}
           color="secondary"
         checked={this.state.iva}
@@ -651,6 +679,20 @@ send
                           catToEdit={this.state.catEditar}
                                 />
                         </Animate >
+                          <Animate show={this.state.modalComprobacion}>
+                                <ModalComprobacionGeneral 
+                                Flecharetro={()=>{this.setState({modalComprobacion:false})}}
+                                Mensaje={this.state.mensajeComprobacion}
+                                SendOk={()=>{
+                                  this.setState({iva:!this.state.iva})
+                                  setTimeout(()=>{
+                                    this.props.sendSwich({...this.state,
+                                        item:this.props.datos})  
+                                },200)
+                                }}
+                                
+                                />
+                                </Animate> 
         </div>
     <style>
         {`.MuiFormControlLabel-root{
