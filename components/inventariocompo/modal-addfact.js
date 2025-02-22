@@ -39,7 +39,7 @@ class Contacto extends Component {
 
       
       }
-      comprobadorGenCompra=( TotalValorCompra, TotalPago)=>{
+      comprobadorGenCompra=( TotalValorCompra, TotalPago, fecha)=>{
         if(this.state.loading == false){
           this.setState({loading:true})
         let arrErrCant=[]
@@ -91,6 +91,7 @@ class Contacto extends Component {
               newstate.TotalValorCompra = parseFloat(TotalValorCompra).toFixed(2)
               newstate.TotalPago = parseFloat(TotalPago).toFixed(2)
               newstate.Userdata ={DBname:this.props.state.userReducer.update.usuario.user.DBname}
+              newstate.fecha = fecha
            
              var lol = JSON.stringify(newstate)
              fetch(url, {
@@ -308,7 +309,7 @@ class Contacto extends Component {
 
     sendSwich=(data)=>{
      
-
+console.log("in switch")
       let valinsumo = data.insumo? true:null
       let valiva = data.iva? true:null
 
@@ -318,6 +319,9 @@ class Contacto extends Component {
    
       deepClone.factura.detalles[0].detalle[indexset].insumo = valinsumo 
       deepClone.factura.detalles[0].detalle[indexset].iva = valiva 
+      deepClone.factura.detalles[0].detalle[indexset].categoria = data.catSelect
+      deepClone.factura.detalles[0].detalle[indexset].subcategoria = data.subCatSelect
+      deepClone.factura.detalles[0].detalle[indexset].precioFinal = parseFloat(data.precioFinal)
       this.setState({Comprobante:deepClone})
     
     }
@@ -366,11 +370,11 @@ class Contacto extends Component {
 
     render () {
     console.log(this.state)
-      let now 
+      let now  = new Date()
       if(this.state.Comprobante !== ""){
        now = new Date(this.state.xmlData.fechaAutorizacion[0])
       }
-      console.log(now)
+ 
       if(now == "Invalid Date"){
 
         now = new Date(this.state.Comprobante.factura.infoFactura[0].fechaEmision)
@@ -569,7 +573,7 @@ done
       </Animate>
       <Animate show={!this.state.loading}>
       <div className="contBotonPago">
-                    <button style={{width:"50%",maxWidth:"200px"}} className={` btn btn-success botonedit2 `} onClick={()=>{this.comprobadorGenCompra( TotalValorCompra, TotalPago)}}>
+                    <button style={{width:"50%",maxWidth:"200px"}} className={` btn btn-success botonedit2 `} onClick={()=>{this.comprobadorGenCompra( TotalValorCompra, TotalPago,fecha)}}>
 <p>Comprar</p>
 <i className="material-icons">
 add

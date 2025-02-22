@@ -44,6 +44,7 @@ class ListVenta extends Component {
         modalCat:false,
         EditCat:false,
         Addcat:false,
+        precioFinal:0,
      
     }
     channel2 = null;
@@ -59,6 +60,19 @@ class ListVenta extends Component {
         this.setState({artSelected:miart[0]})
         this.props.sendItem({itemselect:miart[0],
             item:this.props.datos})  
+    }else{
+
+        let newprecio =  this.testPrecioUni()
+        this.setState({precioFinal: newprecio})
+       
+        let newstate = this.state
+
+        newstate.precioFinal =  newprecio
+
+            this.props.sendSwich({...newstate,
+                item:this.props.datos})  
+ 
+        
     }
 
    
@@ -77,33 +91,32 @@ class ListVenta extends Component {
     setNombre=(e)=>{
 
 this.setState({tituloArts:e.target.value})
-setTimeout(()=>{
-    this.props.sendNombre({...this.state,
+
+let newstate = this.state
+
+newstate.tituloArts =  e.target.value
+
+
+    this.props.sendNombre({...this.newstate,
         item:this.props.datos})  
-},200)
+
     }
 
     setIva(){
-    
+     
         if(this.props.state.userReducer.update.usuario.user.Factura.populares == "true"){
        
-            setTimeout(()=>{
-                this.props.sendSwich({...this.state,
-                    item:this.props.datos})  
-            },200)
+        
             return false
             
         }else if(this.props.state.userReducer.update.usuario.user.Factura.populares == "false"){
          
-            setTimeout(()=>{
-                this.props.sendSwich({...this.state,
-                    item:this.props.datos})  
-            },200)
+        
             return true
         }else{
             return false
         }
-
+   
        
     }
   
@@ -513,8 +526,7 @@ return (
              </div> 
              <div className="Artic100Fpago">
          <span className='FlexCenter'> $ <div type="number" name="Precio_Compra" className={` inputCustom ${precioErr}`}>{
-            this.testPrecioUni()
-   }</div></span>
+            this.state.precioFinal   }</div></span>
     
         
              </div>     
@@ -524,7 +536,7 @@ return (
          
          (parseFloat(this.props.datos.cantidad[0])
          *
-    (      this.testPrecioUni())
+    (       this.state.precioFinal )
          
          ).toFixed(2)
          
@@ -644,15 +656,29 @@ send
                editCat={(catae)=>{this.setState({EditCat:true, catEditar:catae})}}
             
                sendCatSelect={(cat)=>{
-        
             this.setState({catSelect:cat, CategoriaRender:cat.nombreCat,modalCat:false,subCatSelect:""})
-               } }  
+            setTimeout(()=>{
+                this.props.sendSwich({...this.state,
+                    item:this.props.datos})  
+            },200)
+        }
+            
+            
+            }  
                
         
                sendsubCatSelect={(cat)=>{
         
                 this.setState({catSelect:cat.estado.catSelect, subCatSelect:cat.subcat,categoriaModal:false,})
-                   } }  
+                setTimeout(()=>{
+                    this.props.sendSwich({...this.state,
+                        item:this.props.datos})  
+                },200)
+            
+            }
+                
+                
+                }  
         
                Flecharetro3={()=>{ this.setState({modalCat:false,catSelect:"",subCatSelect:""})  }
                } 

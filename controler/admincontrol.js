@@ -3440,7 +3440,7 @@ findarts.forEach(async x=> {
 
 }
 async function  generateFactCompra(req, res){
-
+console.log(req.body)
   let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
   let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let ComprasModelSass = await conn.model('Compras', ComprasShema);
@@ -3457,8 +3457,6 @@ async function  generateFactCompra(req, res){
     res.send({status: "error", message: "Factura ya ingresada"});
   }else{
 
-
-
   const session = await mongoose.startSession();   
   session.startTransaction();
   try{
@@ -3467,13 +3465,13 @@ async function  generateFactCompra(req, res){
     let insumos = articulos.filter(x=>x.insumo)
     let sinInsumos = articulos.filter(x=>x.insumo == null)
     let articulosCrear = 0
+    let counterRegs = 0
     let valorInsumos = 0
     let valorInventario = 0
     let articulosGenerados = []
     let catIngInv=  await CatModelSass.find({idCat:16}, null,{session, new:true} )
     let catGasInv=  await CatModelSass.find({idCat:17}, null,{session, new:true} )
     if(insumos.length > 0){
-    
       let acc = 0
       let cantacc = 0
       let finval = 0
@@ -3490,15 +3488,14 @@ async function  generateFactCompra(req, res){
         Eqid:"7777777777777",
         Diid:"",
         Grupo:"",
-        Categoria:"Insumos",
-        Subcategoria:"Facturados",
+        Categoria:insumos[x].categoria,
+        Subcategoria:insumos[x].subcategoria,
         Departamento:"",
         Titulo:Titulos,
         Marca:"",
         Existencia:cantacc,
         Calidad:"",
-        Color:"",
-                 
+        Color:"",     
         Descripcion:"",
         Garantia:"No",
         Imagen:"",
@@ -3513,16 +3510,14 @@ async function  generateFactCompra(req, res){
       articulosGenerados.push(dataArtNew)
     }
     if(sinInsumos.length > 0){
-      console.log(sinInsumos)
+     
       let articulosPorCrear = sinInsumos.filter(x=>x.itemSelected == null)
       let articulosPorActualizar= sinInsumos.filter(x=>x.itemSelected)
       
-
-
       if(articulosPorCrear.length > 0){
         articulosCrear = articulosPorCrear.length
 
-        console.log(articulosPorCrear)
+       
         for(let x = 0;x<articulosPorCrear.length;x++){
           
        let Precio_Compra = (parseFloat(articulosPorCrear[x].precioUnitario[0]) * 1.12)
@@ -3537,7 +3532,7 @@ async function  generateFactCompra(req, res){
       } 
      
       let valido = true 
-let acum = 1
+let acuminsu = 1
 let newid = parseFloat(articulosPorCrear[x].codigoPrincipal[0])
 
 while(valido){
@@ -3547,9 +3542,13 @@ while(valido){
   console.log(findDistridi)
 if(findDistridi.length == 0){
   valido = false
-}else{
-  newid ++
-  acum ++
+} else {
+  if (typeof newid === "number") {
+    newid++; // Si es número, sumarle 1
+  } else {
+    newid = newid.toString() + acuminsu; // Si es string, concatenar "acum"
+  }
+  acuminsu++; // Incrementar acumulador
 }
 
 }
@@ -3562,8 +3561,8 @@ articulosPorCrear[x].iva == false? false:false
             Eqid:Counterx[0].ContArticulos + x,
             Diid:newid,
             Grupo:"",
-            Categoria:"Facturado",
-            Subcategoria:"",
+            Categoria:articulosPorCrear[x].categoria,
+            Subcategoria:articulosPorCrear[x].subcategoria,
             Departamento:"",
             Titulo:articulosPorCrear[x].descripcion[0],
             Marca:"",
@@ -3594,7 +3593,7 @@ articulosPorCrear[x].iva == false? false:false
 
       }
       if(articulosPorActualizar.length > 0){
-   
+   console.log(articulosPorActualizar)
         for(let x = 0;x<articulosPorActualizar.length;x++){
           let art = articulosPorActualizar[x].itemSelected
           let nData = articulosPorActualizar[x]
@@ -3603,7 +3602,7 @@ articulosPorCrear[x].iva == false? false:false
           }
            else{
           let totalInvertido = art.Precio_Compra * art.Existencia
-          let ActualInvertido = (parseFloat(nData.precioUnitario[0]) * 1.12) * parseFloat(nData.cantidad[0])
+          let ActualInvertido = nData.precioFinal  * parseFloat(nData.cantidad[0])
           let nuevaCantExistencias = art.Existencia + parseFloat(nData.cantidad[0])
 
           let sumaInvertido =  totalInvertido + ActualInvertido
@@ -3650,7 +3649,7 @@ articulosGenerados.push(artupdate)
                    valorCambiar:  req.body.Fpago[i].Cuenta.DineroActual.$numberDecimal 
                   },
     
-                  CatSelect:{idCat:catGasInv[0].idCat,
+      CatSelect:{idCat:catGasInv[0].idCat,
                     urlIcono:catGasInv[0].urlIcono,
                     nombreCat:catGasInv[0].nombreCat,
                     subCatSelect:catGasInv[0].subCatSelect,
@@ -3709,8 +3708,9 @@ articulosGenerados.push(artupdate)
     }
     }
     let reg1 = await RegModelSass.create([datareg],{session} )
-  
+    counterRegs += 1
     let reg2 = await RegModelSass.create([dataregING], {session} )
+    counterRegs += 1
     arrRegs.push(reg1[0]._id)
     arrRegs.push(reg2[0]._id)
  
@@ -3718,14 +3718,7 @@ articulosGenerados.push(artupdate)
  let cuenta2 =   await CuentasModelSass.findByIdAndUpdate(idCuentaInv[0]._id,updateIng,{session})
  if(cuenta1 == null || cuenta2 == null){
   throw new Error("Cuentas no Encontradas, vuelva intentar en unos minutos")
-} 
-
-
-    }
-    
-    
-    
-                                           }
+}   }   }
 
 
  let   datacompra ={
