@@ -52,6 +52,12 @@ const regSchema = new Schema({
             
               
             },
+            CompraNumero: {
+              type: Number, 
+            },
+            VentaNumero: {
+              type: Number, 
+            },
              Tiempo: {
                type: Number, 
              },
@@ -65,6 +71,9 @@ const regSchema = new Schema({
                type: Boolean, 
              },
              CuentaVal:{
+              type: Number, 
+            },
+            CuentaVal:{
               type: Number, 
             },
             Versiones:  {

@@ -18,7 +18,7 @@ class Contacto extends Component {
    
   state={
     cuentaInvSelect:9999998,
-    cuentaInvNombre:"Principal",
+    cuentaInvNombre:"Inventario",
     loading:false,
     codpunto:"001",
         codemision:"001",

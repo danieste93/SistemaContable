@@ -3440,7 +3440,7 @@ findarts.forEach(async x=> {
 
 }
 async function  generateFactCompra(req, res){
-console.log(req.body)
+
   let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
   let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let ComprasModelSass = await conn.model('Compras', ComprasShema);
@@ -3477,7 +3477,7 @@ console.log(req.body)
       let finval = 0
       let Titulos = "Insumos:"
       for(let x = 0;x<insumos.length;x++){
-        let valorfinal = parseFloat(insumos[x].precioUnitario[0]) * 1.12
+        let valorfinal = parseFloat(insumos[x].precioFinal) 
         acc += valorfinal
         cantacc += parseFloat(insumos[x].cantidad[0])
         finval += valorfinal * parseFloat(insumos[x].cantidad[0])
@@ -3504,13 +3504,15 @@ console.log(req.body)
         Precio_Compra: acc,
         CantidadCompra: cantacc,
         PrecioCompraTotal:finval,
-         Iva:true
+         Iva:true,
+         Bodega_Inv_Nombre: "Inventario ",
+         Bodega_Inv:9999998,
     
       }
       articulosGenerados.push(dataArtNew)
     }
     if(sinInsumos.length > 0){
-     
+     console.log(sinInsumos)
       let articulosPorCrear = sinInsumos.filter(x=>x.itemSelected == null)
       let articulosPorActualizar= sinInsumos.filter(x=>x.itemSelected)
       
@@ -3520,7 +3522,7 @@ console.log(req.body)
        
         for(let x = 0;x<articulosPorCrear.length;x++){
           
-       let Precio_Compra = (parseFloat(articulosPorCrear[x].precioUnitario[0]) * 1.12)
+       let Precio_Compra = (parseFloat(articulosPorCrear[x].precioFinal) )
        let existencias = (parseFloat(articulosPorCrear[x].cantidad[0]))
        valorInventario += (Precio_Compra*existencias) 
       let caducable = {Estado:false}
@@ -3582,7 +3584,9 @@ articulosPorCrear[x].iva == false? false:false
             CantidadCompra: parseFloat(articulosPorCrear[x].cantidad[0]),
             PrecioCompraTotal:Precio_Compra*existencias,
             Caduca:caducable,
-             Iva:ivadata
+             Iva:ivadata,
+             Bodega_Inv_Nombre: "Inventario ",
+             Bodega_Inv:9999998,
         
           }
 
@@ -3602,7 +3606,7 @@ articulosPorCrear[x].iva == false? false:false
           }
            else{
           let totalInvertido = art.Precio_Compra * art.Existencia
-          let ActualInvertido = nData.precioFinal  * parseFloat(nData.cantidad[0])
+          let ActualInvertido = nData.Precio_Compra   * parseFloat(nData.cantidad[0])
           let nuevaCantExistencias = art.Existencia + parseFloat(nData.cantidad[0])
 
           let sumaInvertido =  totalInvertido + ActualInvertido
@@ -3659,6 +3663,7 @@ articulosGenerados.push(artupdate)
     
       Descripcion:req.body.Fpago[i].Detalles,
       Descripcion2:{articulosVendidos:articulosGenerados},
+      CompraNumero:Counterx[0].ContCompras,
       Estado:false,
       urlImg:[],
       Valrep:"No",
@@ -3695,6 +3700,7 @@ articulosGenerados.push(artupdate)
     
     Descripcion:req.body.Fpago[i].Detalles,
     Descripcion2:{articulosVendidos:articulosGenerados},
+    CompraNumero:Counterx[0].ContCompras,
     Estado:false,
     urlImg:[],
     Valrep:"No",
@@ -3723,7 +3729,7 @@ articulosGenerados.push(artupdate)
 
  let   datacompra ={
       arrRegs,
-      CompraNumero:Counterx[0].ContCompras ,
+      CompraNumero:Counterx[0].ContCompras,
       ArtComprados:articulosGenerados,
       Usuario:req.body.Vendedor,
       Tiempo: new Date(req.body.xmlData.fechaAutorizacion[0]).getTime(),

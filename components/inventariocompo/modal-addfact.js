@@ -371,14 +371,13 @@ console.log("in switch")
     render () {
     console.log(this.state)
       let now  = new Date()
-      if(this.state.Comprobante !== ""){
+      if(this.state.xmlData !== ""){
        now = new Date(this.state.xmlData.fechaAutorizacion[0])
+       console.log("enxml")
+       console.log(now)
       }
  
-      if(now == "Invalid Date"){
-
-        now = new Date(this.state.Comprobante.factura.infoFactura[0].fechaEmision)
-      }
+     
 
       let año = now.getFullYear()
       let dia = now.getDate()
