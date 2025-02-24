@@ -39,7 +39,7 @@ class Contacto extends Component {
 
       
       }
-      comprobadorGenCompra=( TotalValorCompra, TotalPago, fecha)=>{
+      comprobadorGenCompra=( TotalValorCompra, TotalPago)=>{
         if(this.state.loading == false){
           this.setState({loading:true})
         let arrErrCant=[]
@@ -91,7 +91,7 @@ class Contacto extends Component {
               newstate.TotalValorCompra = parseFloat(TotalValorCompra).toFixed(2)
               newstate.TotalPago = parseFloat(TotalPago).toFixed(2)
               newstate.Userdata ={DBname:this.props.state.userReducer.update.usuario.user.DBname}
-              newstate.fecha = fecha
+              newstate.fecha = this.state.xmlData.fechaAutorizacion[0]
            
              var lol = JSON.stringify(newstate)
              fetch(url, {
@@ -221,33 +221,61 @@ class Contacto extends Component {
             readXml=e.target.result;
                   
             let parserX = new Xml2js.Parser();
-        
-            const findComprobante = (obj) => {
+            function validarFecha(fecha) {
+              const date = new Date(fecha);
+              return !isNaN(date.getTime()); // Verifica si la fecha es válida
+          }
+            const findComprobanteYFecha = (obj) => {
               if (typeof obj !== 'object' || obj === null) return false;
-              
-              // Obtiene el primer nivel de propiedades
-              const keys = Object.keys(obj);
-            
-              // Si no hay propiedades, retorna false
-              if (keys.length === 0) return false;
-            
-              // Toma la primera propiedad (sin importar el nombre)
-              const firstKey = keys[0];
-              const innerObj = obj[firstKey];
-            
-              // Verifica si es un objeto o array para continuar la búsqueda
-              if (typeof innerObj === 'object' && innerObj !== null) {
-                for (const key in innerObj) {
-                  // Verifica si la clave es "comprobante" y es un array con .length > 0
-                  if (key === 'comprobante' && Array.isArray(innerObj[key]) && innerObj[key].length > 0) {
-                    return innerObj;
+          
+              let resultado = {
+                  comprobante: null,
+                  fechaAutorizacion: null,
+                  numeroAutorizacion: null
+              };
+          
+              for (const key in obj) {
+                console.log(key)
+                  if (key === "comprobante" && Array.isArray(obj[key]) && obj[key].length > 0) {
+                      resultado.comprobante = obj[key][0]; // Toma el primer comprobante
                   }
+                  if (key === "numeroAutorizacion" && Array.isArray(obj[key]) && obj[key].length > 0) {
+
+                    resultado.numeroAutorizacion = obj[key][0]; // Toma el primer comprobante
                 }
+          
+                  if (key === "fechaAutorizacion" && Array.isArray(obj[key]) && obj[key].length > 0) {
+                    let fecha = obj[key][0]; // Tomar el primer elemento del array
+                    
+                    if (typeof fecha === "string" && validarFecha(fecha)) {
+                      resultado.fechaAutorizacion = fecha;
+                  }
+                  
+                 
+                  }
+          
+                  // Si encontró ambos valores, detiene la búsqueda
+                  if (resultado.comprobante && resultado.fechaAutorizacion && resultado.numeroAutorizacion) {
+                    
+                    return resultado;
+                  }
+          
+                  // Si el valor es un objeto o array, busca recursivamente dentro
+                  if (typeof obj[key] === 'object' && obj[key] !== null) {
+                      const nestedResult = findComprobanteYFecha(obj[key]);
+                      if (nestedResult.comprobante) resultado.comprobante = nestedResult.comprobante;
+                      if (nestedResult.fechaAutorizacion) resultado.fechaAutorizacion = nestedResult.fechaAutorizacion;
+                      if (nestedResult.numeroAutorizacion) resultado.numeroAutorizacion = nestedResult.numeroAutorizacion;
+                      // Si encontró ambos valores en la recursión, retorna inmediatamente
+                      if (resultado.comprobante && resultado.fechaAutorizacion&& resultado.numeroAutorizacion) {
+                          return resultado;
+                      }
+                  }
               }
-              
-              // Si no encuentra "comprobante", retorna false
-              return false;
-            };
+          
+              // Retorna el resultado, ya sea con valores encontrados o con `null`
+              return resultado.comprobante || resultado.fechaAutorizacion|| resultado.numeroAutorizacion ? resultado : false;
+          };
             
             // Parseando el XML
             parserX.parseString(readXml, (err, result) => {
@@ -255,25 +283,27 @@ class Contacto extends Component {
                 console.error('Error al parsear XML:', err);
                 return;
               }
-              
-              console.log(result);
+              console.log(result)
+             
             
               // Buscar cualquier objeto que tenga .comprobante[0]
-              const getData = findComprobante(result);
+              const getData = findComprobanteYFecha(result);
             console.log(getData)
-              if (getData) {
-                parserX.parseString(getData.comprobante[0], (err, xml) => {
+            if (getData && getData.comprobante && getData.fechaAutorizacion) {
+                parserX.parseString(getData.comprobante, (err, xml) => {
                   if (err) {
                     console.error('Error al parsear comprobante:', err);
                     return;
                   }
-                  
+                  console.log(xml)
      // Verificación del RUC del comprador
-                  if (xml.factura.infoFactura[0].identificacionComprador[0] != this.props.state.userReducer.update.usuario.user.Factura.ruc) {
-                    this.setState({ prevent1: true, preventData1: xml, preventxmlData: getData });
-                  } else {
-                    this.setState({ xmlData: getData, Comprobante: xml });
-                  }
+     let estructuraXml = {fechaAutorizacion:[getData.fechaAutorizacion],numeroAutorizacion:[getData.numeroAutorizacion]}
+
+     if (xml.factura.infoFactura[0].identificacionComprador[0] != this.props.state.userReducer.update.usuario.user.Factura.ruc) {
+       this.setState({ prevent1: true, preventData1: xml, preventxmlData:estructuraXml  });
+     } else {
+       this.setState({ xmlData: estructuraXml, Comprobante: xml });
+     }
                 });
               } else {
                 // Si no encuentra comprobante, muestra un mensaje de error
@@ -322,6 +352,7 @@ console.log("in switch")
       deepClone.factura.detalles[0].detalle[indexset].categoria = data.catSelect
       deepClone.factura.detalles[0].detalle[indexset].subcategoria = data.subCatSelect
       deepClone.factura.detalles[0].detalle[indexset].precioFinal = parseFloat(data.precioFinal)
+      deepClone.factura.detalles[0].detalle[indexset].itemSelected = data.itemSelected
       this.setState({Comprobante:deepClone})
     
     }
@@ -572,7 +603,7 @@ done
       </Animate>
       <Animate show={!this.state.loading}>
       <div className="contBotonPago">
-                    <button style={{width:"50%",maxWidth:"200px"}} className={` btn btn-success botonedit2 `} onClick={()=>{this.comprobadorGenCompra( TotalValorCompra, TotalPago,fecha)}}>
+                    <button style={{width:"50%",maxWidth:"200px"}} className={` btn btn-success botonedit2 `} onClick={()=>{this.comprobadorGenCompra( TotalValorCompra, TotalPago)}}>
 <p>Comprar</p>
 <i className="material-icons">
 add

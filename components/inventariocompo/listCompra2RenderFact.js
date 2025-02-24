@@ -215,9 +215,29 @@ newstate.tituloArts =  e.target.value
             },100)
     
       }
+      handleChangeSwitchInsumo=(e)=>{        
+      console.log(this.state)
+        if(this.state.artSelected !=""){
+            alert("Error, articulo se asigno a inventario")
+            this.setState({insumo:false})
+        }else{
+
+            this.setState({insumo:!this.state.insumo})
+            this.props.sendSwich({...this.state,
+                insumo:!this.state.insumo,
+                 item:this.props.datos})  
+        }
+     
+      
+   
+    
+          
+   
+ 
+   }
       getSugerencias=()=>{
         let data = this.props.state.RegContableReducer.Articulos?this.props.state.RegContableReducer.Articulos.filter(x=> x.Tipo != "Servicio" && x.Tipo != "Combo" ):""
-    
+    console.log(data)
 return (data)
        }
     
@@ -456,6 +476,9 @@ item})
             }
             SelectArt=(e)=>{
                this.setState({artSelected:e,selectItem:false})
+               this.props.sendSwich({...this.state,
+                itemSelected:e,
+                item:this.props.datos})  
             }
             resetArtData=()=>{
    
@@ -552,7 +575,7 @@ return (
       control={
         <Switch
      
-        onChange={this.handleChangeSwitch}
+        onChange={this.handleChangeSwitchInsumo}
           name={"insumo"}
           color="primary"
         checked={this.state.insumo}

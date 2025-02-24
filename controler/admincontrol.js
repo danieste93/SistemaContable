@@ -3471,6 +3471,7 @@ async function  generateFactCompra(req, res){
     let articulosGenerados = []
     let catIngInv=  await CatModelSass.find({idCat:16}, null,{session, new:true} )
     let catGasInv=  await CatModelSass.find({idCat:17}, null,{session, new:true} )
+  
     if(insumos.length > 0){
       let acc = 0
       let cantacc = 0
@@ -3488,8 +3489,16 @@ async function  generateFactCompra(req, res){
         Eqid:"7777777777777",
         Diid:"",
         Grupo:"",
-        Categoria:insumos[x].categoria,
-        Subcategoria:insumos[x].subcategoria,
+        Categoria:{  _id: '67a1b9a47be396edff3c53eb',
+          tipocat: 'Articulo',
+          subCategoria: [],
+          nombreCat: 'GENERAL',
+          imagen: [],
+          urlIcono: '/iconscuentas/compra.png',
+          idCat: 21,
+          sistemCat: false
+        },
+        Subcategoria:"",
         Departamento:"",
         Titulo:Titulos,
         Marca:"",
@@ -3512,7 +3521,7 @@ async function  generateFactCompra(req, res){
       articulosGenerados.push(dataArtNew)
     }
     if(sinInsumos.length > 0){
-     console.log(sinInsumos)
+   
       let articulosPorCrear = sinInsumos.filter(x=>x.itemSelected == null)
       let articulosPorActualizar= sinInsumos.filter(x=>x.itemSelected)
       
@@ -3535,13 +3544,13 @@ async function  generateFactCompra(req, res){
      
       let valido = true 
 let acuminsu = 1
-let newid = parseFloat(articulosPorCrear[x].codigoPrincipal[0])
-
+let newid = articulosPorCrear[x].codigoPrincipal[0]
+console.log(articulosPorCrear[x])
 while(valido){
-  console.log(newid)
+ 
   let findDistridi = await ArticuloModelSass.find({Diid:newid
 })
-  console.log(findDistridi)
+
 if(findDistridi.length == 0){
   valido = false
 } else {
@@ -3555,6 +3564,7 @@ if(findDistridi.length == 0){
 
 }
 
+console.log("salidmos del while")
 let ivadata = articulosPorCrear[x].iva == null ? false:
 articulosPorCrear[x].iva == true ? true:
 articulosPorCrear[x].iva == false? false:false
@@ -3572,8 +3582,8 @@ articulosPorCrear[x].iva == false? false:false
             Calidad:"",
             Color:"",
             Precio_Compra:parseFloat(Precio_Compra),
-            Precio_Venta:(parseFloat(Precio_Compra) + (parseFloat(Precio_Compra) * 0.5)).toFixed(2),
-            Precio_Alt:(parseFloat(Precio_Compra) +(parseFloat(Precio_Compra) * 0.3)).toFixed(2),
+            Precio_Venta:(parseFloat(Precio_Compra) + (parseFloat(Precio_Compra) * 1)).toFixed(2),
+            Precio_Alt:(parseFloat(Precio_Compra) +(parseFloat(Precio_Compra) * 0.5)).toFixed(2),
            
             Descripcion:"",
             Garantia:"No",
@@ -3606,7 +3616,7 @@ articulosPorCrear[x].iva == false? false:false
           }
            else{
           let totalInvertido = art.Precio_Compra * art.Existencia
-          let ActualInvertido = nData.Precio_Compra   * parseFloat(nData.cantidad[0])
+          let ActualInvertido = nData.precioFinal  * parseFloat(nData.cantidad[0])
           let nuevaCantExistencias = art.Existencia + parseFloat(nData.cantidad[0])
 
           let sumaInvertido =  totalInvertido + ActualInvertido
