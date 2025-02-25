@@ -1245,12 +1245,38 @@ let nombreto = cat.estado.catSelect.nombreCat + "  //  " + cat.subcat
     this.setState({cuentaEnviada:cuenta,cuentaSelect:cuenta, CuentaRender:cuenta.NombreC,cuentasmodal:false,})
        } }  
        sendCuentaSelectT1={(cuenta)=>{
+    
+        if(cuenta._id == this.state.cuentaSelectT2._id){
+          let add = {
+            Estado:true,
+            Tipo:"error",
+            Mensaje:"Cuenta ya seleccionada"
+        }
+        this.setState({Alert: add, cuentasmodal:false, cuentaSelectT1:"",CuentaRenderT1:""}) 
+     
+        }else{
+          this.setState({cuentaEnviada:cuenta,cuentaSelectT1:cuenta, CuentaRenderT1:cuenta.NombreC,cuentasmodal:false,})
         
-        this.setState({cuentaEnviada:cuenta,cuentaSelectT1:cuenta, CuentaRenderT1:cuenta.NombreC,cuentasmodal:false,})
+        }
+
            } }  
            sendCuentaSelectT2={(cuenta)=>{
-            this.setState({cuentaEnviada:cuenta,cuentaSelectT2:cuenta, CuentaRenderT2:cuenta.NombreC,cuentasmodal:false,})
-               } }  
+
+            if(cuenta._id == this.state.cuentaSelectT1._id){
+              let add = {
+                Estado:true,
+                Tipo:"error",
+                Mensaje:"Cuenta ya seleccionada"
+            }
+            this.setState({Alert: add, cuentasmodal:false, cuentaSelectT2:"",CuentaRenderT2:""}) 
+         
+            }else{
+              this.setState({cuentaEnviada:cuenta,cuentaSelectT2:cuenta, CuentaRenderT2:cuenta.NombreC,cuentasmodal:false,})
+            
+            }
+
+
+                } }  
        
        Flecharetro3={
         ()=>{

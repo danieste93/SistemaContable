@@ -55,25 +55,29 @@ class ListVenta extends Component {
 
     let miart = articulos.filter(x=> x.Diid == articuloElegido.codigoPrincipal[0])
 
-  
+    let newprecio =  this.testPrecioUni()
+    console.log(articuloElegido)
+    console.log(newprecio)
     if(miart.length > 0){
-        this.setState({artSelected:miart[0]})
-        this.props.sendItem({itemselect:miart[0],
-            item:this.props.datos})  
+        this.setState({artSelected:miart[0],precioFinal: newprecio})
+   
+         this.props.sendSwich({...this.state,
+            precioFinal: newprecio,
+             itemSelected:miart[0],
+             item:this.props.datos})  
     }else{
-
-        let newprecio =  this.testPrecioUni()
         this.setState({precioFinal: newprecio})
        
-        let newstate = this.state
+        this.props.sendSwich({...this.state,
+            precioFinal: newprecio,
+            item:this.props.datos})  
+    }
 
-        newstate.precioFinal =  newprecio
-
-            this.props.sendSwich({...newstate,
-                item:this.props.datos})  
+        
+        
  
         
-    }
+    
 
    
     }

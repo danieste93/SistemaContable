@@ -43,10 +43,6 @@ channel1 = null;
         
         }
          
-
-
-
-
         onEditmode=()=>{
           
         }
@@ -99,7 +95,6 @@ channel1 = null;
         }*/
     render () {
 
-   
       let generadorDeCuentas
     let cuentactive= this.state.editmode?"bordeazul":""
     let lapizctive= this.state.editmode?"lapizctive":""
@@ -187,8 +182,6 @@ let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario"
 <div onClick={()=>{
         if(this.state.editmode == false){
 
-
-      
           if(this.props.cuentacaller ==="trans1"){
             setTimeout(()=>{  
               
@@ -358,7 +351,7 @@ let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario"
   height:78%;
     overflow-y: scroll;
     overflow-x: hidden;
-    align-items: flex-start;
+    align-items: center;
            }
 
 .nombrem{
@@ -508,7 +501,7 @@ let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario"
   width: 0%;
   opacity: 0;
   height: 50%;
-  display: flex;
+  display: none;
   justify-content: center;
     align-items: center;
     margin: 0px
