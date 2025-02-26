@@ -30,7 +30,7 @@ import EditServ from"./inventariocompo/modal-editServicio"
 import ModalDeleteArt from "./inventariocompo/modal-delete-art"
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Button from '@material-ui/core/Button';
-
+import GenRepArt from "./inventariocompo/generadorReporteArticulos"
 import HookLoader from "../components/cuentascompo/newHooks/hookmodelRedux"
 import {getDistribuidor,getAllcuentas,getCompras,getVentas, getCounter,getArts,getcuentas,addRegs, addFirstRegs } from "../reduxstore/actions/regcont";
 import ModalReportInv from './inventariocompo/modal-reportInv';
@@ -568,20 +568,7 @@ console.log(valorfiltrado)
      donwloaddata=()=>{
      
       let dataart= this.props.state.RegContableReducer.Articulos
-     
-      let csv = this.jsonToCsv(dataart)
-
-      let link = document.createElement('a');
-      const url = window.URL.createObjectURL(
-          new Blob([csv]),
-        );
-      link.href = url;
-      link.setAttribute(
-        'download',
-        `Articulos.csv`,
-      );
-         
-      link.click();
+      GenRepArt(dataart)
 
      }
 
@@ -626,6 +613,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
          
 let renderArts = [] 
             let arts = this.props.state.RegContableReducer.Articulos
+            console.log(arts)
             if(this.state.searcherIn ==""){
                 renderArts=  arts 
             }else{

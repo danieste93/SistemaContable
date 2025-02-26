@@ -129,7 +129,7 @@ if(cuentaX.Permisos.includes("auxiliar")){
         })
         }
         comprobador=()=>{
-          if(this.state.Tipo != ""){
+          if(this.state.Tipo != "" && this.state.Tipo != "No$" ){
             document.getElementById('selectipo').classList.remove("errequerido")
           }
           else{
@@ -150,7 +150,7 @@ if(cuentaX.Permisos.includes("auxiliar")){
           }
 
 
-          if(this.state.Tipo != "" && this.state.NombreC != "" ){
+          if(this.state.Tipo != "" && this.state.Tipo != "No$" && this.state.NombreC != "" ){
             let permisos = this.state.Permisos
            
 
@@ -222,6 +222,7 @@ if(cuentaX.Permisos.includes("auxiliar")){
         this.setState({Alert:AleEstado})
        
     }
+    console.log(this.state)
     const Alert=(props)=> {
         return <MuiAlert elevation={6} variant="filled" {...props} />;
       }
@@ -259,7 +260,7 @@ if(cuentaX.Permisos.includes("auxiliar")){
               <div id =""className="cDc2 alinemiento"style={{border:"none"}} >
               <select name="Tipo" id="selectipo" style={{width:"100%"}} className="tipe" value={this.state.Tipo}onChange={this.handleChangeGeneral} >
 
-<option value="No"> </option>
+<option value="No$"> </option>
 {this.getTipeCuentas()}
 
 
