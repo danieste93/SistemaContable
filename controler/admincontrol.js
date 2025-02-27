@@ -2603,8 +2603,18 @@ function  uploadSignedXml (req, res){
 
 
 var xmlBase64 =  Buffer.from(req.body.doc).toString('base64');
+const options = {
+  wsdl_options: {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
+    },
+    rejectUnauthorized: false, // Evita errores con certificados SSL
+    timeout: 15000 // Aumenta el tiempo de espera
+  }
+};
 
-soap.createClient(url, {}, function(err, client) {
+
+soap.createClient(url, options, function(err, client) {
  console.log("cliente funcional")
   if (err){
     res.send({status: "fatalerror", message: "error en la creacion del clienteSoap"}); 
@@ -2621,7 +2631,7 @@ soap.createClient(url, {}, function(err, client) {
         if (err){
           console.log("error en validarComprobante")
           console.log(err)
-          res.send({status: "fatalerror", message: "error en validarComprobante ",result});
+          res.send({status: "fatalerror", message: "error en validarComprobante ",result,err});
         }
       
        else if(result != undefined){
