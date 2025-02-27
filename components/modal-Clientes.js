@@ -8,6 +8,10 @@ import {paginationPipe} from "../reduxstore/pipes/paginationFilter";
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 import ClientRender from "./ClienteRenderListView"
 import Pagination from "./Pagination";
+import { getClients } from '../reduxstore/actions/regcont';
+import fetchData from './funciones/fetchdata';
+import { CircularProgress } from '@material-ui/core';
+import exportarClienteExcel from './generadorClientes';
 class Contacto extends Component {
   state={
     perPage: 9,
@@ -15,6 +19,7 @@ class Contacto extends Component {
     pagesToShow: 5,
     gridValue: 3,
     loading:false,
+    loadingClient:false,
     waiting:false,
     Fpago:[],
     dataToAdd:[],
@@ -22,7 +27,17 @@ class Contacto extends Component {
     Alert:{Estado:false},
   }
 
-    componentDidMount(){
+    async componentDidMount(){
+      if(!this.props.state.RegContableReducer.Clients){
+        this.setState({loadingClient:true})
+        let data = await fetchData(this.props.state.userReducer, 
+          "/public/getAllClients", {});
+       console.log(data)
+       if (data.status == "Ok"){
+        this.setState({loadingClient:false})
+        this.props.dispatch(getClients(data.clientesHabiles))
+       }
+      }
       setTimeout(function(){ 
         
         document.getElementById('mainxx').classList.add("entradaaddc")
@@ -147,6 +162,13 @@ let newstate = this.state
         });
         }
       }
+      genClientes=()=>{
+
+        let data = this.props.state.RegContableReducer.Clients
+
+        exportarClienteExcel(data)
+      }
+
       Onsalida=()=>{
         document.getElementById('mainxx').classList.remove("entradaaddc")
         setTimeout(()=>{ 
@@ -244,7 +266,19 @@ Agregador Masivo Clientes
 system_update
 </i>   </a>
         </div>
-     
+        <div className="  contdescarga">
+          <Animate show={this.state.loadingClient}>
+          <CircularProgress/>
+          </Animate>
+          <Animate show={!this.state.loadingClient}>
+        <div className='contPlantilla' onClick={this.genClientes}>
+          <div className="">Clientes</div>
+          <i className="material-icons">
+download
+</i>   
+</div>
+          </Animate>
+        </div>
         </div>
 <div className=" centrar contColun">
           <div className="centrar">Inserta la URL de Google Spreed Sheets</div>
@@ -398,6 +432,7 @@ add
                   padding: 6px;
                   font-weight: bold;
                   margin: 15px;
+                  cursor:pointer;
               }
                 .headercontact {
 

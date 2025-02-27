@@ -21,7 +21,7 @@ import DatabaseUsageBar from './cuentascompo/SubCompos/dataBarUsage';
       passClient:null,
       ElectroFact:false,
       Trabajadores:false,
-      Email:true,
+      Email:false,
       docsSize:{
         storage:0,
         datasize:0,
@@ -32,7 +32,7 @@ import DatabaseUsageBar from './cuentascompo/SubCompos/dataBarUsage';
      async componentDidMount(){
       let databaseSize = await this.getDatabase()
     
-  console.log(databaseSize)
+  console.log(this.props)
       if(databaseSize.status =='Ok'){
         this.setState({docsSize:databaseSize.data})
   
@@ -136,7 +136,8 @@ min-width: 120px;
 <Trabajadores Flecharetro ={()=>this.setState({Trabajadores:false})} />
   </Animate>
   <Animate show={this.state.Clientes}>
-  <Clientes Flecharetro ={()=>this.setState({Clientes:false})} />
+  <Clientes downloadClient ={ this.props.state}
+   Flecharetro ={()=>this.setState({Clientes:false})} />
   </Animate>
   <Animate show={this.state.Email}>
   <Email Flecharetro ={()=>this.setState({Email:false})} />

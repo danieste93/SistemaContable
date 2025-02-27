@@ -33,6 +33,9 @@ router.post('/getDatabaseSize',Authentication, AdminControl.getDatabaseSize);
 router.post('/correoconfigverify',Authentication, AdminControl.correoConfigVerify);
 router.post('/getCorreoConfig',Authentication, AdminControl.getCorreoConfig);
 
+router.post('/getAllClients',Authentication, AdminControl.getAllClients);
+
+
 
 router.get('/masiveApplyTemplate', AdminControl.masiveApplyTemplate);
 router.get('/updatedtcarts', AdminControl.updateDTCarts);
