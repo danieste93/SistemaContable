@@ -370,6 +370,26 @@ periodo:false
                   
                   }
 
+
+                  genRegs=(detallesrender)=>{ 
+                    console.log(detallesrender)
+                    if( detallesrender) return detallesrender
+                    else{
+                      return(<div style={{display:"flex", alignItems:"center", 
+
+                        marginTop:"20px"
+                      }}>
+                        <span className="material-icons">
+warning
+</span>
+                         Sin resultos que mostrar. 
+
+                      </div>)
+                    }
+
+
+                  }
+
                   generadorRep=()=>{
                     if(this.props.regC.Reps){
                       if(this.props.regC.Reps.length >0){
@@ -500,14 +520,14 @@ return(<div className={`tipoMain ${visible}`}key={i}>
 if(DetallesPorrender.length > 0){
   detallesrender = <GenGroupRegs Registros={DetallesPorrender} cuentaSelect={{_id:0}} datosGene={{saldo:0, balance:0,saldoActive:false}} />
 
-    let misregs2ing = DetallesPorrender.filter(regsing => regsing.Accion == "Ingreso")
+    let misregs2ing = DetallesPorrender.filter(regsing => regsing.Accion == "Ingreso"&& regsing.TiempoEjecucion != 0)
     let sumaing = 0
                 if(misregs2ing.length > 0){
                   for (let i=0; i < misregs2ing.length; i++ ){
                     sumaing = sumaing + misregs2ing[i].Importe
                 }
               }
-              let misregsgas = DetallesPorrender.filter(regsgas => regsgas.Accion == "Gasto")
+              let misregsgas = DetallesPorrender.filter(regsgas => regsgas.Accion == "Gasto"&& regsgas.TiempoEjecucion != 0)
                 let sumagas = 0
 
                 if(misregsgas.length > 0){
@@ -552,9 +572,9 @@ superIng=  sumaing + sumatransing
         <button className=" btn  btn-primary btnDropDowmRegs" onClick={this.updateData}>
        
         <span className="material-icons" style={{width:"45px"}}>
-        get_app
+        search
      </span>
-     <p>Descargar</p>
+     <p>Buscar</p>
      </button>
         </Dropdown.Item>
         <Dropdown.Item>
@@ -772,7 +792,7 @@ superIng=  sumaing + sumatransing
                 </Animate>
                    <div className="supercontreg">
           {this.state.donwloadDeleteRegs &&  <CircularProgress />  }
-                {detallesrender}
+                {this.genRegs(detallesrender)}
                 </div>
                   
               

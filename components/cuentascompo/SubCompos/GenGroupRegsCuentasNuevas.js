@@ -73,14 +73,14 @@ export default class GenGroupRegs extends Component {
             });
        
             detallesrender =  groupArrays.map((grupo,i)=>{
-              let reging = grupo.registros.filter(regsing => regsing.Accion == "Ingreso")
+              let reging = grupo.registros.filter(regsing => regsing.Accion == "Ingreso"&& regsing.TiempoEjecucion != 0)
               let sumaing = 0
               if(reging.length > 0){
                 for (let i=0; i < reging.length; i++ ){
                   sumaing = sumaing + reging[i].Importe
               } 
             }
-            let regsgas = grupo.registros.filter(regsgas => regsgas.Accion == "Gasto")
+            let regsgas = grupo.registros.filter(regsgas => regsgas.Accion == "Gasto"&& regsgas.TiempoEjecucion != 0)
     let sumagas = 0
     let sumatransgas = 0
     let sumatransing = 0

@@ -620,6 +620,27 @@ this.setState({CuentaEditar:e,EditCuenta:true})
 }
 
 
+
+genRegs=(detallesrender)=>{ 
+ 
+  if( detallesrender) return detallesrender
+  else{
+    return(<div style={{display:"flex", alignItems:"center", 
+
+      marginTop:"20px"
+    }}>
+      <span className="material-icons">
+warning
+</span>
+       Sin resultos que mostrar. 
+       
+    </div>)
+  }
+
+
+}
+
+
 CalcRegsCuentas=(cuentas)=>{
   let SumCuentasActual=0
 
@@ -993,7 +1014,7 @@ delete
       let estilo2 = this.state.Pasivos?"clicked":"";
 
 let displayDetalles =[]
-let detallesrender= []
+let detallesrender= ""
 let DragableContent = <CircularProgress />
 let Detallesfiltrados =""
 let DetallesOrdenados  =""
@@ -2108,7 +2129,7 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
       
                   <div className="supercontreg">
                     
-                  {detallesrender}
+                  {this.genRegs(detallesrender)}
                   </div>
                 
                
