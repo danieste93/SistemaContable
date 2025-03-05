@@ -927,7 +927,7 @@ let datarender2 = dataArray2.map((datillos,i,)=>{
               <p >
    Cuenta Inventario
        </p>    
-            <select className="docRounded" value={this.state.cuentaInvSelect} onChange={this.handleChangeInv} >
+            <select className="docRounded" value={this.state.cuentaInvSelect} onChange={()=>{console.log("this.handleChangeInv")}} >
   {this.state.CuentasInv.map((item,i)=>  <option key={i}  value={item.iDcuenta}>{item.NombreC} </option>)}
          </select>
          </div>

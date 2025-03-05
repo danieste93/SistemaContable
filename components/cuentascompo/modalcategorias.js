@@ -6,181 +6,187 @@ import postal from 'postal';
 import "../../styles/autosugest.css"
 class Contacto extends Component {
    
-state={
-  categoriasSearcher:"",
-  firstload:false,
-  editmode:false,
-  subCategoria:[],
-  ModalDeleteCat:false,
-  Catdel:"",
-  subcatCont:false,
-  Buscador:false,
-  catSelect:{
-    nombreCat:""
+  state={
+    categoriasSearcher:"",
+    firstload:false,
+    editmode:false,
+    subCategoria:[],
+    ModalDeleteCat:false,
+    Catdel:"",
+    subcatCont:false,
+    Buscador:false,
+    catSelect:{
+      nombreCat:""
+    }
   }
-}
 channel1 = null;
-catsearcher = React.createRef();
-    componentDidMount(){
-      this.channel1 = postal.channel();
-  
-      this.channel1.subscribe('desdeingreso', (data) => {
+  async  componentDidMount(){
+    document.addEventListener("keydown", this.handleKeyDown);
+    this.channel1 = postal.channel();
+    this.channel1.subscribe('desdeingreso', (data) => {
        
-  this.setState({subCategoria:[]})
-         
-       });
-      setTimeout(()=>{ 
-        this.setState({firstload:true})
-        document.getElementById('maincontcat').classList.add("entradaCat")
-      
+      this.setState({subCategoria:[]})
+             
+           });
+
+     
+      setTimeout(function(){ 
+        
+        document.getElementById('maincontcat').classList.add("entrada")
+  
        }, 50);
         
+        }
+
+        handleKeyDown = (event) => {
+          // Si el buscador ya está activo, no hace falta reactivarlo
+          if (!this.state.Buscador) {
+            this.setState({ Buscador: true });
+          }
+        };
+        componentWillUnmount() {
+          document.removeEventListener("keydown", this.handleKeyDown);
         }
          
         onEditmode=()=>{
           
         }
-        
         handleChangeSearcher=(e)=>{
          
-            this.setState({
-              [e.target.name]:e.target.value
-              })
-          
-        }   
-       
-        filtroCategorias=(e)=>{
-       
-          if(this.state.categoriasSearcher ==""){
-            return(e)
-          }else{
-            let catFind = e.filter(cat => cat.nombreCat.toLowerCase()
-            .includes(this.state.categoriasSearcher.toLowerCase()) )
-            return(catFind)
-          }
-        }
-    render () {
-
-     
-      let generadorDeCategorias =""
-      let generadorDeSubCategorias
-
-      let subCatActive  = this.state.subcatCont?"subCatActive":""
-    let cuentactive= this.state.editmode?"bordeazul":""
-    let lapizctive= this.state.editmode?"lapizctive":""
-
- if(this.state.subCategoria.length > 0){
-  generadorDeSubCategorias = this.state.subCategoria.map((subc, i)=>(
-   <div key={i} className="minisub"
-   onClick={()=>{
-       let data={
-         estado:this.state,
-         subcat:subc
-       }
-    setTimeout(()=>{        this.props.sendsubCatSelect(data)},500)
-    document.getElementById('maincontcat').classList.remove("entradaCat")
-   }}
-   
-   >
-{subc}
-  </div>))
- }
-
-
-   if(this.props.Categorias){
-    if(this.props.Categorias.length > 0){
-
-      let catFiltradas = this.props.Categorias.filter(x=> x.sistemCat == false)
-   
-      generadorDeCategorias = this.filtroCategorias(catFiltradas).map((cat,i)=>{
-
-        let getid = "butonmapper-"+i
-        return(<div   id={getid} key={i} className={`catRender ${cuentactive}`}     
-                             >
-          <Animate show={this.state.editmode}>
-          <div className="contx" >
-<i className="material-icons close " onClick={()=>{
-  
-  this.setState({ModalDeleteCat:true, Catdel:cat})
-
-}}>  close</i>
-</div>
-</Animate>
-<div className="contlist" onClick={(e)=>{
-        if(this.state.editmode == false){
-         
-          setTimeout(()=>{        this.props.sendCatSelect(cat)},300)
-          if(document.getElementById('maincontcat')){
-          document.getElementById('maincontcat').classList.remove("entradaCat")
-        }
-          
-        }         
-          else{
-            this.setState({editmode:false,
-              catSelect:{
-                nombreCat:""
-              }})
-            this.props.editCat(cat)
-          }
-        }
-        }>
+          this.setState({
+            categoriasSearcher:e.target.value
+            })
         
-            <img src={cat.urlIcono} className='imgicono'  />
-        <p className="nombrem">{cat.nombreCat}      </p>
-   
-       
-        </div>
-        {cat.subCategoria.length > 0?<div className="barr" onClick={()=>{
-            this.setState({subcatCont:true, subCategoria:cat.subCategoria, catSelect:cat})
+      }   
+      
             
-        }}> {'>'}</div>:""}
-      </div>)
-     
-    
-   
-    
-    
-    })
-    }
-      else{
-   
-        generadorDeCategorias =   <div>Aun no tienes categorias creadas</div>
-     
-              }
+      
+      filtroCategorias=(e)=>{
        
-            }
-       
-  let searcherActive = this.state.Buscador?"searcherActive":
-                  this.state.Buscador ==false && this.state.firstload?"entradaCat":""
+        if(this.state.categoriasSearcher ==""){
+          return(e)
+        }else{
+          let catFind = e.filter(cat => cat.nombreCat.toLowerCase()
+          .includes(this.state.categoriasSearcher.toLowerCase()) )
+          return(catFind)
+        }
+      }
+     
+          render () {
 
+  
+            let generadorDeCategorias =""
+            let generadorDeSubCategorias
+      
+            let subCatActive  = this.state.subcatCont?"subCatActive":""
+          let cuentactive= this.state.editmode?"bordeazul":""
+          let lapizctive= this.state.editmode?"lapizctive":""
+          if(this.state.subCategoria.length > 0){
+            generadorDeSubCategorias = this.state.subCategoria.map((subc, i)=>(
+             <div key={i} className="minisub"
+             onClick={()=>{
+                 let data={
+                   estado:this.state,
+                   subcat:subc
+                 }
+              setTimeout(()=>{        this.props.sendsubCatSelect(data)},500)
+              document.getElementById('maincontcat').classList.remove("entradaCat")
+             }}
+             
+             >
+          {subc}
+            </div>))
+           }
+          
+          
+             if(this.props.Categorias){
+              if(this.props.Categorias.length > 0){
+          
+                let catFiltradas = this.props.Categorias.filter(x=> x.sistemCat == false)
+             
+                generadorDeCategorias = this.filtroCategorias(catFiltradas).map((cat,i)=>{
+          
+                  let getid = "butonmapper-"+i
+                  return(<div   id={getid} key={i} className={`catRender ${cuentactive}`}     
+                                       >
+                    <Animate show={this.state.editmode}>
+                    <div className="contx" >
+          <i className="material-icons close " onClick={()=>{
+            
+            this.setState({ModalDeleteCat:true, Catdel:cat})
+          
+          }}>  close</i>
+          </div>
+          </Animate>
+          <div className="contlist" onClick={(e)=>{
+                  if(this.state.editmode == false){
+                   
+                    setTimeout(()=>{        this.props.sendCatSelect(cat)},300)
+                    if(document.getElementById('maincontcat')){
+                    document.getElementById('maincontcat').classList.remove("entradaCat")
+                  }
+                    
+                  }         
+                    else{
+                      this.setState({editmode:false,
+                        catSelect:{
+                          nombreCat:""
+                        }})
+                      this.props.editCat(cat)
+                    }
+                  }
+                  }>
+                  
+                      <img src={cat.urlIcono} className='imgicono'  />
+                  <p className="nombrem">{cat.nombreCat}      </p>
+             
+                 
+                  </div>
+                  {cat.subCategoria.length > 0?<div className="barr" onClick={()=>{
+                      this.setState({subcatCont:true, subCategoria:cat.subCategoria, catSelect:cat})
+                      
+                  }}> {'>'}</div>:""}
+                </div>)
+               
+              
+             
+              
+              
+              })
+              }
+                else{
+             
+                  generadorDeCategorias =   <div>Aun no tienes categorias creadas</div>
+               
+                        }
+                 
+                      }
+                 
+
+       
+  
    
         return ( 
 
          <div >
 
-<div id="maincontcat" className={ `maincontactoCat ` } >
+<div id="maincontcat" className="maincontcat" >
             <div className="contcontacto"  >
         
                 <div className="headercontact cuentasheader">
              
               <div className="tituloventa">
                 
-            <p> Categorias  </p>
+              <p> Categorias  </p>
            
         </div>
-     
-     <div className="conticonos">
+
+        <div className="conticonos">
      <i className="material-icons" onClick={this.props.Addcat}>  add</i>
      <i className={`material-icons ${lapizctive}`}  onClick={()=>{this.setState({editmode:!this.state.editmode,subCategoria:[]})}}>  edit</i>
      <i className="material-icons" onClick={()=>{
       this.setState({Buscador:!this.state.Buscador})
-      setTimeout(()=>{
-       if( this.catsearcher.current){
-        this.catsearcher.current.focus()
-       }
-       
-      },500)
- 
+   
       }}>
        search
        </i>
@@ -193,19 +199,18 @@ catsearcher = React.createRef();
     
      </div>
         </div>
-<div className="generalContCats">
-<Animate show={this.state.Buscador}>
-     <div className="buscadorCats">
+        <Animate show={this.state.Buscador}>
+     <div className="buscadorCuentas">
      <div className="react-autosuggest__container">
-    <input autofocus ref={this.catsearcher} name="categoriasSearcher" className="react-autosuggest__input" onChange={this.handleChangeSearcher} placeholder="Busca tus Categorias" /> 
+    <input autoFocus name="cuentasSearcher" className="react-autosuggest__input" onChange={this.handleChangeSearcher}
+    
+    placeholder="Busca tus Categorias" /> 
     
       </div>
      </div>
      </Animate>
-     <div className="generalContData">
-    
-<div className="contcat">
- {generadorDeCategorias}
+<div className="contcuentas">
+{generadorDeCategorias}
 </div>
 
 <div className={`subcatCont ${subCatActive}`}>
@@ -230,9 +235,6 @@ this.setState({subcatCont:false})
 </div>
 </div>
 </div>
-
-</div>
-</div>    
      
         </div>
         </div>
@@ -240,82 +242,13 @@ this.setState({subcatCont:false})
          <ModalDeleteCat catDelete={this.state.Catdel} Flecharetro={()=>{this.setState({ModalDeleteCat:false})}}/>
           </Animate>
            <style>{`
-         
-           .barr{
-            width: 20%;
-            color: white;
-       
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            border-radius: 0px 9px 9px 0px;
-            background: #87b1dd;
-           }
-          .contlist{
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 5px;
-            flex-flow: column;
-            height: 100%;
-            width: 80%;
-          }
-          .imgicono{
-            max-width: 50px;
-          }
-           .minisub{
-            text-align: center;
-            border: 1px solid black;
-            border-radius: 7px;
-            padding: 4px;
-            margin: 5px 0px;
-            cursor:pointer;
-           }
-     
-            .subcatCont {
-              width: 100%;
-              justify-content: center;
-              display: flex;
-         
-            
-              border-radius: 7px;
-             
-              overflow: scroll;
-              position: absolute;
-              top: -300%;
-              left: 0px;
-              height: 100%;
-           
-              margin-top: 62px;
-         
-              transition:1s
           
-          }
-          .contcentrador{
-            width: 100%;
+
+          .buscadorCuentas{
             display: flex;
-            flex-flow: column;
-            background: #f1f1f1;
-            max-width: 500px;
+    justify-content: center;
+    margin-bottom: 15px;
           }
-          .contSubCate{
-            margin-top:80px;
-          }
-        
-       .subCatActive{
-        top: 0px;
-        transition:0.8s
-       }
-        
-           .generalContCats{
-            display: flex;
-            justify-content: space-around;
-            flex-flow: column;
-        }
-           
-          
            .lapizctive{
             color: white;
            }
@@ -325,17 +258,15 @@ this.setState({subcatCont:false})
             border-radius: 50%;
             margin-top: 5px;
             cursor:pointer;
-        
+            font-size: 15px;
            }
-           .buscadorCats{
-            display: flex;
-    justify-content: center;
 
-          }
            .contx{
             display: flex;
-            justify-content: center;
+          
             align-items: center;
+            justify-content: flex-end;
+            margin-right: 5px;
            }
          
            .cuentasheader{
@@ -343,8 +274,6 @@ this.setState({subcatCont:false})
             background: #00f1e6;
             color: #1f0707;
             border-radius: 10px 10px 0px 0px;
-            position: fixed;
-            width: 100%;
            }
            .tipom{
             font-size: 12px;
@@ -356,17 +285,15 @@ this.setState({subcatCont:false})
             color: white;
             border-radius:  0px 0px 11px 10px;
            }
-           .contcat{
-            margin-top: 40px;
-            width: 95%;
+           .contcuentas{
             padding: 5px;
             display: flex;
-      
-            flex-wrap: wrap;
-            height: 100%;
-            justify-content: space-around;
-           
- 
+    justify-content: space-around;
+    flex-wrap: wrap;
+  height:78%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    align-items: center;
            }
 
 .nombrem{
@@ -374,8 +301,7 @@ this.setState({subcatCont:false})
     font-size: 13px;
     margin: 0px;
     width: 100%;
-    display: flex
-;
+    display: flex;
     align-items: center;
     word-break: break-word;
     justify-content: space-around;
@@ -397,18 +323,17 @@ this.setState({subcatCont:false})
   justify-content: center;
   cursor: pointer;
   min-height: 100px;
-  align-items: center;
+
 }
 .bordeazul{
- box-shadow: -3px 2px 4px #031552;
-    min-height: 35%;
+  box-shadow: -8px 7px 8px #031552;
 }
 .conticonos i{
   cursor:pointer;
 }
            .conticonos{
             display: flex;
-            width: 45%;
+            width: 60%;
             justify-content: space-around;
             align-items: center;
            }
@@ -462,66 +387,41 @@ this.setState({subcatCont:false})
            .headercontact {
 
             display:flex;
-            justify-content: space-around;
+            justify-content: space-between
 
            }
 
 
-
-      
-            .botonventa{
-            
-              margin-top: 17px;
-    border-radius: 10px;
-
-    background-color: #048b0b;
-    box-shadow: 0 3px 1px -2px rgba(0,0,0,0.2), 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12);
-    color: #fff;
-    transition: background-color 15ms linear, box-shadow 280ms cubic-bezier(0.4,0,0.2,1);
-    height: 36px;
-    line-height: 2.25rem;
-    font-family: Roboto,sans-serif;
-    font-size: 0.875rem;
-    font-weight: 500;
-    -webkit-letter-spacing: 0.06em;
-    -moz-letter-spacing: 0.06em;
-    -ms-letter-spacing: 0.06em;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    border: none;
-    width: 40%;
-             }
-       .generalContData{
-        margin-top:20px;
-        display: flex;
-    justify-content: space-around;
-
-       }
-          .option{
-            width: 44%;
-    box-shadow: 0px 3px 4px black;
-    border-radius: 13px;
-    padding-bottom: 5%;
-    padding-top: 10px;
-    padding-left: 5px;
-    padding-right: 5px;
-    height: 290px;
-    word-break: break-word;
-    cursor: pointer;
-    flex-flow: column;
-    display: flex;
-    justify-content: space-around;
-    margin: 14px 0px;
-    border-bottom:2px inset blue;
-    align-items: center;
+           .barr{
+            width: 20%;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 0px 9px 9px 0px;
+            background: #87b1dd;
+           }
+             .contlist{
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 5px;
+            flex-flow: column;
+          
+            width: 80%;
           }
-          .option img {
-    width: 100%;
-    max-width: 120px;
-}
-  
-        .maincontactoCat{
-          z-index: 1298;
+      
+          
+.imgicono{
+            max-width: 50px;
+          }
+
+
+
+        
+        .maincontcat{
+          z-index: 1300;
          width: 100vw;
          height: 50%;
          min-height: 350px;
@@ -537,14 +437,13 @@ this.setState({subcatCont:false})
          border-bottom: 3px solid black
        }
        .contcontacto{
-        margin-top:5px;
+         margin-top:5px;
         border-radius: 15px;
         width: 98%;
          background-color: white;
          height: 100%;
-         overflow: scroll;
+       
          border-bottom: 5px solid black;
-         overflow-x: hidden;
        }
        .marginador{
          margin: 0px 35px 15px 35px;
@@ -556,11 +455,20 @@ this.setState({subcatCont:false})
    
        }
    
-       .searcherActive{
-        bottom:55%
-       }  
-    
-     
+      
+       .cDc2x{
+
+
+        display: flex;
+        align-items: center;
+        flex-flow: column;
+        justify-content: center;
+        width: 15px;
+ 
+
+        cursor:pointer;
+      } 
+
    
        .tituloventa{
          display: flex;
@@ -602,21 +510,48 @@ this.setState({subcatCont:false})
             color:black;
             height: 35%;
           }
-          .entradaCat{
-            top:0%
-       
-          }
-          .catactive{
-            color: #010306;
-          transition: 0.5s;
-            display: flex;
-            justify-content: center;
-            background-color: #c9fddb;
-            min-height: 80px;
-        }
-
-           }
+          .entrada{
+            top:0%}
+          .react-autosuggest__container {
+            position: relative;
+            border-radius: 6px;
+            border: 2px solid #ffffff;
+            box-shadow: -1px 5px 9px #418fe2;
+            margin: 0px;
         
+        }
+                .minisub{
+            text-align: center;
+            border: 1px solid black;
+            border-radius: 7px;
+            padding: 4px;
+            margin: 5px 0px;
+            cursor:pointer;
+           }
+     
+            .subcatCont {
+              width: 100%;
+              justify-content: center;
+              display: flex;
+         
+            
+              border-radius: 7px;
+             
+              overflow: scroll;
+              position: absolute;
+              top: -300%;
+              left: 0px;
+              height: 100%;
+           
+              margin-top: 62px;
+         
+              transition:1s
+          
+          }
+               .subCatActive{
+        top: -15px;
+        transition:0.8s
+       }
              @media only screen and (max-width: 320px) { 
                .subtituloArt{
                 margin-top:2px;
@@ -641,10 +576,6 @@ this.setState({subcatCont:false})
       
       
        }
-       .cuentasheader{
-       
-        width: 70%;
-       }
           }
           @media only screen and (min-width: 950px) { 
            
@@ -664,14 +595,11 @@ this.setState({subcatCont:false})
     }
 }
 
-const mapStateToProps = (state, props) =>  {
- 
-
-  const usuario = state.userReducer
-
+const mapStateToProps = state=>  {
+  let regC =   state.RegContableReducer
   return {
-  
- state
+    regC,
+    state
   }
 };
 

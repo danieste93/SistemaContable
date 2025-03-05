@@ -6,6 +6,7 @@ import MuiAlert from '@material-ui/lab/Alert';
 import HelperFormapago from "../reusableComplex/helperFormapago"
 import {connect} from 'react-redux';
 import {Animate} from "react-animate-mount"
+import ModalAddIndividual from "./modal-addArtIndividual"
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { addRegs,addCompra,updateCuentas } from '../../reduxstore/actions/regcont';
 class Contacto extends Component {
@@ -21,6 +22,7 @@ state={
   idReg:"",
   Fpago:[], 
   ciudad:"",
+  ModalAddIndividual:false,
   ArtAdd:[],
   ArtAddCalc:[],
   Errorlist:[],
@@ -365,6 +367,13 @@ this.setState({ArtAddCalc:deepClone})
 
 
       } //asd
+      getDataUser=()=>{
+        if(this.props.state.userReducer != ""){
+            return (this.props.state.userReducer.update.usuario)
+        }else {
+            return {}
+        }
+    }
       getSugerencias=()=>{
         let data = this.props.Articulos?this.props.Articulos.filter(x=> x.Tipo != "Servicio" && x.Tipo != "Combo" ):""
     
@@ -461,9 +470,18 @@ return (data)
      
         </div>
 
-        <div className="newfixed">
+        <div className="contprods">
         <Autosuggestjw  sendClick={(e)=>{this.addArtToBuy(e)}} getvalue={(item)=>{console.log("")}} 
         sugerencias={this.getSugerencias()} resetData={this.resetArtData}   /> 
+     
+       <button className=" btn btn-success btnaddprod " onClick={(e)=>{this.setState({ModalAddIndividual:true})}}>
+<p> Producto</p>
+<i className="material-icons">
+add
+</i>
+
+</button>
+      
         </div>
 
 
@@ -529,7 +547,7 @@ return (data)
 <button className={` btn btn-success botonedit2 `} onClick={()=>{this.comprobadorGenCompra( TotalValorCompra, TotalPago)}}>
 <p>Comprar</p>
 <i className="material-icons">
-add
+shopping_cart
 </i>
 
 </button></Animate>
@@ -540,6 +558,14 @@ add
                     </div>
         </div>
         </div>
+              <Animate show={this.state.ModalAddIndividual}>
+                                <ModalAddIndividual
+                                
+                                  User={this.getDataUser()} 
+                                   Flecharetro={()=>{this.setState({ModalAddIndividual:false})}}    
+                                />
+        
+                            </Animate >
    
         <Snackbar open={this.state.Alert.Estado} autoHideDuration={5000} onClose={handleClose}>
         <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
@@ -553,14 +579,16 @@ add
           
            .contPrincipal{
     
-             height: 75vh;
+            
              overflow: scroll;
              overflow-x: hidden;
              padding: 0px 10px;
            }
           
-           .newfixed{
-            display:fixed;
+           .contprods{
+            display:flex;
+                justify-content: space-evenly;
+                margin-bottom:10px;
            }
          
        
@@ -626,7 +654,7 @@ add
     border-radius: 20px;
     box-shadow: -4px 5px 7px black;
     justify-content: space-around;
-    width: 200px
+    width: 150px
 
 }
 
@@ -713,8 +741,8 @@ justify-content: center;
    
         
         .maincontacto{
-          z-index: 9999;
-         width: 100vw;
+        z-index: 999;
+         width: 98.5vw;
          height: 100vh;
          background-color: rgba(0, 0, 0, 0.7);
          left: -100%;
@@ -724,18 +752,30 @@ justify-content: center;
          justify-content: center;
          align-items: center;
          transition:0.5s;
+         overflow-y: scroll;  
          
        }
        .contcontacto{
-        border-radius: 30px;
-        padding: 29px 10px;
-      
-         width: 98%;
-         background-color: white;
-      
+     border-radius: 9px;
+    
+        background-color: whitesmoke;
+        padding: 5px 10px;
+        position:absolute;
+        top:0px;
+        overflow: hidden;
+          margin-top: 10vh;
+          padding-bottom:25px
        }
       
-      
+      .btnaddprod{
+          display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 25px;
+    padding: 5px;
+    border-bottom: 1px solid black;
+    border-radius: 15px;
+    margin-top: 11px;}
        .tituloventa{
          display: flex;
          align-items: center;

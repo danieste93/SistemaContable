@@ -100,7 +100,7 @@ balance={this.props.balance}
         width: 95%;
         max-width:800px;
         background-color: whitesmoke;
-        padding: 5px 10px;
+        padding: 5px 5px;
         position:absolute;
         top:0px;
         overflow: hidden;

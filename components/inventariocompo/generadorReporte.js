@@ -45,8 +45,9 @@ const generarReporteVentasPDF = (ventas, logoUrl, data) => {
         titulo = `${data.nombreComercial} - Mensual: ${nombreMes} ${fecha.getFullYear()}`
         doc.text(titulo, doc.internal.pageSize.width / 2, y, null, null, 'center');
     } else if (data.periodo) {
+        console.log(data)
         // Si es periodo, agrega el rango de fechas
-        const fechaInicio = new Date(data.tiempoperiodoini);
+        const fechaInicio = new Date(data.tiempo);
         const fechaFin = new Date(data.tiempoperiodofin);
         titulo = `${data.nombreComercial} - Periodo: ${fechaInicio.toLocaleDateString('es-ES')} a ${fechaFin.toLocaleDateString('es-ES')}`
         doc.text(titulo, doc.internal.pageSize.width / 2, y, null, null, 'center');

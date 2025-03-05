@@ -53,8 +53,12 @@ function escapeRegexCharacters(str) {
 
       return (
         <span key={suggestion._id} className="customsuggest" onClick={()=>{this.props.sendClick(suggestion)
-                            this.setState({ value: '',
-                            suggestions: []})
+                           
+          setTimeout(()=>{
+            this.setState({ value: '',
+              suggestions: []})
+          },5)
+
         }}>{suggestion.Titulo}</span>
       );
     }
@@ -80,7 +84,7 @@ function escapeRegexCharacters(str) {
     };
   
     render() {
-     
+     console.log(this.state)
       const { value, suggestions } = this.state;
       const inputProps = {
         placeholder: "Busca Productos",

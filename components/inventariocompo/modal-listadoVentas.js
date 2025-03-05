@@ -923,7 +923,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
                 />
               <div className="tituloventa">
                 
-            <p> Listado Ventas</p>
+       
             <div>
           <DropdownButtonVentas arrData={filtrados} 
           img={this.props.state.userReducer.update.usuario.user.Factura.logoEmp}
@@ -939,7 +939,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
            }}
           />
       </div>
-         
+      <p> Listado Ventas</p>
          
         </div>
      

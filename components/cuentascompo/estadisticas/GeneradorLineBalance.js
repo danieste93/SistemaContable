@@ -25,6 +25,7 @@ console.log(this.props)
           [codigoMes]: {
             labels: getData.labels,
             datasets: getData.datasets,
+            balanceini: getData.BalanceInicial
           },
         },
       }));
@@ -36,6 +37,7 @@ console.log(this.props)
 
     let labels = [];
     let datasets = [];
+    let BalanceInicial = 0
     let RegsPosesion = [];
 
     const regsIngGas = data.filter((x) => x.Accion !== "Trans");
@@ -103,7 +105,7 @@ console.log(this.props)
       else{
         const primerDiaMesPosterior = new Date(mesSeleccionado.getFullYear(), mesSeleccionado.getMonth() + 1, 1);
       let codigoMes = `${primerDiaMesPosterior.getMonth()}` + `${primerDiaMesPosterior.getFullYear()}`
-      let balancePrimerMes = this.state.historyData[codigoMes].datasets[0];
+      let balancePrimerMes = this.state.historyData[codigoMes].balanceini;
    
     
       balanceActual = parseFloat(balancePrimerMes)
@@ -123,11 +125,13 @@ const reversedArray = Object.entries(balancePorDia)
  let balanceAcum = balanceActual
  let DataPoints = []
 
+let limite = diasOrdenados.length
+
       diasOrdenados.forEach((dia,i) => {
   
      console.log(i)
-let valorArestar = reversedArray[parseFloat(i)];
-if(mesSeleccionado.getMonth()== new Date().getMonth() && i == 0){ 
+let valorArestar = reversedArray[parseFloat(i-1)];
+if(  i == 0){ 
   
 }else
 {
@@ -136,6 +140,11 @@ if(mesSeleccionado.getMonth()== new Date().getMonth() && i == 0){
 
 console.log(balanceAcum)
    DataPoints.push(balanceAcum.toFixed(2))
+   if(i==limite-1){
+    let valorArestarfinal = reversedArray[parseFloat(i)];
+    
+    BalanceInicial =  balanceAcum -= valorArestarfinal
+   }
   
       });
       console.log(DataPoints)
@@ -144,7 +153,7 @@ console.log(balanceAcum)
       datasets = DataPoints.reverse();
     }
 
-    return { labels, datasets };
+    return { labels, datasets, BalanceInicial };
   }
 
   render() {
@@ -190,9 +199,9 @@ console.log(balanceAcum)
                       align: 'center', // Centrado de leyendas
                       labels: {
                         boxWidth: 15,
-                        padding: 10,
+                        padding: 1,
                         font: {
-                          size: 12,
+                          size: 9,
                         },
                       },
                     },
@@ -216,8 +225,11 @@ console.log(balanceAcum)
                     },
                     y: {
                       title: {
-                        display: true,
+                        display: false,
                         text: 'Importe total',
+                        font: {
+                          size: 13,
+                        },
                       },
                     },
                   },
@@ -237,6 +249,8 @@ console.log(balanceAcum)
               height: 100%;
               max-width: 1200px;
               min-height: 500px;
+                  margin-top: 18px;
+    padding-bottom: 11px;
             }
           `}
         </style>

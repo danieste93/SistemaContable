@@ -133,7 +133,7 @@ class Contacto extends Component {
         allData.Firmdata = sendFirm
         allData.Factura = sendfact
         
-        fetch("/public/edditseller", {
+        fetch("/public/editseller", {
           method: 'POST', // or 'PUT'
           body: JSON.stringify(allData), // data can be `string` or {object}!
           headers:{

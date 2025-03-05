@@ -18,7 +18,7 @@ ModalDeleteC:false,
 }
 channel1 = null;
   async  componentDidMount(){
-   
+    document.addEventListener("keydown", this.handleKeyDown);
       if(!this.props.state.RegContableReducer.Tipos){
   
         let data = await fetchData(this.props.state.userReducer,
@@ -41,6 +41,16 @@ channel1 = null;
   
        }, 50);
         
+        }
+
+        handleKeyDown = (event) => {
+          // Si el buscador ya está activo, no hace falta reactivarlo
+          if (!this.state.Buscador) {
+            this.setState({ Buscador: true });
+          }
+        };
+        componentWillUnmount() {
+          document.removeEventListener("keydown", this.handleKeyDown);
         }
          
         onEditmode=()=>{
@@ -290,7 +300,7 @@ let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario"
       </div>
      </div>
      </Animate>
-<div className="contcuentas">
+<div className="contcuentasCx">
  {generadorDeCuentas}
 </div>
      
@@ -299,7 +309,7 @@ let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario"
         <Animate show={this.state.ModalDeleteC}>
          <ModalDeleteC CuentaDelete={this.state.CuentaPorDel} Flecharetro={()=>{this.setState({ModalDeleteC:false})}}/>
           </Animate>
-           <style>{`
+           <style >{`
           
 
           .buscadorCuentas{
@@ -343,12 +353,12 @@ let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario"
             color: white;
             border-radius:  0px 0px 11px 10px;
            }
-           .contcuentas{
+           .contcuentasCx{
             padding: 5px;
             display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-  height:78%;
+    height: 78%;
     overflow-y: scroll;
     overflow-x: hidden;
     align-items: center;
@@ -609,7 +619,7 @@ let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario"
             border: 2px solid #ffffff;
             box-shadow: -1px 5px 9px #418fe2;
             margin: 0px;
-            width: 80%;
+        
         }
         
              @media only screen and (max-width: 320px) { 

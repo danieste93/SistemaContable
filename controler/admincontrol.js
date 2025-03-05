@@ -3206,7 +3206,7 @@ function  signatureCloudi (req, res){
 
 
 async function  editSeller (req, res){
-   
+   console.log(req.body)
   let MainConn = await mongoose.connection.useDb("datashop"); 
   let UserModelSass = await MainConn.model('usuarios', UserSchema);
   let adminuser = await UserModelSass.findById(req.body.idUser)
@@ -3242,13 +3242,14 @@ updateSeller={
   Factura,
   Firmdata,
 }
-if(req.body.newpass !="" || req.body.newpass!=" "){
-  let newpass =   bcrypt.hashSync(req.body.newpass.trim(), 10);
-  console.log(newpass)
+if(req.body.newpass.trim() != ''){
+  console.log("en newpass")
+  let updatedPass =   bcrypt.hashSync(req.body.newpass.trim(), 10);
+  console.log(updatedPass)
   updateSeller={
     Usuario:req.body.sellerToEddit.Usuario,
     Email:req.body.sellerToEddit.Correo,
-    Password:newpass,
+    Password:updatedPass,
     Tipo:req.body.sellerToEddit.Tipo,
     Factura,
     Firmdata,

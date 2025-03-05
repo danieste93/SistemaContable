@@ -107,7 +107,7 @@ router.post('/editartcompra', AdminControl.editArtCompra);
 
 router.post('/uploadnewseller',Authentication, AdminControl.uploadNewSeller);
 router.post('/deleteseller',Authentication, AdminControl.deleteSeller);
-router.post('/edditseller',Authentication, AdminControl.editSeller);
+router.post('/editseller',Authentication, AdminControl.editSeller);
 router.get('/secreturl235/inventarioDelete', AdminControl.inventarioDelete);
 
 

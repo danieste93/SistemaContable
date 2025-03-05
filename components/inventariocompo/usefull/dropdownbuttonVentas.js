@@ -14,6 +14,7 @@ const downloadSellReport = (ventas, state, img) => {
 };
 
 const DropdownButton = ({ arrData, state, img }) => {
+
   const [open, setOpen] = useState(false);
   const [subMenuOpen, setSubMenuOpen] = useState(false);
   const [facturaSubMenuOpen, setFacturaSubMenuOpen] = useState(false);
@@ -28,10 +29,11 @@ const DropdownButton = ({ arrData, state, img }) => {
 
   const handleClickPDF = (event) => {
     if (arrData.length === 0) {
+
       event.stopPropagation();
       setAlertOpen(true);
     } else {
-      downloadSellReport(arrData, state, img);
+      downloadSellReport(arrData.filter(x=>x.TipoVenta == "Contado"), state, img);
     }
   };
 

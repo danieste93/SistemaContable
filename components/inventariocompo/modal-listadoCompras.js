@@ -448,11 +448,7 @@ let filtrados=[]
                 <img src="/static/flecharetro.png" alt="" className="flecharetro" 
                 onClick={  this.Onsalida       }
                 />
-              <div className="tituloventa">
-                
-            <p> Listado Compras</p>
-      
-        </div>
+          
         <div>
           <DropdownButtonCompras arrData={filtrados} 
           img={this.props.state.userReducer.update.usuario.user.Factura.logoEmp}
@@ -468,7 +464,11 @@ let filtrados=[]
            }}
           />
       </div>
-     
+      <div className="tituloventa">
+                
+                <p> Listado Compras</p>
+          
+            </div>
         </div>
 
         <div className="filtros">
