@@ -613,7 +613,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
          
 let renderArts = [] 
             let arts = this.props.state.RegContableReducer.Articulos
-            console.log(arts)
+         
             if(this.state.searcherIn ==""){
                 renderArts=  arts 
             }else{

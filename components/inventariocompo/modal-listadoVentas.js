@@ -11,17 +11,17 @@ import ModalDeleteVentas from './modal-delete-ventas';
 import {updateVenta,getVentas} from "../../reduxstore/actions/regcont"
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ViewVenta from "../modal-viewventas"
-import ReactToPrint from "react-to-print";
-import Button from '@material-ui/core/Button';
+
 import ViewNotas from "./modal-genNotas"
 import ViewNotasCred from "../modal-viewvNotaCred"
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
+
 import ViewCreds from "../modal-viewCreds"
 import "./mediaprint.css"
 import DropdownButtonVentas from './usefull/dropdownbuttonVentas';
 import DoubleScrollbar from "react-double-scrollbar";
 import Estadisticas from './modal-estadisticasArticulos';
+import UploadFact from "./modal-UploadFact"
+
 
 class Listvent extends Component {
   state={
@@ -36,6 +36,8 @@ class Listvent extends Component {
     diario:true,
     mensual:false,
     periodo:false,
+    ModaluploadFact:false,
+    dataUpload:{},
     VentaSelected:{},
     dataNota:{},
     deleteVenta:false,
@@ -688,6 +690,11 @@ if(!this.props.state.RegContableReducer.Ventas){
         }
       
       }
+
+      uploadToFact= ()=> {
+
+        
+       }
       getMonthName = ()=> {
         var monthNames = [ "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" ];
@@ -897,7 +904,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
 
           user={this.props.state.userReducer.update.usuario.user.Tipo}
            deleteVentaList={(datos)=>{this.deleteVentaList(datos)}}
-        
+           uploadToFact={(datos)=>{this.setState({ModaluploadFact:true, dataUpload:datos})}}
            resendProcess={(datos)=>{this.resendProcess(datos)}} 
            />)
       })}
@@ -1343,6 +1350,9 @@ search
   
   userData={this.props.state.userReducer.update} datos={this.state.viewerdataNota} Flecharetro={()=>{this.setState({viewerNota:false})}} />
 </Animate>
+<Animate show={this.state.ModaluploadFact}>
+        <UploadFact dataUpload={this.state.dataUpload} Flecharetro={()=>{this.setState({ModaluploadFact:false, dataUpload:{}});this.props.updateArt()}  }/>
+        </Animate>
 
            <style jsx>{`
          .conFiltroNombres{R

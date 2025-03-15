@@ -119,7 +119,8 @@ console.log(this.state)
          
 
        try {
-        const bufferfile = await SecureFirm(this.props.state.userReducer.update.usuario.user.Firmdata)
+        
+        const  bufferfile = await SecureFirm(this.props.state.userReducer)
         console.log('Bufferfile obtenido:', bufferfile);
         this.genfact(1.15, 1, 0.15,bufferfile )
 

@@ -61,6 +61,9 @@ router.get('/getdataaaa', cuentasController.profesorAdd);
 router.post('/agregarNotaCredito',Authentication, cuentasController.agregarNotaCredito);
 router.post('/generarfact', cuentasController.generarFact);
 
+router.post('/uploadfact',Authentication, cuentasController.uploadFact);
+
+
 router.post('/generarventa', cuentasController.generarVenta);
 router.post('/generarcredito', cuentasController.generarCredito);
 router.post('/findcuenta', cuentasController.findCuenta);

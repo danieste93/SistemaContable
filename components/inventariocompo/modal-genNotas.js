@@ -262,7 +262,7 @@ let data = await fetchData(this.props.state.userReducer,
        
         let propina ="0.00"
         let importeTotal= SuperTotal.toFixed(2)
-        let ambiente = "2"
+        let ambiente = "1"
 
         let s1 = this.props.state.userReducer.update.usuario.user.Factura.codigoEstab
         let s2 = this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision
@@ -368,7 +368,7 @@ let data = await fetchData(this.props.state.userReducer,
  if(this.props.state.userReducer.update.usuario.user.Factura.validateFact && this.props.state.userReducer.update.usuario.user.Firmdata.valiteFirma){                
    let bufferfile = ""                    
     try {
-      bufferfile = await SecureFirm(this.props.state.userReducer.update.usuario.user.Firmdata)
+      bufferfile = await SecureFirm(this.props.state.userReducer)
         console.log('Bufferfile obtenido:', bufferfile);
     
       } catch (error) {

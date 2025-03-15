@@ -22,23 +22,22 @@ import ModalFormapago from "../components/reusableComplex/modal-addFormaPago"
 import ModalEditFormapago from "../components/reusableComplex/modal-editFormaPago"
 import ModalCaducado from "./puntoventacompo/modal-caducado"
 import ModalCaducadoCombo from "./puntoventacompo/modal-caducadoCombo"
-import SignerJS from "./snippets/signer"
 import BarcodeReader from 'react-barcode-reader'
 import ModalEditPrecioCompraServ from "./puntoventacompo/modal-editPrecioCompraServ"
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import Forge  from 'node-forge';
-import factGenerator from "../public/static/FactTemplate"
+
 import cotiGenetor from "../public/static/cotiTemplate"
 import notaGenetor from "../public/static/NotaTemplate"
 import Head from 'next/head';
 import Resultados from "./puntoventacompo/modal-cuentasVend"
-import CryptoJS from "crypto-js";
- 
+
+import GeneradorFactura  from "./snippets/GeneradorFactura"
+import SecureFirm from './snippets/getSecureFirm'; 
  class accessPuntoVenta extends Component {
      state={
-       
-        idCoti:"",    
+        idCoti:"",     
         Resultados:false,
         html:"",
         disableDoc:false,
@@ -49,10 +48,11 @@ import CryptoJS from "crypto-js";
         modalEditServ:false,
         cotiToClient:false,
           doctype:"Factura",
-         UserSelect:false,
+          Comprador:{
+            UserSelect:false,
                     id:"",
                     usuario:"Consumidor Final",
-                    readOnly:true,
+                  
                     correo:"xxxxxxxxxx",
                     telefono:"",
                     ciudad:"",
@@ -60,9 +60,11 @@ import CryptoJS from "crypto-js";
                     cedula:"999999999",
                     idcuenta:"",
                      ClientID:"Cedula",
+         
+          },
                     edditButton:true,
                     Alert:{Estado:false},
-
+                    readOnly:true,
                     perPage: 5,
                     currentPage: 1,
                     pagesToShow: 5,
@@ -93,7 +95,7 @@ import CryptoJS from "crypto-js";
                     ventasErr:[],
                     ventasErrCombo:[],
                     secuencialGen:0,
-
+                    secuencialBase:0,
                     userDisplay:false,
                     adduser:false,
      }
@@ -128,7 +130,7 @@ this.startPuntoVentaData()
          
        
      }
-
+  
      
      handleKeyDown = (event) => {
      
@@ -206,22 +208,7 @@ this.startPuntoVentaData()
     }
  
 
-    getSignature=(url, key, name)=>{
-        let sha1_base64=(txt)=> {
-          let md = Forge.md.sha1.create();
-          md.update(txt,"utf8");
-          return Buffer.from(md.digest().toHex(), 'hex').toString('base64');
-          }
-      let stringdata = name +""+key 
-      let base64 = sha1_base64(stringdata)
-    
-      let signature = `s--${base64.slice(0, 8)}--` 
-      let chanceUrl = url.replace("x-x-x-x",signature)
-      let secureUrl = chanceUrl.replace("y-y-y-y",process.env.REACT_CLOUDY_CLOUDNAME)
 
-      return secureUrl
-
-      }
       comprobadorCoti=(IvaEC,valSinIva)=>{
         if(this.state.loading == false){
             this.setState({loading:true})
@@ -303,7 +290,7 @@ this.startPuntoVentaData()
    
     }
 
-    comprobadorVenta=(IvaEC,valSinIva)=>{
+    comprobadorVenta=async(IvaEC,valSinIva)=>{
         if(this.state.adduser == false){
         if(this.state.loading == false){
             this.setState({loading:true})
@@ -362,81 +349,22 @@ this.startPuntoVentaData()
                                 if (this.state.doctype =="Factura"){
                                   
                                     if(this.props.state.userReducer.update.usuario.user.Factura.validateFact && this.props.state.userReducer.update.usuario.user.Firmdata.valiteFirma){                
-                               
-                                        const baseData = localStorage.getItem("base64data")
-                               
-                                        if(baseData == null){
-                                        let urlf = this.props.state.userReducer.update.usuario.user.Firmdata.url
-                                    let GeneratedURL = this.getSignature(urlf, 
-                                    process.env.REACT_CLOUDY_SECRET, 
-                                    this.props.state.userReducer.update.usuario.user.Firmdata.publicId)
-                                 
-                                    fetch(GeneratedURL, {
-                              method: 'GET',
-                              headers: {
-                                'Content-Type': "application/x-pkcs12",
-                              },
-                            })
-                            .then((response) => response.blob())
-                            .then((blob) => {
-                              // Create blob link to download
-                            
-                              let readerSave = new FileReader();
-                              readerSave.readAsDataURL(blob); 
-                              readerSave.onloadend = ()=> {
-                                let base64data = readerSave.result;                
-                            
-                                const dataEncripted = CryptoJS.AES.encrypt(
-                                    JSON.stringify(base64data),
-                                    process.env.REACT_CLOUDY_SECRET
-                                  ).toString();
+                                        let bufferfile = ""                    
+                                        try {
+                                          bufferfile = await SecureFirm(this.props.state.userReducer )
+                                            console.log('Bufferfile obtenido:', bufferfile);
+                                        
+                                          } catch (error) {
+                                            console.error('Error al obtener bufferfile:', error);
+                                            alert("Error al firmar")
+                                            alert("Error al firmar",error)
+                                          }   
 
-                               
-                                localStorage.setItem("base64data", dataEncripted)
-
-                                }
-                                let reader = new FileReader();
-                                reader.readAsArrayBuffer(blob)
-                                reader.addEventListener("loadend", (event) => {
-                                    let bufferfile = event.target.result
-      
-                                    
-                                 this.genfact(SuperTotal,(SuperTotal - IvaEC), IvaEC,bufferfile,TotalDescuento )
+                                            
+                                     this.genfact(SuperTotal,(SuperTotal - IvaEC), IvaEC,bufferfile,TotalDescuento )
                                
                               
-                              });
-                          
-                            });}else{
-
-                                let base64Decript = this.decryptData(baseData)
-
-                           
-                                fetch(base64Decript, {
-                                    method: 'GET',
-                                    headers: {
-                                      'Content-Type': "application/x-pkcs12",
-                                    },
-                                  })
-                                  .then((response) => response.blob())
-                                  .then((blob) => {
-                                    // Create blob link to download
-                        
-                                      let reader = new FileReader();
-                                      reader.readAsArrayBuffer(blob)
-                                      reader.addEventListener("loadend", (event) => {
-                                          let bufferfile = event.target.result
-            
-                                          
-                                       this.genfact(SuperTotal,(SuperTotal - IvaEC), IvaEC,bufferfile,TotalDescuento )
-                                     
-                                    
-                                    });
-                                
-                                  });
-
-
-                            }
-                                    
+                                 
                                     }else{
                                         let add = {
                                             Estado:true,
@@ -464,13 +392,13 @@ this.startPuntoVentaData()
                                         
                                            SuperTotal,                                           
                                            TotalDescuento,
-                                           ciudadComprador:this.state.UserSelect?this.state.ciudad:'',
+                                           ciudadComprador:this.state.Comprador.UserSelect?this.state.Comprador.ciudad:'',
                                            fechaEmision,
                                            nombreComercial:this.props.state.userReducer.update.usuario.user.Factura.nombreComercial,
                                            dirEstablecimiento:this.props.state.userReducer.update.usuario.user.Factura.dirEstab,
                                          
                                            Doctype: this.state.doctype,
-                                            UserId: this.state.id,
+                                            UserId: this.state.Comprador.id,
                                             razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
                                             ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
                                             estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
@@ -479,11 +407,11 @@ this.startPuntoVentaData()
                                             obligadoContabilidad :this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO",
                                             rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?true:false,
                                             populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
-                                            razonSocialComprador:this.state.UserSelect?this.state.usuario:'CONSUMIDOR FINAL',
-                                            correoComprador:this.state.UserSelect?this.state.correo:'',
-                                            identificacionComprador:this.state.UserSelect?this.state.cedula:'9999999999999',
-                                            direccionComprador:this.state.UserSelect?this.state.direccion:'',
-                                            ciudadComprador:this.state.UserSelect?this.state.ciudad:'',
+                                            razonSocialComprador:this.state.Comprador.UserSelect?this.state.Comprador.usuario:'CONSUMIDOR FINAL',
+                                            correoComprador:this.state.Comprador.UserSelect?this.state.Comprador.correo:'',
+                                            identificacionComprador:this.state.Comprador.UserSelect?this.state.Comprador.cedula:'9999999999999',
+                                            direccionComprador:this.state.Comprador.UserSelect?this.state.Comprador.direccion:'',
+                                            ciudadComprador:this.state.Comprador.UserSelect?this.state.Comprador.ciudad:'',
                                             ArticulosVendidos:this.state.ArtVent,
                                             LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
                                             
@@ -509,13 +437,13 @@ this.startPuntoVentaData()
                                                         IvaEC,
                                                           baseImponible:valSinIva,
                                                           Doctype: this.state.doctype,
-                                                           UserId: this.state.id,
-                                                           UserName:this.state.usuario,
-                                                           Correo: this.state.correo,
-                                                           Telefono: this.state.telefono,
-                                                           Direccion: this.state.direccion,
-                                                            Cedula:this.state.cedula,
-                                                            Ciudad:this.state.ciudad,
+                                                           UserId: this.state.Comprador.id,
+                                                           UserName:this.state.Comprador.usuario,
+                                                           Correo: this.state.Comprador.correo,
+                                                           Telefono: this.state.Comprador.telefono,
+                                                           Direccion: this.state.Comprador.direccion,
+                                                            Cedula:this.state.Comprador.cedula,
+                                                            Ciudad:this.state.Comprador.ciudad,
                                                             ArticulosVendidos:this.state.ArtVent,
                                                             FormasPago:this.state.Fpago,
                                                             idVenta:this.state.idVenta,
@@ -557,31 +485,42 @@ this.startPuntoVentaData()
                                             this.props.dispatch(addRegs(response.arrRegsSend));
                                             this.props.dispatch(updateCuentas(response.Cuentas));
                                             this.props.dispatch(updateArts(response.Articulos));
-                                            let cleanData = {
-                                                loading:false,
-                                                UserSelect:false,
-                                                userDisplay:false,
-                                                id:"",
-                                                usuario:"",
-                                                readOnly:true,
-                                                correo:"",
-                                                telefono:"",
-                                                ciudad:"",
-                                                direccion:"",
-                                                cedula:"",
-                                                disableDoc:false,
-                                                SelectFormaPago:[],
-                    
-                                                ArtVent:[],
-                                                tipopago:"Contado",
-                                                Fpago:[  ],
-                                                Fcredito:[],
-                                                descuentoPer:0,
-                                                descuentoVal:0,
-                                                arrPrecios:[],
-                                               
-                    
-                                            }
+                                            let cleanData = { 
+
+
+                       
+                                                idReg:response.updatedCounter.ContRegs,
+                                                idVenta:response.updatedCounter.ContVentas,
+                                                secuencialGen:response.updatedCounter.ContSecuencial,
+                                                secuencialBase:response.updatedCounter.ContSecuencial,
+                                                idCoti:response.updatedCounter.ContCotizacion,
+                           
+                                                 loading:false,
+                                                 
+                                                 userDisplay:false,
+                                                 Comprador:{
+                                                    UserSelect:false,
+                                                    id:"",
+                                                    usuario:"",
+                                                    correo:"",
+                                                    telefono:"",
+                                                    ciudad:"",
+                                                    direccion:"",
+                                                    cedula:"",
+                                                 },
+                                                 readOnly:true,
+                                                 disableDoc:false,
+                                                 SelectFormaPago:[],
+                                                 Fcredito:[],
+                                                 ArtVent:[],
+                                                 tipopago:"Contado",
+                                                 Fpago:[  ],
+                                                 descuentoPer:0,
+                                                 descuentoVal:0,
+                                                 arrPrecios:[],
+                                                
+                     
+                                             }
                                             this.setState(cleanData)
 
                                             this.saveToLocalStorage(cleanData)
@@ -629,7 +568,7 @@ this.startPuntoVentaData()
                             this.setState({Alert: add,loading:false})  
                         }
         
-                       else if((SuperTotal - this.state.creditoCantidadIni)<=  this.state.creditLimit ){
+                       else if((SuperTotal - this.state.creditoCantidadIni)<=  this.state.Comprador.creditLimit ){
                         if(this.state.impresion){
                         
                             this.printRef.current.handleClick();
@@ -647,13 +586,13 @@ this.startPuntoVentaData()
 
                                SuperTotal,                                           
                                TotalDescuento,
-                               ciudadComprador:this.state.UserSelect?this.state.ciudad:'',
+                               ciudadComprador:this.state.Comprador.UserSelect?this.state.Comprador.ciudad:'',
                                fechaEmision,
                                nombreComercial:this.props.state.userReducer.update.usuario.user.Factura.nombreComercial,
                                dirEstablecimiento:this.props.state.userReducer.update.usuario.user.Factura.dirEstab,
                              
                                Doctype: this.state.doctype,
-                                UserId: this.state.id,
+                                UserId: this.state.Comprador.id,
                                 razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
                                 ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
                                 estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
@@ -663,10 +602,10 @@ this.startPuntoVentaData()
                                 rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?true:false,
                                 populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
                          
-                                razonSocialComprador:this.state.UserSelect?this.state.usuario:'CONSUMIDOR FINAL',
-                                correoComprador:this.state.UserSelect?this.state.correo:'',
-                                identificacionComprador:this.state.UserSelect?this.state.cedula:'9999999999999',
-                                direccionComprador:this.state.UserSelect?this.state.direccion:'',
+                                razonSocialComprador:this.state.Comprador.UserSelect?this.state.Comprador.usuario:'CONSUMIDOR FINAL',
+                                correoComprador:this.state.Comprador.UserSelect?this.state.Comprador.correo:'',
+                                identificacionComprador:this.state.Comprador.UserSelect?this.state.Comprador.cedula:'9999999999999',
+                                direccionComprador:this.state.Comprador.UserSelect?this.state.Comprador.direccion:'',
                                 ArticulosVendidos:this.state.ArtVent,
                                 LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
                                 
@@ -683,14 +622,14 @@ this.startPuntoVentaData()
                             SuperTotal,
                              TotalDescuento: TotalDescuento,
                             Doctype: this.state.doctype,
-                            UserIdCuenta:this.state.idcuenta,
-                             UserId: this.state.id,
-                             UserName:this.state.usuario,
-                             Correo: this.state.correo,
-                             Telefono: this.state.telefono,
-                             Direccion: this.state.direccion,
-                             Cedula:this.state.cedula,
-                              Ciudad:this.state.ciudad,
+                            UserIdCuenta:this.state.Comprador.idcuenta,
+                             UserId: this.state.Comprador.id,
+                             UserName:this.state.Comprador.usuario,
+                             Correo: this.state.Comprador.correo,
+                             Telefono: this.state.Comprador.telefono,
+                             Direccion: this.state.Comprador.direccion,
+                             Cedula:this.state.Comprador.cedula,
+                              Ciudad:this.state.Comprador.ciudad,
                               ArticulosVendidos:this.state.ArtVent,
                               idVenta:this.state.idVenta,
                               idRegistro:this.state.idReg,
@@ -730,16 +669,19 @@ this.startPuntoVentaData()
                                 }
                                 let cleanData = {Alert: add,
                                     loading:false,
-                                    UserSelect:false,
+                                 
                                     userDisplay:false,
-                                    id:"",
-                                    usuario:"",
-                                    readOnly:true,
-                                    correo:"",
-                                    telefono:"",
-                                    ciudad:"",
-                                    direccion:"",
-                                    cedula:"",
+                                    Comprador:{
+                                        UserSelect:false,
+                                        id:"",
+                                        usuario:"", 
+                                        correo:"",
+                                        telefono:"",
+                                        ciudad:"",
+                                        direccion:"",
+                                        cedula:"",
+                                     }, 
+                                     readOnly:true,
                                     loading:false,
                                     SelectFormaPago:[],                
                                     ArtVent:[],
@@ -867,6 +809,7 @@ this.startPuntoVentaData()
                             idReg:response.contadoresHabiles[0].ContRegs,
                             idVenta:response.contadoresHabiles[0].ContVentas,
                             secuencialGen:response.contadoresHabiles[0].ContSecuencial,
+                            secuencialBase:response.contadoresHabiles[0].ContSecuencial,
                             idCoti:response.contadoresHabiles[0].ContCotizacion
                         })
                       
@@ -880,9 +823,9 @@ this.startPuntoVentaData()
 
 handleRadio=(e)=>{
     if(e.target.value=="Credito"){
-        if(this.state.UserSelect){
+        if(this.state.Comprador.UserSelect){
        this.setState({doctype: "Nota de venta",disableDoc:true,tipopago:"Credito"})
-            if(this.state.idcuenta == undefined || this.state.idcuenta == ""|| this.state.idcuenta == null  ){
+            if(this.state.Comprador.idcuenta == undefined || this.state.Comprador.idcuenta == ""|| this.state.Comprador.idcuenta == null  ){
                
                 let datos = {
                     Permisos: ["administrador","vendedor","tesorero"],
@@ -891,7 +834,7 @@ handleRadio=(e)=>{
                 checkedP:false,
                 visibility:true,
                 Tipo:"Cuentas por Cobrar",
-                NombreC:this.state.usuario,
+                NombreC:this.state.Comprador.usuario,
                 Dinero:0,
                 DineroActual:0,
                  Fpago:"Efectivo",
@@ -929,7 +872,7 @@ handleRadio=(e)=>{
                         
                         })
                         let datosUP = {
-                            Id:this.state.id,
+                            Id:this.state.Comprador.id,
                             idcuenta:response.Cuenta._id,
                             Usuario:{DBname:this.props.state.userReducer.update.usuario.user.DBname}
             
@@ -964,7 +907,7 @@ handleRadio=(e)=>{
              
                 var data2 = {
               
-                    idcuenta:this.state.idcuenta,
+                    idcuenta:this.state.Comprador.idcuenta,
                     Usuario:{DBname:this.props.state.userReducer.update.usuario.user.DBname}
                                              }
         var lol2 = JSON.stringify(data2)
@@ -1007,11 +950,23 @@ handleRadio=(e)=>{
 }
 
 handleChangeSecuencial=(e)=>{
+    if(e.target.value >= this.state.secuencialBase){
 
+    
     this.setState({
     [e.target.name]:parseInt(e.target.value)
-    })
+    })}
+    else{
+
+        let add = {
+            Estado:true,
+            Tipo:"error",
+            Mensaje:`No se puede elegir un secuencial menor`
+        }
+        this.setState({Alert: add, }) 
+
     }
+    } 
 handleChangeGeneral=(e)=>{
 
     this.setState({
@@ -1044,11 +999,9 @@ handleChangeGeneral=(e)=>{
         this.saveToLocalStorage({Fpago:newstate})
     }
     setUserData=(e)=>{
-     
-        this.setState({
-            userDisplay:true,
+     let data ={
+        Comprador:{
             id:e._id,
-            adduser:false,
             UserSelect:true,
             usuario:e.Usuario,
             correo:e.Email,
@@ -1057,64 +1010,39 @@ handleChangeGeneral=(e)=>{
             direccion:e.Direccion,
             cedula:e.Cedula,
             idcuenta:e.IDcuenta,
-            tipopago:"Contado",
             creditLimit:0,
             ClientID:e.TipoID,
-            readOnly:true
-        })
-        this.saveToLocalStorage({
-            userDisplay:true,
-            id:e._id,
-            adduser:false,
-            UserSelect:true,
-            usuario:e.Usuario,
-            correo:e.Email,
-            telefono:e.Telefono,
-            ciudad:e.Ciudad,
-            direccion:e.Direccion,
-            cedula:e.Cedula,
-            idcuenta:e.IDcuenta,
-            tipopago:"Contado",
-            creditLimit:0,
-            ClientID:e.TipoID,
-            readOnly:true
-        })
+
+        },
+        adduser:false,
+        userDisplay:true,     
+        tipopago:"Contado",
+        readOnly:true
+    }
+        this.setState(data)
+        this.saveToLocalStorage(data)
     }
     resetUserData=(e)=>{
     
-        this.setState({
-            userDisplay:false,
-            readOnly:true,
-            userEditMode:false,
-            UserSelect:false,
-            id:"",
-            usuario:"",
-            correo:"",
-            telefono:"",
-            ciudad:"",
-            direccion:"",
-            cedula:"",
-            tipopago:"Contado",
-            creditLimit:0,
-           
-        })
+    let data = {
+        userDisplay:false,
+        readOnly:true,
+        userEditMode:false,
+        UserSelect:false,
+        id:"",
+        usuario:"",
+        correo:"",
+        telefono:"",
+        ciudad:"",
+        direccion:"",
+        cedula:"",
+        tipopago:"Contado",
+        creditLimit:0,
+       
+    }
+        this.setState(data)
         
-        this.saveToLocalStorage({
-            userDisplay:false,
-            readOnly:true,
-            userEditMode:false,
-            UserSelect:false,
-            id:"",
-            usuario:"",
-            correo:"",
-            telefono:"",
-            ciudad:"",
-            direccion:"",
-            cedula:"",
-            tipopago:"Contado",
-            creditLimit:0,
-           
-        })
+        this.saveToLocalStorage(data)
     }
 
     
@@ -1167,16 +1095,16 @@ this.setState({impresion:!this.state.impresion})
  
         
   
-   var datar = {Usuario:this.state.usuario,
-               TelefonoContacto:this.state.telefono,
-               Ciudad:this.state.ciudad,
-               Cedula:this.state.cedula,
-               Direccion:this.state.direccion,
-               Correo:this.state.correo.toLowerCase(),
+   var datar = {Usuario:this.state.Comprador.usuario,
+               TelefonoContacto:this.state.Comprador.telefono,
+               Ciudad:this.state.Comprador.ciudad,
+               Cedula:this.state.Comprador.cedula,
+               Direccion:this.state.Comprador.direccion,
+               Correo:this.state.Comprador.correo.toLowerCase(),
                Contrasena:"abc123",
                RegistradoPor:"Vendedor",
                Confirmacion:true,
-               TipoID:this.state.ClientID,
+               TipoID:this.state.Comprador.ClientID,
                Userdata:  {DBname:this.props.state.userReducer.update.usuario.user.DBname   }               
                }
              
@@ -1236,15 +1164,15 @@ this.setState({impresion:!this.state.impresion})
         
 
    var data = {
-                Id:this.state.id,
-               Usuario:this.state.usuario,
-               Telefono:this.state.telefono,
-               Correo:this.state.correo.toLowerCase(),
-               Ciudad:this.state.ciudad,
-               Direccion:this.state.direccion,
-               Cedula:this.state.cedula,
+                Id:this.state.Comprador.id,
+               Usuario:this.state.Comprador.usuario,
+               Telefono:this.state.Comprador.telefono,
+               Correo:this.state.Comprador.correo.toLowerCase(),
+               Ciudad:this.state.Comprador.ciudad,
+               Direccion:this.state.Comprador.direccion,
+               Cedula:this.state.Comprador.cedula,
                Userdata:  {DBname:this.props.state.userReducer.update.usuario.user.DBname   }   ,            
-                TipoID:this.state.ClientID
+                TipoID:this.state.Comprador.ClientID
             
             }
 
@@ -1466,8 +1394,8 @@ this.setState({creditoCantidadIni:parseFloat(e.target.value) })
         
   
    var data = {
-                idCuenta:this.state.idcuenta||"",
-                Id:this.state.id,
+                idCuenta:this.state.Comprador.idcuenta||"",
+                Id:this.state.Comprador.id,
                 Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}        
                }
 
@@ -1522,92 +1450,8 @@ this.setState({creditoCantidadIni:parseFloat(e.target.value) })
         }
 
     }
-    genImpuestos=()=>{
-        let codigoPorcentajeDeta = 4 // 0:0%  2:12%  3:14%  4:15% 5:5% 10:13% 
-        let codigoDeta =2 //IVA:2 ICE:3 IRBPNR:5
-        let artImpuestos  = this.state.ArtVent.filter(x=>x.Iva)
-        let artSinImpuestos = this.state.ArtVent.filter(x=>x.Iva == false)
-        let dataImpuestos = ""
-        if(artSinImpuestos.length > 0){
-            let baseImponibleSinImpuestos = 0
-            let valtotal = 0
-            for(let i=0;i<artSinImpuestos.length;i++){
-                baseImponibleSinImpuestos += artSinImpuestos[i].PrecioCompraTotal
-            }
-            let data = `            <totalImpuesto>\n`+
-            `                <codigo>${2}</codigo>\n`+
-            `                <codigoPorcentaje>${0}</codigoPorcentaje>\n`+
-            `                <baseImponible>${baseImponibleSinImpuestos.toFixed(2)}</baseImponible>\n`+
-            `                <tarifa>${0.00}</tarifa>\n`+
-            `                <valor>${0.00}</valor>\n`+
-            `            </totalImpuesto>\n`
-            dataImpuestos += data
-        }
-        if(artImpuestos.length > 0){
-           
-         let baseImponibleImpuestos = 0
-         let valtotal = 0
-                for(let i=0;i<artImpuestos.length;i++){
-                    baseImponibleImpuestos += (artImpuestos[i].PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`))
-                    valtotal += (artImpuestos[i].PrecioCompraTotal)
-                }
-              
-            
-            let data = `            <totalImpuesto>\n`+
-            `                <codigo>${codigoDeta}</codigo>\n`+
-            `                <codigoPorcentaje>${codigoPorcentajeDeta}</codigoPorcentaje>\n`+
-            `                <baseImponible>${baseImponibleImpuestos.toFixed(2)}</baseImponible>\n`+
-            `                <tarifa>${process.env.IVA_EC}</tarifa>\n`+
-            `                <valor>${(valtotal - baseImponibleImpuestos.toFixed(2)).toFixed(2)}</valor>\n`+
-            `            </totalImpuesto>\n`
-         
-            dataImpuestos += data
-        }
-
-        return dataImpuestos
-       
-    }   
-    gendetalles=()=>{   
-
-        let nuevosDetalles = this.state.ArtVent.map(item =>{
-            let codigoPorcentajeDeta =item.Iva? 4 : 0 // 0:0%  2:12%  3:14%  4:15% 5:5% 10:13% 
-            let codigoDeta =2 //IVA:2 ICE:3 IRBPNR:5
-
-          let tarifaDetal =item.Iva? parseFloat(process.env.IVA_EC) : 0
-          let baseImponible =  (item.PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`)).toFixed(2)
-            let precioTotalSinImpuesto = item.Iva? baseImponible
-                                        :   item.PrecioCompraTotal.toFixed(2) 
-
-                
-                                   let valor  = item.Iva?  ((item.PrecioCompraTotal) - baseImponible).toFixed(2):0                      
-                                        
-        let precioUnitarioval =  item.Iva?  parseFloat(`1.${process.env.IVA_EC }`): 1
-        let data = `        <detalle>\n`+
-        `            <codigoPrincipal>${item.Eqid}</codigoPrincipal>\n`+
-`            <codigoAuxiliar>00000${item.Eqid}</codigoAuxiliar>\n`+
-`            <descripcion>${item.Titulo}</descripcion>\n`+
-`            <cantidad>${item.CantidadCompra}</cantidad>\n`+
-`            <precioUnitario>${(precioTotalSinImpuesto / item.CantidadCompra).toFixed(2)}</precioUnitario>\n`+
-`            <descuento>0</descuento>\n`+
-`            <precioTotalSinImpuesto>${precioTotalSinImpuesto}</precioTotalSinImpuesto>\n`+
-`            <impuestos>\n`+
-`                <impuesto>\n`+
-`                    <codigo>${codigoDeta}</codigo>\n`+
-`                    <codigoPorcentaje>${codigoPorcentajeDeta}</codigoPorcentaje>\n`+
-`                    <tarifa>${tarifaDetal}</tarifa>\n`+
-`                    <baseImponible>${precioTotalSinImpuesto}</baseImponible>\n`+
-`                    <valor>${valor}</valor>\n`+
-`                </impuesto>\n`+
-`            </impuestos>\n`+
-"        </detalle>\n"
-        
-        
-        return data
-        })
-     
-               return nuevosDetalles.join("")  
-                   }
-    ceroMaker=(val)=>{
+   
+   ceroMaker =(val)=>{
 
         let cantidad = JSON.stringify(val).length
     
@@ -1656,7 +1500,7 @@ this.setState({ data:nuevoval})
             let cotiData = {
                 idCoti:this.state.idCoti,
                SuperTotal,      
-               ciudadComprador:this.state.UserSelect?this.state.ciudad:'',                                     
+               ciudadComprador:this.state.Comprador.UserSelect?this.state.Comprador.ciudad:'',                                     
                TotalDescuento,
                IvaEC:valorIVA,
                fechaEmision,
@@ -1664,7 +1508,7 @@ this.setState({ data:nuevoval})
                dirEstablecimiento,
                baseImponible:baseImponible,
                Doctype: this.state.doctype,
-                UserId: this.state.id,
+                UserId: this.state.Comprador.id,
                 razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
                 ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
                 estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
@@ -1672,9 +1516,9 @@ this.setState({ data:nuevoval})
                 secuencial:this.ceroMaker(this.state.secuencialGen),
                 obligadoContabilidad :this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO",
                 rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?true:false,
-                razonSocialComprador:this.state.UserSelect?this.state.usuario:'CONSUMIDOR FINAL',
-                identificacionComprador:this.state.UserSelect?this.state.cedula:'9999999999999',
-                direccionComprador:this.state.UserSelect?this.state.direccion:'',
+                razonSocialComprador:this.state.Comprador.UserSelect?this.state.Comprador.usuario:'CONSUMIDOR FINAL',
+                identificacionComprador:this.state.Comprador.UserSelect?this.state.Comprador.cedula:'9999999999999',
+                direccionComprador:this.state.Comprador.UserSelect?this.state.Comprador.direccion:'',
                 ArticulosVendidos:this.state.ArtVent,
                 populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
                 LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
@@ -1686,9 +1530,9 @@ this.setState({ data:nuevoval})
     
 
      let newData = {html:cotiGenetor(cotiData),
-     //   correo: this.state.correo ,
+     //   correo: this.state.Comprador.correo ,
      Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
-            correo:this.state.correo,
+            correo:this.state.Comprador.correo,
           allData:cotiData,
           cotiToClient:this.state.cotiToClient
 }
@@ -1726,16 +1570,19 @@ this.setState({ data:nuevoval})
         }) 
         setTimeout(()=>{ 
             let cleanData = {
-                 UserSelect:false,
+              
                 userDisplay:false,
-                id:"",
-                usuario:"",
-                readOnly:true,
-                correo:"",
-                telefono:"",
-                ciudad:"",
-                direccion:"",
-                cedula:"",
+                Comprador:{
+                    UserSelect:false,
+                    id:"",
+                    usuario:"", 
+                    correo:"",
+                    telefono:"",
+                    ciudad:"",
+                    direccion:"",
+                    cedula:"",
+                 }, 
+                 readOnly:true,
 
                 SelectFormaPago:[],
                 Fcredito:[],
@@ -1760,612 +1607,135 @@ this.setState({ data:nuevoval})
   
 
           }
-          decryptData = (text) => {
-           
-            const bytes = CryptoJS.AES.decrypt(text, process.env.REACT_CLOUDY_SECRET);
-            const data = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-           
-            return (data)
-          };
-           genfact = (SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento ) => {
          
-            let razon = this.props.state.userReducer.update.usuario.user.Factura.razon 
-            let nombreComercial = this.props.state.userReducer.update.usuario.user.Factura.nombreComercial
-            let ruc = this.props.state.userReducer.update.usuario.user.Factura.ruc
-            let codDoc = "01"
-            let estab =this.props.state.userReducer.update.usuario.user.Factura.codigoEstab
-            let ptoEmi= this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision
-            let secuencial= this.ceroMaker(this.state.secuencialGen)
-      //    let secuencial=  "000000034"
-            let dirMatriz=this.props.state.userReducer.update.usuario.user.Factura.dirMatriz    
-            let dirEstablecimiento=this.props.state.userReducer.update.usuario.user.Factura.dirEstab
-            let obligadoContabilidad =this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO"
-            let rimpeval = this.props.state.userReducer.update.usuario.user.Factura.rimpe?"        <contribuyenteRimpe>CONTRIBUYENTE RÉGIMEN RIMPE</contribuyenteRimpe>\n":""
-            
-            let tipoIdentificacionComprador = "07" // 04--ruc  05--cedula  06--pasaporte  07-VENTA A CONSUMIDOR FINAL  08--IDENTIFICACION DELEXTERIOR*//
-            let razonSocialComprador ='CONSUMIDOR FINAL'
-            let identificacionComprador ="9999999999999"
-            let direccionComprador = " "
-
-
-            if(this.state.UserSelect){
-                tipoIdentificacionComprador=this.state.ClientID =="Cedula"?"05":
-                                            this.state.ClientID == "RUC"?"04":
-                                            this.state.ClientID =="Pasaporte"?"06":"07"
-            razonSocialComprador = this.state.usuario
-            identificacionComprador = this.state.cedula
-            direccionComprador = this.state.direccion
-            }
-   
-            let valorIVA = IvaEC.toFixed(2)
-     
-            let artImpuestos  = this.state.ArtVent.filter(x=>x.Iva)
-            let artSinImpuestos = this.state.ArtVent.filter(x=>x.Iva == false)
-
-            let totalSinImpuestos = 0
-            let baseImpoConImpuestos = 0
-            let baseImpoSinImpuestos = 0
-            if(artImpuestos.length > 0){
-                for(let i=0;i<artImpuestos.length;i++){
-                    totalSinImpuestos += (artImpuestos[i].PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`))
-                    baseImpoConImpuestos += (artImpuestos[i].PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`))
-                }
-                
-            }
-            if(artSinImpuestos.length > 0){
-                for(let i=0;i<artSinImpuestos.length;i++){
-                    totalSinImpuestos += artSinImpuestos[i].PrecioCompraTotal
-                    baseImpoSinImpuestos += artSinImpuestos[i].PrecioCompraTotal
-                }
-            }
-            
-            let baseImponible =  SubTotal.toFixed(2) 
-
-
-
- 
-            let totalDescuento = TotalDescuento
-            let codigo ="2" //IVA:2 ICE:3 IRBPNR:5
-           
-            let propina ="0.00"
-            let importeTotal= SuperTotal.toFixed(2)
-            let ambiente = "2"
-
-            let s1 = this.props.state.userReducer.update.usuario.user.Factura.codigoEstab
-            let s2 = this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision
-            let serie = s1+""+s2
-            let codNum ="12345678"//8 digitos
-            let tiempo = new Date()    
-            let mes = this.addCero(tiempo.getMonth()+1)
-            let dia = this.addCero(tiempo.getDate())
-            var date = dia+ "/"+ mes+"/"+tiempo.getFullYear()
-            let fechaEmision =date
-        
-            let tipoEmision  = "1"
-            let claveAcceso = dia+""+mes+""+tiempo.getFullYear()+""+codDoc+""+ruc+""+ambiente+""+serie+""+secuencial+""+codNum+""+tipoEmision
+           genfact = async (SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento ) => {
          
-    
-            let digVerificador =(claveAcceso)=>{
-    
-                let suma = 0
-                let fact = 7
-    
-                for (let i =0;i<claveAcceso.length;i++){
-                    suma += claveAcceso[i] * fact
-                    if(fact == 2){
-                        fact = 7
-                    }else{
-                        fact--
+       
+          
+            let factGenerated = await GeneradorFactura(this.state.idVenta,this.state.idReg,this.state.Fpago,this.state.ArtVent, this.state.Comprador, this.state.secuencialGen, 
+
+                      SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento 
+            )
+
+          
+          
+            if(factGenerated.status == "Ok"){
+            
+                fetch('/cuentas/generarventa', {
+                    method: 'POST', // or 'PUT'
+                    body: JSON.stringify(factGenerated.CompiladoFactdata), // data can be `string` or {object}!
+                    headers:{
+                      'Content-Type': 'application/json',
+                      "x-access-token": this.props.state.userReducer.update.usuario.token
                     }
-                }
-    
-           
-    
-                let dv = (11-(suma%11))
-                if(dv ==10){
-                    return 1
-                }else if(dv ==11 ){
-                    return 0
-                }else{
-                    return dv
-                }
-    
-            
-    
-            }
-    
-    
-      
-            let digitoverificador = digVerificador(claveAcceso)
-            let clavefinal = claveAcceso +""+digitoverificador
-       
-            let xmlgenerator = 
-           '<factura id="comprobante" version="1.0.0">\n' +
-            "    <infoTributaria>\n" +
-            `        <ambiente>${ambiente}</ambiente>\n` +
-            `        <tipoEmision>${tipoEmision}</tipoEmision>\n`+
-            `        <razonSocial>${razon}</razonSocial>\n`+
-            `        <nombreComercial>${nombreComercial}</nombreComercial>\n`+
-            `        <ruc>${ruc}</ruc>\n`+
-            `        <claveAcceso>${clavefinal}</claveAcceso>\n`+        
-            `        <codDoc>${codDoc}</codDoc>\n`+
-            `        <estab>${estab}</estab>\n`+
-            `        <ptoEmi>${ptoEmi}</ptoEmi>\n`+
-            `        <secuencial>${secuencial}</secuencial>\n`+
-            `        <dirMatriz>${dirMatriz}</dirMatriz>\n`+
-                      rimpeval +       
-            `    </infoTributaria>\n`+
-            `    <infoFactura>\n`+
-            `        <fechaEmision>${fechaEmision}</fechaEmision>\n`+
-            `        <dirEstablecimiento>${dirEstablecimiento}</dirEstablecimiento>\n`+
-            `        <obligadoContabilidad>${obligadoContabilidad}</obligadoContabilidad>\n`+
-            `        <tipoIdentificacionComprador>${tipoIdentificacionComprador}</tipoIdentificacionComprador>\n`+
-            `        <razonSocialComprador>${razonSocialComprador}</razonSocialComprador>\n`+
-            `        <identificacionComprador>${identificacionComprador}</identificacionComprador>\n`+
-            `        <direccionComprador>${direccionComprador}</direccionComprador>`+
-            `        <totalSinImpuestos>${totalSinImpuestos.toFixed(2)}</totalSinImpuestos>\n`+
-            `        <totalDescuento>${totalDescuento.toFixed(2)}</totalDescuento>\n`+
-            `        <totalConImpuestos>\n`+
-            this.genImpuestos()+
-            `        </totalConImpuestos>\n`+
-            `        <propina>${propina}</propina>\n`+
-            `        <importeTotal>${importeTotal}</importeTotal>\n`+
-            `        <moneda>DOLAR</moneda>\n`+
-            "        <pagos>\n"+
-            "            <pago>\n"+
-            "                <formaPago>01</formaPago>\n"+
-            `                <total>${importeTotal}</total>\n`+
-            `            </pago>\n`+
-            `        </pagos>\n`+
-            `    </infoFactura>\n`+
-            `    <detalles>\n`+
-        this.gendetalles()+
-            `    </detalles>\n`+
-
-            "</factura>"
-           
-      
-    
-         let link = document.createElement('a');
-         let docFirmado = SignerJS(xmlgenerator, 
-            contP12, 
-           this.decryptData( this.props.state.userReducer.update.usuario.user.Firmdata.pass))
-
-           if(docFirmado.status == "Error"){
-
-           console.log(docFirmado)
-            let add = {
-                Estado:true,
-                Tipo:"error",
-                Mensaje:`Error con la firma electronica, ${docFirmado.message}`
-            }
-            this.setState({Alert: add, loading:false}) 
-           }else{
-
-            let accumText = ""
-            let mimapper =  this.state.Fpago.map(x=> accumText.concat(x.Detalles))
-       
-    /*
-    const url = window.URL.createObjectURL(
-        new Blob([docFirmado], { type: "text/plain"}),
-      );
-    link.href = url;
-    link.setAttribute(
-      'download',
-      `Consultores Asociados 001-001-100.xml`,
-    );
-    
-     link.click()
-     
-     */
-             
-    
-            
-       
-    let dataexample2 = {
-        ClaveAcceso:clavefinal, 
-        xmlDoc:docFirmado,
-        numeroAuto:"1511202201170655537000110010010000001001234567812",
-         fechaAuto:"2022-11-15T22:49:50-05:00",
-         secuencial:"100",
-           SuperTotal,                                           
-           TotalDescuento,
-           IvaEC:valorIVA,
-           fechaEmision,
-           nombreComercial,
-           dirEstablecimiento,
-           baseImpoSinImpuestos,
-           baseImpoConImpuestos,
-           Doctype: this.state.doctype,
-            UserId: this.state.id,
-    
-            razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
-            ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
-            estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
-            ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision,
-            secuencial:this.ceroMaker(this.state.secuencialGen),
-            obligadoContabilidad :this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO",
-            rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?true:false,
-            razonSocialComprador:this.state.UserSelect?this.state.usuario:'CONSUMIDOR FINAL',
-            ciudadComprador:this.state.UserSelect?this.state.ciudad:'',
-            correoComprador:this.state.UserSelect?this.state.correo:'',
-            identificacionComprador:this.state.UserSelect?this.state.cedula:'9999999999999',
-            direccionComprador:this.state.UserSelect?this.state.direccion:'',
-            ArticulosVendidos:this.state.ArtVent,
-            LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
-          populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
-             Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
-             Estado:"AUTORIZADO",
-             detalles:mimapper.map((x)=>  x +" ")
-         };
-        let generatedFact = factGenerator(dataexample2)
-    
-     // this.setState({html:generatedFact})
-    
-    let allData ={doc:docFirmado,
-              codigo:clavefinal,
-              idUser:this.props.state.userReducer.update.usuario.user._id,
-              ambiente:ambiente==1?"Pruebas":"Produccion"  
-                 }
-    
-       
-               fetch("/public/uploadSignedXml", {
-                method: 'POST', // or 'PUT'
-                body: JSON.stringify(allData), // data can be `string` or {object}!
-                headers:{
-                  'Content-Type': 'application/json',
-                  "x-access-token": this.props.state.userReducer.update.usuario.token
-                }
-              }).then(res => res.json())
-              .catch(error => {console.error('Error:', error);
-                     })
-              .then(response => {
-               console.log(response)
-                      if(response.status =="ok" ){
-                       if(response.resdata.estado == "AUTORIZADO"){
-                           let numeroAuto = response.resdata.numeroAutorizacion
-                           let fechaAuto = response.resdata.fechaAutorizacion
-                           let accumText = ""
-                           let mimapper =  this.state.Fpago.map(x=> accumText.concat(x.Detalles))
-                          
-                           let vendedorCont ={
-                               Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
-                               Id:this.props.state.userReducer.update.usuario.user._id,
-                               Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
-                           }
-    
-                           let newdocFirmado =     `    <autorizacion>\n`+
-                           `    <estado>AUTORIZADO</estado>\n`+
-                            `    <numeroAutorizacion>${numeroAuto}</numeroAutorizacion>\n`+
-                            `    <fechaAutorizacion>${fechaAuto}</fechaAutorizacion>\n`+
-                            `    <ambiente>PRODUCCIÓN</ambiente>\n`+
-                            `    <comprobante>
-                            <![CDATA[<?xml version="1.0" encoding="UTF-8"?>
-                            ${docFirmado}
-                        ]]>
-                            </comprobante>\n`+
-                            
-                           `    </autorizacion>`
-    
-           
-    
-                           let PDFdata = {
-                            ClaveAcceso:clavefinal, 
-                            xmlDoc:docFirmado,
-                            numeroAuto,
-                             fechaAuto,
-                             secuencial,
-                               SuperTotal,                                           
-                               TotalDescuento,
-                               baseImpoSinImpuestos,
-                               baseImpoConImpuestos,
-                               IvaEC:valorIVA,
-                               fechaEmision,
-                               nombreComercial,
-                               dirEstablecimiento,
-                            
-                               Doctype: this.state.doctype,
-                                UserId: this.state.id,
-                                razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
-                                ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
-                                estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
-                                ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision,
-                                secuencial:this.ceroMaker(this.state.secuencialGen),
-                                obligadoContabilidad :this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO",
-                                rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?"CONTRIBUYENTE RÉGIMEN RIMPE":"",
-                                razonSocialComprador:this.state.UserSelect?this.state.usuario:'CONSUMIDOR FINAL',
-                                identificacionComprador:this.state.UserSelect?this.state.cedula:'9999999999999',
-                                direccionComprador:this.state.UserSelect?this.state.direccion:'',
-                                correoComprador:this.state.UserSelect?this.state.correo:'',
-                                ciudadComprador:this.state.UserSelect?this.state.ciudad:'',
-                                ArticulosVendidos:this.state.ArtVent,
-                                LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
-                                populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
-                                 Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
-                                 Estado:"AUTORIZADO",
-                                 detalles:mimapper.map((x)=>  x +" ")
-                             };
-                           let CompiladoFactdata = {
-                                               iDCating:5,
-                                               html:factGenerator(PDFdata),
-                                               allData:PDFdata,
-                                               xmlDoc:newdocFirmado,
-                                              numeroAuto,
-                                               fechaAuto,
-                                               secuencial,                                      
-                                                 SuperTotal,   
-                                                 ClaveAcceso:clavefinal,                                        
-                                                 TotalDescuento,
-                                                 IvaEC:valorIVA,
-                                                 baseImponible,
-                                                 Doctype: "Factura-Electronica",
-                                                  UserId: this.state.id,
-                                                  UserName:this.state.usuario,
-                                                  Correo: this.state.correo,
-                                                  Telefono: this.state.telefono,
-                                                  Direccion: this.state.direccion,
-                                                   Cedula:this.state.cedula,
-                                                   Ciudad:this.state.ciudad,
-                                                   ArticulosVendidos:this.state.ArtVent,
-                                                   FormasPago:this.state.Fpago,
-                                                   idVenta:this.state.idVenta,
-                                                   idRegistro:this.state.idReg,
-                                                   Tiempo: new Date().getTime(),
-                                                   Vendedor: vendedorCont,
-                                                   Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
-                                                   Estado:"AUTORIZADO",
-                                                   detalles:mimapper.map((x)=>  x +" ")
-                                               };
-                                               
-                           fetch('/cuentas/generarventa', {
-                               method: 'POST', // or 'PUT'
-                               body: JSON.stringify(CompiladoFactdata), // data can be `string` or {object}!
-                               headers:{
-                                 'Content-Type': 'application/json',
-                                 "x-access-token": this.props.state.userReducer.update.usuario.token
-                               }
-                             }).then(res => res.json())
-                             .catch(error => console.error('Error:', error))
-                             .then(response => {
-                              
-                               if(response.message=="error al registrar"){
-                                   let add = {
-                                     Estado:true,
-                                     Tipo:"error",
-                                     Mensaje:"Error en el sistema, porfavor intente en unos minutos"
-                                 }
-                                 this.setState({Alert: add, loading:false}) 
-                                 }
-                                 else if(response.message=="fatalerror"){
-                                    let add = {
-                                        Estado:true,
-                                        Tipo:"error",
-                                        Mensaje:"Error en el sistema del SRI, porfavor intente mas tarde"
-                                    }
-                                    this.setState({Alert: add, loading:false}) 
-                                 }
-                                 else{
-                                   let add = {
-                                       Estado:true,
-                                       Tipo:"success",
-                                       Mensaje:"Factura Electrónica Generada Satisfactoriamente"
-                                   }
-                                   this.setState({Alert: add,
-                                    loading:false,
-                                 
-                                })
-                               
-                             
-                                  setTimeout(()=>{ 
-                                                   this.getUA()
-                                    let cleanData = { 
-                                        loading:false,
-                                        UserSelect:false,
-                                        userDisplay:false,
-                                        id:"",
-                                        usuario:"",
-                                        readOnly:true,
-                                        correo:"",
-                                        telefono:"",
-                                        ciudad:"",
-                                        direccion:"",
-                                        cedula:"",
-                                        disableDoc:false,
-                                        SelectFormaPago:[],
-                                        Fcredito:[],
-                                        ArtVent:[],
-                                        tipopago:"Contado",
-                                        Fpago:[  ],
-                                        descuentoPer:0,
-                                        descuentoVal:0,
-                                        arrPrecios:[],
-                                       
-            
-                                    }
-                                   this.setState(cleanData)
-                                   this.saveToLocalStorage(cleanData)
-                                   this.props.dispatch(addVenta(response.VentaGen));
-                                   this.props.dispatch(addRegs(response.arrRegsSend));
-                                   this.props.dispatch(updateCuentas(response.Cuentas));
-                                   this.props.dispatch(updateArts(response.Articulos));
-                                },100)
-                                  
-                                   
-                           }
-                           })
-            
-            
-            
-                       }                  
-            
-                 }else if( response.status =="error" ){
-            
-                   if(response.resdata.estado == 'EN PROCESO'){
-                       let numeroAuto = "00000000000"
-                       let fechaAuto = "xx-en-espera--xx"
-                       
-    
-                       let vendedorCont ={
-                           Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
-                           Id:this.props.state.userReducer.update.usuario.user._id,
-                           Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
-                       }
-                       let PDFproceso = {
-                        ClaveAcceso:clavefinal, 
-                        numeroAuto,
-                         fechaAuto,
-                         secuencial,
-                           SuperTotal,                                           
-                           TotalDescuento,
-                           IvaEC:valorIVA,
-                           fechaEmision,
-                           nombreComercial,
-                           dirEstablecimiento,
-                           baseImpoSinImpuestos,
-                           baseImpoConImpuestos,
-                           Doctype: this.state.doctype,
-                            UserId: this.state.id,
-                            razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
-                            ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
-                            estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
-                            ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision,
-                            secuencial:this.ceroMaker(this.state.secuencialGen),
-                            obligadoContabilidad :this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO",
-                            rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?"CONTRIBUYENTE RÉGIMEN RIMPE":"",
-                            razonSocialComprador:this.state.UserSelect?this.state.usuario:'CONSUMIDOR FINAL',
-                            identificacionComprador:this.state.UserSelect?this.state.cedula:'9999999999999',
-                            direccionComprador:this.state.UserSelect?this.state.direccion:'',
-                            correoComprador:this.state.UserSelect?this.state.correo:'',
-    
-                            ArticulosVendidos:this.state.ArtVent,
-                            populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,            
-                                                        correoComprador:this.state.UserSelect?this.state.correo:'',
-                             Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
-                             Estado:"EN PROCESO",
-                             detalles:mimapper.map((x)=>  x +" ")
-                                         };
-                       var dataexample = {
-                                    
-                                         html:factGenerator(PDFproceso),
-                                               allData:PDFproceso,
-                                          numeroAuto,
-                                           fechaAuto,
-                                           secuencial,
-                                             SuperTotal,  
-                                             xmlDoc:docFirmado, 
-                                             ClaveAcceso:clavefinal,                                        
-                                             TotalDescuento,
-                                             IvaEC:valorIVA,
-                                             baseImponible:baseImponible,
-                                             Doctype: "Factura-Electronica",
-                                              UserId: this.state.id,
-                                              UserName:this.state.usuario,
-                                              Correo: this.state.correo,
-                                              Telefono: this.state.telefono,
-                                              Direccion: this.state.direccion,
-                                               Cedula:this.state.cedula,
-                                               Ciudad:this.state.ciudad,
-                                               ArticulosVendidos:this.state.ArtVent,
-                                               FormasPago:this.state.Fpago,
-                                               idVenta:this.state.idVenta,
-                                               idRegistro:this.state.idReg,
-                                               Tiempo: new Date().getTime(),
-                                               Vendedor: vendedorCont,
-                                               Estado:"EN PROCESO",
-                                               detalles:mimapper.map((x)=>  x +" "),
-                                               Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}  
-                                        };
-                       fetch('/cuentas/generarventa', {
-                           method: 'POST', // or 'PUT'
-                           body: JSON.stringify(dataexample), // data can be `string` or {object}!
-                           headers:{
-                             'Content-Type': 'application/json',
-                             "x-access-token": this.props.state.userReducer.update.usuario.token
-                           }
-                         }).then(res => res.json())
-                         .catch(error => console.error('Error:', error))
-                         .then(response => {
-                          
-                           if(response.message=="error al registrar"){
-                               let add = {
-                                 Estado:true,
-                                 Tipo:"error",
-                                 Mensaje:"Error en el sistema, porfavor intente en unos minutos"
-                             }
-                             this.setState({Alert: add, loading:false}) 
-                             }else{
-                               let add = {
-                                   Estado:true,
-                                   Tipo:"warning",
-                                   Mensaje:"Factura en Proceso de Validacion, revisar "
-                               }
-                             
-                               this.setState({Alert: add,
-                                loading:false })
-    
-                            let accumText = ""
-                            let mimapper =  this.state.Fpago.map(x=> accumText.concat(x.Detalles))
-                         
-                          
-                          
-                            
-                              
-                              setTimeout(()=>{ 
-                                this.setState({
-                                    UserSelect:false,  
-                                    userDisplay:false, 
-                                    id:"",
-                                    usuario:"",
-                                    readOnly:true,
-                                    correo:"",
-                                    telefono:"",
-                                    ciudad:"",
-                                    direccion:"",
-                                    cedula:"",
-                                    SelectFormaPago:[],
-    
-                                    ArtVent:[],
-                                    tipopago:"Contado",
-                                    Fpago:[  ],
-                                    descuentoPer:0,
-                                    descuentoVal:0,
-                                    arrPrecios:[],
-                                   
-         
-                                })
-                            
-                            },100)
-                       }
-                       })
-                   }
-                   else {
-                    let add = {
-                   Estado:true,
-                   Tipo:"error",
-                   Mensaje:`Error en la factura, ${response.resdata.mensajes.mensaje.mensaje},  ${response.resdata.mensajes.mensaje.informacionAdicional
-                   } `
-               }
-            
-               this.setState({Alert: add, 
-                   loading:false,
-               })
-                
-                 }
-               }else if(response.status =="fatalerror" ){
-               
+                  }).then(res => res.json())
+                  .catch(error => console.error('Error:', error))
+                  .then(response => {
+                   console.log(response)
+                    if(response.message=="error al registrar"){
                         let add = {
-                                   Estado:true,
-                                   Tipo:"error",
-                                   Mensaje:"Error el los Servidores del SRI, intente en unos momentos"
-                               }
-                             
-                               this.setState({Alert: add,
-                                            loading:false,
-                             })
-               }
-            });
+                          Estado:true,
+                          Tipo:"error",
+                          Mensaje:"Error en el sistema, porfavor intente en unos minutos"
+                      }
+                    return {status:"Error",mensaje:`Error con la firma electronica, ${docFirmado.message}`}
+                      }
+                      else if(response.message=="fatalerror"){
+                         let add = {
+                             Estado:true,
+                             Tipo:"error",
+                             Mensaje:"Error en el sistema del SRI, porfavor intente mas tarde"
+                         }
+                         this.setState({Alert: add, loading:false}) 
+                      }
+                      else{
+                        let add = {
+                            Estado:true,
+                            Tipo:"success",
+                            Mensaje:"Factura Electrónica Generada Satisfactoriamente"
+                        }
+                        this.setState({Alert: add,
+                         loading:false,
+                      
+                     })
+                
+                  
+                       setTimeout(()=>{ 
+                                       
+                         let cleanData = { 
 
-           }
+
+                       
+                            idReg:response.updatedCounter.ContRegs,
+                            idVenta:response.updatedCounter.ContVentas,
+                            secuencialGen:response.updatedCounter.ContSecuencial,
+                            secuencialBase:response.updatedCounter.ContSecuencial,
+                            idCoti:response.updatedCounter.ContCotizacion,
+       
+                             loading:false,
+                             
+                             userDisplay:false,
+                             Comprador:{
+                                UserSelect:false,
+                                id:"",
+                                usuario:"",
+                                readOnly:true,
+                                correo:"",
+                                telefono:"",
+                                ciudad:"",
+                                direccion:"",
+                                cedula:"",
+                             },
+                          
+                             disableDoc:false,
+                             SelectFormaPago:[],
+                             Fcredito:[],
+                             ArtVent:[],
+                             tipopago:"Contado",
+                             Fpago:[  ],
+                             descuentoPer:0,
+                             descuentoVal:0,
+                             arrPrecios:[],
+                            
+ 
+                         }
+                        this.setState(cleanData)
+                        this.saveToLocalStorage(cleanData)
+                        this.props.dispatch(addVenta(response.VentaGen));
+                        this.props.dispatch(addRegs(response.arrRegsSend));
+                        this.props.dispatch(updateCuentas(response.Cuentas));
+                        this.props.dispatch(updateArts(response.Articulos));
+                     },100)
+                       
+                        
+                }
+                })
+
+
+
+
+            }else if(factGenerated.status == "Error"){
+          
+                let messageShow  = factGenerated.mensaje
+
+                if(messageShow == 'Error :  Error en la factura, CLAVE ACCESO REGISTRADA,  undefined '){
+
+                    messageShow ="Ese Secuencial ya ha sido utilizado, aumente un numero en el secuencial"
+                }
+
+                let add = {
+                    Estado:true,
+                    Tipo:"error",
+                    Mensaje:messageShow
+                }
+                this.setState({Alert: add, loading:false}) 
+
+            }
+          
+   
+          
+         
+       
       
 
            }
@@ -3213,6 +2583,8 @@ let creditRest =  SuperTotal - this.state.creditoCantidadIni
                           Resultados
                         </div>
                     </div>
+                 
+      
                     </div>
                
                     <div className=" userwrap">
@@ -3220,7 +2592,7 @@ let creditRest =  SuperTotal - this.state.creditoCantidadIni
                         <div className="contSuggester">
                         <div className="jwseccionCard buttoncont">
 
-   <Animate show={this.state.UserSelect}>                       
+   <Animate show={this.state.Comprador.UserSelect}>                       
 <div className="contButtonsUserSelect">
  <button type="button" className=" btn btn-primary botonedit" onClick={()=>{this.setState({readOnly:false, userEditMode:true})}}>
 <p>Editar</p>
@@ -3241,7 +2613,7 @@ delete
 </div>
 </Animate> 
 
-<Animate show={!this.state.UserSelect}>  
+<Animate show={!this.state.Comprador.UserSelect}>  
  <button className=" btn btn-success botonedit" onClick={this.addNewUser}>
 <p>Agregar</p>
 <span className="material-icons">
@@ -3279,7 +2651,7 @@ account_circle
        type="text"         
        validators={['requerido']}
        errorMessages={['Ingresa un nombre'] }
-       value={this.state.usuario}
+       value={this.state.Comprador.usuario}
        InputProps={{
         readOnly: this.state.readOnly,
       }}
@@ -3302,7 +2674,7 @@ mail
        validators={['requerido']}
        errorMessages={['Escribe un correo'] }
       
-       value={this.state.correo}
+       value={this.state.Comprador.correo}
        InputProps={{
         readOnly: this.state.readOnly,
       }}
@@ -3324,7 +2696,7 @@ mail
        type="text"
        validators={['requerido']}
        errorMessages={['Ingresa un nombre'] }
-       value={this.state.direccion}
+       value={this.state.Comprador.direccion}
        InputProps={{
         readOnly: this.state.readOnly,
       }}
@@ -3338,7 +2710,7 @@ mail
     perm_identity
 </span>
 </div>
-<select className="ClieniDInput" value={this.state.ClientID} onChange={this.handleClientID} disabled= {CheckReadOnly} >
+<select className="ClieniDInput" value={this.state.Comprador.ClientID} onChange={this.handleClientID} disabled= {CheckReadOnly} >
           <option value="Cedula"> Cédula</option>
     <option value="RUC" > RUC </option>
     <option value="Pasaporte" > Pasaporte </option>
@@ -3358,7 +2730,7 @@ mail
        type="text"
        validators={['requerido']}
        errorMessages={['Ingresa '] }
-       value={this.state.cedula}
+       value={this.state.Comprador.cedula}
        InputProps={{
         readOnly: this.state.readOnly,
       }}
@@ -3379,7 +2751,7 @@ phone
        type="number"
        validators={[]}
        errorMessages={[]}
-       value={this.state.telefono}
+       value={this.state.Comprador.telefono}
        InputProps={{
         readOnly: this.state.readOnly,
       }}
@@ -3402,7 +2774,7 @@ phone
        type="text"
        validators={[]}
        errorMessages={[] }
-       value={this.state.ciudad}
+       value={this.state.Comprador.ciudad}
        InputProps={{
         readOnly: this.state.readOnly,
       }}
@@ -3631,7 +3003,7 @@ cancel
                     <div className="contContado">   
                     <div className="contLimite">
                         <p>Límite Crédito: </p>
-                        <p style={{fontWeight:"bolder"}}>${this.state.creditLimit}</p>
+                        <p style={{fontWeight:"bolder"}}>${this.state.Comprador.creditLimit}</p>
                     </div>
                     <button className=" btn btn-warning botonAddCrom" onClick={()=>{this.setState({addFormaPago:true, tipopago:"Credito"})}}>
          
@@ -3866,7 +3238,7 @@ color="primary"
    checked={this.state.cotiToClient}
    onChange={()=>{
        
-       if(this.state.UserSelect){
+       if(this.state.Comprador.UserSelect){
            
        this.setState({cotiToClient:!this.state.cotiToClient})
       
@@ -3916,7 +3288,7 @@ post_add
                                 <p className='textoArtTituloPrint'>  Cliente: </p>
                                 </div> 
                                 <div className="cDc2" >
-                                    <p className='textoArt'> {this.state.usuario} </p>  
+                                    <p className='textoArt'> {this.state.Comprador.usuario} </p>  
                                 </div> 
                                 </div> 
                                 <div className="grupoDatosPrint" >
@@ -3924,7 +3296,7 @@ post_add
                                 <p className='textoArtTituloPrint'>  ID: </p>
                                 </div> 
                                 <div className="cDc2" >
-                                    <p className='textoArt'> {this.state.cedula} </p>  
+                                    <p className='textoArt'> {this.state.Comprador.cedula} </p>  
                                 </div> 
                                 </div>
                                 <div className="grupoDatosPrint" >
@@ -3932,7 +3304,7 @@ post_add
                                 <p className='textoArtTituloPrint'>  Correo: </p>
                                 </div> 
                                 <div className="cDc2" >
-                                    <p className='textoArt'> {this.state.correo} </p>  
+                                    <p className='textoArt'> {this.state.Comprador.correo} </p>  
                                 </div> 
                                 </div>
                                 <div className="grupoDatosPrint" >
@@ -3940,7 +3312,7 @@ post_add
                                 <p className='textoArtTituloPrint'>  Dirección: </p>
                                 </div> 
                                 <div className="cDc2" >
-                                    <p className='textoArt'> {this.state.direccion} </p>  
+                                    <p className='textoArt'> {this.state.Comprador.direccion} </p>  
                                 </div> 
                                 </div>
                                 <p className="textoArt">--------------------------------------------------</p>

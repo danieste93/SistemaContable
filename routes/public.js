@@ -30,6 +30,9 @@ router.post('/geticons', AdminControl.getIcons);
 router.post('/deleteicon', AdminControl.deleteIcon);
 
 router.post('/getDatabaseSize',Authentication, AdminControl.getDatabaseSize);
+
+router.post('/getDbuserData',Authentication, AdminControl.getDbuserData);
+
 router.post('/correoconfigverify',Authentication, AdminControl.correoConfigVerify);
 router.post('/getCorreoConfig',Authentication, AdminControl.getCorreoConfig);
 

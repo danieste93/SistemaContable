@@ -2,8 +2,9 @@
 import {Animate} from "react-animate-mount"
 import Dropdown from 'react-bootstrap/Dropdown';
 import React, { useState,useEffect } from 'react';
-const ArtRender = ({ datos,getNota, watchNotaCredito, deleteVentaList,user,resendProcess,sendView,viewCreds}) => {
+const ArtRender = ({ uploadToFact, datos,getNota, watchNotaCredito, deleteVentaList,user,resendProcess,sendView,viewCreds}) => {
   const [visual, setvisual] = useState(false );
+  const [visualUploadFact, setvisualUploadFact] = useState(false );
   const [visualCred, setvisualCred] = useState(false );
   const [backGroundVent, setbackGroundVent] = useState("");
   const [visualProcess, setvisualProcess] = useState(false);
@@ -11,8 +12,7 @@ const ArtRender = ({ datos,getNota, watchNotaCredito, deleteVentaList,user,resen
   const [watchNota, setwatchNota] = useState(false);
 
 useEffect(() => {
-
-
+console.log(datos)
 if(datos.TipoVenta == "Credito"){
   setvisualCred(true)
   if(datos.FormasCredito.length > 0){
@@ -47,9 +47,13 @@ if(datos.TipoVenta == "Credito"){
   
     setvisualNota(true)
   }
-  if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != "" && datos.NotaCredito != null && datos.NotaCredito != ""){
+  if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != "" && datos.NotaCredito && datos.NotaCredito.Doctype == "Nota-de-Credito"){
   
     setwatchNota(true)
+  }
+  if(datos.Doctype == "Nota de venta" &&datos.nombreCliente != "" &&datos.cedulaCliente != ""){
+  
+    setvisualUploadFact(true)
   }
 
 
@@ -240,6 +244,16 @@ var hora = addCero(tiempo.getHours())+" : "+   addCero(tiempo.getMinutes())
 send
 </span>
 <p>Re-enviar</p>
+
+</button>
+  </Dropdown.Item>
+</Animate>
+<Animate show={visualUploadFact}>
+<Dropdown.Item>
+                    <button  className="btn btn-info btnDropDowm " onClick={(e)=>{ e.stopPropagation();uploadToFact(datos)}}><span className="material-icons">
+send
+</span>
+<p>Generar Factura</p>
 
 </button>
   </Dropdown.Item>

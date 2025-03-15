@@ -3,7 +3,7 @@ import Barcode  from 'react-barcode';
 
 
 const genProds = (arts, Inf)=>{
-    console.log(Inf)
+    
 let mapeador = arts.map((item)=>{
   
     let precioGenerado = item.Iva?((item.PrecioVendido / parseFloat(`1.${process.env.IVA_EC }`))).toFixed(2)
@@ -68,7 +68,7 @@ justify-content: space-between;
 export const Bodygen = (data)=>{
    
     let Inf = data.data
-    console.log(Inf)
+ 
 let Rimpeval =""
     if(Inf.rimpeval && !Inf.populares){
         Rimpeval = "Contribuyente Régimen RIMPE"

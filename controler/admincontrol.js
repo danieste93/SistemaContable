@@ -5,7 +5,7 @@ const Ventas =  require("../models/venta")
 const Compras =  require("../models/compras")
 const Counter = require("../models/counter")
 const tipoSchema  = require("../models/tiposSass")
-
+const CryptoJS = require('crypto-js');
 const catSchema = require("../models/catSass")
 const Articulo = require("../models/articulo")
 var fs = require('fs')
@@ -27,7 +27,8 @@ const distriSchema = require('../models/ditribuidorSass');
 const  HtmlArtSchema = require('../models/articuloHTMLSass');
 const mongoose = require('mongoose')
 const nodemailer = require('nodemailer');
-
+const Forge = require('node-forge');
+const fetch = require('node-fetch');
 const {encrypt,decrypt} = require('./security');
 
 const UserControl = require("./usercontrol")
@@ -1646,7 +1647,7 @@ let newid = codebase +"L" +subcode
 
 let createdCode = "L"+ subcode
 let titleClean = nData.Titulo.replace(createdCode, "")
-console.log()
+
 let valido = true 
 let acum = 1
 while(valido){
@@ -1857,7 +1858,7 @@ res.status(200).send({status: "Ok", message: "getArts",articulosHabiles});
 
 
   async function getArtByTitle (req, res){
- console.log(req.body)
+
     let conn = await mongoose.connection.useDb(req.body.User.DBname);
     
     let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);  
@@ -2356,7 +2357,7 @@ function  validateCompraFact (req, res){
     client.autorizacionComprobante({claveAccesoComprobante:"0809202201179191912200120013020000018230000000111"}, async (err,auth)=>{     
     
       if(err) console.log(err)  
-      console.log(auth)
+   
    if(auth.RespuestaAutorizacionComprobante.autorizaciones){
       let resdata = auth.RespuestaAutorizacionComprobante.autorizaciones.autorizacion
    
@@ -2395,7 +2396,7 @@ function  resendAuthFact (req, res){
   client.autorizacionComprobante({claveAccesoComprobante:req.body.allData.ClaveAcceso}, async (err,auth)=>{     
   
     if(err) console.log(err)  
-    console.log(auth)
+   
  if(auth.RespuestaAutorizacionComprobante.autorizaciones){
     let resdata = auth.RespuestaAutorizacionComprobante.autorizaciones.autorizacion
 
@@ -2636,8 +2637,7 @@ soap.createClient(url, options, function(err, client) {
       
        else if(result != undefined){
         if(result.RespuestaRecepcionComprobante){
-          console.log(result.RespuestaRecepcionComprobante)
-          console.log(result.RespuestaRecepcionComprobante.estado)
+         
           if(result.RespuestaRecepcionComprobante.estado == "RECIBIDA"){
             console.log("Recibido")
             setTimeout(()=> {
@@ -2694,10 +2694,11 @@ const  Authdata =()=>{
     client.autorizacionComprobante({claveAccesoComprobante:req.body.codigo}, async (err,auth)=>{     
     
       if(err) console.log(err)  
-      console.log(auth)
+  
       let resdata = auth.RespuestaAutorizacionComprobante.autorizaciones.autorizacion
-      console.log(resdata)
-     
+    
+      if(resdata.estado){
+
         if(resdata.estado == "AUTORIZADO"){
 
         
@@ -2709,8 +2710,10 @@ const  Authdata =()=>{
         }
         else if(resdata.estado == "EN PROCESO"){
           res.status(500).send({status: "error", message: "AuthSucess",resdata});
+        }else {
+          res.status(500).send({status: "error", message: "AuthSucess",resdata});
         }
-        
+      }
         
         else{
 
@@ -2820,7 +2823,7 @@ const  Authdata =()=>{
       if(err) console.log(err)  
       console.log(auth)
       let resdata = auth.RespuestaAutorizacionComprobante.autorizaciones.autorizacion
-
+if(resdata.est)
      
         if(resdata.estado == "AUTORIZADO"){
 
@@ -3162,7 +3165,7 @@ function  signatureCloudi (req, res){
       access_mode:'authenticated',
       upload_preset:"dv6fhl5k"
     }
-    let Forge = require('node-forge');
+   
     let sha1_base64=(txt)=> {
       let md = Forge.md.sha1.create();
       md.update(txt,"utf8");
@@ -4576,16 +4579,63 @@ console.log(datafind)
            }
 
            async function deleteCorreoConfigurado(req,res) {
-            console.log(req.body)
+        
             let conn = await mongoose.connection.useDb(req.body.User.DBname);
             let CounterModelSass = await conn.model('Counter', counterSchema);
             await CounterModelSass.findByIdAndDelete(req.body.item._id)
             
             res.status(200).send({ status: "Ok", message: "Correo eliminado" });
 
-
              }
+             async function getDbuserData(req,res) {
+              try {
+              const getSignature=(url, name)=>{
+                let sha1_base64=(txt)=> {
+                  let md = Forge.md.sha1.create();
+                  md.update(txt,"utf8");
+                  return Buffer.from(md.digest().toHex(), 'hex').toString('base64');
+                  }
+              let stringdata = name +""+process.env.REACT_CLOUDY_SECRET
+              let base64 = sha1_base64(stringdata)
+              
+              let signature = `s--${base64.slice(0, 8)}--` 
+              let chanceUrl = url.replace("x-x-x-x",signature)
+              let secureUrl = chanceUrl.replace("y-y-y-y",process.env.REACT_CLOUDY_CLOUDNAME)
+        
+              return secureUrl
+              }
+              const encryptData = (data, secretKey) => {
+                return CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+            };
 
+              const GeneratedURL = getSignature(
+                req.body.datos.url,   
+                req.body.datos.publicId
+              );
+
+              const response = await fetch(GeneratedURL, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/x-pkcs12', 
+                },
+            });
+            if (!response.ok) {
+              throw new Error(`Error en la descarga: ${response.statusText}`);
+          }
+
+              const buffer = await response.arrayBuffer();
+        const base64Data = await Buffer.from(buffer).toString('base64');
+     
+    //    const encryptedData = await encryptData(base64Data, process.env.CLOUDY_SECRET);
+      //  console.log("encriptando")
+      //  console.log(encryptedData)
+        res.send({status: "Ok", data:base64Data});
+ 
+      } catch (error) {
+        res.send({status: "Error", message: error});
+ 
+    }
+  }
              async function getAllClients(req,res) {
             
               try {
@@ -4604,4 +4654,4 @@ console.log(datafind)
               }
           }
 
-module.exports = {getAllClients, deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,uploadSignedXmlTest, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };
+module.exports = {getDbuserData,getAllClients, deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,uploadSignedXmlTest, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };

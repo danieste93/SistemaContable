@@ -1,21 +1,8 @@
 import React from 'react';
 import Forge  from 'node-forge';
 import CryptoJS from "crypto-js";
-const getSignature=(url, key, name)=>{
-        let sha1_base64=(txt)=> {
-          let md = Forge.md.sha1.create();
-          md.update(txt,"utf8");
-          return Buffer.from(md.digest().toHex(), 'hex').toString('base64');
-          }
-      let stringdata = name +""+key 
-      let base64 = sha1_base64(stringdata)
-      
-      let signature = `s--${base64.slice(0, 8)}--` 
-      let chanceUrl = url.replace("x-x-x-x",signature)
-      let secureUrl = chanceUrl.replace("y-y-y-y",process.env.REACT_CLOUDY_CLOUDNAME)
+import fetchData from '../funciones/fetchdata';
 
-      return secureUrl
-      }
   const decryptData = (text) => {
            
             const bytes = CryptoJS.AES.decrypt(text, process.env.REACT_CLOUDY_SECRET);
@@ -23,72 +10,50 @@ const getSignature=(url, key, name)=>{
            
             return (data)
           }; 
-       const SecureFirm = async (firmadata) => {
+       
+
+ const base64ToArrayBuffer = (base64) => {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+};
+
+       const SecureFirm = async (userReducer) => {
 
         const baseData = localStorage.getItem("base64data")
         if(baseData == null){
-        const GeneratedURL = getSignature(
-          firmadata.url,
-          process.env.REACT_CLOUDY_SECRET,
-          firmadata.publicId
-        );
-      
-        // Realiza la solicitud fetch y obtiene el blob
-        const response = await fetch(GeneratedURL, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/x-pkcs12',
-          },
-        });
-      
-        const blob = await response.blob();
+          console.log("descargando desde cloudi2")
 
-        let readerSave = new FileReader();
-        readerSave.readAsDataURL(blob); 
-        readerSave.onloadend = ()=> {
-        let base64data = readerSave.result;                
+          let firmaDescargada = await fetchData(userReducer,
+            "/public/getDbuserData",
+            userReducer.update.usuario.user.Firmdata)
+    
+            console.log(firmaDescargada)
+            if(firmaDescargada.status == "Ok"){
+              const dataEncripted = CryptoJS.AES.encrypt(
+                JSON.stringify(firmaDescargada.data),
+                process.env.REACT_CLOUDY_SECRET
+                ).toString();
 
-        const dataEncripted = CryptoJS.AES.encrypt(
-        JSON.stringify(base64data),
-        process.env.REACT_CLOUDY_SECRET
-        ).toString();
+                localStorage.setItem("base64data", dataEncripted)
+                const bufferfile = base64ToArrayBuffer(firmaDescargada.data);
+                return bufferfile;
+             
 
-
-
-
-        localStorage.setItem("base64data", dataEncripted)
-        }
-
-        // Convierte el blob a un ArrayBuffer usando FileReader encapsulado en una promesa
-        const bufferfile = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsArrayBuffer(blob);
-          reader.onloadend = () =>      resolve(reader.result)
-
-          reader.onerror = () => reject(new Error('Error al leer el blob'));
-        });
-      
-        return bufferfile;
+            }else{
+              throw new Error("No se pudo descargar la firma desde Cloudinary");
+            }
+        
+       
      }else{
-        console.log("esta bien guardado")
-        let base64Decript = decryptData(baseData)
-        const response = await fetch(base64Decript, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/x-pkcs12',
-            },
-          });
-          const blob = await response.blob();
-     
-
-          const bufferfile = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsArrayBuffer(blob);
-            reader.onloadend = () => resolve(reader.result)
-            reader.onerror = () => reject(new Error('Error al leer el blob'));
-          });
-          console.log(bufferfile)
-          return bufferfile;
+      let FinalFirma = await decryptData(baseData)
+      const bufferfile = base64ToArrayBuffer(FinalFirma);
+      return bufferfile;
+   
+    
       }
       };
 

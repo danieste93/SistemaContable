@@ -2299,8 +2299,8 @@ res.status(200).send({cuenta})
                                     }
    
    
-   await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updateCounterVenta,{session} )
-   res.json({status: "Ok", message: "Venta generada", VentaGen: ventac, Articulos:arrArtsUpdate,Cuentas:arrCuentas,arrRegsSend});
+  let updatedCounter = await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updateCounterVenta,{session, new:true} )
+   res.json({status: "Ok", message: "Venta generada", VentaGen: ventac, Articulos:arrArtsUpdate,Cuentas:arrCuentas,arrRegsSend,updatedCounter});
    if(req.body.Correo != ""){
     
    pdf.create(req.body.html, {
@@ -2590,7 +2590,7 @@ let adjuntos = data.Doctype == "Factura-Electronica"?adjuntosFactura:adjuntosNot
    
      }
  async function generarCredito(req,res){
- console.log(req.body)
+
     let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
     let CuentasModelSass = await conn.model('Cuenta', accountSchema);
     let RegModelSass = await conn.model('Reg', regSchema);
@@ -3161,9 +3161,9 @@ let nuevosFC = getVenta.FormasCredito.concat(arrpagos)
   async function agregarNotaCredito (req, res) {
     console.log("agregarNotas")
     let conn = await mongoose.connection.useDb(req.body.Userdata.DBname)
-
     let VentaModelSass = await conn.model('Venta', ventasSchema);
     let CounterModelSass = await conn.model('Counter', counterSchema);
+  
     const session = await mongoose.startSession();   
     session.startTransaction();
 
@@ -3203,7 +3203,7 @@ let update={NotaCredito: req.body.PDFdata}
               auth: {
                 
                       user: usermail,
-                      pass: userpass,
+                    pass: userpass,
                  
             
               }
@@ -3383,7 +3383,337 @@ let update={NotaCredito: req.body.PDFdata}
 
 
    }
+   async function uploadFact (req, res) { 
+   
+    let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
+    let VentaModelSass = await conn.model('Venta', ventasSchema);
+    let CounterModelSass = await conn.model('Counter', counterSchema);
+    let RegModelSass = await conn.model('Reg', regSchema);
+   
+    const session = await mongoose.startSession();   
+    session.startTransaction();
+
+    try{
+let newTime = new Date(req.body.fechaAuto).getTime()
+      let update={
+        Secuencial:parseInt(req.body.secuencial),
+        ClaveAcceso: req.body.ClaveAcceso,
+        Doctype:req.body.Doctype,
+        FactAutorizacion:req.body.numeroAuto,
+        FactFechaAutorizacion:req.body.fechaAuto,
+        tiempo:newTime,
+        Estado:req.body.Estado
+   }
+      let updateVenta = await VentaModelSass.findByIdAndUpdate(req.body.IdVentaMongo, update, {session, new:true})
+
+
+      let newRegs=[]
+      for (const x of req.body.arrRegs) {  
+        let registro = await RegModelSass.findById(x, null, { session });
+        if (!registro) {
+          throw new Error("Error encontrando Registros, vuelva a iniciar sesión");
+        }
+        let newversiones = registro.Versiones
+        
+        newversiones.push(registro.toObject())
+        let upReg = {      
+          tiempo: newTime,
+          Versiones: newversiones
+        };
+      
+        let regUp = await RegModelSass.findByIdAndUpdate(x, upReg, { session, new: true });
+        newRegs.push(regUp);
+      }
+
+      let updatecounter = { $inc: { ContSecuencial: 1 } }
+      await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session} )
+
+      res.send({status: "Ok", message: "facturaGenerada", Venta:updateVenta, Regs:newRegs });
+      if(req.body.Correo != ""){
+    
+        pdf.create(req.body.html, {
+        
+        border: {
+            top: "0px",            // default is 0, units: mm, cm, in, px
+            right: "0px",
+            bottom: "0px",
+            left: "0px"
+          },
+          childProcessOptions: { env: { OPENSSL_CONF: '/dev/null' }}}).toBuffer(async (err, buffer) => {
+        
+           if (err) {console.log(err); throw new Error("error al crear pdf")}
+     
+           let datafind = await CounterModelSass.find({ iDgeneral:9999990})
+           let usermail ='iglassmailer2020@gmail.com'
+           let userpass =process.env.REACT_MAILER_PASS
+                if(datafind.length > 0){
+                 usermail = datafind[0].Data[0].user
+                 userpass = datafind[0].Data[0].pass
+                }
+     
+     
+            var transporter = nodemailer.createTransport({
+              service: 'gmail',
+              auth: {
+                
+                      user: usermail,
+                      pass: userpass,
+                 
+            
+              }
+            })
+            let subjectstingFactura = `Factura Electrónica ${req.body.allData.nombreComercial} Nº ${req.body.allData.estab}${req.body.allData.ptoEmi}-${req.body.allData.secuencial}  `;
+            let subjectstingNota = `Nota de Venta ${req.body.allData.nombreComercial} Nº ${req.body.idVenta}  `;
+            
+            let subjectsting = req.body.Doctype == "Factura-Electronica"?subjectstingFactura:subjectstingNota
+           
+            
+            let adjuntosFactura = [
+            {
+                filename: `${req.body.allData.nombreComercial}-${req.body.secuencial}.pdf`, // <= Here: made sure file name match
+                content: buffer,
+                contentType: 'application/pdf'
+            },
+            {
+              filename: `${req.body.allData.nombreComercial}-${req.body.secuencial}.xml`, // <= Here: made sure file name match
+              content: Buffer.from(req.body.xmlDoc),
+              contentType: 'application/xml'
+          },
+        
+        ]
+        
+        let adjuntosNota = [
+         {
+             filename: `${req.body.allData.nombreComercial}-${req.body.idVenta}.pdf`, // <= Here: made sure file name match
+             content: buffer,
+             contentType: 'application/pdf'
+         },
+        
+     
+     ]
+     
+     let adjuntos = req.body.Doctype == "Factura-Electronica"?adjuntosFactura:adjuntosNota
+        
+            let textstingdevFactura =
+            `<table width="90%" border="1">
+            <tbody>
+            <tr>
+            <td align="center">Estimad@ informamos que su comprobante electronico ha sido emitido exitosamente</td>
+            </tr>
+            </tbody>
+            </table>
+            <table width="90%" border="0" cellpadding="0" cellspacing="5">
+            <tbody>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            <tr>
+            <th align="right">Razón Social:</th>
+            <td>${req.body.allData.razon}</td>
+            </tr>
+            <tr>
+            <th align="right">RUC:</th>
+            <td>${req.body.allData.ruc}</td>
+            </tr>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            <tr>
+            <th align="right">Cliente:</th>
+            <td>${req.body.allData.razonSocialComprador}</td>
+            </tr>
+            <tr>
+            <th align="right">Identificaci&oacute;n Cliente:</th>
+            <td>${req.body.allData.identificacionComprador}</td>
+            </tr>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            <tr>
+            <th align="right">Ambiente:</th>
+            <td>Produccion</td>
+            </tr>
+            <tr>
+            <th align="right">Tipo de Comprobante:</th>
+            <td>Factura</td>
+            </tr>
+            <tr>
+            <th align="right">Fecha de Emisi&oacute;n:</th>
+            <td>${req.body.allData.fechaAuto}</td>
+            </tr>
+            <tr>
+            <th align="right">Nro. de Comprobante:</th>
+            <td>${req.body.allData.estab}${req.body.allData.ptoEmi}-${req.body.allData.secuencial}</td>
+            </tr>
+            <tr>
+            <th align="right">Valor Total:</th>
+            <td>${parseFloat(req.body.allData.SuperTotal).toFixed(2)}</td>
+            </tr>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            <tr>
+            <th align="right">Nro. Autorizacion SRI:</th>
+            <td>${req.body.allData.numeroAuto}</td>
+            </tr>
+            <tr>
+            <th align="right">Clave de Acceso:</th>
+            <td>${req.body.allData.ClaveAcceso}</td>
+            </tr>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            </tbody>
+            </table>
+            <table width="90%" border="1">
+            <tbody>
+            <tr>
+            <td align="center">Documento Generado por Contalux S.A 2024</td>
+            </tr>
+            </tbody>
+            </table>`
+            let textstingdevNota =
+            `<table width="90%" border="1">
+            <tbody>
+            <tr>
+            <td align="center">Estimad@ informamos que su comprobante electronico ha sido emitido exitosamente</td>
+            </tr>
+            </tbody>
+            </table>
+            <table width="90%" border="0" cellpadding="0" cellspacing="5">
+            <tbody>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            <tr>
+            <th align="right">Razón Social:</th>
+            <td>${req.body.allData.razon}</td>
+            </tr>
+            <tr>
+            <th align="right">RUC:</th>
+            <td>${req.body.allData.ruc}</td>
+            </tr>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            <tr>
+            <th align="right">Cliente:</th>
+            <td>${req.body.allData.razonSocialComprador}</td>
+            </tr>
+            <tr>
+            <th align="right">Identificaci&oacute;n Cliente:</th>
+            <td>${req.body.allData.identificacionComprador}</td>
+            </tr>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            <tr>
+            <th align="right">Ambiente:</th>
+            <td>Produccion</td>
+            </tr>
+            <tr>
+            <th align="right">Tipo de Comprobante:</th>
+            <td>Nota de Venta</td>
+            </tr>
+            <tr>
+            
+            </tr>
+            <tr>
+            <th align="right">Nro. de Comprobante:</th>
+            <td>${req.body.idVenta}</td>
+            </tr>
+            <tr>
+            <th align="right">Valor Total:</th>
+            <td>${parseFloat(req.body.allData.SuperTotal).toFixed(2)}</td>
+            </tr>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            <tr>
+          
+            </tr>
+            <tr>
+          
+       
+            </tr>
+            <tr>
+            <th align="right"></th>
+            <td></td>
+            </tr>
+            </tbody>
+            </table>
+            <table width="90%" border="1">
+            <tbody>
+            <tr>
+            <td align="center">Documento Generado por Contalux S.A 2022</td>
+            </tr>
+            </tbody>
+            </table>`
+            let textstingdev = req.body.Doctype == "Factura-Electronica"?textstingdevFactura:textstingdevNota 
+            if(req.body.allData.Estado == "EN PROCESO"){
+        
+              subjectsting = `Comprobante temporal ${req.body.allData.nombreComercial} Nº ${req.body.allData.estab}${req.body.allData.ptoEmi}-${req.body.allData.secuencial}  `;
+        
+              textstingdev = `<table width="90%" border="1">
+              <tbody>
+              <tr>
+              <td align="center">Estimad@ su factura se encuentra proceso, con prontitud se le enviara la autorizada</td>
+              </tr>
+              </tbody>
+              </table>`
+        
+              adjuntos =  [
+                {
+                    filename: `${req.body.allData.nombreComercial}-${req.body.allData.secuencial}.pdf`, // <= Here: made sure file name match
+                    content: buffer,
+                    contentType: 'application/pdf'
+                },
+              
+        
+            ]
+        
+            }   
+            var mailOptions = {
+           
+              to: req.body.Correo,
+              subject: subjectsting,
+              html: textstingdev,
+              attachments: adjuntos
+            }
+            
+            transporter.sendMail(mailOptions, function (err, res) {
+              if(err){
+               if (err) {console.log(err)}
+              } else {
+                  console.log('Email Sent');
+              }
+            })
+        
+          });
+        }
 
 
 
-module.exports = {agregarNotaCredito,getRegsDeleteTime,getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};
+        await session.commitTransaction();
+        session.endSession();
+
+    }
+  
+  catch(error){
+   await session.abortTransaction();
+   session.endSession();
+   console.log(error, "errr")
+   return res.json({status: "Error", message: error.name, error:error.message });
+ }
+
+}
+module.exports = {uploadFact,agregarNotaCredito,getRegsDeleteTime,getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};
