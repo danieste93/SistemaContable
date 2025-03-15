@@ -51,7 +51,7 @@ if(datos.TipoVenta == "Credito"){
   
     setwatchNota(true)
   }
-  if(datos.Doctype == "Nota de venta" &&datos.nombreCliente != "" &&datos.cedulaCliente != ""){
+  if(datos.Doctype == "Nota de venta" ){
   
     setvisualUploadFact(true)
   }

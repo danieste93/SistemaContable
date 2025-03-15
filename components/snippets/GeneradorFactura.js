@@ -177,7 +177,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
                               
                                let propina ="0.00"
                                let importeTotal= SuperTotal.toFixed(2)
-                               let ambiente = "1"
+                               let ambiente = "2"
                    
                                let s1 = state.userReducer.update.usuario.user.Factura.codigoEstab
                                let s2 = state.userReducer.update.usuario.user.Factura.codigoPuntoEmision
