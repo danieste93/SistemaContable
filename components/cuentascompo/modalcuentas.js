@@ -1,6 +1,10 @@
 import React, { Component } from 'react'
 import { Animate } from "react-animate-mount";
 import {connect} from 'react-redux';
+import Addcuenta from "./modal-addcuenta"
+import Editcuenta from "./modal-editcuenta"
+import Addtipo from "./modal-addtipo"
+
 import  {deleteCuenta} from "../../reduxstore/actions/regcont"
 import ModalDeleteC from "./modal-delete-cuenta";
 import fetchData from '../funciones/fetchdata';
@@ -8,6 +12,10 @@ import {gettipos} from "../../reduxstore/actions/regcont"
 class Contacto extends Component {
    
 state={
+  AddCuenta:false,
+  EditCuenta:false,
+  CuentaEditar:"",
+  addmitipo:false,
   CuentasHabiles:[],
   editmode:false,
   CuentasD:[],
@@ -75,7 +83,7 @@ channel1 = null;
         }
             
       
-        filtroCuentas=(e)=>{
+        FilterSearcher=(e)=>{
           if(this.state.cuentasSearcher ==""){
             return(e)
           }else{
@@ -104,18 +112,33 @@ channel1 = null;
           });
         }*/
     render () {
-
+      let userData={_id:''}
+    
+      if(this.props.state.userReducer != ""){
+        userData=this.props.state.userReducer.update.usuario.user
+      }
       let generadorDeCuentas
     let cuentactive= this.state.editmode?"bordeazul":""
     let lapizctive= this.state.editmode?"lapizctive":""
       if(this.props.regC.Cuentas.length > 0){
-       
-let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario" 
+
+let cuentasGenerales = this.props.regC.Cuentas
+let cuentasporFiltar = cuentasGenerales
+if(this.props.FiltroP){
+  if(this.props.FiltroP == "CuentasNoPosesion"){
+    cuentasporFiltar = cuentasGenerales.filter(x=>!x.CheckedP )
+  }
+
+
+}
+
+
+let cuentasSinInv = cuentasporFiltar.filter(x=>x.Tipo != "Inventario" 
   
  // && x._id != this.props.cuentaEnviada._id
 )
 
-      generadorDeCuentas = this.filtroCuentas(cuentasFiltradas).map((cuenta,i)=>{
+      generadorDeCuentas = this.FilterSearcher(cuentasSinInv).map((cuenta,i)=>{
         if(cuenta.Visibility){
        
         return(<div key={i} className={`cuentaRender jwPointer ${cuentactive}`}                             >
@@ -163,8 +186,11 @@ let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario"
         
         }
           else{
-          
-            this.props.editCuenta(cuenta)
+          this.setState({
+            EditCuenta:true,
+            CuentaEditar:cuenta
+          })
+            
           }
         }
         }>
@@ -267,7 +293,7 @@ let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario"
         </div>
 
      <div className="conticonos">
-     <i className="material-icons" onClick={this.props.Addcuentas}>  add</i>
+     <i className="material-icons" onClick={()=>this.setState({AddCuenta:true})}>  add</i>
      <i className={`material-icons ${lapizctive}`}  onClick={()=>{this.setState({editmode:!this.state.editmode})}}>  edit</i>
  
    
@@ -309,6 +335,44 @@ let cuentasFiltradas = this.props.regC.Cuentas.filter(x=>x.Tipo != "Inventario"
         <Animate show={this.state.ModalDeleteC}>
          <ModalDeleteC CuentaDelete={this.state.CuentaPorDel} Flecharetro={()=>{this.setState({ModalDeleteC:false})}}/>
           </Animate>
+           <Animate show={this.state.AddCuenta}>
+                 < Addcuenta datosUsuario={userData._id}    Flecharetro4={
+                   
+             ()=>{
+              
+              this.setState({AddCuenta:false, })}
+            } 
+            agregarTipo={()=>{
+           
+              this.setState({addmitipo:true})}}
+                    />
+                  </Animate >
+          
+                  <Animate show={this.state.EditCuenta}>
+                 < Editcuenta
+                  datosUsuario={userData._id} 
+             
+                    CuentaEditar={this.state.CuentaEditar}
+                    Flecharetro4={
+             
+             ()=>{
+             
+              this.setState({EditCuenta:false, valdefault:"No"})}} 
+                    />
+                  </Animate >
+           <Animate show={this.state.addmitipo}>
+           
+              < Addtipo id="adddtipe"   Flecharetro4={
+          
+          ()=>{
+       
+           this.setState({addmitipo:false, valdefault:"No"})}} 
+                 /> 
+                 
+               </Animate >
+       
+       
+       
            <style >{`
           
 

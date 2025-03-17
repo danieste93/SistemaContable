@@ -42,6 +42,7 @@ class Contacto extends Component {
             console.log('Bufferfile obtenido:', bufferfile);
           
               let datos= this.props.dataUpload
+              console.log(datos)
 
               let factGenerated = await GeneradorFactura(datos.iDVenta,datos.iDRegistro,datos.formasdePago,datos.articulosVendidos, 
               {
@@ -53,7 +54,7 @@ class Contacto extends Component {
                  direccion:datos.direccionCliente,
                  cedula:datos.cedulaCliente,
                  ClientID:this.state.ClientID,
-                 UserSelect:datos.nombreCliente!=""?true:false,
+                 UserSelect:datos.nombreCliente!="Consumidor Final"?true:false,
                }
               ,  this.state.secuencialGen, 
                  datos.PrecioCompraTotal,
@@ -145,6 +146,7 @@ class Contacto extends Component {
                       secuencialBase:data.Counters,
         
             })
+           
                }
    
       Onsalida=()=>{

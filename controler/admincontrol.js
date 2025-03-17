@@ -4474,8 +4474,12 @@ res.status(200).send({message:"Iconos Actualizados", updadatedIcons })
               let ClienteModelSass = await conn.model('Cliente', clientSchema);
               let CounterModelSass = await conn.model('Counter', counterSchema);
               let contadoresHabiles = await CounterModelSass.find({iDgeneral:9999999})
-              let findClient = await ClienteModelSass.findById(req.body.datos)
-              console.log(findClient)
+              let findClient ="Cedula"
+              if(req.body.datos != ""){
+                findClient = await ClienteModelSass.findById(req.body.datos)
+              }
+        
+          
 
               res.status(200).send({ status: "Ok", message: "findClient",Client:findClient, Counters:contadoresHabiles[0].ContSecuencial  });
               

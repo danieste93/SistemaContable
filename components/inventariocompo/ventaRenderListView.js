@@ -43,7 +43,7 @@ if(datos.TipoVenta == "Credito"){
     setvisual(true)
   }
 
-  if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != "" && (datos.NotaCredito == null || datos.NotaCredito == "")){
+  if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != "" &&datos.nombreCliente != "Consumidor Final" && (datos.NotaCredito == null || datos.NotaCredito == "")){
   
     setvisualNota(true)
   }

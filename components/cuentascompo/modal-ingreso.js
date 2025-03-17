@@ -6,14 +6,14 @@ import CuotaRep from "./modalcuota"
 import Cat from "./modalcategorias"
 import Calcu from "./modalcalculadora"
 import Cuentas from "./modalcuentas"
-import Addcuenta from "./modal-addcuenta"
+
 import Addcat from "./modal-addcat"
-import Editcuenta from "./modal-editcuenta"
+
 import Edditcat from "./modal-editcat"
 import TextField from '@material-ui/core/TextField';
 import {connect} from 'react-redux';
 import Router from 'next/router';
-import Addtipo from "./modal-addtipo"
+
 import { DateTimePicker,  MuiPickersUtilsProvider } from "@material-ui/pickers";
 import moment from "moment";
 import "moment/locale/es";
@@ -43,7 +43,7 @@ class Contacto extends Component {
     cuentasmodal:false,
     calcuModal:false,
     Importe:"",
-    AddCuenta:false,
+ 
     err1:false,
     err2:false,
     err3:false,
@@ -54,9 +54,7 @@ class Contacto extends Component {
     cuentaSelect:"",
     cuentaSelectT2:"",
     cuentaSelectT1:"",
-    EditCuenta:false,
-    CuentaEditar:"",
-    addmitipo:false,
+   
     categoriaModal:false,
     CuentaCaller:"",
     tiempo:new Date(),
@@ -1235,12 +1233,10 @@ let nombreto = cat.estado.catSelect.nombreCat + "  //  " + cat.subcat
         </Animate>
 
         <Animate show={this.state.cuentasmodal}>
-       < Cuentas Addcuentas={()=>{this.setState({AddCuenta:true})}} 
-       datosUsuario={userData}
+       < Cuentas 
+    
        cuentacaller={this.state.CuentaCaller }
        cuentaEnviada={this.state.cuentaEnviada }
-       editCuenta={(cuentae)=>{this.setState({EditCuenta:true, CuentaEditar:cuentae})}}
-    
        sendCuentaSelect={(cuenta)=>{
     this.setState({cuentaEnviada:cuenta,cuentaSelect:cuenta, CuentaRender:cuenta.NombreC,cuentasmodal:false,})
        } }  
@@ -1289,36 +1285,13 @@ let nombreto = cat.estado.catSelect.nombreCat + "  //  " + cat.subcat
           }
         }
        } 
-      envioCuentas={this.envioCuentas} />
+     
+      />
         </Animate >
 
        
 
-        <Animate show={this.state.AddCuenta}>
-       < Addcuenta datosUsuario={userData._id}    Flecharetro4={
-         
-   ()=>{
-    
-    this.setState({AddCuenta:false, valdefault:"No"})}
-  } 
-  agregarTipo={()=>{
- 
-    this.setState({addmitipo:true})}}
-          />
-        </Animate >
-
-        <Animate show={this.state.EditCuenta}>
-       < Editcuenta
-        datosUsuario={userData._id} 
-   
-          CuentaEditar={this.state.CuentaEditar}
-          Flecharetro4={
-   
-   ()=>{
-   
-    this.setState({EditCuenta:false, valdefault:"No"})}} 
-          />
-        </Animate >
+       
 
 
         <Animate show={this.state.Addcat}>
@@ -1345,16 +1318,7 @@ let nombreto = cat.estado.catSelect.nombreCat + "  //  " + cat.subcat
         </Animate >
 
 
-        <Animate show={this.state.addmitipo}>
     
-       < Addtipo id="adddtipe"   Flecharetro4={
-   
-   ()=>{
-
-    this.setState({addmitipo:false, valdefault:"No"})}} 
-          /> 
-          
-        </Animate >
         <Snackbar open={this.state.Alert.Estado} autoHideDuration={5000} onClose={handleClose}>
     <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
         <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>

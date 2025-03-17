@@ -4,15 +4,12 @@ import ModalRep from "./modalrepetir"
 import CuotaRep from "./modalcuota"
 import Cat from "./modalcategorias"
 import Cuentas from "./modalcuentas"
-import Addcuenta from "../cuentascompo/modal-addcuenta"
 import Addcat from "../cuentascompo/modal-addcat"
 import Calcu from "./modalcalculadora"
 import postal from 'postal';
-import Editcuenta from "./modal-editcuenta"
 import Edditcat from "./modal-editcat"
 import TextField from '@material-ui/core/TextField';
 import {connect} from 'react-redux';
-import Addtipo from "./modal-addtipo"
 import { DateTimePicker,  MuiPickersUtilsProvider } from "@material-ui/pickers";
 import moment from "moment";
 import "moment/locale/es";
@@ -40,7 +37,7 @@ class Contacto extends Component {
     valdefault:"No",
     cuotamodal:false,
     Importe:"",
-    AddCuenta:false,
+
     err1:false,
     err2:false,
     err3:false,
@@ -1011,12 +1008,11 @@ edit
         </Animate >
 
         <Animate show={this.state.cuentasmodal}>
-       < Cuentas Addcuentas={()=>{this.setState({AddCuenta:true})}} 
+       < Cuentas 
        datosUsuario={this.props.state.userReducer.update.usuario}
        cuentacaller={this.state.CuentaCaller }
        cuentaEnviada={this.state.cuentaEnviada }
-       editCuenta={(cuentae)=>{this.setState({EditCuenta:true, CuentaEditar:cuentae})}}
-    
+     
        sendCuentaSelect={(cuenta)=>{
         let data = {
           idCuenta: cuenta._id,
@@ -1095,32 +1091,7 @@ let nombreto = cat.estado.catSelect.nombreCat + "  //  " + cat.subcat
 
        
 
-        <Animate show={this.state.AddCuenta}>
-       < Addcuenta datosUsuario={this.props.state.userReducer.update.usuario._id}    Flecharetro4={
-         
-   ()=>{
-     console.log("enretro4")
-    this.setState({AddCuenta:false, valdefault:"No"})}
-  } 
-  agregarTipo={()=>{
  
-    this.setState({addmitipo:true})}}
-          />
-        </Animate >
-
-        <Animate show={this.state.EditCuenta}>
-       < Editcuenta
-        datosUsuario={this.props.state.userReducer.update.usuario._id} 
-   
-          CuentaEditar={this.state.CuentaEditar}
-          Flecharetro4={
-   
-   ()=>{
-   
-    this.setState({EditCuenta:false, valdefault:"No"})}} 
-          />
-        </Animate >
-
 
         <Animate show={this.state.Addcat}>
         < Addcat datosUsuario={this.props.state.userReducer.update.usuario._id}     Flecharetro4={
@@ -1143,16 +1114,7 @@ let nombreto = cat.estado.catSelect.nombreCat + "  //  " + cat.subcat
         </Animate >
 
 
-        <Animate show={this.state.addmitipo}>
-    
-       < Addtipo id="adddtipe"   Flecharetro4={
-   
-   ()=>{
-
-    this.setState({addmitipo:false, valdefault:"No"})}} 
-          /> 
-          
-        </Animate >
+     
         <Snackbar open={this.state.Alert.Estado} autoHideDuration={5000} onClose={handleClose}>
     <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
         <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>

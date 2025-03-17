@@ -117,7 +117,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
                    let razon = state.userReducer.update.usuario.user.Factura.razon 
                    let nombreComercial = state.userReducer.update.usuario.user.Factura.nombreComercial
                    let ruc = state.userReducer.update.usuario.user.Factura.ruc
-                   let codDoc = "01"
+                   let codDoc = "01" // 04 nota de credito, 01 factura, 
                    let estab =state.userReducer.update.usuario.user.Factura.codigoEstab
                    let ptoEmi= state.userReducer.update.usuario.user.Factura.codigoPuntoEmision
                    let secuencial= ceroMaker(secuencialGen)
@@ -129,8 +129,9 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
                    
                    let tipoIdentificacionComprador = "07" // 04--ruc  05--cedula  06--pasaporte  07-VENTA A CONSUMIDOR FINAL  08--IDENTIFICACION DELEXTERIOR*//
                    let razonSocialComprador ='CONSUMIDOR FINAL'
-                   let identificacionComprador ="9999999999999"
-                   let direccionComprador = ""
+                   let identificacionComprador ="9999999999999" 
+                   let direccionComprador = "xxxxxx"
+                   console.log(Comprador)
                    if(Comprador.UserSelect){
                        tipoIdentificacionComprador=Comprador.ClientID =="Cedula"?"05":
                                                    Comprador.ClientID == "RUC"?"04":
@@ -139,15 +140,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
                    identificacionComprador = Comprador.cedula
                    direccionComprador = Comprador.direccion
                    }
-                   if(Comprador.UserSelect){
-                       tipoIdentificacionComprador=Comprador.ClientID =="Cedula"?"05":
-                                                   Comprador.ClientID == "RUC"?"04":
-                                                   Comprador.ClientID =="Pasaporte"?"06":"07"
-                   razonSocialComprador = Comprador.usuario
-                   identificacionComprador = Comprador.cedula
-                   direccionComprador = Comprador.direccion
-                   }
-               
+                
                      let valorIVA = IvaEC.toFixed(2)
                         
                                let artImpuestos  = ArtVent.filter(x=>x.Iva)
@@ -289,7 +282,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
             let accumText = ""
             let mimapper =  Fpago.map(x=> accumText.concat(x.Detalles))
        
-    /*
+/*
     const url = window.URL.createObjectURL(
         new Blob([docFirmado], { type: "text/plain"}),
       );
@@ -301,7 +294,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
     
      link.click()
      
-     */
+   */
              
     
             
@@ -332,7 +325,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
             rimpeval : state.userReducer.update.usuario.user.Factura.rimpe?true:false,
             razonSocialComprador:Comprador.UserSelect?Comprador.usuario:'CONSUMIDOR FINAL',
             ciudadComprador:Comprador.UserSelect?Comprador.ciudad:'',
-            correoComprador:Comprador.UserSelect?Comprador.correo:'',
+            correoComprador:Comprador.UserSelect?Comprador.correo:'activos.ec@gmail.com',
             identificacionComprador:Comprador.UserSelect?Comprador.cedula:'9999999999999',
             direccionComprador:Comprador.UserSelect?Comprador.direccion:'',
             ArticulosVendidos:ArtVent,
@@ -419,7 +412,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
                              razonSocialComprador:Comprador.UserSelect?Comprador.usuario:'CONSUMIDOR FINAL',
                              identificacionComprador:Comprador.UserSelect?Comprador.cedula:'9999999999999',
                              direccionComprador:Comprador.UserSelect?Comprador.direccion:'',
-                             correoComprador:Comprador.UserSelect?Comprador.correo:'',
+                             correoComprador:Comprador.UserSelect?Comprador.correo:'activos.ec@gmail.com',
                              ciudadComprador:Comprador.UserSelect?Comprador.ciudad:'',
                              ArticulosVendidos:ArtVent,
                              LogoEmp : state.userReducer.update.usuario.user.Factura.logoEmp,       
@@ -508,11 +501,11 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
                          razonSocialComprador:Comprador.UserSelect?Comprador.usuario:'CONSUMIDOR FINAL',
                          identificacionComprador:Comprador.UserSelect?Comprador.cedula:'9999999999999',
                          direccionComprador:Comprador.UserSelect?Comprador.direccion:'',
-                         correoComprador:Comprador.UserSelect?Comprador.correo:'',
+                         correoComprador:Comprador.UserSelect?Comprador.correo:'activos.ec@gmail.com',
  
                          ArticulosVendidos:ArtVent,
                          populares:  state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,            
-                                                     correoComprador:Comprador.UserSelect?Comprador.correo:'',
+                                                  
                           Userdata:{DBname:state.userReducer.update.usuario.user.DBname} , 
                           Estado:"EN PROCESO",
                           detalles:mimapper.map((x)=>  x +" ")

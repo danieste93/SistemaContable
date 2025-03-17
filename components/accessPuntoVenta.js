@@ -13,7 +13,7 @@ import Autosuggest from '../components/suggesters/jwsuggest-general-venta';
 import { ValidatorForm, TextValidator} from 'react-material-ui-form-validator';
 import Radio from '@material-ui/core/Radio';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import {addRegs,getArts,getcuentas,getClients, cleanData,addFirstRegs, addVenta,addClient,updateClient, addCuenta, updateCuentas, updateArts } from "../reduxstore/actions/regcont";
+import {addRegs,getArts,getcuentas,getClients, cleanData, addVenta,addClient,updateClient, addCuenta, updateCuentas, updateArts } from "../reduxstore/actions/regcont";
 import RadioGroup from '@material-ui/core/RadioGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -26,8 +26,9 @@ import BarcodeReader from 'react-barcode-reader'
 import ModalEditPrecioCompraServ from "./puntoventacompo/modal-editPrecioCompraServ"
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
-import Forge  from 'node-forge';
-
+import Cuentas from "../components/cuentascompo/modalcuentas"
+import { Button, Box, Typography, Paper } from "@material-ui/core";
+import { AssignmentTurnedIn, AddCircleOutline } from "@material-ui/icons";
 import cotiGenetor from "../public/static/cotiTemplate"
 import notaGenetor from "../public/static/NotaTemplate"
 import Head from 'next/head';
@@ -37,6 +38,8 @@ import GeneradorFactura  from "./snippets/GeneradorFactura"
 import SecureFirm from './snippets/getSecureFirm'; 
  class accessPuntoVenta extends Component {
      state={
+        cuentasmodal:false,
+        cuentaAsignada:false,
         idCoti:"",     
         Resultados:false,
         html:"",
@@ -48,21 +51,22 @@ import SecureFirm from './snippets/getSecureFirm';
         modalEditServ:false,
         cotiToClient:false,
           doctype:"Factura",
+          
           Comprador:{
             UserSelect:false,
                     id:"",
                     usuario:"Consumidor Final",
                   
-                    correo:"xxxxxxxxxx",
+                    correo:"activos.ec@gmail.com",
                     telefono:"",
                     ciudad:"",
                     direccion:"xxxxxxxxxx",
-                    cedula:"999999999",
+                    cedula:"9999999999999",
                     idcuenta:"",
                      ClientID:"Cedula",
          
           },
-                    edditButton:true,
+                   
                     Alert:{Estado:false},
                     readOnly:true,
                     perPage: 5,
@@ -747,11 +751,29 @@ this.startPuntoVentaData()
         this.setState({Alert: add, loading:false}) 
     }
     }
-  
+    desasignarCuenta=(e)=>{
+
+    } 
+    handleChangeformNumeros = (e) => {
+        const { name, value } = e.target;
+        
+        // Validamos que el valor solo contenga números (permitiendo ceros a la izquierda)
+        if (/^\d*$/.test(value)) {
+            this.setState((prevState) => ({
+                Comprador: {
+                    ...prevState.Comprador,
+                    [name]: value
+                }
+            }));
+        }
+    };
      handleChangeform=(e)=>{
-        this.setState({
-            [e.target.name] : e.target.value
-        })
+        this.setState((prevState) => ({
+            Comprador: {
+              ...prevState.Comprador,
+              [e.target.name] : e.target.value
+            }
+          }));
          }
          handleClientID=(e)=>{
        
@@ -1028,16 +1050,20 @@ handleChangeGeneral=(e)=>{
         userDisplay:false,
         readOnly:true,
         userEditMode:false,
-        UserSelect:false,
-        id:"",
-        usuario:"",
-        correo:"",
-        telefono:"",
-        ciudad:"",
-        direccion:"",
-        cedula:"",
-        tipopago:"Contado",
-        creditLimit:0,
+      
+        Comprador:{
+            UserSelect:false,
+                    id:"",
+                    usuario:"Consumidor Final",
+                    correo:"activos.ec@gmail.com'",
+                    telefono:"",
+                    ciudad:"",
+                    direccion:"xxxxxxxxxx",
+                    cedula:"9999999999999",
+                    idcuenta:"",
+                     ClientID:"Cedula",
+         
+          },
        
     }
         this.setState(data)
@@ -1051,8 +1077,38 @@ handleChangeGeneral=(e)=>{
 this.setState({impresion:!this.state.impresion})
     }
     addNewUser=()=>{
-        this.setState({readOnly:false, adduser:true, userDisplay:true})
+        this.setState({readOnly:false, 
+            adduser:true, 
+            userDisplay:true,
+            Comprador:{
+                UserSelect:false,
+                        id:"",
+                        usuario:"",
+                      
+                        correo:"",
+                        telefono:"",
+                        ciudad:"",
+                        direccion:"",
+                        cedula:"",
+                        idcuenta:"",
+                         ClientID:"Cedula",
+             
+              },
+        
+        
+        })
     }
+    validarSoloNumeros = (event) => {
+        const { value } = event.target;
+        const soloNumeros = value.replace(/\D/g, ''); // Elimina cualquier carácter que no sea un número
+      
+        this.setState((prevState) => ({
+          Comprador: {
+            ...prevState.Comprador,
+            [event.target.name]: soloNumeros
+          }
+        }));
+      };
     getAllArts=()=>{
         
           let datos = {User: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
@@ -1093,7 +1149,7 @@ this.setState({impresion:!this.state.impresion})
         }
     regisUser=()=>{
  
-        
+        console.log("en regisUser")
   
    var datar = {Usuario:this.state.Comprador.usuario,
                TelefonoContacto:this.state.Comprador.telefono,
@@ -1214,8 +1270,8 @@ this.setState({creditoCantidadIni:parseFloat(e.target.value) })
     }
     handleScanError=(e)=>{
      
- 
-        if(e != null && e !=undefined && e !=""  ){
+if(e.length > 6){
+        if(e != null && e !=undefined && e !=""   ){
         let findArt = this.props.state.RegContableReducer.Articulos.find(x => x.Eqid.toUpperCase().trim() == e.toUpperCase().trim())
     
         if(findArt == undefined){
@@ -1305,6 +1361,7 @@ this.setState({creditoCantidadIni:parseFloat(e.target.value) })
             this.setState({Alert: add,loading:false}) 
         }
     }
+}
     handleScan=(e)=>{
       
         let findArt = this.props.state.RegContableReducer.Articulos.find(x => x.Eqid.toUpperCase().trim() == e.toUpperCase().trim())
@@ -2353,7 +2410,10 @@ let generarRimpeNota = ""
 let SuggesterReady =    <CircularProgress  />              
 if(this.props.state.RegContableReducer.Clients){
   
-    SuggesterReady =  <Autosuggest placeholder="Busca Clientes" sendClick={this.setUserData}   sugerencias={this.props.state.RegContableReducer.Clients} resetData={this.resetUserData}  />  
+    SuggesterReady =  <Autosuggest placeholder="Busca Clientes"
+                     sendClick={this.setUserData}  
+                      sugerencias={this.props.state.RegContableReducer.Clients}
+                       resetData={this.resetUserData}  />  
 }
 let logogen = ""
 if(this.props.state.userReducer){
@@ -2615,10 +2675,11 @@ delete
 
 <Animate show={!this.state.Comprador.UserSelect}>  
  <button className=" btn btn-success botonedit" onClick={this.addNewUser}>
-<p>Agregar</p>
-<span className="material-icons">
+ <span className="material-icons">
 add
 </span>
+<p>Agregar</p>
+
 
 </button>
 </Animate> 
@@ -2654,6 +2715,7 @@ account_circle
        value={this.state.Comprador.usuario}
        InputProps={{
         readOnly: this.state.readOnly,
+        style: this.state.readOnly ? { pointerEvents: "none", backgroundColor: "#f0f0f0" } : {}
       }}
    />
    
@@ -2677,6 +2739,7 @@ mail
        value={this.state.Comprador.correo}
        InputProps={{
         readOnly: this.state.readOnly,
+        style: this.state.readOnly ? { pointerEvents: "none", backgroundColor: "#f0f0f0" } : {}
       }}
    />
    
@@ -2699,6 +2762,7 @@ mail
        value={this.state.Comprador.direccion}
        InputProps={{
         readOnly: this.state.readOnly,
+        style: this.state.readOnly ? { pointerEvents: "none", backgroundColor: "#f0f0f0" } : {}
       }}
    />
    
@@ -2725,7 +2789,7 @@ mail
 </div>
       <TextValidator
       label="Número Identificación"
-       onChange={this.handleChangeform}
+       onChange={this.handleChangeformNumeros}
        name="cedula"
        type="text"
        validators={['requerido']}
@@ -2733,6 +2797,7 @@ mail
        value={this.state.Comprador.cedula}
        InputProps={{
         readOnly: this.state.readOnly,
+        style: this.state.readOnly ? { pointerEvents: "none", backgroundColor: "#f0f0f0" } : {}
       }}
    />
    
@@ -2746,18 +2811,19 @@ phone
 </div>
       <TextValidator
       label="Teléfono"
-       onChange={this.handleChangeform}
+       onChange={this.handleChangeformNumeros}
        name="telefono"
-       type="number"
+       type="text"
+     
        validators={[]}
        errorMessages={[]}
        value={this.state.Comprador.telefono}
        InputProps={{
         readOnly: this.state.readOnly,
+        style: this.state.readOnly ? { pointerEvents: "none", backgroundColor: "#f0f0f0" } : {}
       }}
    />
-   
-   
+
    </div>
  
   
@@ -2775,14 +2841,17 @@ phone
        validators={[]}
        errorMessages={[] }
        value={this.state.Comprador.ciudad}
+    
        InputProps={{
         readOnly: this.state.readOnly,
+        style: this.state.readOnly ? { pointerEvents: "none", backgroundColor: "#f0f0f0" } : {}
+     
       }}
    />
-   
+
    
    </div>
-
+  
    </div>
    <div className="contb">
       <Animate show={this.state.adduser}>
@@ -2796,7 +2865,9 @@ done
 
 </button>
 
-<button className=" btn btn-danger botonflex" onClick={()=>{
+<button className=" btn btn-danger botonflex" onClick={(e)=>{
+    e.preventDefault()
+     e.stopPropagation();
     this.resetUserData();
     this.setState({adduser:false, readOnly:true,userDisplay:false})}}>
 <p>Cancelar</p>
@@ -2819,7 +2890,9 @@ done
 
 </button>
 
-<button className=" btn btn-danger botonflex" onClick={()=>{
+<button className=" btn btn-danger botonflex" onClick={(e)=>{
+        e.preventDefault()
+        e.stopPropagation();
     this.resetUserData();
     this.setState({userEditMode:false, readOnly:true})}}>
 <p>Cancelar</p>
@@ -2931,24 +3004,7 @@ cancel
                 
                 <div className="contVentaFinal">
                     <div className='contFlex'>
-                    <div className="tipoPago">
-                    <p className="subtituloArt" style={{marginRight:"10px"}}>Cancelación</p>
-       
-              
-              <RadioGroup aria-label="category" name="category1" value={this.state.tipopago} >
-              <div  className="radiobox"> 
-              <FormControlLabel value="Contado" control={<Radio  />} label="Contado" onClick={this.handleRadio}/>
-           
-         
-            
-              <FormControlLabel value="Credito" control={<Radio  />} label="Crédito" onClick={this.handleRadio}/>
-   
-              </div>
-              
-        </RadioGroup>
-  
-
-                </div>
+          
                 <div className="contFormasDepago">
                     <Animate show={this.state.tipopago == "Contado"}>
                         <div className="contContado">
@@ -3515,7 +3571,36 @@ Documento electrónico generado en activos.ec
                     <BarcodeReader
           onError={this.handleScanError}
           onScan={this.handleScan}
+          minLength={5}
           />
+   <Animate show={this.state.cuentasmodal}>
+       < Cuentas 
+
+       cuentacaller={"" }
+       cuentaEnviada={"" }
+       sendCuentaSelect={(cuenta)=>{
+    this.setState({
+        cuentaCliente:cuenta,
+        cuentasmodal:false,
+        cuentaAsignada:true,
+        Comprador:{
+            idcuenta:cuenta._id,
+        }
+     
+    
+    })
+       } }  
+       FiltroP={"CuentasNoPosesion"}
+       Flecharetro3={
+        ()=>{
+            this.setState({cuentasmodal:false, cuentaCliente:"" })
+          }
+                } 
+              
+               />
+                 </Animate > 
+
+
                     <Snackbar open={this.state.Alert.Estado} autoHideDuration={10000} onClose={handleClose}>
     <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
         <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>
