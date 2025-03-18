@@ -61,7 +61,8 @@ class Contacto extends Component {
              ( datos.PrecioCompraTotal-datos.IvaEC), 
                    datos.IvaEC, 
                    bufferfile,
-                   datos.valorDescuento 
+                   datos.valorDescuento,
+                   2 // ambiente
                      )
 
            

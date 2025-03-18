@@ -1673,7 +1673,7 @@ this.setState({ data:nuevoval})
           
             let factGenerated = await GeneradorFactura(this.state.idVenta,this.state.idReg,this.state.Fpago,this.state.ArtVent, this.state.Comprador, this.state.secuencialGen, 
 
-                      SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento 
+                      SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento, 2 //ambiente 
             )
 
           

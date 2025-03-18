@@ -7,7 +7,7 @@ import {store} from "../../pages/_app"
 import addCero from "../../components/funciones/addcero"
 
 
-const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen, SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento) => {
+const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen, SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento, AmbienteSelect) => {
     const ceroMaker =(val)=>{
 
         let cantidad = JSON.stringify(val).length
@@ -88,8 +88,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
                 
                                    let valor  = item.Iva?  ((item.PrecioCompraTotal) - baseImponible).toFixed(2):0                      
                                         
-        let precioUnitarioval =  item.Iva?  parseFloat(`1.${process.env.IVA_EC }`): 1
-        let data = `        <detalle>\n`+
+       let data = `        <detalle>\n`+
         `            <codigoPrincipal>${item.Eqid}</codigoPrincipal>\n`+
 `            <codigoAuxiliar>00000${item.Eqid}</codigoAuxiliar>\n`+
 `            <descripcion>${item.Titulo}</descripcion>\n`+
@@ -170,7 +169,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
                               
                                let propina ="0.00"
                                let importeTotal= SuperTotal.toFixed(2)
-                               let ambiente = "2"
+                               let ambiente = AmbienteSelect
                    
                                let s1 = state.userReducer.update.usuario.user.Factura.codigoEstab
                                let s2 = state.userReducer.update.usuario.user.Factura.codigoPuntoEmision

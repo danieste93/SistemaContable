@@ -8,13 +8,14 @@ import {connect} from 'react-redux';
 import {Animate} from "react-animate-mount"
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
-import SignerJS from "./snippets/signer"
+import fetchData from './funciones/fetchdata';
 import axios from 'axios';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import {updateUser2} from "../reduxstore/actions/myact"
+import {updateUser,updateUser2} from "../reduxstore/actions/myact"
 import Head from 'next/head';
 import CryptoJS from "crypto-js";
 import SecureFirm from './snippets/getSecureFirm';
+import genFact from './snippets/GeneradorFactura';
 class Contacto extends Component {
    state={
 
@@ -48,13 +49,19 @@ class Contacto extends Component {
     loading:false,
     logoemp:"",
     urlLogoEmp:this.props.state.userReducer.update.usuario.user.Factura.logoEmp ||"",
+  
+
+
+    ClientID:"",
+  secuencialGen:"",
+  secuencialBase:"",
    }
    getRandomInt(max) {
     return Math.floor(Math.random() * max);
   }
     componentDidMount(){
 
-console.log(this.state)
+
      
       setTimeout(function(){ 
         
@@ -75,8 +82,22 @@ console.log(this.state)
       
         this.setState({FirmaData:{add:false, verified:true}})
       }
+
+      this.getUserData()
       }
-   
+      getUserData=async()=>{
+
+        let data = await fetchData(this.props.state.userReducer,
+            "/public/getClientData",
+            "")
+        
+            this.setState({ClientID:data.Client.TipoID,
+                      secuencialGen:data.Counters,
+                      secuencialBase:data.Counters,
+        
+            })
+           
+               }
       addCero=(n)=>{
         if (n<10){
           return ("0"+n)
@@ -84,49 +105,121 @@ console.log(this.state)
           return n
         }
       }
-      getSignature=(url, key, name)=>{
-        let sha1_base64=(txt)=> {
-          let md = Forge.md.sha1.create();
-          md.update(txt,"utf8");
-          return Buffer.from(md.digest().toHex(), 'hex').toString('base64');
-          }
-      let stringdata = name +""+key 
-      let base64 = sha1_base64(stringdata)
-      
-      let signature = `s--${base64.slice(0, 8)}--` 
-      let chanceUrl = url.replace("x-x-x-x",signature)
-      let secureUrl = chanceUrl.replace("y-y-y-y",process.env.REACT_CLOUDY_CLOUDNAME)
-
-      return secureUrl
-
-      }
+     
 
       valAlldata= async()=>{
         console.log(this.state)
         if(this.state.loading == false){
           this.setState({loading:true})
   
-        if(this.state.valiteFirma 
-          && this.state.ruc !=""
-          && this.state.razon.trim() !=""
-          && this.state.nombreComercial.trim() !=""
-          && this.state.dirMatriz.trim() !=""
-          && this.state.dirEstab.trim() !=""
-          && this.state.codigoEstab.trim() !=""
-          && this.state.codigoPuntoEmision.trim() !=""
-        
-        ){
+          if(this.state.valiteFirma 
+            && this.state.ruc !=""
+            && this.state.razon.trim() !=""
+            && this.state.nombreComercial.trim() !=""
+            && this.state.dirMatriz.trim() !=""
+            && this.state.dirEstab.trim() !=""
+            && this.state.codigoEstab.trim() !=""
+            && this.state.codigoPuntoEmision.trim() !=""
+          ){
          
-
+            let  bufferfile =""
        try {
-        
-        const  bufferfile = await SecureFirm(this.props.state.userReducer)
+      bufferfile = await SecureFirm(this.props.state.userReducer)
         console.log('Bufferfile obtenido:', bufferfile);
-        this.genfact(1.15, 1, 0.15,bufferfile )
-
       } catch (error) {
-        console.error('Error al obtener bufferfile:', error);
+        let add = {
+          Estado:true,
+          Tipo:"error",
+          Mensaje:`Error ${error.message}`
       }
+        console.error('Error al obtener bufferfile:', error);
+        this.setState({Alert: add, loading:false})
+      }
+       
+        let factGenerated = await genFact(54,54,
+        [{Detalles:""} ], //Formasdepago
+        [{Iva:true, PrecioCompraTotal:1.15,
+          Titulo:"TituloPrueba",
+          Eqid:"5454",  CantidadCompra:1
+        }],
+        {UserSelect:false},
+        this.state.secuencialGen,
+        1.15, 1, 0.15,
+        bufferfile,
+        0,//descuento 
+        1//ambiente
+        )
+
+        console.log(factGenerated)
+        if(factGenerated.status =="Ok" ){
+          let allData ={
+            idUser:this.state.idUser   }
+              // Realizamos el fetch
+          const response = await fetch("public/updateUser", {
+            method: 'POST', // o 'PUT'
+            body: JSON.stringify(allData),
+            headers: {
+              'Content-Type': 'application/json',
+              'x-access-token': this.props.state.userReducer.update.usuario.token,
+            },
+          });
+       
+          const data = await response.json(); 
+          console.log(data)
+          if(data.status == "ok"){
+            const usuario= data.user
+            this.props.dispatch(updateUser2({usuario}))
+            this.setState({validateFact:true,
+              areaValidacion:false
+            })
+          }else{
+            let add = {
+              Estado:true,
+              Tipo:"error",
+              Mensaje:`Error actualizando el usuario`
+          }
+       
+          this.setState({Alert: add, 
+            loading:false, })
+
+          }
+
+        }else if( factGenerated.status =="Error" ){
+
+          if(factGenerated.resdata){
+          if(factGenerated.resdata.estado == 'EN PROCESO'){
+            let add = {
+              Estado:true,
+              Tipo:"error",
+              Mensaje:`Servidor del SRI saturado Intente mas tarde`
+          }
+       
+          this.setState({Alert: add,
+            uploadedFactData:false,
+            readOnly:false,
+            areaValidacion:true,  
+            loading:false,
+          })
+          }
+        }
+        else{
+           let add = {
+          Estado:true,
+          Tipo:"error",
+          Mensaje:` ${factGenerated.mensaje} `
+          }
+   
+      this.setState({Alert: add, 
+        loading:false, 
+        areaValidacion:true,  
+        readOnly:false,
+        uploadedFactData:false,
+      })
+       
+    }
+      } 
+
+      
   
         }
         else{
@@ -149,6 +242,9 @@ console.log(this.state)
       }
 
       }
+     
+
+
       ceroMaker=(val)=>{
 
         let cantidad = JSON.stringify(val).length
@@ -175,255 +271,7 @@ console.log(this.state)
       return (data)
     };
 
-      genfact = (SuperTotal, SubTotal, IvaEC, contP12 ) => {
-     
-        let razon = this.state.razon
-        let nombreComercial = this.state.nombreComercial
-        let ruc = this.state.ruc
-        let codDoc = "01"
-        let estab =this.state.codigoEstab
-        let ptoEmi= this.state.codigoPuntoEmision
-        let secuencial= this.ceroMaker(this.getRandomInt(999))
-        let dirMatriz=this.state.dirMatriz     
-        let dirEstablecimiento=this.state.dirEstab
-        let obligadoContabilidad =this.state.contabilidad?"SI":"NO"
-        let tipoIdentificacionComprador = "07" // 04--ruc  05--cedula  06--pasaporte  07-VENTA A CONSUMIDOR FINAL  08--IDENTIFICACION DELEXTERIOR*//
-        let razonSocialComprador ='CONSUMIDOR FINAL'
-        let identificacionComprador ="9999999999999"
-        let direccionComprador = "alamos y aripos"
-        let totalSinImpuestos = SubTotal.toFixed(2)
-        let totalDescuento ="0.00"
-        let codigo ="2" //IVA:2 ICE:3 IRBPNR:5
-        let codigoPorcentaje =4  // 0:0%  2:12%  3:14%  4:15% 5:5% 10:13% 
-
-        let baseImponible =  SubTotal.toFixed(2)
-        let valorIVA = IvaEC.toFixed(2)
-        let propina ="0.00"
-        let importeTotal= SuperTotal.toFixed(2)
-        let ambiente = "1"
-        let s1 = this.props.state.userReducer.update.usuario.user.Factura.codigoEstab
-        let s2 = this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision
-        let serie = s1+""+s2
-        let codNum ="12345678"//8 digitos
-        let tiempo = new Date()    
-        let mes = this.addCero(tiempo.getMonth()+1)
-        let dia = this.addCero(tiempo.getDate())
-        var date = dia+ "/"+ mes+"/"+tiempo.getFullYear()
-        let fechaEmision =date
-        let tarifa = "15.00"
-        if(this.state.populares){
-
-          codigoPorcentaje =0 
-          valorIVA = 0
-          tarifa = "0.00"
-        }
-
-        
-        let tipoEmision  = "1"
-        let claveAcceso = dia+""+mes+""+tiempo.getFullYear()+""+codDoc+""+ruc+""+ambiente+""+serie+""+secuencial+""+codNum+""+tipoEmision
-        
-
-        let digVerificador =(claveAcceso)=>{
-
-            let suma = 0
-            let fact = 7
-
-            for (let i =0;i<claveAcceso.length;i++){
-                suma += claveAcceso[i] * fact
-                if(fact == 2){
-                    fact = 7
-                }else{
-                    fact--
-                }
-            }
-
-       
-
-            let dv = (11-(suma%11))
-            if(dv ==10){
-                return 1
-            }else if(dv ==11 ){
-                return 0
-            }else{
-                return dv
-            }
-
-        
-
-        }
-
-
-  
-        let digitoverificador = digVerificador(claveAcceso)
-        let clavefinal = claveAcceso +""+digitoverificador
-   
-        let xmlgenerator = 
-       '<factura id="comprobante" version="1.0.0">\n' +
-        "    <infoTributaria>\n" +
-        `        <ambiente>${ambiente}</ambiente>\n` +
-        `        <tipoEmision>${tipoEmision}</tipoEmision>\n`+
-        `        <razonSocial>${razon}</razonSocial>\n`+
-        `        <nombreComercial>${nombreComercial}</nombreComercial>\n`+
-        `        <ruc>${ruc}</ruc>\n`+
-        `        <claveAcceso>${clavefinal}</claveAcceso>\n`+        
-        `        <codDoc>${codDoc}</codDoc>\n`+
-        `        <estab>${estab}</estab>\n`+
-        `        <ptoEmi>${ptoEmi}</ptoEmi>\n`+
-        `        <secuencial>${secuencial}</secuencial>\n`+
-        `        <dirMatriz>${dirMatriz}</dirMatriz>\n`+
-       // `        <contribuyenteRimpe>CONTRIBUYENTE RÉGIMEN RIMPE</contribuyenteRimpe>\n`+
-        `    </infoTributaria>\n`+
-        `    <infoFactura>\n`+
-        `        <fechaEmision>${fechaEmision}</fechaEmision>\n`+
-        `        <dirEstablecimiento>${dirEstablecimiento}</dirEstablecimiento>\n`+
-        `        <obligadoContabilidad>${obligadoContabilidad}</obligadoContabilidad>\n`+
-        `        <tipoIdentificacionComprador>${tipoIdentificacionComprador}</tipoIdentificacionComprador>\n`+
-        `        <razonSocialComprador>${razonSocialComprador}</razonSocialComprador>\n`+
-        `        <identificacionComprador>${identificacionComprador}</identificacionComprador>\n`+
-    //  `<direccionComprador>${direccionComprador}</direccionComprador>`+
-        `        <totalSinImpuestos>${totalSinImpuestos}</totalSinImpuestos>\n`+
-        `        <totalDescuento>${totalDescuento}</totalDescuento>\n`+
-        `        <totalConImpuestos>\n`+
-        `            <totalImpuesto>\n`+
-        `                <codigo>${codigo}</codigo>\n`+
-        `                <codigoPorcentaje>${codigoPorcentaje}</codigoPorcentaje>\n`+
-        `                <baseImponible>${baseImponible}</baseImponible>\n`+
-        `                <tarifa>${tarifa}</tarifa>\n`+
-        `                <valor>${valorIVA}</valor>\n`+
-        `            </totalImpuesto>\n`+
-        `        </totalConImpuestos>\n`+
-        `        <propina>${propina}</propina>\n`+
-        `        <importeTotal>${importeTotal}</importeTotal>\n`+
-        `        <moneda>DOLAR</moneda>\n`+
-        "        <pagos>\n"+
-        "            <pago>\n"+
-        "                <formaPago>01</formaPago>\n"+
-        `                <total>${importeTotal}</total>\n`+
-        `            </pago>\n`+
-        `        </pagos>\n`+
-        `    </infoFactura>\n`+
-        `    <detalles>\n`+
-        `        <detalle>\n`+
-        `            <codigoPrincipal>1020</codigoPrincipal>\n`+
-        `            <codigoAuxiliar>000001020</codigoAuxiliar>\n`+
-        `            <descripcion>TIJERAS</descripcion>\n`+
-        `            <cantidad>1</cantidad>\n`+
-        `            <precioUnitario>1</precioUnitario>\n`+
-        `            <descuento>0</descuento>\n`+
-        `            <precioTotalSinImpuesto>1.00</precioTotalSinImpuesto>\n`+
-        `            <impuestos>\n`+
-        `                <impuesto>\n`+
-        `                    <codigo>${codigo}</codigo>\n`+
-        `                    <codigoPorcentaje>${codigoPorcentaje}</codigoPorcentaje>\n`+
-        `                    <tarifa>${tarifa}</tarifa>\n`+
-        `                    <baseImponible>${baseImponible}</baseImponible>\n`+
-        `                    <valor>${valorIVA}</valor>\n`+
-        `                </impuesto>\n`+
-        `            </impuestos>\n`+
-        "        </detalle>\n"+
-        `    </detalles>\n`+
-        "</factura>"
-       
-
-     let link = document.createElement('a');
-     
-     let docFirmado = SignerJS(xmlgenerator, 
-      contP12, 
-     this.decryptData( this.props.state.userReducer.update.usuario.user.Firmdata.pass))
-
-     if(docFirmado.status == "Error"){
-
-      console.log(docFirmado)
-       let add = {
-           Estado:true,
-           Tipo:"error",
-           Mensaje:`Error con la firma electronica, ${docFirmado.message}`
-       }
-       this.setState({Alert: add, loading:false}) 
-      }else{
-        const url = window.URL.createObjectURL(
-          new Blob([docFirmado]),
-        );
-      link.href = url;
-      link.setAttribute(
-        'download',
-        `result.xml`,
-      );
-
- 
-   
-      let allData ={doc:docFirmado,
-       codigo:clavefinal,
-       idUser:this.state.idUser,
-       ambiente:"Pruebas" 
-          
-     }
-  
-      fetch("/public/uploadSignedXmlTest", {
-          method: 'POST', // or 'PUT'
-          body: JSON.stringify(allData), // data can be `string` or {object}!
-          headers:{
-            'Content-Type': 'application/json',
-            "x-access-token": this.props.state.userReducer.update.usuario.token
-          }
-        }).then(res => res.json())
-        .catch(error => {console.error('Error:', error);
-               })
-        .then(response => {
- 
-          console.log(response)
-           if(response.status =="ok" ){
- 
-             const usuario= response.user
-          this.props.dispatch(updateUser2({usuario}))
-             this.setState({validateFact:true,
-               areaValidacion:false
-             })
- 
- 
- 
- 
-           }else if( response.status =="error" ){
- 
- 
-             if(response.resdata.estado == 'EN PROCESO'){
-               let add = {
-                 Estado:true,
-                 Tipo:"error",
-                 Mensaje:`Servidor del SRI saturado Intente mas tarde`
-             }
-          
-             this.setState({Alert: add,
-               uploadedFactData:false,
-               readOnly:false,
-               areaValidacion:true,  
-               loading:false,
-             })
-             }
-             else {
-              let add = {
-             Estado:true,
-             Tipo:"error",
-             Mensaje:`Error en la factura, ${response.resdata.mensajes.mensaje.mensaje}, ${response.resdata.mensajes.mensaje.informacionAdicional}, Codigo de Error: ${response.resdata.mensajes.mensaje.identificador} `
-         }
-      
-         this.setState({Alert: add, 
-           loading:false, 
-           areaValidacion:true,  
-           readOnly:false,
-           uploadedFactData:false,
-         })
-          
-           }
-         }
-  });
- 
-
-      }
-   
-  
-
-       }
+    
 
 
       Onsalida=()=>{
@@ -571,6 +419,24 @@ console.log(this.state)
          this.setState({[switchmame]:!this.state[switchmame]})
           
    }
+   handleChangeSecuencial=(e)=>{
+    if(e.target.value >= this.state.secuencialBase){
+
+    
+    this.setState({
+    [e.target.name]:parseInt(e.target.value)
+    })}
+    else{
+
+        let add = {
+            Estado:true,
+            Tipo:"error",
+            Mensaje:`No se puede elegir un secuencial menor`
+        }
+        this.setState({Alert: add, }) 
+
+    }
+    } 
      handleChangeGeneral=(e)=>{
 
       this.setState({
@@ -606,6 +472,7 @@ console.log(this.state)
     }
 
     render () {
+      console.log(this.state)
 
 const handleClose = (event, reason) => {
   let AleEstado = this.state.Alert
@@ -953,11 +820,14 @@ perm_contact_calendar
    
    </div>
    <div className="customInputEF contLogo" >
+    <div className='jwFlex' style={{width:"100%", justifyContent:"space-around"}}>
         <div className="jwminilogoEF">
     <span className="material-icons">
 apple
 </span>
 Logo
+</div>
+{this.state.urlLogoEmp !="" && <img style={{maxHeight:"100px", maxWidth:"100px",}} src={this.state.urlLogoEmp} />}
 </div>
 <input type="file"
  className="Logo" name="rimagen" onChange={this.handleChangeLogo}
@@ -972,7 +842,11 @@ accept="image/png, image/jpeg" />
 
     <Animate show={!this.state.uploadedFactData}>
     <div className='centrar botoncontxD'>
-       <button className="botoncontact botoupload rojo" onClick={this.Onsalida }>
+       <button className="botoncontact botoupload rojo" onClick={(e)=>{e.preventDefault()
+        e.stopPropagation()
+        this.Onsalida()
+
+       } }>
                      Cancelar
                     </button> 
                     <button  className="botoncontact botoupload azul"  type="submit">
@@ -1019,9 +893,16 @@ ok
   
                     </div>
                     <Animate show={!this.state.loading}>
-                    <button className=" botonValidate verde" onClick={this.valAlldata}>
+                   <div className='centrar jwColumn' >
+                    <div className="centrar spaceAround contsecuencial"> 
+               <span > Secuencial</span>
+               <input type="number" name="secuencialGen" className='percentInput' value={this.state.secuencialGen} onChange={this.handleChangeSecuencial }/>
+               </div>
+
+               <button className=" botonValidate verde" onClick={this.valAlldata}>
                      Validar
                     </button>
+                    </div>
                     </Animate>
   
                     <Animate show={this.state.loading}>
@@ -1232,6 +1113,16 @@ ok
            .MuiInputBase-input{
             height: 30px;
            }
+                       .contsecuencial{
+  
+}
+.contsecuencial input{
+    border-radius: 26px;
+    padding: 7px;
+        width: 100px;
+    text-align:center;
+    margin:10px
+}
 
       .customInputEF{
         display: flex;

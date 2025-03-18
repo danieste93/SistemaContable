@@ -2692,8 +2692,9 @@ const  Authdata =()=>{
     soap.createClient(urlAuth, {}, function(err, client) {
    
     client.autorizacionComprobante({claveAccesoComprobante:req.body.codigo}, async (err,auth)=>{     
+    console.log(auth)
+      if(err)  res.status(500).send({status: "error", message: "AuthSucess",auth});
     
-      if(err) console.log(err)  
   
       let resdata = auth.RespuestaAutorizacionComprobante.autorizaciones.autorizacion
     
@@ -2729,140 +2730,6 @@ const  Authdata =()=>{
          })}  
 }
 
-function  uploadSignedXmlTest (req, res){
-  
-  let url =""
-
-  if(req.body.ambiente =="Produccion"){
-    url = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl"
-  }else if (req.body.ambiente =="Pruebas"){
-    url = "https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl"
-}
-
-
-var xmlBase64 =  Buffer.from(req.body.doc).toString('base64');
-
-soap.createClient(url, {}, function(err, client) {
- console.log("cliente funcional")
-  if (err){
-    res.send({status: "fatalerror", message: "error en la creacion del clienteSoap"}); 
-  }else{
-    if(client == undefined){
-      res.send({status: "fatalerror", message: "error en la creacion del clienteSoap, indefinido"}); 
-    }
-  
-    else if(client != undefined){
-      console.log("cliente encontrado")
-     
-      client.validarComprobante({xml:xmlBase64}, function(err, result) {
-        
-        if (err){
-          console.log("error en validarComprobante")
-          console.log(err)
-          res.send({status: "fatalerror", message: "error en validarComprobante ",result});
-        }
-      
-       else if(result != undefined){
-        if(result.RespuestaRecepcionComprobante){
-         
-          if(result.RespuestaRecepcionComprobante.estado == "RECIBIDA"){
-            console.log("Recibido")
-            setTimeout(()=> {
-              Authdata()
-            },500)
-           
-           
-       
-          }
-    
-          else if(result.RespuestaRecepcionComprobante.estado == "DEVUELTA" ){
-            let resdata = result.RespuestaRecepcionComprobante.comprobantes.comprobante
-            console.log("DEVUELTA")
-            res.status(200).send({status: "error", message: "errorAccess",resdata});
-          }
-    
-          else{
-            
-            res.status(200).send({status: "fatalerror", message: "errorAccess",result});
-          }
-           
-          
-          }else {
-                res.send({status: "faltaerror", message: "errorAccess", result});
-          }  
-          }
-          
-          else {
-        res.send({status: "fatalerror", message: "Error en encontrar result Validacion comprobante", result});
-                } 
-  
-        })
-      
-      }
-  }
- 
-
-  
-})
-
-
-const  Authdata =()=>{
- 
-  
-    let urlAuth 
-    if(req.body.ambiente =="Produccion"){
-      urlAuth = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl"
-    }else if (req.body.ambiente =="Pruebas"){
-    urlAuth = "https://celcer.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl"
-      }
-  
-    soap.createClient(urlAuth, {}, function(err, client) {
-   
-    client.autorizacionComprobante({claveAccesoComprobante:req.body.codigo}, async (err,auth)=>{     
-    
-      if(err) console.log(err)  
-      console.log(auth)
-      let resdata = auth.RespuestaAutorizacionComprobante.autorizaciones.autorizacion
-if(resdata.est)
-     
-        if(resdata.estado == "AUTORIZADO"){
-
-        
-          let conn = await mongoose.connection.useDb("datashop");
-          let UserModelSass = await conn.model('usuarios', UserSchema);
-        
-        
-         let userfinded = await UserModelSass.findById(req.body.idUser) 
-        
-         userfinded.Factura.validateFact = true
-         
-         let updateUser = await userfinded.save()
-        
-       
-
-          res.status(200).send({status: "ok", message: "AuthSucess",resdata, user:updateUser});
-            
-        
-        
-        }
-        else if(resdata.estado == "EN PROCESO"){
-          res.status(500).send({status: "error", message: "AuthSucess",resdata});
-        }
-        
-        
-        else{
-
-
-          res.status(500).send({status: "error", message: "AuthSucess",resdata});
-        }
-       
-
-
-       
-      
-         }) 
-         })}  
-}
 
 async function  getUA (req, res){
 
@@ -4591,6 +4458,26 @@ console.log(datafind)
             res.status(200).send({ status: "Ok", message: "Correo eliminado" });
 
              }
+             async function updateUser(req,res) {
+              console.log(req.body)
+              let conn = await mongoose.connection.useDb("datashop");
+              let UserModelSass = await conn.model('usuarios', UserSchema);
+            
+            
+             let userfinded = await UserModelSass.findById(req.body.idUser) 
+             if (!userfinded) {
+              return res.status(404).send({ status: "error", message: "Usuario no encontrado" });
+          }
+             userfinded.Factura.validateFact = true
+             
+             let updateUser = await userfinded.save()
+            
+           
+    
+              res.status(200).send({status: "ok", message: "AuthSucess", user:updateUser});
+                
+
+             }
              async function getDbuserData(req,res) {
               try {
               const getSignature=(url, name)=>{
@@ -4658,4 +4545,4 @@ console.log(datafind)
               }
           }
 
-module.exports = {getDbuserData,getAllClients, deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,uploadSignedXmlTest, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };
+module.exports = {getDbuserData,getAllClients, deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,updateUser, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };

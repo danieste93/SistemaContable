@@ -96,7 +96,7 @@ router.post('/edit-combo',Authentication, AdminControl.editCombo);
 
 router.post('/uploadSignedXml', Authentication, AdminControl.uploadSignedXml);
 
-router.post('/uploadSignedXmlTest', Authentication, AdminControl.uploadSignedXmlTest);
+router.post('/updateUser', Authentication, AdminControl.updateUser);
 router.post('/resendauthfact', Authentication, AdminControl.resendAuthFact);
 
 router.post('/downloadfact', Authentication, AdminControl.downLoadFact);
