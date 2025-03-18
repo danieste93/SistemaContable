@@ -1,25 +1,32 @@
 import { Input } from '@material-ui/core';
 import React, { Component } from 'react'
 import {connect} from 'react-redux';
-
+import Cuentas from "../cuentascompo/modalcuentas"
+import { Animate } from 'react-animate-mount/lib/Animate';
 
 class ModalAddFormaPago extends Component {
    
 state={
   CuentaSelect:"",
-  CuentaId:"",
   CuentasHabiles:[],
-  formaPagoAdd:"No",
+  formaPagoAdd:"",
   Detalles:"",
   Cantidad:"",
+  cuentasmodal:false,
+
 }
     componentDidMount(){
 console.log(this.props)
-      setTimeout(function(){ 
+      setTimeout(()=>{ 
         
         document.getElementById('addFormaCont').classList.add("entradaaddc")
 
-       }, 500);
+       }, 200);
+       setTimeout(()=>{ 
+        
+        this.setState({cuentasmodal:true})
+
+       }, 300);
         
      if(this.props.valorSugerido){
       
@@ -70,13 +77,9 @@ console.log(this.props)
         })
         }
 
-        handleChangeCuentas=(e)=>{        
-          let cuentax = this.props.state.RegContableReducer.Cuentas.find(x=> x._id === e.target.value )
-       
-          this.setState({CuentaSelect:cuentax,CuentaId:e.target.value})
-        }
+     
         comprobarFormaPago=()=>{
-          if(this.state.CuentaSelect == "" || this.state.CuentaId == ""){
+          if(this.state.CuentaSelect == "" ){
             this.setState({cuentaError1:true})
    
           }else{
@@ -95,13 +98,10 @@ console.log(this.props)
             this.setState({cantidadOk:true})
           }
           
-          if(this.state.CuentaSelect != "" && this.state.formaPagoAdd !="No" && this.state.Cantidad > 0){
+          if(this.state.CuentaSelect != "" && this.state.formaPagoAdd !="" && this.state.Cantidad > 0){
       
-            if(this.props.tipoDeForma == "Contado"){
               this.props.sendFormaPago(this.state)
-            }else if(this.props.tipoDeForma == "Credito"){
-              this.props.sendFormaCredito(this.state)
-            }
+           
             this.Onsalida()
           }
   
@@ -116,6 +116,8 @@ console.log(this.props)
         }
     render () {
 console.log(this.state)
+let tituloCuenta= this.state.CuentaSelect == ''?"Seleccione..":this.state.CuentaSelect.NombreC
+
 let okC= this.state.cuentaOk?"okactive":""
 let okCant= this.state.cantidadOk?"okactive":""
 let okFP= this.state.formaPagoOk?"okactive":""
@@ -128,7 +130,7 @@ let okFP= this.state.formaPagoOk?"okactive":""
          <div >
 
 <div className="maincontacto" id="addFormaCont" >
-            <div className="contcontacto"  >
+            <div className="contcontactoFpago"  >
         
             <div className="headercontact">
                 <img src="/static/flecharetro.png" alt="" className="flecharetro" 
@@ -144,23 +146,19 @@ let okFP= this.state.formaPagoOk?"okactive":""
         <div className="Scrolled">
         <div className="contFormulario">
   
-        <div className="grupoDatos">
+       
+              <div className="grupoDatos">
         <div className="cDc1">
-              <p style={{fontWeight:"bolder"}}>  Forma de pago  </p>
-            
+              <p style={{fontWeight:"bolder"}}>  Cuenta  </p>
+              
               </div>
-              <div className={`cDc2  `} >
-              <select name="formaPagoAdd"   className={`customCantidad ${erroFP1}  ${okFP} `}  value={this.state.formaPagoAdd}onChange={this.handleChangeGeneral} >
-              <option value="No"> </option>
-              <option value="Efectivo"> Efectivo</option>
-                <option value="Transferencia"> Transferencia</option>
-                <option value="Tarjeta-de-Credito"> Tarjeta de Crédito</option>
-                <option value="Tarjeta-de-Debito">Tarjeta de Débito </option>
-
-
-
-
-</select>
+      
+              <div id ="cDc2Cuentas"className={`cDc2  `} onClick={()=>{this.setState({cuentasmodal:true})}}>
+              <button className="select-button">
+    {tituloCuenta}
+      </button>
+            
+            
 
 
 
@@ -170,24 +168,13 @@ let okFP= this.state.formaPagoOk?"okactive":""
               </div>
               <div className="grupoDatos">
         <div className="cDc1">
-              <p style={{fontWeight:"bolder"}}>  Cuenta  </p>
-              
-              </div>
-              <div className={`cDc2    `} >
-              <select name="CuentaId" className={`customCantidad ${erroC1}  ${okC} `}  value={this.state.CuentaId}onChange={this.handleChangeCuentas} >
-
-
-<option value=""> </option>
-{this.getCuentas()}
-
-
-
-</select>
-
-
-
-
+              <p style={{fontWeight:"bolder"}}>  Forma de pago  </p>
             
+              </div>
+              <div className={`cDc2  `} >
+              <p>  {this.state.formaPagoAdd} </p>
+            
+
               </div>
               </div>
 
@@ -243,6 +230,30 @@ cancel
   
         </div>
         </div>
+
+           
+           {  this.state.cuentasmodal&&  < Cuentas 
+        
+               cuentacaller={"" }
+               cuentaEnviada={"" }
+               sendCuentaSelect={(cuenta)=>{
+           console.log(cuenta)
+
+           this.setState({cuentasmodal:false, 
+            CuentaSelect:cuenta,
+            formaPagoAdd:cuenta.FormaPago
+          })
+             
+               } }  
+               FiltroP={"CuentasNoPosesion"}
+               Flecharetro3={
+                ()=>{
+                    this.setState({cuentasmodal:false, CuentaSelect:"" })
+                  }
+                        } 
+                      
+                       />}
+                       
         <style jsx>{`
              .Scrolled{
  
@@ -317,7 +328,22 @@ cancel
 
            }
 
+.select-button {
+  background-color: #1976d2;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-transform: none;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+}
 
+.select-button:hover {
+  background-color: #1565c0;
+}
 
       
            
@@ -332,7 +358,7 @@ cancel
 }
           }
         .maincontacto{
-          z-index: 9999;
+          z-index: 1000;
          width: 100vw;
          height: 100vh;
          background-color: rgba(0, 0, 0, 0.7);
@@ -345,7 +371,7 @@ cancel
          transition:0.5s;
          
        }
-       .contcontacto{
+       .contcontactoFpago{
         border-radius: 30px;
      
          width: 90%;
@@ -418,14 +444,14 @@ cancel
                .marginador{
                 margin: 0px 2px 15px 2px;
                }
-         .contcontacto{
+         .contcontactoFpago{
           width: 95%;
          }
           }
           @media only screen and (min-width: 600px) { 
          
 
-              .contcontacto{
+              .contcontactoFpago{
        
          width: 70%;
       

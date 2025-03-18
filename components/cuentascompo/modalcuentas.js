@@ -9,7 +9,8 @@ import  {deleteCuenta} from "../../reduxstore/actions/regcont"
 import ModalDeleteC from "./modal-delete-cuenta";
 import fetchData from '../funciones/fetchdata';
 import {gettipos} from "../../reduxstore/actions/regcont"
-class Contacto extends Component {
+
+class Cuentas extends Component {
    
 state={
   AddCuenta:false,
@@ -124,14 +125,14 @@ channel1 = null;
 
 let cuentasGenerales = this.props.regC.Cuentas
 let cuentasporFiltar = cuentasGenerales
-if(this.props.FiltroP){
+/*if(this.props.FiltroP){
   if(this.props.FiltroP == "CuentasNoPosesion"){
     cuentasporFiltar = cuentasGenerales.filter(x=>!x.CheckedP )
   }
 
 
 }
-
+*/
 
 let cuentasSinInv = cuentasporFiltar.filter(x=>x.Tipo != "Inventario" 
   
@@ -182,6 +183,13 @@ let cuentasSinInv = cuentasporFiltar.filter(x=>x.Tipo != "Inventario"
            
  
  
+          }else if(this.props.cuentacaller ===""){
+            setTimeout(()=>{  
+              
+              this.props.sendCuentaSelect(cuenta)},300)
+                         
+            document.getElementById('maincuentas').classList.remove("entrada")
+            
           }
         
         }
@@ -737,4 +745,4 @@ const mapStateToProps = state=>  {
   }
 };
 
-export default connect(mapStateToProps, null)(Contacto);
+export default connect(mapStateToProps, null)(Cuentas);

@@ -26,9 +26,7 @@ import BarcodeReader from 'react-barcode-reader'
 import ModalEditPrecioCompraServ from "./puntoventacompo/modal-editPrecioCompraServ"
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
-import Cuentas from "../components/cuentascompo/modalcuentas"
-import { Button, Box, Typography, Paper } from "@material-ui/core";
-import { AssignmentTurnedIn, AddCircleOutline } from "@material-ui/icons";
+
 import cotiGenetor from "../public/static/cotiTemplate"
 import notaGenetor from "../public/static/NotaTemplate"
 import Head from 'next/head';
@@ -78,7 +76,7 @@ import SecureFirm from './snippets/getSecureFirm';
                     Fpago:[
                      
                     ],
-                    addFormaPago:false,
+                    addFormaPago:true,
                     editFormaPago:false,
 
                     SelectFormaPago:[],
@@ -1014,7 +1012,11 @@ handleChangeGeneral=(e)=>{
 
         let newid = "FP-" +ramdon 
 
-        let DatatoAdd=  {Tipo:e.formaPagoAdd, Cantidad:e.Cantidad, Cuenta:e.CuentaSelect, Id:newid,Detalles:e.Detalles}
+        let DatatoAdd=  {Tipo:e.formaPagoAdd,
+             Cantidad:e.Cantidad,
+              Cuenta:e.CuentaSelect,
+               Id:newid,
+               Detalles:e.Detalles}
         let newstate = [...this.state.Fpago, DatatoAdd]
        
         this.setState({Fpago:newstate})
@@ -3520,7 +3522,11 @@ Documento electrónico generado en activos.ec
                 </div>
                 <div contentEditable='true' dangerouslySetInnerHTML={{ __html: this.state.html }}></div>
                 <Animate show={this.state.addFormaPago}>
-                    <ModalFormapago valorSugerido={SuperTotal} sendFormaPago={this.createFormaPago}  sendFormaCredito={this.createFormaCredito} tipoDeForma={this.state.tipopago} Flecharetro={()=>{this.setState({addFormaPago:false})}} />
+                    <ModalFormapago valorSugerido={SuperTotal}
+                                     sendFormaPago={this.createFormaPago} 
+                                     sendFormaCredito={this.createFormaCredito}
+                                      tipoDeForma={this.state.tipopago} 
+                                      Flecharetro={()=>{this.setState({addFormaPago:false})}} />
                     </Animate >
 
                     <Animate show={this.state.ModalCaducado}>
@@ -3573,32 +3579,7 @@ Documento electrónico generado en activos.ec
           onScan={this.handleScan}
           minLength={5}
           />
-   <Animate show={this.state.cuentasmodal}>
-       < Cuentas 
 
-       cuentacaller={"" }
-       cuentaEnviada={"" }
-       sendCuentaSelect={(cuenta)=>{
-    this.setState({
-        cuentaCliente:cuenta,
-        cuentasmodal:false,
-        cuentaAsignada:true,
-        Comprador:{
-            idcuenta:cuenta._id,
-        }
-     
-    
-    })
-       } }  
-       FiltroP={"CuentasNoPosesion"}
-       Flecharetro3={
-        ()=>{
-            this.setState({cuentasmodal:false, cuentaCliente:"" })
-          }
-                } 
-              
-               />
-                 </Animate > 
 
 
                     <Snackbar open={this.state.Alert.Estado} autoHideDuration={10000} onClose={handleClose}>

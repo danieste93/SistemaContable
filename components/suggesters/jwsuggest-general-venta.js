@@ -36,6 +36,7 @@ let userFilter = props.filter(x=> x.Usuario.toLowerCase().includes(value.toLower
         suggestions: []
       };    
     }
+   
     componentDidMount(){
       this.loadFromLocalStorage()
     }
@@ -88,12 +89,13 @@ let userFilter = props.filter(x=> x.Usuario.toLowerCase().includes(value.toLower
   
     onSuggestionsClearRequested = () => {
       this.setState({
+        value:"",
         suggestions: []
       });
     };
   
     render() {
-       
+      console.log(this.state)
       const { value, suggestions } = this.state;
       const inputProps = {
         placeholder: this.props.placeholder,
@@ -115,7 +117,7 @@ getSuggestionValue={getSuggestionValue}
 renderSuggestion={this.renderSuggestion}
 inputProps={inputProps} />
 
-<Animate show={this.state.value !== ""}>
+
 
 <button type="button" className="btn btn-outline-danger"
 onClick={()=>{
@@ -128,7 +130,7 @@ onClick={()=>{
 
 }
 >X</button>
-</Animate>
+
 <style >{` 
 .customsuggest{
   width: 100%;
