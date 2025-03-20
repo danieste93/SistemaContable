@@ -47,29 +47,7 @@ console.log(this.props)
      
       
 
-      getCuentas=()=>{
-        
-        let cuentasFiltradas = []
-
-        if(this.props.state.RegContableReducer.Cuentas){
-          cuentasFiltradas =  this.props.state.RegContableReducer.Cuentas.filter(x => x.FormaPago == this.state.formaPagoAdd && x.Tipo != "Inventario")
-        }
-
-
-        if(cuentasFiltradas.length > 0){
-          let cuentasrender = cuentasFiltradas.map((c, i)=>{
-
-            return(
-              <option value={c._id} key={i} >{c.NombreC}</option>
-            )
-          })
-          return cuentasrender
-        }else {
-          return ""
-        }
-
-
-      } 
+  
       handleChangeGeneral=(e)=>{
 
         this.setState({

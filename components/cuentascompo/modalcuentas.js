@@ -124,6 +124,7 @@ channel1 = null;
       if(this.props.regC.Cuentas.length > 0){
 
 let cuentasGenerales = this.props.regC.Cuentas
+console.log(cuentasGenerales)
 let cuentasporFiltar = cuentasGenerales
 /*if(this.props.FiltroP){
   if(this.props.FiltroP == "CuentasNoPosesion"){
@@ -138,6 +139,7 @@ let cuentasSinInv = cuentasporFiltar.filter(x=>x.Tipo != "Inventario"
   
  // && x._id != this.props.cuentaEnviada._id
 )
+console.log(cuentasSinInv)
 
       generadorDeCuentas = this.FilterSearcher(cuentasSinInv).map((cuenta,i)=>{
         if(cuenta.Visibility){
@@ -153,6 +155,8 @@ let cuentasSinInv = cuentasporFiltar.filter(x=>x.Tipo != "Inventario"
 </div>  
 </Animate>
 <div onClick={()=>{
+  console.log(cuenta)
+  console.log(this.props)
         if(this.state.editmode == false){
 
 
@@ -253,6 +257,13 @@ let cuentasSinInv = cuentasporFiltar.filter(x=>x.Tipo != "Inventario"
            
  
  
+          }else if(this.props.cuentacaller ===""){
+            setTimeout(()=>{  
+              
+              this.props.sendCuentaSelect(cuenta)},300)
+                         
+            document.getElementById('maincuentas').classList.remove("entrada")
+            
           }
         
         }

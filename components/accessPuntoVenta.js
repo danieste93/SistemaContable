@@ -76,7 +76,7 @@ import SecureFirm from './snippets/getSecureFirm';
                     Fpago:[
                      
                     ],
-                    addFormaPago:true,
+                    addFormaPago:false,
                     editFormaPago:false,
 
                     SelectFormaPago:[],
@@ -1199,10 +1199,16 @@ this.setState({impresion:!this.state.impresion})
       else{
 
 
-    this.setState({ UserSelect:true, 
+    this.setState({ 
+        Comprador:{...this.state.Comprador,
+            UserSelect:true ,
+            id:response.user._id,
+        },
+        
+    
                     readOnly:true,
                     adduser:false,
-                    id:response.user._id,
+                 
                     idcuenta:null,
                     creditLimit:0,
                     tipopago:"Contado",
@@ -1256,7 +1262,12 @@ this.setState({impresion:!this.state.impresion})
       }
       else{
         this.props.dispatch(updateClient(response.user));
-    this.setState({ UserSelect:true, 
+    this.setState({
+        Comprador:{
+            ...this.state.Comprador,
+            UserSelect:true,
+        },
+         
         readOnly:true,
         userEditMode:false,
         })

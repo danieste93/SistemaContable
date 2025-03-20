@@ -74,6 +74,8 @@ let Rimpeval =""
         Rimpeval = "Contribuyente Régimen RIMPE"
     }else if(Inf.rimpeval && Inf.populares){
         Rimpeval = "Contribuyente Negocio Popular - Régimen RIMPE"
+    }else if(!Inf.rimpeval&& !Inf.populares){
+             Rimpeval = "Contribuyente Regimen General"
     }
 
     return( <div class="invoice-box">
