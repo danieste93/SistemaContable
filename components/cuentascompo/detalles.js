@@ -17,22 +17,28 @@ import { makeStyles, withStyles } from '@material-ui/core/styles';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
+import AttachMoneyIcon from "@material-ui/icons/AttachMoney"; // Ícono de dinero en Material-UI v4
 
 
-const RedSwitch = withStyles({
-  switchBase: {
-    color: '#f44336', // Rojo
-    '&$checked': {
-      color: '#f44336',
+
+
+const CustomSwitch = ({ color, ...props }) => {
+  const StyledSwitch = withStyles({
+    switchBase: {
+      color: color || '#f44336', // Rojo por defecto
+      '&$checked': {
+        color: color || '#f44336',
+      },
+      '&$checked + $track': {
+        backgroundColor: color || '#f44336',
+      },
     },
-    '&$checked + $track': {
-      backgroundColor: '#f44336',
-    },
-  },
-  checked: {},
-  track: {},
-})(Switch);
+    checked: {},
+    track: {},
+  })(Switch);
 
+  return <StyledSwitch {...props} />;
+};
 
 class homepp1 extends Component {
     state={
@@ -57,6 +63,7 @@ class homepp1 extends Component {
         Repeticiones:[],
         modalrep:false,
         deletedRegs:false,
+        liquidez:false,
         downloadData:false,
         donwloadDeleteRegs:false,
     }
@@ -262,9 +269,10 @@ periodo:false
             })
            }
           }
-          handleToggle = () => {
+          handleToggle = (e) => {
+            const { name } = e.target;
             this.setState((prevState) => ({
-              deletedRegs: !prevState.deletedRegs,
+              [name]: !prevState[name], // Se usa el valor de name correctamente
             }));
           };
 
@@ -615,10 +623,11 @@ superIng=  sumaing + sumatransing
            <div className="glass-container">
            <FormControlLabel
           control={
-            <RedSwitch
-              checked={this.state.deletedRegs}
+            <CustomSwitch color="#f44336"
+             checked={this.state.deletedRegs}
               onChange={this.handleToggle}
-            />
+                  name="deletedRegs"
+              /> /* Rojo */
           }
           label={
             <span style={{ display: 'flex', alignItems: 'center' }}>
@@ -782,6 +791,11 @@ superIng=  sumaing + sumatransing
                      
                        </div>
                        </div>
+
+      
+
+
+
                    </div>
                    </div>
                    <Animate show={this.state.deletedRegs}>

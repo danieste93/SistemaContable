@@ -763,6 +763,31 @@ this.startPuntoVentaData()
                     [name]: value
                 }
             }));
+
+
+            
+
+        }
+
+
+
+    };
+    handleChangeIdentificacion = (e) => {
+        const { name, value } = e.target;
+    
+        // Validamos que el valor solo contenga números (permitiendo ceros a la izquierda)
+        if (/^\d*$/.test(value)) {
+            this.setState((prevState) => {
+                const nuevoTipoID = value.length > 10 ? "RUC" : "Cedula";
+    
+                return {
+                    Comprador: {
+                        ...prevState.Comprador,
+                        [name]: value,
+                        ClientID: nuevoTipoID
+                    }
+                };
+            });
         }
     };
      handleChangeform=(e)=>{
@@ -773,11 +798,43 @@ this.startPuntoVentaData()
             }
           }));
          }
-         handleClientID=(e)=>{
-       
-            this.setState({ClientID:e.target.value})
-            
-        }
+         handleClientID = (e) => {
+            const { value } = e.target;
+            const { cedula } = this.state.Comprador;
+        
+            // Verificamos la longitud del campo cedula
+            if (cedula.length > 10 && value === "Cedula") {
+                this.setState({ 
+                    Alert: { 
+                        Estado: true, 
+                        Tipo: "error", 
+                        Mensaje: "Cedula solo hasta 10 dígitos"
+                    } 
+                });
+                return; // Salimos de la función sin actualizar el estado
+            }
+        
+            if (cedula.length <= 10 && value === "RUC") {
+                this.setState({ 
+                    Alert: { 
+                        Estado: true, 
+                        Tipo: "info", 
+                        Mensaje: "RUC debe tener más de 10 dígitos"
+                    } 
+                });
+                return;
+            }
+        
+            // Si la validación es correcta, actualizamos ClientID
+            this.setState((prevState) => ({
+                Comprador: {
+                    ...prevState.Comprador,
+                    ClientID: value
+                },
+                Alert: { Estado: false } // Reseteamos la alerta si todo está bien
+            }));
+        };
+        
         handleDocType=(e)=>{
        
     
@@ -2802,7 +2859,7 @@ mail
 </div>
       <TextValidator
       label="Número Identificación"
-       onChange={this.handleChangeformNumeros}
+       onChange={this.handleChangeIdentificacion}
        name="cedula"
        type="text"
        validators={['requerido']}
