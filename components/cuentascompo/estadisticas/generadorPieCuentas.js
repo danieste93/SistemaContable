@@ -31,6 +31,7 @@ class Stats extends Component {
                 } ]  }
       //      let catInventario = this.state.CategoriaElegida.idCat == 5?true:false
             let DetallesPorrender = this.props.data
+            
         
             let toggleObjeto =(array, objeto)=> {
                 const index = array.findIndex(item => item.Tipo=== objeto.Tipo);
@@ -127,8 +128,8 @@ for (let z = 0; z < DetallesPorrender.length; z++) {
  
     let registro = DetallesPorrender[z];
     let cuenta = registro.CuentaSelec;
-    console.log(registro)
-    console.log(cuenta)
+   // console.log(registro)
+  //  console.log(cuenta)
     let cuenta2 = registro.CuentaSelec2;
     let importe = registro.Importe;
     let accion = registro.Accion;
@@ -138,10 +139,10 @@ for (let z = 0; z < DetallesPorrender.length; z++) {
 
     if (!CuentasMap[cuentaId]) { 
         let Cuentafind = this.props.Cuentas.find(cuenta =>cuenta._id == cuentaId )
-console.log(Cuentafind)
+
         CuentasMap[cuentaId] = {
             nombre: cuenta.nombreCuenta,
-            Tipo:Cuentafind.Tipo,
+            Tipo:Cuentafind?.Tipo || "Otros", 
             totalImporte: 0,
             porcentaje: 0,
             _id: cuentaId,
@@ -181,7 +182,7 @@ console.log(Cuentafind)
 }
 
  objetData = Object.values(CuentasMap)
-console.log(objetData)
+
 const TiposMap = {};
 for (let z = 0; z < objetData.length; z++) {
 

@@ -648,55 +648,56 @@ editDistri:async function(req,res){
   res.status(200).send({updateDistri})
  },
  registerSeller: async function(req, res, next) {
+  try {
+      let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
+      let ClienteModelSass = await conn.model('Cliente', clientSchema);
 
-  let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
-  let ClienteModelSass = await conn.model('Cliente', clientSchema);
+      // Verificamos si existe un usuario con el mismo Email, Cedula, Usuario o Telefono
+      const existingUser = await ClienteModelSass.findOne({
+          $or: [
+              { Email: req.body.Correo },
+              { Cedula: req.body.Cedula },
+              { Usuario: req.body.Usuario },
+              { Telefono: req.body.TelefonoContacto }
+          ]
+      });
 
- 
+      if (existingUser) {
+          let field = "";
+          if (existingUser.Email === req.body.Correo) field = "Email";
+          else if (existingUser.Cedula === req.body.Cedula) field = "Cédula";
+          else if (existingUser.Usuario === req.body.Usuario) field = "Usuario";
+          else if (existingUser.Telefono === req.body.TelefonoContacto) field = "Teléfono";
 
- ClienteModelSass.find({ Email: req.body.Correo }, (err, previousUsers) => {
-   if (err) {
-     return res.send({
-       success: false,
-       status:"error",
-       message: 'error al registrar'
-     });
-   }else if (previousUsers.length > 0) {
-     return res.status(200).send({
-       success: false,
-       status:"error",
-               message: 'El correo ya esta registrado'
-     });
+          return res.status(200).send({
+              success: false,
+              status: "error",
+              message: `El ${field} ya está registrado, por favor use otro.`
+          });
+      }
 
-   }
-   ClienteModelSass.create({
-     Usuario: req.body.Usuario,
-     Tipo:"cliente",
-     Telefono: req.body.TelefonoContacto, 
-     Confirmacion:req.body.Confirmacion,
-     Email: req.body.Correo,
-      Password: req.body.Contrasena,
-      RegistradoPor:req.body.RegistradoPor,
-      Ciudad:req.body.Ciudad,
-      Direccion:req.body.Direccion,
-      Cedula:req.body.Cedula,
-      TipoID:req.body.TipoID
-       },
-        
-        
-    function (err, result) {
-      if (err) 
-         res.json({status: "Error", message: "error al registrar", err });
-      else
-       res.json({status: "Ok", message: "Usuario agregado exitosamente!!!", user:result});
-      
-    });
-  
- })
+      // Crear nuevo usuario
+      const newUser = new ClienteModelSass({
+          Usuario: req.body.Usuario,
+          Tipo: "cliente",
+          Telefono: req.body.TelefonoContacto,
+          Confirmacion: req.body.Confirmacion,
+          Email: req.body.Correo,
+          Password: req.body.Contrasena,
+          RegistradoPor: req.body.RegistradoPor,
+          Ciudad: req.body.Ciudad,
+          Direccion: req.body.Direccion,
+          Cedula: req.body.Cedula,
+          TipoID: req.body.TipoID
+      });
 
-
-
+      await newUser.save();
+      return res.json({ status: "Ok", message: "Usuario agregado exitosamente!!!", user: newUser });
+  } catch (error) {
+      return res.json({ status: "error", message: "Error al registrar", error });
+  }
 },
+
 
 logOut: function(req,res){
 

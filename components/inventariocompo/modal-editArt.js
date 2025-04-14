@@ -9,7 +9,7 @@ import { ValidatorForm, TextValidator} from 'react-material-ui-form-validator';
 
 import { addArt, addCompra,addRegs,updateArt,updateCuentas } from '../../reduxstore/actions/regcont';
 
-
+import ModalPrecioCompra from "../modal-PrecioCompra"
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import DropFileInput from "../drop-file-input/DropFileInput"
@@ -18,6 +18,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { reorder } from "../reusableComplex/herlperDrag"
 import Cat from "./modalCategoriasArticulos"
+import { BorderBottom } from '@material-ui/icons';
 class Contacto extends Component {
    
   state={
@@ -25,6 +26,8 @@ class Contacto extends Component {
     loading:false,
     htmlDescrip:false,
     Fpago:[],
+    changePrecioCompra:false,
+    clickedPC:false,
     addFormaPago:false,
     ContContado:false,
     ContEgreso: false,
@@ -67,7 +70,7 @@ class Contacto extends Component {
         AntiExis: this.props.data.Existencia,  
         Existencia: this.props.data.Existencia,  
         Cantidad:this.props.data.Existencia,
-         Precio_Compra: this.props.data.Precio_Compra,
+         Precio_Compra: this.props.data.Precio_Compra, 
         Precio_Venta: this.props.data.Precio_Venta,
         Precio_Alt: this.props.data.Precio_Alt,
         newImg:"",
@@ -111,6 +114,12 @@ class Contacto extends Component {
 });
       
       }
+      handleClickPC = () => {
+        this.setState({ clickedPC: true, changePrecioCompra:true });
+        setTimeout(() => {
+          this.setState({ clickedPC: false });
+        }, 300); // efecto de iluminación breve
+      };
   
       onDragEnd = async ({ destination, source }) => {
         // dropped outside the list
@@ -1080,6 +1089,19 @@ return(
     value={this.state[datillos[0]]}
     validators={["requerido"] }
     errorMessages={["Campo requerido"] }  
+    InputProps={{
+      disableUnderline: true, // Elimina el subrayado del input
+      style: {
+        pointerEvents: "none", // Bloquea la interacción del input, evita el cursor de escritura
+      },
+    }}
+    style= {{
+      cursor: "pointer",
+      backgroundColor: "rgb(39 98 255 / 10%)",
+      padding:"2px",
+      borderRadius: "5px",
+      borderBottom:"1px solid black"
+    } }
    /> 
                   <style >{`  
                .boxp{
@@ -1116,11 +1138,23 @@ return(
    
    <TextValidator
       label={datillos[0]}
-   
+      onClick={this.handleClickCat}
        name={datillos[0]}
        type={datillos[1].Tipo}
     value={this.state.subCatSelect}
-      
+    InputProps={{
+      disableUnderline: true, // Elimina el subrayado del input
+      style: {
+        pointerEvents: "none", // Bloquea la interacción del input, evita el cursor de escritura
+      },
+    }}
+    style= {{
+      cursor: "pointer",
+      backgroundColor: "rgb(39 98 255 / 10%)",
+      padding:"2px",
+      borderRadius: "5px",
+      borderBottom:"1px solid black"
+    } }
       
       
    /> 
@@ -1396,15 +1430,16 @@ let datarender2 = dataArray2.map((datillos,i,)=>{
     <div  className="contdetalleAIaddindi"> 
     <div className="boxp">
     <button className={`buttonTotal ${buttonactiveVunit}`} onClick={(e)=>{e.preventDefault(); this.setState({Vunitario:true, Vtotal:false})}}>V.Unitario</button>
-    <button className={`buttonTotal ${buttonactivevtotal}`} onClick={(e)=>{e.preventDefault();this.setState({Vunitario:false, Vtotal:true})}}>V.Total</button>
+    {/* <button className={`buttonTotal ${buttonactivevtotal}`} onClick={(e)=>{e.preventDefault();this.setState({Vunitario:false, Vtotal:true})}}>V.Total</button>
+  */ }
     </div>
     </div>
    
 <Animate show={this.state.Vunitario}>
 <div  className="contdetalleAIaddindi2"> 
-<TextValidator
+<TextValidator 
     label="Precio Compra Unitario"
-    onChange={this.handleChangeGeneral}
+   disabled
      name="Precio_Compra"
      type="number"
   value={this.state.Precio_Compra}
@@ -1415,6 +1450,17 @@ let datarender2 = dataArray2.map((datillos,i,)=>{
       readOnly: this.state.readOnly,
     }}
  /> 
+   <button 
+        className={`lock-button ${this.state.clickedPC ? 'clicked' : ''}`} 
+        onClick={(e)=>{
+          e.stopPropagation()
+          e.preventDefault()
+          this.handleClickPC()
+
+        }}
+      >
+        <span className="material-icons">lock</span>
+      </button>
 </div>
 <div  className="contdetalleAIaddindi2"> 
 <TextValidator
@@ -1637,6 +1683,11 @@ shopping_cart
        } 
        />
         </Animate >   
+        {this.state.changePrecioCompra && 
+        <ModalPrecioCompra 
+        PrecioCompra={this.state.Precio_Compra}
+        Cantidad={this.props.data.Existencia}
+        Flecharetro={()=>this.setState({changePrecioCompra:false})}  />}
                     <style jsx>{`
            .datarenderCont{
         
@@ -1942,7 +1993,36 @@ shopping_cart
        }
       
    
-      
+      .lock-button {
+  background-color: #fff;
+  border: 2px solid #888;
+  border-radius: 12px;
+  padding: 5px;
+  cursor: pointer;
+  height: 30px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.lock-button .material-icons {
+  font-size: 14px;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+.lock-button:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 14px rgba(0,0,0,0.2);
+}
+
+.lock-button.clicked {
+  background-color: #4caf50;
+  border-color: #4caf50;
+}
+
+.lock-button.clicked .material-icons {
+  color: white;
+}
       
      
    

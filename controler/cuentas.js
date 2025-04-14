@@ -1399,7 +1399,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
               CatSelect:{idCat:req.body.CatSelect.idCat,
                 urlIcono:req.body.CatSelect.urlIcono,
                   nombreCat:req.body.CatSelect.nombreCat,
-                subCatSelect:req.body.SubCatSelect,
+                subCatSelect:req.body.CatSelect.subCatSelect,
                 _id:req.body.CatSelect._id
               }
           }

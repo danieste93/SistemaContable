@@ -214,7 +214,7 @@ channel1 = null;
 </div>
 
 <div className={`subcatCont ${subCatActive}`}>
-<div className=" contcontacto">
+<div className="contcontactoSub">
 <div className="headercontact cuentasheader">
 <div className="tituloventa">
                 
@@ -445,6 +445,17 @@ this.setState({subcatCont:false})
        
          border-bottom: 5px solid black;
        }
+              .contcontactoSub{
+         margin-top:5px;
+        border-radius: 15px;
+        width: 72%;
+               background-color: white;
+         height: 100%;
+       
+     }
+         .contSubCate{
+         background-color: white;
+         }
        .marginador{
          margin: 0px 35px 15px 35px;
          color: black;

@@ -56,7 +56,7 @@ filteredTimeRegs:[],
         
         }
         configData = (event) => {
-
+console.log(event)
           this.setState({filteredTimeRegs:event})
 
          }

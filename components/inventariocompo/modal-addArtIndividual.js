@@ -309,7 +309,7 @@ this.setState({CuentasInv:response.cuentasHabiles})
         }
         
         comprobadorTypoUpload=(TotalPago, TotalValorCompra)=>{
-          if(this.state.Cantidad == 0 ||this.state.Cantidad == ""||this.state.Cantidad == " "  ){
+          if(this.state.Cantidad == 0 ||this.state.Cantidad.trim() == ""){
             
             this.createArt()
           }else{  

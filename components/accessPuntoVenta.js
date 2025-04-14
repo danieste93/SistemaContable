@@ -1236,23 +1236,16 @@ this.setState({impresion:!this.state.impresion})
    .catch(error => console.error('Error:', error))
    .then(response => {
   
-    if(response.message=="error al registrar"){
+    if(response.status=="error"){
         let add = {
           Estado:true,
           Tipo:"error",
-          Mensaje:"Error en el sistema, porfavor intente en unos minutos"
+          Mensaje:response.message
       }
       this.setState({Alert: add, loading:false,}) 
       }
 
-      else if(response.message=="El correo ya esta registrado"){
-        let add = {
-            Estado:true,
-            Tipo:"error",
-            Mensaje:"El correo ya esta registrado"
-        }
-        this.setState({Alert: add, loading:false,}) 
-      }
+  
       else{
 
 

@@ -281,6 +281,7 @@ fetch("/cuentas/getcuentas", {
       
     
         if(filtradospornombre.length >0){
+          console.log(filtradospornombre)
           let renderNewCuentas = filtradospornombre.map((cuenta,i)=>{
             let tintura = ()=>{
 
@@ -322,6 +323,7 @@ fetch("/cuentas/getcuentas", {
              )
 
           })
+
 return renderNewCuentas
         }
         else{
@@ -607,7 +609,7 @@ pabutton=(e)=>{
     this.setState({Pasivos:!this.state.Pasivos})
 }
 editCustomCuenta=(e)=>{
-  if(e.Tipo== "Inventario" || e.Tipo== "Trabajadores"|| e.Tipo== "Distribuidores"){
+  if(e.Tipo== "Inventario" ){
     let add = {
       Estado:true,
       Tipo:"error",
@@ -1249,11 +1251,11 @@ if(this.props.regC.Regs.length > 0 && this.state.cuentaSelect != ""){
 
   DetallesPorrender = this.MensualFilter(displayDetalles, this.state.tiempo)
 
-      let getPeriodRegs =  this.PeriodoFilter(displayDetalles, fecha.setDate(1), new Date() )
+    let getPeriodRegs =  this.PeriodoFilter(displayDetalles, fecha.setDate(1), new Date() )
   
 
       let balancePeriod = parseFloat(this.generadorBalanceGeneral(getPeriodRegs))
-      let balanceMesSistema= parseFloat(this.generadorBalanceGeneral(DetallesPorrender))
+      let balanceMesSistema= parseFloat(this.generadorBalanceGeneral(DetallesPorrender.filter(x=>x.TiempoEjecucion!= 0)))
  
       
       let saldoGenerado = ((valorActualCuenta - balancePeriod) + balanceMesSistema).toFixed(2)
@@ -1394,7 +1396,7 @@ if(cuentasrenderNoPosesion.length > 0){
 
  }
 
-   
+    
     if(cuentasCapital.length > 0){
     for(let i = 0; i < cuentasCapital.length; i++){
     capitalTotal  += parseFloat(cuentasCapital[i].DineroActual.$numberDecimal)

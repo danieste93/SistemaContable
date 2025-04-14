@@ -42,10 +42,12 @@ async function genOnlyArt(req,res){
   session.startTransaction();
  try{
   let data = req.body
-  console.log(data)
+
   let  eqidFind= await ArticuloModelSass.findOne({Eqid:data.EqId})
   //let  tituloFind= await ArticuloModelSass.findOne({Titulo:`/^${req.body.Titulo}$/i`})
-  let  tituloFind= await ArticuloModelSass.findOne({Titulo : { $regex:`/^${req.body.Titulo}$/i`}});
+  let tituloFind = await ArticuloModelSass.findOne({ 
+    Titulo: { $regex: `^${req.body.Titulo.trim()}$`, $options: 'i' } 
+});
 
   if(eqidFind == null && tituloFind == null){
   let finalid = ""
@@ -175,9 +177,14 @@ async function addArtIndividual(req,res){
   const session = await mongoose.startSession();  
   session.startTransaction();
   try{
+    console.log(req.body.Titulo)
+
     let  eqidFind= await ArticuloModelSass.findOne({Eqid:data.EqId})
-    let  tituloFind= await ArticuloModelSass.findOne({Titulo:` /^${req.body.Titulo}$/i `})
-  if(eqidFind == null && tituloFind == null){
+    let tituloFind = await ArticuloModelSass.findOne({ 
+      Titulo: { $regex: `^${req.body.Titulo.trim()}$`, $options: 'i' } 
+  });
+  console.log(tituloFind)
+   if(eqidFind == null && tituloFind == null){
     let finalid = ""
     let cantidadReal =""
     let medidafinal =""
@@ -428,11 +435,11 @@ arrCuentas.push(cuenta2)
           session.endSession();
   
   
-   }else if(eqidFind){
+   }else if(tituloFind){
     res.send({status: "Error", message: "Titulo ya existente"});
     await session.abortTransaction();
     session.endSession();
-   } else if(tituloFind){
+   } else if(eqidFind){
     res.send({status: "Error", message: "EqId ya existente"});
     await session.abortTransaction();
     session.endSession();
