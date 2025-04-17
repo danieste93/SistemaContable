@@ -1784,8 +1784,6 @@ this.setState({ data:nuevoval})
                                        
                          let cleanData = { 
 
-
-                       
                             idReg:response.updatedCounter.ContRegs,
                             idVenta:response.updatedCounter.ContVentas,
                             secuencialGen:response.updatedCounter.ContSecuencial,

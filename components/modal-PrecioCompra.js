@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
 import { Animate } from 'react-animate-mount/lib/Animate';
 import HelperFormapago from './reusableComplex/helperSoloPago';
+import fetchData from './funciones/fetchdata';
+
+
 
 class Contacto extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      precioCompra: props.PrecioCompra,
+      precioCompra: props.ArtData.Precio_Compra,
       justificacion: '',
       Fpago:[],
       helperReady: false, // Esto puede cambiar si HelperFormapago necesita enviar confirmación
@@ -14,6 +17,7 @@ class Contacto extends Component {
   }
 
   componentDidMount() {
+    
     setTimeout(() => {
       document.getElementById('mainxx').classList.add('entradaaddc');
     }, 100);
@@ -35,21 +39,33 @@ class Contacto extends Component {
     this.setState({ justificacion: e.target.value });
   };
 
-  handleEnviar = () => {
-    console.log('Enviado', {
-      PrecioCompraOriginal: this.props.PrecioCompra,
+  handleEnviar = async (esMayor, esMenor) => {
+    let data= {
+    
       PrecioCompraNuevo: this.state.precioCompra,
-      Cantidad: this.props.Cantidad,
+     
       Justificacion: this.state.justificacion,
-    });
+      Fpago:this.state.Fpago,
+      esMayor,esMenor,
+      allData:this.props,
+    }
+
+
+    let dataSend = await fetchData(this.props.User,
+      "/public/editarPrecioCompra",
+    data)
+      console.log(data)
+
   };
 
   render() {
-    console.log(this.state)
-    const { PrecioCompra, Cantidad } = this.props;
+    console.log(this.props.ArtData)
+    const  PrecioCompra = this.props.ArtData.Precio_Compra;
+    console.log(PrecioCompra)
+    const  Cantidad = this.props.ArtData.Existencia;
     const { precioCompra, justificacion } = this.state;
 
-let newCatidad = 1
+let newCatidad = Cantidad
 
     const totalOriginal = PrecioCompra * newCatidad;
     const totalNuevo = precioCompra * newCatidad;
@@ -144,7 +160,7 @@ let validadorSum = SumaTotal === (totalNuevo - totalOriginal)?true:false
 
               <div className="center-button">
                 <button
-                  onClick={this.handleEnviar}
+                  onClick={()=>{this.handleEnviar(esMayor, esMenor)}}
                   className="botonenviar"
                   disabled={!puedeEnviar}
                 >

@@ -1685,8 +1685,9 @@ shopping_cart
         </Animate >   
         {this.state.changePrecioCompra && 
         <ModalPrecioCompra 
-        PrecioCompra={this.state.Precio_Compra}
-        Cantidad={this.props.data.Existencia}
+        User={this.props.state.userReducer}
+    
+        ArtData={this.props.data}
         Flecharetro={()=>this.setState({changePrecioCompra:false})}  />}
                     <style jsx>{`
            .datarenderCont{

@@ -4552,4 +4552,31 @@ console.log(datafind)
               }
           }
 
-module.exports = {getDbuserData,getAllClients, deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,updateUser, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };
+
+          async function editarPrecioCompra(req,res) {
+
+
+            const session = await mongoose.startSession();  
+            session.startTransaction();
+           try{
+            let conn = await mongoose.connection.useDb(req.body.User.DBname);
+            let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
+            let RegModelSass = await conn.model('Reg', regSchema);
+            let CuentasModelSass = await conn.model('Cuenta', accountSchema);
+  
+            console.log(req.body)
+
+
+            }
+catch(error){
+                  await session.abortTransaction();
+                  session.endSession();
+                  console.log(error, "errr")
+                  return res.json({status: "Error", message: "Error en el sistema, porfavor intente en unos minutos", error });
+                }
+
+          }
+
+
+
+module.exports = {editarPrecioCompra, getDbuserData,getAllClients, deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,updateUser, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };

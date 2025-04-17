@@ -10,9 +10,10 @@ const ArtRender = ({onResearch,datos, onEdicion, onDelete,userReducer}) => {
    
     let [value, setValue] = useState(1);
     let [verRastreador, setverRastreador] = useState(true);
+    
     useEffect(() => {
-
-        if(datos.Tipo == "Servicio" ||datos.Tipo == "Combo"){
+console.log(datos)
+        if(datos.Tipo !== "Producto"){
             setverRastreador(false)
         }
 
