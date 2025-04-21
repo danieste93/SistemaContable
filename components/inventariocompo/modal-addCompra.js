@@ -8,7 +8,7 @@ import {connect} from 'react-redux';
 import {Animate} from "react-animate-mount"
 import ModalAddIndividual from "./modal-addArtIndividual"
 import CircularProgress from '@material-ui/core/CircularProgress';
-import { addRegs,addCompra,updateCuentas } from '../../reduxstore/actions/regcont';
+import { addRegs,addCompra,updateCuentas, updateArts } from '../../reduxstore/actions/regcont';
 class Contacto extends Component {
    
 state={
@@ -332,7 +332,8 @@ this.setState({ArtAddCalc:deepClone})
                    Mensaje:"Compra Ingresada"
                }
                this.setState({Alert: add})
-               setTimeout(()=>{this.props.updateArt();
+               setTimeout(()=>{
+                this.props.dispatch(updateArts(response.Articulos));
                 this.props.dispatch(addRegs(response.Regs));
                 this.props.dispatch(addCompra(response.Compra));
                 this.props.dispatch(updateCuentas(response.Cuentas));

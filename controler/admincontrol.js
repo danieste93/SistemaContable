@@ -23,6 +23,7 @@ const comprasSchema= require("../models/comprasSass")
 const ventasSchema = require("../models/ventaSass")
 const clientSchema = require("../models/clientSass")
 const UserSchema = require('../models/usersSass');
+const regSchemaDelete= require("../models/registrosSassDel")
 const distriSchema = require('../models/ditribuidorSass');
 const  HtmlArtSchema = require('../models/articuloHTMLSass');
 const mongoose = require('mongoose')
@@ -1906,6 +1907,13 @@ let RegModelSass = await conn.model('Reg', regSchema);
 let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
 let VentaModelSass = await conn.model('Venta', ventasSchema);
 let CuentasModelSass = await conn.model('Cuenta', accountSchema);
+let RegModelSassDelete = await conn.model('RegDelete', regSchemaDelete);
+         
+
+let arrArts = []
+let arrCuentas = []
+let arrRegs = []
+let arrRegsDell = []
 
 const session = await mongoose.startSession();   
   session.startTransaction();
@@ -1948,8 +1956,8 @@ const session = await mongoose.startSession();
     let valorIncremento = req.body.articulosVendidos[i].CantidadCompra 
 
     let update = { $inc: { Existencia: valorIncremento } }
- let artInve=   await  ArticuloModelSass.findByIdAndUpdate(req.body.articulosVendidos[i]._id,update,{session})  
-
+ let artInve=   await  ArticuloModelSass.findByIdAndUpdate(req.body.articulosVendidos[i]._id,update,{session, new:true})  
+arrArts.push(artInve)
 if(artInve == null){
   throw new Error("articulo no encontrado")
 }
@@ -1972,15 +1980,28 @@ if(req.body.arrRegs.length == 0 || req.body.arrRegs == undefined ){
     for(let y=0;y<req.body.arrRegs.length;y++){
       let regdata =   await RegModelSass.findByIdAndRemove(req.body.arrRegs[y], { session })
      
-     
-      if(regdata == null){
-        throw new Error("Registros no encontrados")
+      if (!regdata) {
+        throw new Error(`Registro con ID ${req.body.arrRegs[y]} no encontrado para eliminar.`);
       }
+      let newDeleteReg={
+        ...regdata.toObject(),
+        Estado:false,
+        TiempoDelete: new Date().getTime(),
+        UsuarioDelete:req.body.UsuarioDelete
+      }
+
+      let newRegDelete = await RegModelSassDelete.create([newDeleteReg],{session})
+      
+    
+      arrRegs.push(regdata)
+      arrRegsDell.push(newRegDelete[0])
+     
+      
       if(regdata.Accion == "Gasto"){
         const fixedImport= new mongoose.Types.Decimal128(JSON.stringify(parseFloat(regdata.Importe)))
         let updateInv = { $inc: { DineroActual:fixedImport } }
-        let cuentaUpdate=  await CuentasModelSass.findByIdAndUpdate(regdata.CuentaSelec.idCuenta,updateInv,{session})
-      
+        let cuentaUpdate=  await CuentasModelSass.findByIdAndUpdate(regdata.CuentaSelec.idCuenta,updateInv,{session, new:true})
+      arrCuentas.push(cuentaUpdate)
         if(cuentaUpdate == null){
           throw new Error("Cuenta no encontrada")
         }
@@ -1989,8 +2010,8 @@ if(req.body.arrRegs.length == 0 || req.body.arrRegs == undefined ){
       if(regdata.Accion == "Ingreso"){
         const fixedImport= new mongoose.Types.Decimal128(JSON.stringify(parseFloat(regdata.Importe)))
         let updateInv = { $inc: { DineroActual:fixedImport *-1 } }
-        let cuentaUpdate=  await CuentasModelSass.findByIdAndUpdate(regdata.CuentaSelec.idCuenta,updateInv,{session})
-       
+        let cuentaUpdate=  await CuentasModelSass.findByIdAndUpdate(regdata.CuentaSelec.idCuenta,updateInv,{session, new:true})
+        arrCuentas.push(cuentaUpdate)
         if(cuentaUpdate == null){
           throw new Error("Cuenta no encontrada")
         }
@@ -2001,15 +2022,16 @@ if(req.body.arrRegs.length == 0 || req.body.arrRegs == undefined ){
         let updateInvGas = { $inc: { DineroActual:fixedImport *-1 } }
         let updateInvIng = { $inc: { DineroActual:fixedImport  } }
 
-        let cuenta1 = await  CuentasModelSass.findByIdAndUpdate(regdata.CuentaSelec.idCuenta, updateInvIng, {session})
-        let cuenta2 =await   CuentasModelSass.findByIdAndUpdate(regdata.CuentaSelec2.idCuenta, updateInvGas, {session})        
+        let cuenta1 = await  CuentasModelSass.findByIdAndUpdate(regdata.CuentaSelec.idCuenta, updateInvIng, {session,new:true})
+        let cuenta2 =await   CuentasModelSass.findByIdAndUpdate(regdata.CuentaSelec2.idCuenta, updateInvGas, {session, new:true})        
         if(cuenta1 == null){
           throw new Error("Cuenta no encontrada")
         }
         if(cuenta2 == null){
           throw new Error("Cuenta no encontrada")
         }
-    
+        arrCuentas.push(cuenta1)
+        arrCuentas.push(cuenta2)
       }
   
 
@@ -2033,7 +2055,7 @@ if(req.body.formasdePago){
 
  await session.commitTransaction();
   session.endSession();
-  return res.status(200).send({status: "venta Eliminada", Venta: ventac });
+  return res.status(200).send({status: "venta Eliminada", Venta: ventac, arrRegs, arrArts, arrCuentas, arrRegsDell });
 
 }  catch(e){
     await session.abortTransaction();
@@ -2052,6 +2074,14 @@ const deleteCompra= async (req, res, next)=>{
   let ComprasModelSass = await conn.model('Compras', ComprasShema);
   let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
   let CuentasModelSass = await conn.model('Cuenta', accountSchema);
+  let RegModelSassDelete = await conn.model('RegDelete', regSchemaDelete);
+         
+
+  let arrArts = []
+  let arrCuentas = []
+  let arrRegs = []
+  let arrRegsDell = []
+
 
 let valdata = false
 for(let i=0;i<req.body.ArtComprados.length;i++){
@@ -2130,7 +2160,7 @@ for(let i=0;i<req.body.ArtComprados.length;i++){
     throw new Error("Compra no encontrada")
   }
   
-  
+  arrArts.push(resart)
   
   
     }
@@ -2143,14 +2173,31 @@ for(let i=0;i<req.body.ArtComprados.length;i++){
     if(regdata == null){
       throw new Error("Registros no encontrados")
     }
+    let newDeleteReg={
+      ...regdata.toObject(),
+      Estado:false,
+        TiempoDelete: new Date().getTime(),
+        
+      UsuarioDelete:req.body.UsuarioDelete
+    }
+
+    let newRegDelete = await RegModelSassDelete.create([newDeleteReg],{session})
+    
+  
+    arrRegs.push(regdata)
+    arrRegsDell.push(newRegDelete[0])
+
+
+
     if(regdata.Accion == "Ingreso"){
       const fixedImport= new mongoose.Types.Decimal128((parseFloat(regdata.Importe )* -1).toFixed(2))
       let updateIng = { $inc: { DineroActual: fixedImport} }
 
-      let cuentaUpdate=  await CuentasModelSass.findByIdAndUpdate(regdata.CuentaSelec.idCuenta,updateIng,{session})
+      let cuentaUpdate=  await CuentasModelSass.findByIdAndUpdate(regdata.CuentaSelec.idCuenta,updateIng,{session, new:true})
       if(cuentaUpdate == null){
         throw new Error("Cuenta no encontrada")
       }
+      arrCuentas.push(cuentaUpdate)
 
     }
 
@@ -2163,16 +2210,16 @@ for(let i=0;i<req.body.ArtComprados.length;i++){
      let update2= { $inc: { DineroActual: req.body.Fpago[x].Cantidad } }
     
     
-    let cuentaActualizada =   await  CuentasModelSass.findByIdAndUpdate(req.body.Fpago[x].Cuenta._id,update2,{ session })
+    let cuentaActualizada =   await  CuentasModelSass.findByIdAndUpdate(req.body.Fpago[x].Cuenta._id,update2,{ session, new:true})
     if(cuentaActualizada == null){
       throw new Error("Cuenta de pago no encontrada")
     }
-   
+    arrCuentas.push(cuentaActualizada)
    
     if(x == req.body.Fpago.length - 1){
        await session.commitTransaction();
         session.endSession();
-      return  res.json({status: "Ok", message: "compra Eliminada", Compra});
+      return  res.json({status: "Ok", message: "compra Eliminada", Compra, arrRegs, arrArts, arrCuentas, arrRegsDell });
        
      
       }
@@ -2333,8 +2380,8 @@ let dataregSI= { Accion:"Gasto",
 
   let updateSI = { $inc: { DineroActual: valEgresado *-1  } }
 
-    await RegModelSass.create([dataregSI],{session} )
-    await CuentasModelSass.findByIdAndUpdate(cuentainv[0]._id,updateSI,{session})
+   let reg1 = await RegModelSass.create([dataregSI],{session} )
+ let cuentaupdate =   await CuentasModelSass.findByIdAndUpdate(cuentainv[0]._id,updateSI,{session, new:true})
   let articDelete =  await ArticuloModelSass.findByIdAndDelete(req.body._id, {session})
     
    
@@ -2342,7 +2389,7 @@ let dataregSI= { Accion:"Gasto",
    await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updateCounterCompra,{session} )
 
    await session.commitTransaction();
-   res.status(200).send({message:"Articulo Eliminado",articDelete})
+   res.status(200).send({message:"Articulo Eliminado",articDelete, cuentaupdate, registro:reg1})
       session.endSession();
   }catch(error){
     await session.abortTransaction();
@@ -4563,8 +4610,186 @@ console.log(datafind)
             let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
             let RegModelSass = await conn.model('Reg', regSchema);
             let CuentasModelSass = await conn.model('Cuenta', accountSchema);
+            let CounterModelSass = await conn.model('Counter', counterSchema);
+            let CatModelSass = await conn.model('Categoria', catSchema);
+           
+            let artData = req.body.datos.allData.ArtData
+
+            let actualInvertido = artData.Existencia * artData.Precio_Compra
+            let modificacionInversion = artData.Existencia * req.body.datos.PrecioCompraNuevo
+            let Counterx =     await CounterModelSass.find({iDgeneral:9999999},null, {session} )
+            let idCuentaInv  =  await CuentasModelSass.find({iDcuenta:artData.Bodega_Inv}, null,{session} )
+            let tiempo = new Date().getTime()
+                     
+           let catSalidaInv=  await CatModelSass.find({idCat:18}, null,{session, new:true} )
+
+            let Usuario =req.body.datos.allData.User.update.usuario.user
+       
+
+            if(req.body.datos.esMenor){
+
+            
+            
+             let diferencia = actualInvertido - modificacionInversion
+ 
+
+const fixedImportGas = new mongoose.Types.Decimal128(parseFloat(diferencia).toFixed(2))
+       
+             let datareg= { Accion:"Gasto",   
+              Tiempo:tiempo,
+              TiempoEjecucion:tiempo,
+              IdRegistro:Counterx[0].ContRegs,
+              
+              CuentaSelec:{idCuenta:idCuentaInv[0]._id,
+                            nombreCuenta: idCuentaInv[0].NombreC,
+                         },
+        
+                CatSelect:{idCat:catSalidaInv[0].idCat,
+                  urlIcono:catSalidaInv[0].urlIcono,
+                  nombreCat:catSalidaInv[0].nombreCat,
+                  subCatSelect:catSalidaInv[0].subCatSelect,
+                  _id:catSalidaInv[0]._id,
+             
+                },
+              
+                Nota:"Salida de Precio de Compra "+ " / " + req.body.datos.Justificacion ,
+                Descripcion:"",
+              Descripcion2:{articulosVendidos:[artData]},
+              Estado:false,
+              urlImg:[],
+              Valrep:"No",
+              TipoRep:"",
+              Importe:fixedImportGas,
+              Usuario:{
+                Nombre:Usuario.Usuario,
+                Id:Usuario._id,
+                Tipo:Usuario.Tipo,
+              
+              }
+              }
+              
+              let reg1 = await RegModelSass.create([datareg],{session} )
+          
+              let updateSI = { $inc: { DineroActual: fixedImportGas *-1  } }
+              let updateArt = { Precio_Compra: req.body.datos.PrecioCompraNuevo } 
+              console.log("reg")
+let cuentaInvEdit =  await CuentasModelSass.findByIdAndUpdate(idCuentaInv[0]._id,updateSI,{session, new:true})
+
+let ArticuloActual = await ArticuloModelSass.findByIdAndUpdate(artData._id, updateArt,{session, new:true})
+let updatecounter = { $inc: { ContRegs: 1 } }
+  await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session, new:true} )
   
-            console.log(req.body)
+ await session.commitTransaction();
+res.status(200).send({status:"Ok",message:"Baja de Precio Compra",cuentaInvEdit, ArticuloActual, Registro:reg1[0]})
+   session.endSession();
+
+            }else if(req.body.datos.esMayor){
+
+
+              let artData = req.body.datos.allData.ArtData
+              let arrRegs = []
+              let arrCuentas = []
+              let diferencia = modificacionInversion - actualInvertido  
+              let catIngInv=  await CatModelSass.find({idCat:16}, null,{session, new:true} )
+              const fixedImport = new mongoose.Types.Decimal128(parseFloat(diferencia).toFixed(2))
+      
+              let dataregIng= { Accion:"Ingreso",   
+                Tiempo:tiempo,
+                TiempoEjecucion:tiempo,
+                IdRegistro:Counterx[0].ContRegs,
+                
+                CuentaSelec:{idCuenta:idCuentaInv[0]._id,
+                              nombreCuenta: idCuentaInv[0].NombreC,
+                           },
+          
+                  CatSelect:{idCat:catIngInv[0].idCat,
+                    urlIcono:catIngInv[0].urlIcono,
+                    nombreCat:catIngInv[0].nombreCat,
+                    subCatSelect:catIngInv[0].subCatSelect,
+                    _id:catIngInv[0]._id,
+               
+                  },
+                
+                  Nota:"Aumento de Precio de Compra "+ " / " ,
+                  Descripcion:"",
+                Descripcion2:{articulosVendidos:[artData]},
+                Estado:false,
+                urlImg:[],
+                Valrep:"No",
+                TipoRep:"",
+                Importe:fixedImport,
+                Usuario:{
+                  Nombre:Usuario.Usuario,
+                  Id:Usuario._id,
+                  Tipo:Usuario.Tipo,
+                
+                }
+                }
+
+                let reg1 = await RegModelSass.create([dataregIng],{session} )
+
+            
+let updateInv = { $inc: { DineroActual: fixedImport   } }
+let UpInv =  await CuentasModelSass.findByIdAndUpdate(idCuentaInv[0]._id,updateInv,{session, new:true})
+
+arrRegs.push(reg1[0])
+arrCuentas.push(UpInv)
+
+                req.body.datos.Fpago.forEach(async (x,i)=>{
+                  const fixedImportFpago = new mongoose.Types.Decimal128(parseFloat(x.Cantidad).toFixed(2))
+      
+                  let datareg= { Accion:"Gasto",   
+                    Tiempo:tiempo,
+                    TiempoEjecucion:tiempo,
+                    IdRegistro:Counterx[0].ContRegs + i,
+                    
+                    CuentaSelec:{idCuenta:x.Cuenta._id,
+                                  nombreCuenta: x.Cuenta.NombreC,
+                               },
+              
+                      CatSelect:{idCat:catIngInv[0].idCat,
+                        urlIcono:catIngInv[0].urlIcono,
+                        nombreCat:catIngInv[0].nombreCat,
+                        subCatSelect:catIngInv[0].subCatSelect,
+                        _id:catIngInv[0]._id,
+                   
+                      },
+                    
+                      Nota:"Aumento Precio de Compra "+ " / " + x.Tipo ,
+                      Descripcion:"",
+                    Descripcion2:{articulosVendidos:[artData]},
+                    Estado:false,
+                    urlImg:[],
+                    Valrep:"No",
+                    TipoRep:"",
+                    Importe:fixedImportFpago,
+                    Usuario:{
+                      Nombre:Usuario.Usuario,
+                      Id:Usuario._id,
+                      Tipo:Usuario.Tipo,
+                    
+                    }
+                    }
+                    let reg2 = await RegModelSass.create([datareg],{session} )
+                    arrRegs.push(reg2[0])
+
+                    let updateSI = { $inc: { DineroActual: fixedImportFpago *-1  } }            
+      let cuentaPago =  await CuentasModelSass.findByIdAndUpdate(x.Cuenta._id,updateSI,{session, new:true})
+      
+      arrCuentas.push(cuentaPago)
+
+                })
+                let updateArt = { Precio_Compra: req.body.datos.PrecioCompraNuevo } 
+            
+                let ArticuloActual = await ArticuloModelSass.findByIdAndUpdate(artData._id, updateArt,{session, new:true})
+                let updatecounter = { $inc: { ContRegs: req.body.datos.Fpago.length } }
+                  await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session, new:true} )
+                  await session.commitTransaction();
+                  res.status(200).send({status:"Ok",message:"Subida de Precio Compra",arrCuentas, arrRegs, ArticuloActual })
+                     session.endSession();                
+
+
+            }
 
 
             }

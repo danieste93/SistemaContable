@@ -12,7 +12,7 @@ const ArtRender = ({onResearch,datos, onEdicion, onDelete,userReducer}) => {
     let [verRastreador, setverRastreador] = useState(true);
     
     useEffect(() => {
-console.log(datos)
+
         if(datos.Tipo !== "Producto"){
             setverRastreador(false)
         }

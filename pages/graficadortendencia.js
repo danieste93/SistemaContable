@@ -8,6 +8,7 @@ import {Chart} from"chart.js"
 import 'chart.js/auto';
 import Head from 'next/head';
 import { io } from "socket.io-client";
+import TrendBoxv2 from "../components/cuentascompo/newTrendbox"
 //import TrendBox from './trendBox';
 
 class purdata extends Component {
@@ -270,11 +271,7 @@ MA= (data, windowSize) => {
 */
 
    const socket = io("http://localhost:5000");
-   socket.on("ARIMA", (arg) => {
-   
-    let fixedArg = parseFloat(arg[0]).toFixed(2)
-this.setState({ARIMA:fixedArg})
-  });
+ 
   
   socket.on("inidata", (arg) => {
      // world
@@ -676,13 +673,13 @@ let PendienteRenderEdit = pendienteEditConUmbral > 0?  'Alcista' :
                                     'Neutra'
 
 
-                                    const resultEMA = this.calculateEMAWithTrend(this.state.inidata, 5 );
-                                    const resultEMASuperData = this.calculateEMAWithTrend(this.state.superdata.datasets[0].data, 8);
+                                   // const resultEMA = this.calculateEMAWithTrend(this.state.inidata, 5 );
+                                   // const resultEMASuperData = this.calculateEMAWithTrend(this.state.superdata.datasets[0].data, 8);
 
           return(
             <div className='mainGrafic' style={{marginTop:"15vh"}}>
              <p>Bienvenidos</p>
-          
+          <TrendBoxv2 data={this.state.inidata} indicesOperativos={this.state.indicesOperativos} />
             <div className='contindexes'>
             <p> Operando con </p>
             <div className='contInput'>

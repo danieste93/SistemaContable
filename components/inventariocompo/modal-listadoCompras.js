@@ -774,7 +774,7 @@ let filtrados=[]
         
         
         
-        Flecharetro={()=>{this.setState({deleteCompra:false, deletedata:{}});this.props.updateArt()}  }/>
+        Flecharetro={()=>{this.setState({deleteCompra:false, deletedata:{}})}  }/>
         </Animate>
 
         <Snackbar open={this.state.Alert.Estado} autoHideDuration={10000} onClose={handleClose}>

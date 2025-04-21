@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import {connect} from 'react-redux';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import {deleteCompra} from "../../reduxstore/actions/regcont"
+import {deleteCompra, updateCuentas, deleteReg, updateArts, addRegsDelete } from "../../reduxstore/actions/regcont"
 import {Animate} from "react-animate-mount"
 class Contacto extends Component {
    
@@ -33,7 +33,14 @@ class Contacto extends Component {
       
         let datos = {
           UserData:{DBname:this.props.state.userReducer.update.usuario.user.DBname},                   
-                 ...reg
+                 ...reg,
+                 UsuarioDelete:{
+            
+                  Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
+                  Id:this.props.state.userReducer.update.usuario.user._id,
+                  Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
+              
+              }  
           } 
         let lol = JSON.stringify(datos)
         console.log(datos)
@@ -66,9 +73,16 @@ class Contacto extends Component {
         
         else {
           this.props.dispatch(deleteCompra(response.Compra))
-        this.Onsalida()
-      
-     console.log("endelete")
+       response.arrRegs.forEach(x => {
+                   
+                   this.props.dispatch(deleteReg(x))
+                 });
+       
+                 this.props.dispatch(updateCuentas(response.arrCuentas))
+                 this.props.dispatch(updateArts(response.arrArts))
+                     this.props.dispatch(addRegsDelete(response.arrRegsDell))
+       
+               this.Onsalida()
     } 
       //  this.setState({idReg:response.counter.ContRegs})
       })

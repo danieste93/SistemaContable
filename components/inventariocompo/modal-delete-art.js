@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import {connect} from 'react-redux';
-import {deleteArt} from "../../reduxstore/actions/regcont"
+import {deleteArt, updateCuenta, addRegs} from "../../reduxstore/actions/regcont"
 import postal from 'postal';
 import {Animate} from "react-animate-mount"
 import Snackbar from '@material-ui/core/Snackbar';
@@ -101,8 +101,10 @@ class Contacto extends Component {
         }
         else{
           this.props.dispatch(deleteArt(response.articDelete))
-
-        this.Onsalida()
+          this.props.dispatch(updateCuenta(response.cuentaupdate))
+          this.props.dispatch(addRegs(response.registro))
+        
+          this.Onsalida()
       }
  
       })

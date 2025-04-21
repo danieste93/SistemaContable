@@ -219,14 +219,7 @@ await  CatModelSass.create([{
     urlIcono:"/iconscuentas/salud1.png",
     idCat:13
   }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Viajes",
-    urlIcono:"/iconscuentas/playa.png",
-    idCat:13
-  }],opts2 )
-
+ 
   await  CatModelSass.create([{
     tipocat: "Gasto",
     subCategoria: [],
@@ -241,6 +234,14 @@ await  CatModelSass.create([{
     urlIcono:"/iconscuentas/mascota2.png",
     idCat:15
   }],opts2 )
+  await  CatModelSass.create([{
+    tipocat: "Gasto",
+    subCategoria: [],
+    nombreCat:"Viajes",
+    urlIcono:"/iconscuentas/playa.png",
+    idCat:16
+  }],opts2 )
+
 
   await  CatModelSass.create([{
     tipocat: "Articulo",
@@ -317,7 +318,7 @@ await  CatModelSass.create([{
             DineroActual: 0,
             iDcuenta: 3,
             Descrip: "",
-            Permisos:"administrador",
+            Permisos:["administrador"],
             urlIcono:"/iconscuentas/cardwallet.png",
             Background:{Seleccionado:"Imagen",
             urlBackGround:"/fondoscuentas/visa05.png",
@@ -334,7 +335,7 @@ await  CatModelSass.create([{
                 DineroActual: 0,
                 iDcuenta: 4,
                 Descrip: "",
-                Permisos:"administrador",
+                Permisos:["administrador"],
                 urlIcono:"/iconscuentas/wallet.png",
                 Background:{Seleccionado:"Solido",
                 urlBackGround:"/fondoscuentas/amex1.png",
@@ -350,7 +351,7 @@ await  CatModelSass.create([{
                     DineroActual: 0,
                     iDcuenta: 7,
                     Descrip: "",
-                    Permisos:"administrador",
+                    Permisos:["administrador"],
                     urlIcono:"/iconscuentas/moneybox.png",
                     Background:{Seleccionado:"Solido",
                     urlBackGround:"/fondoscuentas/amex1.png",
@@ -370,7 +371,7 @@ await  CatModelSass.create([{
                     Background:{Seleccionado:"Imagen",
                     urlBackGround:"/fondoscuentas/amex1.png",
                     colorPicked:"#ffffff"},
-                    Permisos:"administrador",
+                    Permisos:["administrador"],
                       }], opts2 )
 
                       await  CuentasModelSass.create([{
@@ -530,7 +531,7 @@ await  CatModelSass.create([{
 })
 let subjectsting = `Verificacion a cuenta de usuario ${req.body.Usuario}`;
 let textstingdev =
-`<p>Su registro a iGlass fue exitoso</p> <p>para verificar su cuenta  <a href="http://localhost:3000/usuarios/verificacion/${getUser[0]._id}">CLICK AQUÍ</a></p>`
+`<p>Su registro a Activos fue exitoso</p> <p>para verificar su cuenta  <a href="http://localhost:3000/usuarios/verificacion/${getUser[0]._id}">CLICK AQUÍ</a></p>`
   
 var mailOptions = {
   from: 'iglassmailer2020@gmail.com',
@@ -548,15 +549,16 @@ transporter.sendMail(mailOptions, function (err, res) {
 })
 
         await session.commitTransaction();
-        session.endSession();
+        
       return res.json({status: "Ok", message: "Exito en el registro", }); 
          
       }
       catch(error){
         console.log(error)
         await session.abortTransaction();
-        session.endSession();
         return res.json({status: "error", message: "error al registrar", error });
+      }finally {
+        session.endSession();
       }
    
 
@@ -1032,7 +1034,7 @@ console.log(UsuarioFind)
       DineroActual: 0,
       iDcuenta: 1,
       Descrip: "",
-      Permisos:"administrador",
+      Permisos:["administrador"],
         }], opts2 )
   
         await  CuentasModelSass.create([{
@@ -1045,7 +1047,7 @@ console.log(UsuarioFind)
           DineroActual: 0,
           iDcuenta: 2,
           Descrip: "",
-          Permisos:"administrador",
+        Permisos:["administrador"],
             }], opts2 )
   
   
@@ -1059,7 +1061,7 @@ console.log(UsuarioFind)
               DineroActual: 0,
               iDcuenta: 3,
               Descrip: "",
-              Permisos:"administrador",
+              Permisos:["administrador"],
                 }], opts2 )
                 
                 await  CuentasModelSass.create([{
@@ -1072,7 +1074,7 @@ console.log(UsuarioFind)
                   DineroActual: 0,
                   iDcuenta: 4,
                   Descrip: "",
-                  Permisos:"administrador",
+                  Permisos:["administrador"],
                     }], opts2 )
                     await  CuentasModelSass.create([{
                       CheckedA: true,
@@ -1084,7 +1086,7 @@ console.log(UsuarioFind)
                       DineroActual: 0,
                       iDcuenta: 5,
                       Descrip: "",
-                      Permisos:"administrador",
+                      Permisos:["administrador"],
                         }], opts2 )
 
                         await  CuentasModelSass.create([{
@@ -1097,7 +1099,7 @@ console.log(UsuarioFind)
                           DineroActual: 0,
                           iDcuenta: 9999998,
                           Descrip: "",
-                          Permisos:"administrador",
+                          Permisos:["administrador"],
                             }], opts2 )
   
   
@@ -1141,7 +1143,7 @@ res.json({status: "Ok", message: "Exito en el registro",data:{user:getUser[0], t
         console.log(error)
         await session.abortTransaction();
         session.endSession();
-        return res.json({status: "Error", message: "error al registrar", error });
+        return res.json({status: "error", message: "error al registrar", error });
       }
     }else{
    console.log("encontrado")

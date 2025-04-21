@@ -309,7 +309,7 @@ this.setState({CuentasInv:response.cuentasHabiles})
         }
         
         comprobadorTypoUpload=(TotalPago, TotalValorCompra)=>{
-          if(this.state.Cantidad == 0 ||this.state.Cantidad.trim() == ""){
+          if(this.state.Cantidad === 0 ){
             
             this.createArt()
           }else{  
@@ -642,9 +642,18 @@ else if(datillos[0]=="Categoria"){
   validators={requerido }
   errorMessages={errmessage }
   InputProps={{
-    readOnly: true, // Hace que el campo no sea editable
+    disableUnderline: true, // Elimina el subrayado del input
+    style: {
+      pointerEvents: "none", // Bloquea la interacción del input, evita el cursor de escritura
+    },
   }}
-  style={{ cursor: 'pointer' }} 
+  style= {{
+    cursor: "pointer",
+    backgroundColor: "rgb(39 98 255 / 10%)",
+    padding:"2px",
+    borderRadius: "5px",
+    borderBottom:"1px solid black"
+  } }
  /> 
                 <style >{`  
              .boxp{
@@ -681,7 +690,7 @@ else if(datillos[0]=="SubCategoria"){
  
  <TextValidator
     label={datillos[0]}
- 
+    onClick={()=>{ this.setState({categoriaModal:true})}}
      name={datillos[0]}
      type={datillos[1].Tipo}
   value={this.state.subCatSelect}
@@ -689,9 +698,18 @@ else if(datillos[0]=="SubCategoria"){
      validators={ requerido }
      errorMessages={errmessage }
      InputProps={{
-      readOnly: true, // Hace que el campo no sea editable
+      disableUnderline: true, // Elimina el subrayado del input
+      style: {
+        pointerEvents: "none", // Bloquea la interacción del input, evita el cursor de escritura
+      },
     }}
-    style={{ cursor: 'pointer' }} 
+    style= {{
+      cursor: "pointer",
+      backgroundColor: "rgb(39 98 255 / 10%)",
+      padding:"2px",
+      borderRadius: "5px",
+      borderBottom:"1px solid black"
+    } }
  /> 
                 <style >{`  
              .boxp{

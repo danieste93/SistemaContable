@@ -14,7 +14,11 @@ class Modal extends Component {
        
     componentDidMount(){
    
+     setTimeout(function(){ 
+          
+          document.getElementById('mainContactoExito').classList.add("opacityon")
   
+         }, 500);
    
       }
 
@@ -22,16 +26,15 @@ class Modal extends Component {
             
 
 
-        onFlechaRetro=()=>{
-         
-            this.props.flechafun()
-         
-        }
+      onFlechaRetro=()=>{
+        document.getElementById('mainContactoExito').classList.remove("opacityon")
+        setTimeout(()=>{ 
+          this.props.flechafun()
+          
+         }, 500);
+      } 
      
-goProfile=()=>{
 
-  this.props.flechafun()
-}
 
           modalCont=()=>{
          
@@ -46,7 +49,7 @@ goProfile=()=>{
               <p>Ya Puedes iniciar sesion</p>
 
               <div className="contbotonventa">
- <button  className="botonventa " onClick={this.goProfile}>Continuar</button>
+ <button  className="botonventa " onClick={this.onFlechaRetro}>Continuar</button>
  </div>
             </div>)
                     
@@ -59,7 +62,7 @@ goProfile=()=>{
             <div >
     
 
-            <div className="maincontacto" >
+            <div id='mainContactoExito' className="mainContactoExito" >
             <div className="contcontacto"  >
               <div style={{width:"100%", display:"flex", justifyContent:"flex-start"}}>
 
@@ -138,13 +141,7 @@ goProfile=()=>{
   text-align: center;
     font-size: 11px;
 }
-             .contenidoForm{
-               margin: 20px 0px;
-              display: flex;
-    flex-flow: column;
-    justify-content: center;
-    align-items: center;
-             }
+            
              .contSoporte{  
             
  margin-top:5vw;
@@ -360,7 +357,7 @@ margin: 5px
           }
       
         
-        .maincontacto{
+        .mainContactoExito{
           overflow: scroll;
     z-index: 9999;
     width: 100%;
@@ -372,6 +369,8 @@ margin: 5px
     display: flex;
     justify-content: center;
     align-items: center;
+     opacity: 0;
+         transition: 1s;
          
        }
        .contcontacto{
@@ -507,6 +506,9 @@ margin: 5px
 margin-top:10px;
 margin-top:10px
 }
+.opacityon{
+        opacity: 1;
+       }
              @media only screen and (max-width: 320px) { 
                .subtituloArt{
                 margin-top:2px;

@@ -309,6 +309,11 @@ console.log(this.state)
       
       })
     }}
+    handleChangeformUsuario = (event) => {
+      const input = event.target.value;
+      const soloLetrasYNumeros = input.replace(/[^a-zA-Z0-9]/g, ''); // elimina todo lo que no sea letra o número
+      this.setState({ usuarioReg: soloLetrasYNumeros });
+    };
 
  render() {
     const Alert=(props)=> {
@@ -397,8 +402,8 @@ console.log(this.state)
             </div>
 					
 			</div>
-			<div className="social-login">
-				<h3>Ingresa con </h3>
+			<div className="social-login" >
+				<h3 >Ingresa con </h3>
 				<div className="social-icons">
 				
 					<a href="#" className="social-login__icon fab fa-facebook"></a>
@@ -435,8 +440,8 @@ undo
 </span>
 
 
-</div>
-      <p className="tituloArt">Registrate</p>
+</div><div className='contTituloReg'>  <p className="tituloArt">Registrate</p> </div>
+    
       </div>
       <div className="jwseccionCard customRegis">
     
@@ -456,7 +461,7 @@ account_circle
 </div>
 <TextValidator
 label="Usuario*"
-onChange={this.handleChangeform}
+onChange={this.handleChangeformUsuario}
 name="usuarioReg"
 type="text"
 validators={['requerido']}
@@ -572,10 +577,10 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
 		</div>		
 	</div>
 
-            <Animate show={this.state.modal}>
-            <Modal flechafun={()=>{this.setState({modal:false,   registro:false,
-    login:true,})}} datos={this.state.datos} />
-            </Animate>
+
+{ this.state.modal &&  <Modal flechafun={()=>{this.setState({modal:false,   registro:false,
+    login:true,})}} datos={this.state.datos} />}
+       
             <Animate show={this.state.resetpass}>
             <Modalreset flechafun={()=>{this.setState({resetpass:false, login:true})}}  />
             </Animate>
@@ -710,6 +715,11 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
 	padding: 20px 0px;	
 	position: relative;	
 }
+  .contTituloReg{
+      padding: 5px;
+    background: #ffffffc9;
+    border-radius: 20px;
+  }
 
 .login__icon {
 	position: absolute;

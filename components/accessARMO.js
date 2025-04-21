@@ -883,7 +883,7 @@ list
         <EditArt 
         data={this.state.itemPoreditar}
          Flecharetro={()=>{this.setState({edicion:false})}}
-         updateArt={()=>{ this.getdata()}} 
+       
          User={this.getDataUser()} 
           /> 
       </Animate>
@@ -902,7 +902,7 @@ list
         data={this.state.itemPoreditar}
      
          Flecharetro={()=>{this.setState({edicionServ:false})}}
-         updateArt={()=>{ this.getdata()}} 
+     
          User={this.getDataUser()} 
  
          
@@ -921,13 +921,11 @@ list
                     <ModalAddCompra 
                                     User={this.getDataUser()} 
                                     Articulos={this.props.state.RegContableReducer.Articulos} 
-                                    updateArt={()=>{ this.getdata()}} 
                                     Flecharetro={()=>{this.setState({addCompra:false})}} />
                     </Animate >
                     <Animate show={this.state.listadoCompras}>
                         <ModalListadoCompras 
                            Flecharetro={()=>{this.setState({listadoCompras:false})}}  
-                           updateArt={()=>{ this.getdata()}}   
                         />
 
                     </Animate >
@@ -935,8 +933,7 @@ list
                       
                     <ModalListadoVentas
                            Flecharetro={()=>{this.setState({listadoVentas:false})}}    
-                           updateArt={()=>{ this.getdata()}}   
-                       />
+                         />
                     </Animate >
                     <Animate show={this.state.addMasive}>
                         <ModalAddMasive
@@ -948,15 +945,13 @@ list
                     </Animate >
                     <Animate show={this.state.addIndividual}>
                         <ModalAddIndividual
-                          updateArt={()=>{ this.getdata()}} 
-                          User={this.getDataUser()} 
+                         User={this.getDataUser()} 
                            Flecharetro={()=>{this.setState({addIndividual:false})}}    
                         />
 
                     </Animate >
                     <Animate show={this.state.addServ}>
                         <ModalAddServ
-                          updateArt={()=>{ this.getdata()}} 
                           User={this.getDataUser()} 
                            Flecharetro={()=>{this.setState({addServ:false})}}    
                         />

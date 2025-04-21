@@ -7,7 +7,7 @@ import {Animate} from "react-animate-mount"
 import HtmlDescrip from "./modal-htmldescrip"
 import { ValidatorForm, TextValidator} from 'react-material-ui-form-validator';
 
-import { addArt, addCompra,addRegs,updateArt,updateCuentas } from '../../reduxstore/actions/regcont';
+import { addArt, addCompra,addRegs,updateArt,updateCuentas, updateCuenta, } from '../../reduxstore/actions/regcont';
 
 import ModalPrecioCompra from "../modal-PrecioCompra"
 import FormControlLabel from '@material-ui/core/FormControlLabel';
@@ -312,6 +312,23 @@ class Contacto extends Component {
             
             
             }
+
+            updatePrecioCompra=  (data)=>{
+              this.setState({Precio_Compra:data.ArticuloActual.Precio_Compra})                   
+              this.props.dispatch(updateArt(data.ArticuloActual))
+               
+              if(data.message == "Baja de Precio Compra"){
+              
+                this.props.dispatch(updateCuenta(data.cuentaInvEdit   ))
+                this.props.dispatch(addRegs([data.Registro]))
+                        }else{
+                          this.props.dispatch(addRegs(data.arrRegs))
+                          this.props.dispatch(updateCuentas(data.arrCuentas   ))
+              } 
+            
+            }
+
+            
 
             submitFunc=()=>{
               if(this.state.ContContado == false && this.state.ContEgreso == false){   
@@ -1686,7 +1703,10 @@ shopping_cart
         {this.state.changePrecioCompra && 
         <ModalPrecioCompra 
         User={this.props.state.userReducer}
-    
+        updatePrecioCompra={this.updatePrecioCompra
+       
+
+        }
         ArtData={this.props.data}
         Flecharetro={()=>this.setState({changePrecioCompra:false})}  />}
                     <style jsx>{`

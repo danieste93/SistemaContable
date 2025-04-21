@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import {connect} from 'react-redux';
 
-import {deleteVenta} from "../../reduxstore/actions/regcont"
+import {deleteVenta, updateCuentas, deleteReg, updateArts, addRegsDelete } from "../../reduxstore/actions/regcont"
 
 class Contacto extends Component {
    
@@ -33,7 +33,14 @@ class Contacto extends Component {
         console.log(reg)
         let datos = {
           UserData:{DBname:this.props.state.userReducer.update.usuario.user.DBname},                   
-                 ...reg
+                 ...reg,
+                 UsuarioDelete:{
+            
+                  Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
+                  Id:this.props.state.userReducer.update.usuario.user._id,
+                  Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
+              
+              }       
           } 
         let lol = JSON.stringify(datos)
         var url = '/public/deleteventa';
@@ -54,6 +61,16 @@ class Contacto extends Component {
          } 
          else {
           this.props.dispatch(deleteVenta(response.Venta))
+
+          response.arrRegs.forEach(x => {
+            
+            this.props.dispatch(deleteReg(x))
+          });
+
+          this.props.dispatch(updateCuentas(response.arrCuentas))
+          this.props.dispatch(updateArts(response.arrArts))
+              this.props.dispatch(addRegsDelete(response.arrRegsDell))
+
         this.Onsalida()
          }
      

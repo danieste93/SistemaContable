@@ -2,13 +2,14 @@ import React, { Component } from 'react';
 import { Animate } from 'react-animate-mount/lib/Animate';
 import HelperFormapago from './reusableComplex/helperSoloPago';
 import fetchData from './funciones/fetchdata';
-
+import { CircularProgress } from '@material-ui/core';
 
 
 class Contacto extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      loading:false,
       precioCompra: props.ArtData.Precio_Compra,
       justificacion: '',
       Fpago:[],
@@ -40,10 +41,11 @@ class Contacto extends Component {
   };
 
   handleEnviar = async (esMayor, esMenor) => {
+    this.setState({loading:true})
+    if(this.state.loading === false){
     let data= {
     
       PrecioCompraNuevo: this.state.precioCompra,
-     
       Justificacion: this.state.justificacion,
       Fpago:this.state.Fpago,
       esMayor,esMenor,
@@ -54,21 +56,27 @@ class Contacto extends Component {
     let dataSend = await fetchData(this.props.User,
       "/public/editarPrecioCompra",
     data)
-      console.log(data)
 
+      if(dataSend.status == "Ok"){
+        this.props.updatePrecioCompra(dataSend)
+        this.Onsalida()
+      }
+
+    }
   };
 
   render() {
-    console.log(this.props.ArtData)
+
+
     const  PrecioCompra = this.props.ArtData.Precio_Compra;
-    console.log(PrecioCompra)
+    console.log(this.state)
     const  Cantidad = this.props.ArtData.Existencia;
     const { precioCompra, justificacion } = this.state;
 
-let newCatidad = Cantidad
+let newCantidad = Cantidad
 
-    const totalOriginal = PrecioCompra * newCatidad;
-    const totalNuevo = precioCompra * newCatidad;
+    const totalOriginal = PrecioCompra * newCantidad;
+    const totalNuevo = precioCompra * newCantidad;
 
     const esMayor = totalNuevo > totalOriginal;
     const esMenor = totalNuevo < totalOriginal;
@@ -77,7 +85,7 @@ let SumaTotal = 0
 this.state.Fpago.forEach(x=>  SumaTotal += x.Cantidad)
     }
     console.log(SumaTotal)
-    const cantidadEsCero = newCatidad === 0;
+    const cantidadEsCero = newCantidad === 0;
 let validadorSum = SumaTotal === (totalNuevo - totalOriginal)?true:false
     const puedeEnviar =
       cantidadEsCero ||
@@ -113,7 +121,7 @@ let validadorSum = SumaTotal === (totalNuevo - totalOriginal)?true:false
                   <label>Cantidad:</label>
                   <input
                     type="number"
-                    value={newCatidad}
+                    value={newCantidad}
                     disabled
                     className="inputform"
                   />
@@ -159,13 +167,24 @@ let validadorSum = SumaTotal === (totalNuevo - totalOriginal)?true:false
               </Animate>
 
               <div className="center-button">
-                <button
+
+               <div className="contBotonPago">
+                                 
+                                  <Animate show={this.state.loading}>
+              <CircularProgress />
+              </Animate>
+                           
+              <Animate  show={!this.state.loading}>
+              <button
                   onClick={()=>{this.handleEnviar(esMayor, esMenor)}}
                   className="botonenviar"
                   disabled={!puedeEnviar}
                 >
                   Enviar
-                </button>
+                </button></Animate>
+              
+                                  </div>
+              
               </div>
             </div>
           </div>

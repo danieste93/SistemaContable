@@ -1326,7 +1326,7 @@ search
 
         </div>
         <Animate show={this.state.deleteVenta}>
-        <ModalDeleteVentas DeleteReg={this.state.VentaSelected} Flecharetro={()=>{this.setState({deleteVenta:false, VentaSelected:{}});this.props.updateArt()}  }/>
+        <ModalDeleteVentas DeleteReg={this.state.VentaSelected} Flecharetro={()=>{this.setState({deleteVenta:false, VentaSelected:{}})}  }/>
         </Animate>
         <Animate show={this.state.viewVenta}>
         <ViewVenta token={this.props.state.userReducer.update.usuario.token} usuario={this.props.state.userReducer.update.usuario}datos={this.state.dataventa} Flecharetro={()=>{this.setState({viewVenta:false, dataventa:""})}  }/>
