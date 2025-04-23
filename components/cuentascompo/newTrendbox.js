@@ -14,7 +14,11 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 
 function calcularPendiente(valores) {
   const N = valores.length;
-  const x = [...Array(N).keys()];
+  const x = [...Array(N).keys()];{
+
+console.log("pediente")
+
+  }
 
   const sumX = x.reduce((a, b) => a + b, 0);
   const sumY = valores.reduce((a, b) => a + b, 0);
