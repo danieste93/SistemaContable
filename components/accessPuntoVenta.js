@@ -8,6 +8,7 @@ import ArticuloVentaRenderImpersion from "./puntoventacompo/articuloventaRenderI
 import FormasdePagoList from "./reusableComplex/formasPagoRender"
 import {Filtervalue,Searcher} from "./filtros/filtroeqid"
 import Pagination from "./Pagination";
+import ModalAddIndividual from "../components/inventariocompo/modal-addArtIndividual"
 import {paginationPipe} from "../reduxstore/pipes/paginationFilter";
 import Autosuggest from '../components/suggesters/jwsuggest-general-venta';
 import { ValidatorForm, TextValidator} from 'react-material-ui-form-validator';
@@ -37,6 +38,7 @@ import SecureFirm from './snippets/getSecureFirm';
  class accessPuntoVenta extends Component {
      state={
         cuentasmodal:false,
+        createArt:false,
         cuentaAsignada:false,
         idCoti:"",     
         Resultados:false,
@@ -133,7 +135,13 @@ this.startPuntoVentaData()
        
      }
   
-     
+     getDataUser=()=>{
+        if(this.props.state.userReducer != ""){
+            return (this.props.state.userReducer.update.usuario)
+        }else {
+            return {}
+        }
+    }
      handleKeyDown = (event) => {
      
      }
@@ -2739,7 +2747,7 @@ delete
  <span className="material-icons">
 add
 </span>
-<p>Agregar</p>
+<p>Cliente</p>
 
 
 </button>
@@ -2976,8 +2984,18 @@ cancel
                     </div>
             <div className="contBajo">
                 <div className="subContBajo inventario">
-
+    <div className='jwFlex'>
                 <input name="searcherIn" className="react-autosuggest__input" onChange={this.getAutoValue} placeholder="Busca Productos o Servicios" />  
+                <button className=" btn btn-info botonedit" onClick={()=>{this.setState({createArt:true})}}>
+ <span className="material-icons">
+add
+</span>
+<p>Articulo</p>
+
+
+</button>
+
+</div>
                     <div className="contenedorArticulos">
                     <div className="contTitulosArt">
                         <div className="add">
@@ -3632,13 +3650,27 @@ Documento electrónico generado en activos.ec
                         Flecharetro={()=>{this.setState({modalEditServ:false})}} 
                         />
                     </Animate >   
+                    <Animate show={this.state.modalEditServ}>
+                        <ModalEditPrecioCompraServ 
+                        data={this.state.serviceToEdit}
+                        sendServData={this.setServData}
+                        Flecharetro={()=>{this.setState({modalEditServ:false})}} 
+                        />
+                    </Animate > 
+                    
                       
                     <BarcodeReader
           onError={this.handleScanError}
           onScan={this.handleScan}
           minLength={5}
           />
+       <Animate show={this.state.createArt}>
+                        <ModalAddIndividual
+                         User={this.getDataUser()} 
+                           Flecharetro={()=>{this.setState({createArt:false})}}    
+                        />
 
+                    </Animate >
 
 
                     <Snackbar open={this.state.Alert.Estado} autoHideDuration={10000} onClose={handleClose}>

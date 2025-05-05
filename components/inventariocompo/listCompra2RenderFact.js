@@ -8,6 +8,7 @@ import Addcat from '../cuentascompo/modal-addcat';
 import Edditcat from '../cuentascompo/modal-editcat';
 import Autosuggestjw from '../suggesters/jwsuggest-autorender';
 import ModalComprobacionGeneral from './usefull/modal-comprobacion-general';
+import ModalCategoriasArticulos from './modalCategoriasArticulos';
 class ListVenta extends Component {
 
     state={
@@ -25,23 +26,23 @@ class ListVenta extends Component {
         caduca:false,
         mensajeComprobacion:"",
         iva:this.setIva(),
+        precioVenta: (this.testPrecioUni() *2 ).toFixed(2),
         insumo:false,
         selectItem:false,
         catSelect:{
-            _id: "67a1b9a47be396edff3c53eb",
             tipocat: "Articulo",
             subCategoria: [],
             nombreCat: "GENERAL",
             imagen: [],
             urlIcono: "/iconscuentas/compra.png",
             idCat: 21,
-            sistemCat: false,
         
         },
         subCatSelect:"",
         artSelected:"",
         tituloArts:this.props.datos.descripcion[0],
         modalCat:false,
+        modalCatArt:false,
         EditCat:false,
         Addcat:false,
         precioFinal:0,
@@ -55,9 +56,8 @@ class ListVenta extends Component {
 
     let miart = articulos.filter(x=> x.Diid == articuloElegido.codigoPrincipal[0])
 
-    let newprecio =  this.testPrecioUni()
-    console.log(articuloElegido)
-    console.log(newprecio)
+    let newprecio =  this.testPrecioUni() * (parseFloat(articuloElegido.cantidad[0]))
+ 
     if(miart.length > 0){
         this.setState({artSelected:miart[0],precioFinal: newprecio})
    
@@ -66,6 +66,7 @@ class ListVenta extends Component {
              itemSelected:miart[0],
              item:this.props.datos})  
     }else{
+        
         this.setState({precioFinal: newprecio})
        
         this.props.sendSwich({...this.state,
@@ -73,18 +74,12 @@ class ListVenta extends Component {
             item:this.props.datos})  
     }
 
-        
-        
- 
-        
-    
-
    
     }
     sendCat=()=>{
         let Cats = this.props.state.RegContableReducer.Categorias
       if(Cats.length > 0){
-        let CatsArt = Cats.filter(x => x.tipocat == "Articulo")
+        let CatsArt = Cats.filter(x => x.tipocat == "Gasto")
        
     return CatsArt
       }
@@ -124,40 +119,30 @@ newstate.tituloArts =  e.target.value
        
     }
   
-    testPrecioUni=(e)=>{
+    testPrecioUni(){
         if(this.props.datos.impuestos){
 
-            if(parseInt(this.props.datos.impuestos[0].
-                impuesto[0].codigoPorcentaje[0]) ==   0){  
+            let impuesto = parseFloat(this.props.datos.impuestos[0].impuesto[0].tarifa[0]) 
+            let conImpuesto = parseFloat(this.props.datos.precioUnitario[0]) * parseFloat(`1.${impuesto }`)
+                   let precioUnitario = parseFloat(conImpuesto.toFixed(2))
 
-                    return parseFloat(this.props.datos.precioUnitario[0]) 
-              
-                
-        }else if(
-            parseInt(this.props.datos.impuestos[0].
-                impuesto[0].codigoPorcentaje[0]) ==   2
-        ){
+                   return precioUnitario
+         
 
-            return (parseFloat(this.props.datos.precioUnitario[0]) * 1.12).toFixed(2)
-        }else if(
-            parseInt(this.props.datos.impuestos[0].
-                impuesto[0].codigoPorcentaje[0]) ==   4
-        ){
-
-            return (parseFloat(this.props.datos.precioUnitario[0]) * 1.15).toFixed(2)
-        }
-        
- 
-    }else{
-        return ""
-    }
  }
+}
 
     handleChangeGeneral=(e)=>{
 
         this.setState({
         [e.target.name]:e.target.value
         })
+
+       
+            this.props.sendSwich({...this.state,
+                precioVenta:e.target.value,
+                item:this.props.datos})  
+     
         }
     handleChangeCantval=(e)=>{
   
@@ -220,19 +205,64 @@ newstate.tituloArts =  e.target.value
     
       }
       handleChangeSwitchInsumo=(e)=>{        
-      console.log(this.state)
+    
         if(this.state.artSelected !=""){
             alert("Error, articulo se asigno a inventario")
             this.setState({insumo:false})
         }else{
+            if(this.state.insumo == false){
+            this.setState({insumo:!this.state.insumo,
+                catSelect:{
+                
+                    tipocat: "Gasto",
+                    subCategoria: [],
+                    nombreCat:"Comida",
+                    urlIcono:"/iconscuentas/comida.png",
+                    idCat:6
+                
+                },
 
-            this.setState({insumo:!this.state.insumo})
+
+            })
             this.props.sendSwich({...this.state,
+                catSelect:{       
+                    tipocat: "Gasto",
+                    subCategoria: [],
+                    nombreCat:"Comida",
+                    urlIcono:"/iconscuentas/comida.png",
+                    idCat:6     
+                },
                 insumo:!this.state.insumo,
                  item:this.props.datos})  
+        }else{
+            this.setState({insumo:!this.state.insumo,
+                catSelect:{
+                    tipocat: "Articulo",
+                    subCategoria: [],
+                    nombreCat: "GENERAL",
+                    imagen: [],
+                    urlIcono: "/iconscuentas/compra.png",
+                    idCat: 21,
+                
+                },
+
+
+            })
+            this.props.sendSwich({...this.state,
+                catSelect:{       
+                    tipocat: "Articulo",
+                    subCategoria: [],
+                    nombreCat: "GENERAL",
+                    imagen: [],
+                    urlIcono: "/iconscuentas/compra.png",
+                    idCat: 21,
+                  
+                },
+                insumo:!this.state.insumo,
+                 item:this.props.datos})
         }
      
-      
+    }
    
     
           
@@ -241,7 +271,7 @@ newstate.tituloArts =  e.target.value
    }
       getSugerencias=()=>{
         let data = this.props.state.RegContableReducer.Articulos?this.props.state.RegContableReducer.Articulos.filter(x=> x.Tipo != "Servicio" && x.Tipo != "Combo" ):""
-    console.log(data)
+  
 return (data)
        }
     
@@ -496,7 +526,7 @@ item})
             }
             
 render(){
- 
+
  let cantidadErr= ""
  let precioErr= ""
  let precioAltErr= ""
@@ -553,7 +583,7 @@ return (
              </div> 
              <div className="Artic100Fpago">
          <span className='FlexCenter'> $ <div type="number" name="Precio_Compra" className={` inputCustom ${precioErr}`}>{
-            this.state.precioFinal   }</div></span>
+            this.testPrecioUni().toFixed(2)   }</div></span>
     
         
              </div>     
@@ -569,6 +599,16 @@ return (
          
          
          }</div></span>
+    
+        
+             </div> 
+
+             <div className="Artic100Fpago">
+         <span className='FlexCenter'> $
+             <input type="number"
+              value={this.state.precioVenta} 
+               onChange={this.handleChangeGeneral}
+                name="precioVenta" className={` inputCustom `} /></span>
     
         
              </div> 
@@ -623,10 +663,18 @@ return (
            <div className="Artic100Fpago"    >
 <div className='botonweb'
             //generarcat
-            onClick={()=>this.setState({modalCat:true})}
+            onClick={()=>{
+                if(this.state.insumo){
+                    this.setState({modalCat:true})
+                }else{
+                    this.setState({modalCatArt:true})
+                }
+            }}
         >
 
             {this.state.catSelect.nombreCat}
+            <span style={{fontSize:"10px",marginTop:"2px"}}>      {this.state.subCatSelect} </span>
+            
          
                         </div>
   </div>              
@@ -683,41 +731,46 @@ send
                editCat={(catae)=>{this.setState({EditCat:true, catEditar:catae})}}
             
                sendCatSelect={(cat)=>{
-            this.setState({catSelect:cat, CategoriaRender:cat.nombreCat,modalCat:false,subCatSelect:""})
-            setTimeout(()=>{
+            this.setState({catSelect:cat,modalCat:false,subCatSelect:""})
+        
                 this.props.sendSwich({...this.state,
+                                catSelect:cat,
+                                subCatSelect:"",
                     item:this.props.datos})  
-            },200)
-        }
-            
-            
-            }  
+           } 
+     } 
+
                
         
                sendsubCatSelect={(cat)=>{
         
-                this.setState({catSelect:cat.estado.catSelect, subCatSelect:cat.subcat,categoriaModal:false,})
-                setTimeout(()=>{
+                this.setState({catSelect:cat.estado.catSelect, subCatSelect:cat.subcat,modalCat:false,})
+               
                     this.props.sendSwich({...this.state,
+                        catSelect:cat.estado.catSelect, subCatSelect:cat.subcat,
+               
+
                         item:this.props.datos})  
-                },200)
+             
             
             }
                 
                 
                 }  
         
-               Flecharetro3={()=>{ this.setState({modalCat:false,catSelect:"",subCatSelect:""})  }
+               Flecharetro3={()=>{ this.setState({modalCat:false})  }
                } 
             
         
         />
                 </Animate> 
                  <Animate show={this.state.Addcat}>
-                        < Addcat datosUsuario={this.props.state.userReducer.update.usuario._id}     Flecharetro4={
-                         
+                        < Addcat 
+                          AccionSend={"Gasto"}
+                        datosUsuario={this.props.state.userReducer.update.usuario._id}     Flecharetro4={
+                       
                          ()=>{
-                           console.log("enretro4")
+                          
                           this.setState({Addcat:false})}
                         } 
                     
@@ -732,6 +785,38 @@ send
                           catToEdit={this.state.catEditar}
                                 />
                         </Animate >
+
+                          <Animate show={this.state.modalCatArt}>
+                               <ModalCategoriasArticulos
+                        
+                               sendCatSelect={(cat)=>{
+                            this.setState({catSelect:cat,modalCatArt:false,subCatSelect:""})
+                          
+                                this.props.sendSwich({...this.state,
+                                    catSelect:cat,subCatSelect:"",
+                                    item:this.props.datos})  
+                         
+                        
+                        } }         
+                        
+                               sendsubCatSelect={(cat)=>{
+                                this.setState({catSelect:cat.estado.catSelect, subCatSelect:cat.subcat, modalCatArt:false,})
+                              
+                                    this.props.sendSwich({...this.state,
+                                        catSelect:cat.estado.catSelect, subCatSelect:cat.subcat,
+                                        item:this.props.datos})  
+                               
+                            
+                            } }  
+                        
+                               Flecharetro3={
+                                ()=>{
+                                  this.setState({modalCatArt:false,})
+                                      
+                                }
+                               } 
+                               />
+                                </Animate >   
                           <Animate show={this.state.modalComprobacion}>
                                 <ModalComprobacionGeneral 
                                 Flecharetro={()=>{this.setState({modalComprobacion:false})}}
@@ -923,8 +1008,9 @@ send
 cursor: pointer;
     box-shadow:  0px 1px 0px hsl(180,100%,40%),
     0px 2px 0px hsl(180,100%,38%),
-    0px 3px 0px hsl(180,100%,37%)
-
+    0px 3px 0px hsl(180,100%,37%);
+flex-flow: column;
+    padding: 3px;
 
 }
   

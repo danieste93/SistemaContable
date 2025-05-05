@@ -248,7 +248,8 @@ await  CatModelSass.create([{
     subCategoria: [],
     nombreCat:"GENERAL",
     urlIcono:"/iconscuentas/compra.png",
-    idCat:21
+    idCat:21,
+    sistemCat:true,
   }],opts2 )
   await  CatModelSass.create([{
     tipocat: "Articulo",

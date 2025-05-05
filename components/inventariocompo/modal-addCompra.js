@@ -317,7 +317,7 @@ this.setState({ArtAddCalc:deepClone})
               }).then(res => res.json())
               .catch(error => console.error('Error:', error))
               .then(response => {
-           
+           console.log(response)
                 if(response.message=="error al registrar"){
                   let add = {
                     Estado:true,

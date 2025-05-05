@@ -724,7 +724,7 @@ if(!this.props.state.RegContableReducer.Ventas){
       }
 
       if(this.state.searcherIn != ""){
-        let valor = this.state.searcherIn
+        let valor =  this.removeAccents(this.state.searcherIn)
         let regisFiltradoVenta =  regis.filter((reg)=>{
 
           let telefono = reg.telefonoCliente? reg.telefonoCliente : 0
@@ -1126,7 +1126,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
                   </div>
                   <div className='conFiltroNombres'>
 <div className="react-autosuggest__container">
-<input name="searcherOut" className="react-autosuggest__input" onChange={this.handleChangeGeneral} placeholder="Busca Ventas" /> 
+<input name="searcherOut" className="react-autosuggest__input" onChange={this.handleChangeGeneral} placeholder="Busca Clientes" /> 
 <div className='contSearcher'>
 <i className={`material-icons  `} onClick={()=>{this.setState({searcherIn:this.state.searcherOut})}}>
 search

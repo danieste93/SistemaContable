@@ -69,7 +69,7 @@ class HelperFormapago extends Component {
                   )
 
                   if(distrifind.length > 0){
-                    console.log(distrifind)
+                    //console.log(distrifind)
                   }else{
                     this.setState({
                  Ruc:this.props.preData.infoTributaria[0].ruc[0],
@@ -114,7 +114,7 @@ class HelperFormapago extends Component {
       }).then(res => res.json())
       .catch(error => console.error('Error:', error))
       .then(response => {
-       console.log('Success Register User:', response)
+      // console.log('Success Register User:', response)
        if(response.message=="error al registrar"){
            let add = {
              Estado:true,
@@ -174,7 +174,7 @@ class HelperFormapago extends Component {
       }).then(res => res.json())
       .catch(error => console.error('Error:', error))
       .then(response => {
-       console.log('Success Register User:', response)
+     //  console.log('Success Register User:', response)
        if(response.message=="error al registrar"){
            let add = {
              Estado:true,
@@ -331,6 +331,7 @@ class HelperFormapago extends Component {
         this.props.onChange({addFact:!this.state.addFact})
       }  
 render(){
+  
     let TotalPago = 0
     if(this.state.Fpago.length > 0){
         
@@ -345,7 +346,7 @@ render(){
     let activeadd= this.state.adduser? "articeadd":""
      
     let editadd= this.state.userEditMode? "editadd":""
-    console.log(this.state) 
+
     
     const handleClose = (event, reason) => {
         let AleEstado = this.state.Alert
@@ -381,7 +382,19 @@ render(){
       <div className="contContado">
                     <div className="contContadoButtons">
                     <div className="contBotones">
-                    <button className=" btn btn-success botonAddCrom" onClick={(e)=>{e.preventDefault();this.setState({addFormaPago:true})}}>
+                    <button className=" btn btn-success botonAddCrom" onClick={(e)=>{e.preventDefault();
+                      if(this.state.Fpago.length >= 1){
+                        let add = {
+                          Estado:true,
+                          Tipo:"info",
+                          Mensaje:"Solo se puede agregar una forma de pago aqui,"
+                      }
+                      this.setState({Alert: add, loading:false,}) 
+                      }else{
+                        this.setState({addFormaPago:true})
+                      }
+
+                      }}>
          
          <span className="material-icons">
        add
@@ -669,6 +682,8 @@ cancel
 <Animate show={this.state.addFormaPago}>
                     <ModalFormapago sendFormaPago={this.createFormaPago} 
                     tipoDeForma="Contado"
+                    valorSugerido={this.props.valorSugerido}
+
                     Flecharetro={()=>{this.setState({addFormaPago:false})}} />
                     </Animate >
                     

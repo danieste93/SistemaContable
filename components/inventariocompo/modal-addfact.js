@@ -7,6 +7,7 @@ import Xml2js from 'xml2js';
 import ListCompraFact from "./listCompra2RenderFact";
 import Animate from 'react-animate-mount/lib/Animate';
 import {connect} from 'react-redux';
+import {addArt, addCompra,addRegs, updateCuentas, updateArts } from "../../reduxstore/actions/regcont"
 import AddCero from "../../components/funciones/addcero"
 import HelperFormapagoPredit from '../reusableComplex/helperFormapagoPredit';
 import Prevent from "../cuentascompo/modal-prevent" 
@@ -135,8 +136,26 @@ class Contacto extends Component {
                  Tipo:"success",
                  Mensaje:"Factura Ingresada"
              }
+
              this.setState({Alert: add})
-             setTimeout(()=>{this.props.updateArt(), this.Onsalida()},1200) 
+
+
+this.props.dispatch(addRegs(response.Registros))
+this.props.dispatch(addCompra(response.Compra[0]))
+this.props.dispatch(updateCuentas(response.Cuentas))
+
+if(response.articulosCreados.length > 0)
+  {
+  response.articulosCreados.forEach(x=>{
+       this.props.dispatch(addArt(x)) })
+ }
+       
+
+ if(response.articulosActualizados.length > 0)
+  {
+    this.props.dispatch(updateArts(response.articulosActualizados))
+ }
+             this.Onsalida()
       
          }
             })
@@ -337,14 +356,18 @@ class Contacto extends Component {
         this.setState({Comprobante:deepClone})
       }
 
-    sendSwich=(data)=>{
+    sendSwich2=(data)=>{
      
 console.log("in switch")
+console.log(data.tituloArts)
       let valinsumo = data.insumo? true:null
       let valiva = data.iva? true:null
 
       let itemfind =  this.state.Comprobante.factura.detalles[0].detalle.filter(x=>x.codigoPrincipal[0] === data.item.codigoPrincipal[0])  
+      console.log(itemfind)
+      
       let indexset = this.state.Comprobante.factura.detalles[0].detalle.indexOf(itemfind[0])
+      console.log(indexset)
       let deepClone = JSON.parse(JSON.stringify(this.state.Comprobante));
    
       deepClone.factura.detalles[0].detalle[indexset].insumo = valinsumo 
@@ -356,6 +379,34 @@ console.log("in switch")
       this.setState({Comprobante:deepClone})
     
     }
+
+    sendSwich = (data) => {
+    
+    
+      this.setState((prevState) => {
+        let deepClone = JSON.parse(JSON.stringify(prevState.Comprobante));
+    
+        // Buscar el item en la lista
+        deepClone.factura.detalles[0].detalle = deepClone.factura.detalles[0].detalle.map((item) => {
+          if (item.codigoPrincipal[0] === data.item.codigoPrincipal[0]) {
+            return {
+              ...item,
+              insumo: data.insumo ? true : null,
+              iva: data.iva ? true : null,
+              categoria: data.catSelect,
+              subcategoria: data.subCatSelect,
+              precioFinal: parseFloat(data.precioFinal),
+              itemSelected: data.itemSelected,
+              precioVenta:parseFloat(data.precioVenta)
+            };
+          }
+          return item;
+        });
+    
+        return { Comprobante: deepClone };
+      });
+    };
+
 
     sendItem=(data)=>{
      
@@ -558,6 +609,9 @@ done
                             P.Total
                         </div>
                         <div className="Artic100Fpago ">
+                            P.Venta
+                        </div>
+                        <div className="Artic100Fpago ">
                             Insumo
                         </div>
                         <div className="Artic100Fpago ">
@@ -595,7 +649,12 @@ done
             
               </div>
                     </div></div>
-      <HelperFormapagoPredit setuserData={(e)=>{this.setState(e)}}  preData={dataFact}onChange={this.setHeperdata}/>
+      <HelperFormapagoPredit 
+      setuserData={(e)=>{this.setState(e)}}
+        preData={dataFact}
+        valorSugerido={parseFloat(TotalValorCompra).toFixed(2)}
+        
+        onChange={this.setHeperdata}/>
      
       
       <Animate show={this.state.loading}>

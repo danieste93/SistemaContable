@@ -1779,7 +1779,7 @@ NuevoPrecioCompra= nData.PrecioCompraTotal / nData.CantidadCompra
 let update = { Existencia: nuevaCantExistencias  ,
                      Precio_Compra:NuevoPrecioCompra   }
                     
-let artupdate = await ArticuloModelSass.findByIdAndUpdate(art._id,update,{ session} )
+let artupdate = await ArticuloModelSass.findByIdAndUpdate(art._id,update,{ session, new:true} )
 if(artupdate == null ){
   throw new Error("Articulo no modificado, vuelva intentar en unos minutos")
 }   
@@ -2067,7 +2067,7 @@ if(req.body.formasdePago){
 
 const deleteCompra= async (req, res, next)=>{
 
-   
+   console.log(req.body)
   let conn = await mongoose.connection.useDb(req.body.UserData.DBname);
 
   let RegModelSass = await conn.model('Reg', regSchema);
@@ -2081,12 +2081,14 @@ const deleteCompra= async (req, res, next)=>{
   let arrCuentas = []
   let arrRegs = []
   let arrRegsDell = []
+  const session = await mongoose.startSession();   
+    session.startTransaction();
+    try{
 
 
-let valdata = false
 for(let i=0;i<req.body.ArtComprados.length;i++){
- if(req.body.ArtComprados[i].Eqid ==='7777777777777' ){
-  valdata = true
+ if(req.body.ArtComprados[i].Eqid ==='INSUMO-GEN' ){
+
   continue;
  }
   let artic = await ArticuloModelSass.findById(req.body.ArtComprados[i]._id) 
@@ -2101,22 +2103,19 @@ for(let i=0;i<req.body.ArtComprados.length;i++){
   let unidadesEliminadas = (req.body.ArtComprados[i].CantidadCompra) 
 
   let unidadesActuales = numeroExistencias - unidadesEliminadas
-  if (unidadesActuales >= 0){
-    valdata = true
-  }else{
-    valdata = false
-    let articulo = {Titulo:artic.Titulo,
-                    Eqid:artic.Eqid}
-
- return   res.status(200).send({status:"error",message: "Existencias insuficientes",
-     articulo});
-  }
-
-  if(valdata){
-
-    const session = await mongoose.startSession();   
-    session.startTransaction();
-    try{
+  if (unidadesActuales < 0) {
+    // apenas encuentres uno con error, responde y termina
+    let articulo = { Titulo: artic.Titulo, Eqid: artic.Eqid };
+    return res.status(200).send({
+        status: "error",
+        message: "Existencias insuficientes",
+        articulo
+    });
+}
+}
+}
+    console.log("entrando Valdata")
+  
     let Compra = await ComprasModelSass.findByIdAndDelete(req.body._id, { session })
 
     if(Compra == null){
@@ -2124,7 +2123,7 @@ for(let i=0;i<req.body.ArtComprados.length;i++){
     }
 
     for(let i=0;i<req.body.ArtComprados.length;i++){
-      if(req.body.ArtComprados[i].Eqid ==='7777777777777' ){
+      if(req.body.ArtComprados[i].Eqid ==='INSUMO-GEN' ){
         continue;
        }
   
@@ -2155,7 +2154,7 @@ for(let i=0;i<req.body.ArtComprados.length;i++){
       let update = {   Existencia: unidadesActuales, Precio_Compra: nuevoPrecioCompra  }
      
   
-   let resart = await  ArticuloModelSass.findByIdAndUpdate(req.body.ArtComprados[i]._id,update,{ session})
+   let resart = await  ArticuloModelSass.findByIdAndUpdate(req.body.ArtComprados[i]._id,update,{ session, new:true})
    if(resart == null){
     throw new Error("Compra no encontrada")
   }
@@ -2168,6 +2167,7 @@ for(let i=0;i<req.body.ArtComprados.length;i++){
   throw new Error("sin arrRegs q eliminar")
   }
     for(let y=0;y<req.body.arrRegs.length;y++){
+      console.log("entrando arrRegs")
     let regdata =  await RegModelSass.findByIdAndRemove(req.body.arrRegs[y], { session })
 
     if(regdata == null){
@@ -2205,9 +2205,10 @@ for(let i=0;i<req.body.ArtComprados.length;i++){
     }
     for(let x=0;x<req.body.Fpago.length;x++){
        
-     
+      const fixedImportFpago= new mongoose.Types.Decimal128(req.body.Fpago[x].Cantidad)
     
-     let update2= { $inc: { DineroActual: req.body.Fpago[x].Cantidad } }
+    
+     let update2= { $inc: { DineroActual:fixedImportFpago } }
     
     
     let cuentaActualizada =   await  CuentasModelSass.findByIdAndUpdate(req.body.Fpago[x].Cuenta._id,update2,{ session, new:true})
@@ -2231,13 +2232,13 @@ for(let i=0;i<req.body.ArtComprados.length;i++){
       console.log(error, "errr")
       return res.json({status: "Error", message: "error al registrar", error });
     }
-  }
+  
 
 
-}
 
 
-  }
+
+
   
 
 
@@ -3404,56 +3405,105 @@ async function  generateFactCompra(req, res){
     let valorInsumos = 0
     let valorInventario = 0
     let articulosGenerados = []
+    let articulosCreados = []
+    let articulosActualizados = []
+    let arrRegs= []
+    let arrCuentas= []
     let catIngInv=  await CatModelSass.find({idCat:16}, null,{session, new:true} )
     let catGasInv=  await CatModelSass.find({idCat:17}, null,{session, new:true} )
   
     if(insumos.length > 0){
-      let acc = 0
-      let cantacc = 0
-      let finval = 0
-      let Titulos = "Insumos:"
+   
       for(let x = 0;x<insumos.length;x++){
-        let valorfinal = parseFloat(insumos[x].precioFinal) 
-        acc += valorfinal
-        cantacc += parseFloat(insumos[x].cantidad[0])
-        finval += valorfinal * parseFloat(insumos[x].cantidad[0])
-        Titulos += insumos[x].descripcion[0] + ","
+        let catInsumo=  await CatModelSass.find({idCat:insumos[x].categoria.idCat}, null,{session, new:true} )
+        const fixedImport= new mongoose.Types.Decimal128(insumos[x].precioFinal.toFixed(2))
+ 
+        let impuesto = parseFloat(insumos[x].impuestos[0].impuesto[0].tarifa[0]) 
+
+        let conImpuesto = parseFloat(insumos[x].impuestos[0].impuesto[0].baseImponible[0]) * parseFloat(`1.${impuesto }`)
+
+        let precioUnitario = parseFloat(conImpuesto.toFixed(2))
+      
+        let dataArtNew= {
+          Eqid:"INSUMO-GEN",
+          Diid:"",
+          Grupo:"",
+          Categoria:{  
+            tipocat: 'Articulo',
+            subCategoria: [],
+            nombreCat: 'GENERAL',
+            imagen: [],
+            urlIcono: '/iconscuentas/compra.png',
+            idCat: 21,
+            sistemCat: true
+          },
+          Subcategoria:"",
+          Departamento:"",
+          Titulo:insumos[x].descripcion[0],
+          Marca:"",
+          Existencia:parseFloat(insumos[x].cantidad[0]),
+          Calidad:"",
+          Color:"",     
+          Descripcion:"",
+          Garantia:"No",
+          Imagen:"",
+          Medida:"Unidad",
+          Tipo:"Producto",
+          Precio_Compra: precioUnitario,
+          CantidadCompra: parseFloat(insumos[x].cantidad[0]),
+          PrecioCompraTotal:insumos[x].precioFinal,
+           Iva:true,
+           Bodega_Inv_Nombre: "Inventario ",
+           Bodega_Inv:9999998,
+      
+        }
+        articulosGenerados.push(dataArtNew)
+
+        let dataregInsumoGas= { Accion:"Gasto",   
+          Tiempo:new Date(req.body.xmlData.fechaAutorizacion[0]).getTime(),
+          IdRegistro:Counterx[0].ContRegs + x,
+        
+          CuentaSelec:{idCuenta:req.body.Fpago[0].Cuenta._id,
+                       nombreCuenta: req.body.Fpago[0].Cuenta.NombreC,
+           },
+        
+          CatSelect:{idCat:catInsumo[0].idCat,
+                        urlIcono:catInsumo[0].urlIcono,
+                        nombreCat:catInsumo[0].nombreCat,
+                        subCatSelect:catInsumo[0].subCatSelect,
+                        _id:catInsumo[0]._id,
+                      },
+                    Nota:"Insumo Facturado en la Compra N° "+Counterx[0].ContCompras ,
+        
+          Descripcion:req.body.Fpago[0].Detalles,
+          Descripcion2:{articulosVendidos:[dataArtNew]},
+          CompraNumero:Counterx[0].ContCompras,
+          Estado:false,
+          urlImg:[],
+          Valrep:"No",
+          TipoRep:"",
+          Importe:fixedImport,
+          Usuario:{
+            Nombre:req.body.Vendedor.Nombre,
+            Id:req.body.Vendedor.Id,
+            Tipo:req.body.Vendedor.Tipo,
+        
+          }
+        }
+
+        let reg1 = await RegModelSass.create([dataregInsumoGas],{session} )
+        arrRegs.push(reg1[0])
+        counterRegs += 1
+
+        let valornegativo = fixedImport * (-1)            
+        let update = { $inc: { DineroActual: valornegativo } }
+        let cuenta1 =   await CuentasModelSass.findByIdAndUpdate(req.body.Fpago[0].Cuenta._id,update,{session, new:true})
+        arrCuentas.push(cuenta1)
+
+
       }
-      valorInsumos = acc
-      let dataArtNew= {
-        Eqid:"7777777777777",
-        Diid:"",
-        Grupo:"",
-        Categoria:{  _id: '67a1b9a47be396edff3c53eb',
-          tipocat: 'Articulo',
-          subCategoria: [],
-          nombreCat: 'GENERAL',
-          imagen: [],
-          urlIcono: '/iconscuentas/compra.png',
-          idCat: 21,
-          sistemCat: false
-        },
-        Subcategoria:"",
-        Departamento:"",
-        Titulo:Titulos,
-        Marca:"",
-        Existencia:cantacc,
-        Calidad:"",
-        Color:"",     
-        Descripcion:"",
-        Garantia:"No",
-        Imagen:"",
-        Medida:"Unidad",
-        Tipo:"Producto",
-        Precio_Compra: acc,
-        CantidadCompra: cantacc,
-        PrecioCompraTotal:finval,
-         Iva:true,
-         Bodega_Inv_Nombre: "Inventario ",
-         Bodega_Inv:9999998,
-    
-      }
-      articulosGenerados.push(dataArtNew)
+   
+   
     }
     if(sinInsumos.length > 0){
    
@@ -3466,9 +3516,16 @@ async function  generateFactCompra(req, res){
        
         for(let x = 0;x<articulosPorCrear.length;x++){
           
-       let Precio_Compra = (parseFloat(articulosPorCrear[x].precioFinal) )
+    
+          let impuesto = parseFloat(sinInsumos[x].impuestos[0].impuesto[0].tarifa[0]) 
+          let conImpuesto = parseFloat(sinInsumos[x].precioUnitario[0]) * parseFloat(`1.${impuesto }`)
+          let precioUnitario = parseFloat(conImpuesto.toFixed(2))
+        
+
+
        let existencias = (parseFloat(articulosPorCrear[x].cantidad[0]))
-       valorInventario += (Precio_Compra*existencias) 
+       let Precio_Compra = (parseFloat(precioUnitario)) 
+       valorInventario += articulosPorCrear[x].precioFinal
       let caducable = {Estado:false}
       if(articulosPorCrear[x].Caduca){
         caducable={
@@ -3477,7 +3534,7 @@ async function  generateFactCompra(req, res){
         }
       } 
      
-      let valido = true 
+  let valido = true 
 let acuminsu = 1
 let newid = articulosPorCrear[x].codigoPrincipal[0]
 console.log(articulosPorCrear[x])
@@ -3500,6 +3557,8 @@ if(findDistridi.length == 0){
 }
 
 console.log("salidmos del while")
+let idCuentaInv  =  await CuentasModelSass.find({iDcuenta:9999998}, null,{session} )
+
 let ivadata = articulosPorCrear[x].iva == null ? false:
 articulosPorCrear[x].iva == true ? true:
 articulosPorCrear[x].iva == false? false:false
@@ -3517,8 +3576,8 @@ articulosPorCrear[x].iva == false? false:false
             Calidad:"",
             Color:"",
             Precio_Compra:parseFloat(Precio_Compra),
-            Precio_Venta:(parseFloat(Precio_Compra) + (parseFloat(Precio_Compra) * 1)).toFixed(2),
-            Precio_Alt:(parseFloat(Precio_Compra) +(parseFloat(Precio_Compra) * 0.5)).toFixed(2),
+            Precio_Venta:articulosPorCrear[x].precioVenta,
+            Precio_Alt:articulosPorCrear[x].precioVenta - (articulosPorCrear[x].precioVenta *0.20),
            
             Descripcion:"",
             Garantia:"No",
@@ -3530,19 +3589,22 @@ articulosPorCrear[x].iva == false? false:false
             PrecioCompraTotal:Precio_Compra*existencias,
             Caduca:caducable,
              Iva:ivadata,
-             Bodega_Inv_Nombre: "Inventario ",
+             Bodega_Inv_Nombre: idCuentaInv[0].NombreC,
              Bodega_Inv:9999998,
         
           }
 
           let art = await ArticuloModelSass.create([dataArtNew], { session})
       
-          articulosGenerados.push(art[0])
+          articulosCreados.push(art[0])
         }
 
       }
       if(articulosPorActualizar.length > 0){
-   console.log(articulosPorActualizar)
+        let impuesto = parseFloat(insumos[x].impuestos[0].impuesto[0].tarifa[0]) 
+     let conImpuesto = parseFloat(insumos[x].precioUnitario[0]) * parseFloat(`1.${impuesto }`)
+            let precioUnitario = parseFloat(conImpuesto.toFixed(2))
+      
         for(let x = 0;x<articulosPorActualizar.length;x++){
           let art = articulosPorActualizar[x].itemSelected
           let nData = articulosPorActualizar[x]
@@ -3551,7 +3613,7 @@ articulosPorCrear[x].iva == false? false:false
           }
            else{
           let totalInvertido = art.Precio_Compra * art.Existencia
-          let ActualInvertido = nData.precioFinal  * parseFloat(nData.cantidad[0])
+          let ActualInvertido =parseFloat(precioUnitario)  * parseFloat(nData.cantidad[0])
           let nuevaCantExistencias = art.Existencia + parseFloat(nData.cantidad[0])
 
           let sumaInvertido =  totalInvertido + ActualInvertido
@@ -3572,31 +3634,26 @@ let artupdate = await ArticuloModelSass.findByIdAndUpdate(art._id,updateAS,{ ses
 if(artupdate == null ){
   throw new Error("Articulo no modificado, vuelva intentar en unos minutos")
 }
-valorInventario += ActualInvertido
-articulosGenerados.push(artupdate)
+valorInventario += nData.precioFinal
+articulosActualizados.push(artupdate)
 
         }
       }
     }
-
-    }
- let arrRegs = []
-
-    for(let i=0; i<req.body.Fpago.length;i++){
-      if(req.body.Fpago[i].Cantidad > 0){
-   
-      let valornegativo = req.body.Fpago[i].Cantidad * (-1)            
+    const fixedImport= new mongoose.Types.Decimal128(valorInventario.toFixed(2))
+ 
+    let valornegativo = fixedImport  * (-1)            
     let update = { $inc: { DineroActual: valornegativo } }
     let idCuentaInv  =  await CuentasModelSass.find({iDcuenta:9999998}, null,{session, new:true} )
-    let updateIng = { $inc: { DineroActual: valorInventario } }
-      let datareg= { Accion:"Gasto",   
+    let updateIng = { $inc: { DineroActual: fixedImport } }
+
+    let datareg= { Accion:"Gasto",   
       Tiempo:new Date(req.body.xmlData.fechaAutorizacion[0]).getTime(),
-      IdRegistro:Counterx[0].ContRegs + i,
+      IdRegistro:Counterx[0].ContRegs + counterRegs,
     
-      CuentaSelec:{idCuenta:req.body.Fpago[i].Cuenta._id,
-                   nombreCuenta: req.body.Fpago[i].Cuenta.NombreC,
-                   valorCambiar:  req.body.Fpago[i].Cuenta.DineroActual.$numberDecimal 
-                  },
+      CuentaSelec:{idCuenta:req.body.Fpago[0].Cuenta._id,
+                   nombreCuenta: req.body.Fpago[0].Cuenta.NombreC,
+                   },
     
       CatSelect:{idCat:catGasInv[0].idCat,
                     urlIcono:catGasInv[0].urlIcono,
@@ -3604,16 +3661,16 @@ articulosGenerados.push(artupdate)
                     subCatSelect:catGasInv[0].subCatSelect,
                     _id:catGasInv[0]._id,
                   },
-                Nota:"Compra Facturada N°"+Counterx[0].ContCompras+ " / " + req.body.Fpago[i].Tipo ,
+                Nota:"Compra Facturada N°"+Counterx[0].ContCompras+ " / " + req.body.Fpago[0].Tipo ,
     
-      Descripcion:req.body.Fpago[i].Detalles,
-      Descripcion2:{articulosVendidos:articulosGenerados},
+      Descripcion:req.body.Fpago[0].Detalles,
+      Descripcion2:{articulosVendidos:[...articulosActualizados, ...articulosCreados]},
       CompraNumero:Counterx[0].ContCompras,
       Estado:false,
       urlImg:[],
       Valrep:"No",
       TipoRep:"",
-      Importe:req.body.Fpago[i].Cantidad,
+      Importe:fixedImport,
       Usuario:{
         Nombre:req.body.Vendedor.Nombre,
         Id:req.body.Vendedor.Id,
@@ -3622,100 +3679,107 @@ articulosGenerados.push(artupdate)
       }
     }
 
-   
-    let dataregING= { Accion:"Ingreso",   
-    Tiempo:new Date(req.body.xmlData.fechaAutorizacion[0]).getTime(),
-    IdRegistro:Counterx[0].ContRegs + i,
-    
-    CuentaSelec:{idCuenta:idCuentaInv[0]._id,
-                nombreCuenta: "Inventario",
-                valorCambiar:  ""
-                },
-    
-                CatSelect:{
-                  idCat:catIngInv[0].idCat,
-                 urlIcono:catIngInv[0].urlIcono,
-                 nombreCat:catIngInv[0].nombreCat,
-                 subCatSelect:catIngInv[0].subCatSelect,
-                 _id:catIngInv[0]._id,
-            
-               },
-    
-    Nota:"Compra Facturada N°"+Counterx[0].ContCompras ,
-    
-    Descripcion:req.body.Fpago[i].Detalles,
-    Descripcion2:{articulosVendidos:articulosGenerados},
-    CompraNumero:Counterx[0].ContCompras,
-    Estado:false,
-    urlImg:[],
-    Valrep:"No",
-    TipoRep:"",
-    Importe:valorInventario,
-    Usuario:{
-      Nombre:"Sistema",
-      Id:"999999",
-      Tipo:"Sistema",
-  
-    }
-    }
     let reg1 = await RegModelSass.create([datareg],{session} )
+    arrRegs.push(reg1[0])
     counterRegs += 1
-    let reg2 = await RegModelSass.create([dataregING], {session} )
-    counterRegs += 1
-    arrRegs.push(reg1[0]._id)
-    arrRegs.push(reg2[0]._id)
+
+    
+    let dataregING= { Accion:"Ingreso",   
+      Tiempo:new Date(req.body.xmlData.fechaAutorizacion[0]).getTime(),
+      IdRegistro:Counterx[0].ContRegs + counterRegs,
+      
+      CuentaSelec:{idCuenta:idCuentaInv[0]._id,
+                  nombreCuenta: idCuentaInv[0].NombreC,  
+                  },
+      
+                  CatSelect:{
+                    idCat:catIngInv[0].idCat,
+                   urlIcono:catIngInv[0].urlIcono,
+                   nombreCat:catIngInv[0].nombreCat,
+                   subCatSelect:catIngInv[0].subCatSelect,
+                   _id:catIngInv[0]._id,
+              
+                 },
+                 Nota:"Compra Facturada N°"+Counterx[0].ContCompras+ " / " + req.body.Fpago[0].Tipo ,
+
+      
+      Descripcion:req.body.Fpago[0].Detalles,
+      Descripcion2:{articulosVendidos:[...articulosActualizados, ...articulosCreados]},
+      CompraNumero:Counterx[0].ContCompras,
+     Estado:false,
+      urlImg:[],
+      Valrep:"No",
+      TipoRep:"",
+      Importe:fixedImport,
+      Usuario:{
+        Nombre:"Sistema",
+        Id:"999999",
+        Tipo:"Sistema",
+    
+      }
+      }
  
- let cuenta1 =   await CuentasModelSass.findByIdAndUpdate(req.body.Fpago[i].Cuenta._id,update,{session})
- let cuenta2 =   await CuentasModelSass.findByIdAndUpdate(idCuentaInv[0]._id,updateIng,{session})
- if(cuenta1 == null || cuenta2 == null){
-  throw new Error("Cuentas no Encontradas, vuelva intentar en unos minutos")
-}   }   }
+    let reg2 = await RegModelSass.create([dataregING], {session} )
+   
+    arrRegs.push(reg2[0])
+    counterRegs += 1
+  
+    let cuenta1 =   await CuentasModelSass.findByIdAndUpdate(req.body.Fpago[0].Cuenta._id,update,{session, new:true})
+    let cuenta2 =   await CuentasModelSass.findByIdAndUpdate(idCuentaInv[0]._id,updateIng,{session, new:true})
+    if(cuenta1 == null || cuenta2 == null){
+     throw new Error("Cuentas no Encontradas, vuelva intentar en unos minutos")
+   }   
+arrCuentas.push(cuenta1)
+arrCuentas.push(cuenta2)
+
+    }
 
 
  let   datacompra ={
-      arrRegs,
-      CompraNumero:Counterx[0].ContCompras,
-      ArtComprados:articulosGenerados,
-      Usuario:req.body.Vendedor,
-      Tiempo: new Date(req.body.xmlData.fechaAutorizacion[0]).getTime(),
-      ValorTotal:req.body.TotalPago,
-      Proveedor:"",
-      Fpago:req.body.Fpago,
-      idReg:Counterx[0].ContRegs,
-      Doctype:"Factura",
-      Factdata:{
-        ruc:req.body.Ruc,
-        nombreComercial:req.body.usuario,
-        numeroFactura:`${req.body.codpunto}-${req.body.codemision}-${req.body.numeroFact}`,
-        numeroAutorizacion:req.body.xmlData.numeroAutorizacion[0],
-        fechaAutorizacion:req.body.xmlData.fechaAutorizacion[0],
-      },
-      ClaveAcceso:claveAccess,
-      Validada:true
-    }
+  arrRegs:arrRegs.map(x=>x._id),
+  CompraNumero:Counterx[0].ContCompras,
+  ArtComprados:[...articulosGenerados, ...articulosCreados, ...articulosActualizados],
+  Usuario:req.body.Vendedor,
+  Tiempo: new Date(req.body.xmlData.fechaAutorizacion[0]).getTime(),
+  ValorTotal:req.body.TotalPago,
+  Proveedor:"",
+  Fpago:req.body.Fpago,
+  idReg:Counterx[0].ContRegs,
+  Doctype:"Factura",
+  Factdata:{
+    ruc:req.body.Ruc,
+    nombreComercial:req.body.usuario,
+    numeroFactura:`${req.body.codpunto}-${req.body.codemision}-${req.body.numeroFact}`,
+    numeroAutorizacion:req.body.xmlData.numeroAutorizacion[0],
+    fechaAutorizacion:req.body.xmlData.fechaAutorizacion[0],
+  },
+  ClaveAcceso:claveAccess,
+ 
+}
 
-   //let mydata = {...req.body}
-    //let newDistri =  await UserControl.registerDistri(JSON.stringify(mydata))
+//let mydata = {...req.body}
+//let newDistri =  await UserControl.registerDistri(JSON.stringify(mydata))
 
 
 
-    let Compra = await ComprasModelSass.create([datacompra], {new:true, session})
+let Compra = await ComprasModelSass.create([datacompra], {new:true, session})
 
-    
 
-    let adicionador  = Counterx[0].ContRegs + counterRegs
-      let updatecounter = { $inc: { ContCompras: 1, }, 
-                           ContRegs:adicionador + 1,
+
+let adicionador  = Counterx[0].ContRegs + counterRegs
+  let updatecounter = { $inc: { ContCompras: 1, }, 
+                       ContRegs:adicionador + 1,
+                       
+                       $inc: { ContArticulos: articulosCrear, }, 
                            
-                           $inc: { ContArticulos: articulosCrear, }, 
-                               
-                                   }
-      await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session} )
-     
+                               }
+  await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session} )
+ 
 
+  
    await session.commitTransaction();
       session.endSession();
-      return res.status(200).send({message:"Factura Ingresada"})                                 
+      return res.status(200).send({message:"Factura Ingresada", Registros:arrRegs, Cuentas:arrCuentas,Compra, articulosCreados, articulosActualizados})                                 
 
  
   }
@@ -4672,7 +4736,7 @@ const fixedImportGas = new mongoose.Types.Decimal128(parseFloat(diferencia).toFi
           
               let updateSI = { $inc: { DineroActual: fixedImportGas *-1  } }
               let updateArt = { Precio_Compra: req.body.datos.PrecioCompraNuevo } 
-              console.log("reg")
+           
 let cuentaInvEdit =  await CuentasModelSass.findByIdAndUpdate(idCuentaInv[0]._id,updateSI,{session, new:true})
 
 let ArticuloActual = await ArticuloModelSass.findByIdAndUpdate(artData._id, updateArt,{session, new:true})

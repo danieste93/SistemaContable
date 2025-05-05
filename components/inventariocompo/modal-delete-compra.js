@@ -43,7 +43,7 @@ class Contacto extends Component {
               }  
           } 
         let lol = JSON.stringify(datos)
-        console.log(datos)
+      
         var url= '/public/deletecompra';
     
         fetch(url, {
@@ -93,7 +93,7 @@ class Contacto extends Component {
 
     render () {
 
-   console.log(this.props)
+  
         return ( 
 
          <div >
