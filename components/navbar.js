@@ -23,7 +23,8 @@ import Router from "next/router"
       scrollanimAltura:false,
       ondesktop: false,
       fondoalt:false,
-      usuario:false
+      usuario:false,
+      setSidebarOpen:false,
 
     };
     channel1 = null;
@@ -47,23 +48,9 @@ import Router from "next/router"
   
     
     
-    if(route === "/"){
     
-      this.setState({fondoalt:false})
-
-    }
-   else{
+ 
   
-    this.setState({fondoalt:true})
-   }
- 
-   
- 
-     this.channel2.subscribe('fondoalt', (data) => {
-   
-      this.setState({fondoalt:true})
-       
-     });
 
    
 
@@ -80,13 +67,11 @@ import Router from "next/router"
         
           const alturawindow = window.document.documentElement.clientHeight
           
-         if( route === "/" && window.scrollY >= alturawindow  ){
+         if( window.scrollY >= 10){
            
               this.setState({isscroll:true})
            
-              this.channel1.publish('scrollon', {
-                message: 'enviado desde reset'
-             });
+              
               
           } 
      
@@ -94,10 +79,10 @@ import Router from "next/router"
 
   
  
-  else if(route === "/" && window.scrollY <= 50){
+  else if( window.scrollY <= 50){
     this.setState({isscroll:false})
    
-  }else if( route === "/" && window.scrollY <= alturawindow ){
+  }else if(  window.scrollY <= alturawindow ){
     this.channel1.publish('scrollof', {
       message: 'enviado desde reset'
    });
@@ -105,10 +90,10 @@ import Router from "next/router"
   } 
  
 
-  else if (route !== "/" && window.scrollY >= 10){
+  else if ( window.scrollY >= 10){
     this.setState({isscroll:true, iconchange:true})
 
-  } else if (route !== "/"  && window.scrollY <= 5){
+  } else if ( window.scrollY <= 5){
     this.setState({isscroll:false, iconchange:false})
 
   } 
@@ -219,7 +204,12 @@ else if(this.props.usuario.update.usuario.Tipo == "vendedor" || this.props.usuar
   )}
 }
 usercont=(e)=>{
-
+  const links = [
+    { name: 'Inicio', icon: 'home' },
+    { name: 'Servicios', icon: 'build' },
+    { name: 'Productos', icon: 'shopping_cart' },
+    { name: 'Contacto', icon: 'contact_mail' },
+  ];
   if(this.props.usuario !== ""  ){
     const ruta = `/`
     let asignadorDeRuta=()=>{
@@ -273,23 +263,50 @@ logout
       
       </Dropdown.Menu>
     </Dropdown>)
-  }else{return ("")}
+  }else{return (
+    <div className='contBotonera'>
+<div className="links-desktop">
+          {links.map((link) => (
+            <a key={link.name} href={`#${link.name.toLowerCase()}`} className="nav-link">
+              
+              {link.name}
+            </a>
+          ))}
+        </div>
+        <button className="ingreso-button">Ingreso</button>
+         {/* Burger button for mobile */}
+         <button className="burger-button" onClick={() => this.setState({setSidebarOpen:true})}>
+          <span className="material-icons">menu</span>
+        </button>
+
+
+
+</div>
+
+  )
+
+
+
+  }
 
 }
 
   render() {
     
-
+const links = [
+    { name: 'Inicio', icon: 'home' },
+    { name: 'Servicios', icon: 'build' },
+    { name: 'Productos', icon: 'shopping_cart' },
+    { name: 'Contacto', icon: 'contact_mail' },
+  ];
      let estilosnav = this.state.isscroll?"botonClickactive":"botonClick";
    
 
        
     
 
-    let fondobarra = this.state.isscroll == true ? "fondoa": 
-                     this.state.isscroll == false && !this.state.fondoalt? "fondod":
-                     this.state.isscroll == false && this.state.fondoalt? "fondoalt":
-                     'bocultar';
+    let fondobarra = this.state.isscroll == true ? "fondoa": "fondod"
+              
 
     let modificator;
 
@@ -311,7 +328,7 @@ logout
 
     return (
     
-      <div  className={fondobarra}>
+      <div style={{paddingBottom:"2px"}} className={fondobarra}>
      
    
 
@@ -322,24 +339,7 @@ logout
     </div>
      
 
-      <div id='mainul'className={modificator}>
-       
-       <div className="botonera">
-                 
-               
-           
-
-
-                  
-        
-                  
-             
-               
-                  </div>
-           
-    
-
-    </div>
+  
  
     <div className="navXSderecha ">
 
@@ -348,8 +348,150 @@ logout
 
         
   
- </div>    
- 
+ </div> 
+
+   {/* Sidebar */}
+   
+       <div className={`sidebar ${this.state.setSidebarOpen ? 'open' : ''}`}>
+          <button className="close-button" onClick={() => this.setState({setSidebarOpen:false})}>
+            <span className="material-icons">close</span>
+          </button>
+          <div className="logo-container">
+            <img src="/static/logo1.png" alt="Logo de la empresa" className="logo" />
+          </div>
+          <nav className="sidebar-links">
+            {links.map((link) => (
+              <a
+                key={link.name}
+                href={`#${link.name.toLowerCase()}`}
+                className="sidebar-link"
+                onClick={() =>  this.setState({setSidebarOpen:true})}
+              >
+                <span className="material-icons sidebar-icon">{link.icon}</span>
+                {link.name}
+              </a>
+            ))}
+          </nav>
+        </div>
+      
+
+ <style >{`
+       
+        .ingreso-button {
+          background: white;
+          color: #16a34a;
+          padding: 0.5rem 1rem;
+          border-radius: 0.25rem;
+          border: none;
+          cursor: pointer;
+          margin-right:5px;
+        }
+        .links-desktop {
+          display: none;
+        }
+        .nav-link {
+          color: white;
+          margin-left: 1rem;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          position: relative;
+        }
+        .nav-link::after {
+          content: '';
+          display: block;
+          width: 0;
+          height: 2px;
+          background: white;
+          transition: width 0.3s;
+          position: absolute;
+          bottom: -2px;
+          left: 0;
+        }
+        .nav-link:hover::after {
+          width: 100%;
+        }
+        .nav-icon {
+          margin-right: 0.25rem;
+        }
+        .burger-button {
+          background: none;
+          border: none;
+          color: white;
+          cursor: pointer;
+          display: block;
+        }
+     .sidebar {
+          position: fixed;
+          top: 0;
+          right: -20rem;
+          width: 10rem;
+          height: 100%;
+          background: white;
+          box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
+          padding: 1rem;
+          z-index: 100;
+          display: flex;
+          flex-direction: column;
+          transition: 1s;
+        }
+          .open {
+          right: 0px;
+        }
+        .close-button {
+          align-self: flex-end;
+          background: none;
+          border: none;
+          cursor: pointer;
+        }
+        .logo-container {
+          text-align: center;
+          margin-bottom: 1.5rem;
+        }
+        .logo {
+          width: 4rem;
+          height: auto;
+          filter: grayscale(100%);
+        }
+        .sidebar-links {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        .sidebar-link {
+          color: #1f2937;
+          text-decoration: none;
+          font-size: 1rem;
+          display: flex;
+          align-items: center;
+        }
+        .sidebar-icon {
+          margin-right: 0.5rem;
+        }
+        .sidebar-link:hover {
+          color: #16a34a;
+        }
+          .contBotonera{
+          display:flex;
+          width:100%;
+              justify-content: flex-end;
+              margin-top: 13px;
+    padding-right: 10px;
+          }
+
+        @media (min-width: 768px) {
+          .links-desktop {
+          width: 100%;
+        justify-content: space-around;
+          font-size:1.1rem;
+            display: flex;
+            margin-right:100px
+          }
+          .burger-button {
+            display: none;
+          }
+        }
+      `}</style>
     
       </div>
     );

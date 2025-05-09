@@ -1,0 +1,41 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 250" width="1360" height="250">
+	<title>waves</title>
+	<defs>
+		<linearGradient id="g1" x2="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1360,0,0,433.76,0,-247)">
+			<stop offset="0" stop-color="#ff00ff"/>
+			<stop offset="1" stop-color="#00ffff"/>
+		</linearGradient>
+		<linearGradient id="g2" x2="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1360,0,0,400.745,0,-247)">
+			<stop offset="0" stop-color="#ff00ff"/>
+			<stop offset="1" stop-color="#00ffff"/>
+		</linearGradient>
+		<linearGradient id="g3" x2="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1360,0,0,438.744,0,-247)">
+			<stop offset="0" stop-color="#ff00ff"/>
+			<stop offset="1" stop-color="#00ffff"/>
+		</linearGradient>
+		<linearGradient id="g4" x2="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1360,0,0,438.485,0,-247)">
+			<stop offset="0" stop-color="#ff00ff"/>
+			<stop offset="1" stop-color="#00ffff"/>
+		</linearGradient>
+		<linearGradient id="g5" x2="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1360,0,0,458.911,0,-247)">
+			<stop offset="0" stop-color="#ff00ff"/>
+			<stop offset="1" stop-color="#00ffff"/>
+		</linearGradient>
+	</defs>
+	<style>
+		.s0 { opacity: .4;fill: url(#g1) } 
+		.s1 { opacity: .4;fill: url(#g2) } 
+		.s2 { opacity: .4;fill: url(#g3) } 
+		.s3 { opacity: .4;fill: url(#g4) } 
+		.s4 { opacity: .4;fill: url(#g5) } 
+	</style>
+	<g>
+		<path class="s0" d="m0-247v433.8q136-14.3 272-34.3 136-20 272-93.9 136-73.8 272-29.2 136 44.6 272 44 136-0.7 272-66.4v-254z"/>
+		<path class="s1" d="m0-247v400.7q136-8.9 272-33.7 136-24.8 272-46.5 136-21.7 272-58.6 136-36.8 272-52.5 136-15.7 272 0.3v-209.7z"/>
+		<path class="s2" d="m0-247v410.9q136 43.4 272 19.2 136-24.3 272-143.1 136-118.8 272 26 136 144.7 272-70.3 136-215 272-44.8v-197.9z"/>
+		<path class="s3" d="m0-247v438.5q136-55.4 272-80.2 136-24.7 272 16.1 136 40.7 272-82.6 136-123.4 272 26 136 149.4 272-67.5v-250.3z"/>
+		<path class="s4" d="m0-247v458.9q136-62.7 272-84.1 136-21.3 272-59.1 136-37.8 272 8.7 136 46.4 272-120 136-166.5 272-43.8v-160.6z"/>
+		<g>
+		</g>
+	</g>
+</svg>

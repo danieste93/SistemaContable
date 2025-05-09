@@ -40,11 +40,11 @@
 
   }
   .navXSderecha{
-      display: flex;
-      width: 45%;
+      
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    width: 80%;
   }
   .userCont p{
       margin-bottom: 0;
@@ -108,7 +108,7 @@
     padding-left: 15px
 }
 .contlogo{
-    width: 45%;
+    width: 20%;
     display: flex;
     align-items: center;
   height: 100%;
@@ -147,7 +147,7 @@ width: 100%;
 }
 
   .fondod{  
-    color: black;
+    
     display: flex;
     justify-content: space-between;
     position: fixed;
@@ -156,14 +156,14 @@ width: 100%;
     width: 100%;
     font-size: 40px;
     align-items: center;
-    height: 7vh;
+
     transition: 0.5s;
  
 
     }
     .fondoa{  
       
-   background-color: whitesmoke;
+   background-color: rgb(60 138 224);
     display: flex;
     justify-content: space-between;
     position: fixed;
@@ -173,11 +173,10 @@ width: 100%;
     width: 100%;
     font-size: 40px;
     align-items: center;
-    height: 63px;
+   
     border-radius: 0px 0px 25px 25px;
-    border-bottom: 4px inset rgb(0, 123, 255);
-     
-      transition:  0.5s;
+    border-bottom: 4px inset rgb(0 58 120);
+    transition: 0.5s;
         }
 
     .navBD{
