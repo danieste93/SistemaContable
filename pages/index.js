@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import PantallaPrincipal from '../components/indexcompo/PantallaPrincipal';
+import PantallaPrincipal from '../components/indexcompo/pantallaPrincipal';
 import Caracteristicas from '../components/indexcompo/caracteristicas';
 import WhyChooseApp from '../components/indexcompo/why';
 import FunFactsSection from '../components/indexcompo/funfact';
