@@ -166,6 +166,7 @@ padding: 10px;
   
     overflow: hidden;
     background-position-x: 400px;
+    background-size: cover;
   }
   .jwSubContainer{
   

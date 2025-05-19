@@ -41,7 +41,7 @@ const Caracteristicas = () => {
             setIsVisible(true);
             observer.unobserve(entry.target);
 
-          },500)
+          },300)
         
         }
       },

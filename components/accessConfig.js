@@ -11,6 +11,7 @@ import Clientes from "./modal-Clientes"
 import Email from "./modal-CorreoConfig"
 import fetchData from './funciones/fetchdata';
 import DatabaseUsageBar from './cuentascompo/SubCompos/dataBarUsage';
+import InfoClean from './modal-infoClean';
 
  class accessPuntoVenta extends Component {
  
@@ -20,6 +21,7 @@ import DatabaseUsageBar from './cuentascompo/SubCompos/dataBarUsage';
       archivos:null,
       passClient:null,
       ElectroFact:false,
+      infoClean:false,
       Trabajadores:false,
       Email:false,
       docsSize:{
@@ -123,6 +125,12 @@ min-width: 120px;
     <div style={{ marginTop:"10px", display: "flex", justifyContent: "center", alignItems: "center",  backgroundColor: "#f5f5f5" }}>
             <DatabaseUsageBar dbSize={this.state.docsSize.datasize} userSize={300} />
         </div>
+        <div className='donwload' onClick={()=>{this.setState({infoClean:true})}}>
+  <span className="material-icons" style={{width:"40px", fontSize:"25px"}}>
+cloud_download_icon
+</span>
+<p> Descargar Información</p>
+ </div>
     </div>
    
     </div>
@@ -143,6 +151,9 @@ min-width: 120px;
   <Email Flecharetro ={()=>this.setState({Email:false})} />
   </Animate>
 
+  <Animate show={this.state.infoClean}>
+  <InfoClean Flecharetro ={()=>this.setState({infoClean:false})} />
+  </Animate>
  
 
   <Snackbar open={this.state.Alert.Estado} autoHideDuration={5000} onClose={handleClose}>
@@ -188,6 +199,21 @@ min-width: 120px;
                   margin: 5px 10px;
                   justify-content: center;
               }
+                  .donwload{
+                  
+   border: 1px solid #000001;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 60%;
+    margin: auto;
+    cursor:pointer;
+    border-radius: 10px;
+    padding: 5px;
+    border-bottom: 3px solid #3c8ae0;
+                  }
+
+
                 ` } </style>
 
     </div>)

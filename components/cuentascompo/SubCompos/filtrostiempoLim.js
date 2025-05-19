@@ -70,7 +70,7 @@ class Stats extends Component {
             }).then(res => res.json())
             .catch(error => {console.error('Error:', error);
             })  .then(response => {  
-        
+        console.log(response)
             if(response.status == 'error'){
               alert("error al actualizar registros")
              

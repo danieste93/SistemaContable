@@ -30,7 +30,7 @@ export default function NewsletterSubscribe() {
 
   return (
     <div className="subscribe-container">
-<div class="curve-container">
+<div className="curve-container">
   <svg viewBox="0 0 100 10" preserveAspectRatio="none">
     <path d="M0,10 Q50,0 100,10 L100,0 L0,0 Z" fill="lightgrey"/>
   </svg>
@@ -227,7 +227,7 @@ margin:20px
           }
           .curve-container {
   width: 100%;
-  height: 20px; /* ajusta la altura aquí */
+ 
   overflow: hidden;
 }
 

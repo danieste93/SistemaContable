@@ -171,7 +171,7 @@ this.setState({donwloadDeleteRegs:false, deletedRegs:true})
             }).then(res => res.json())
             .catch(error => {console.error('Error:', error);
             })  .then(response => {  
-        
+        console.log(response)
             if(response.status == 'error'){
               alert("error al actualizar registros")
              
@@ -735,7 +735,7 @@ superIng=  sumaing + sumatransing
 <MuiPickersUtilsProvider libInstance={moment} utils={MomentUtils}>
                <KeyboardDatePicker
           disableToolbar
-          format="D/MM/YYYY"
+          format="DD/MM/YYYY"
           margin="normal"
           id="date-picker-inline"
           label="Fecha de inicio "

@@ -25,6 +25,8 @@ router.post('/tienda/updateorder',Authentication, TiendaControl.updateOrdenCompr
 router.post('/getallordenescompra',Authentication, TiendaControl.getAllOrdenesCompra)
 
 
+
+
 router.post('/addnewicons', AdminControl.addNewIcons);
 router.post('/geticons', AdminControl.getIcons);
 router.post('/deleteicon', AdminControl.deleteIcon);
@@ -49,6 +51,11 @@ router.get('/updatesistemarts', AdminControl.updateVersionSistemArts);
 router.get('/createSystemCats', AdminControl.createSystemCats);
 
 router.post('/solicitudllamada', MailerControl.newsolicitudllamada);
+
+router.post('/findYearRegs',Authentication, AdminControl.findYearRegs);
+router.post('/findDataYearRegs',Authentication, AdminControl.findDataYearRegs);
+
+
 
 router.post('/edithtmlart',Authentication, AdminControl.editHtmlArt);
 router.post('/venddata',Authentication, AdminControl.vendData);

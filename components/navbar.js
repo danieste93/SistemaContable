@@ -108,7 +108,7 @@ import Router from "next/router"
   logOut=()=>{
 
     this.props.dispatch(logOut())
-    Router.push("/")
+    Router.push("/ingreso")
     localStorage.clear()
   
     }
@@ -203,7 +203,19 @@ else if(this.props.usuario.update.usuario.Tipo == "vendedor" || this.props.usuar
   </Link>
   )}
 }
+ asignadorDeRuta=()=>{
+  if(this.props.usuario.update.usuario.user.Tipo === "administrador"){
+
+    return "/usuarios/administrador"
+ 
+} else if(this.props.usuario.update.usuario.user.Tipo === "vendedor" || this.props.usuario.update.usuario.user.Tipo === "tesorero"){
+
+  return "/usuarios/vendedor"
+}
+}
 usercont=(e)=>{
+  const {route} = this.props.router;
+
   const links = [
     { name: 'Inicio', icon: 'home' },
     { name: 'Servicios', icon: 'build' },
@@ -212,16 +224,7 @@ usercont=(e)=>{
   ];
   if(this.props.usuario !== ""  ){
     const ruta = `/`
-    let asignadorDeRuta=()=>{
-      if(this.props.usuario.update.usuario.user.Tipo === "administrador"){
- 
-        return "/usuarios/administrador"
-     
-    } else if(this.props.usuario.update.usuario.user.Tipo === "vendedor" || this.props.usuario.update.usuario.user.Tipo === "tesorero"){
-    
-      return "/usuarios/vendedor"
-  }
-  }
+
   
     return ( 
     <Dropdown>
@@ -230,7 +233,7 @@ usercont=(e)=>{
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
-      <Dropdown.Item href={asignadorDeRuta()}>
+      <Dropdown.Item href={this.asignadorDeRuta()}>
         
       <button className='btn btn-success btnDropDowm ' >  
       <span className="material-icons">
@@ -263,7 +266,7 @@ logout
       
       </Dropdown.Menu>
     </Dropdown>)
-  }else{return (
+  }else if( route === "/" ){return (
     <div className='contBotonera'>
 <div className="links-desktop">
           {links.map((link) => (
@@ -273,7 +276,10 @@ logout
             </a>
           ))}
         </div>
+        <Link href="/ingreso">
         <button className="ingreso-button">Ingreso</button>
+        </Link>
+       
          {/* Burger button for mobile */}
          <button className="burger-button" onClick={() => this.setState({setSidebarOpen:true})}>
           <span className="material-icons">menu</span>
@@ -292,7 +298,8 @@ logout
 }
 
   render() {
-    
+    const {route} = this.props.router;
+    let genrouter = route == "/ingreso"?"/":"/ingreso"
 const links = [
     { name: 'Inicio', icon: 'home' },
     { name: 'Servicios', icon: 'build' },
@@ -300,10 +307,7 @@ const links = [
     { name: 'Contacto', icon: 'contact_mail' },
   ];
      let estilosnav = this.state.isscroll?"botonClickactive":"botonClick";
-   
 
-       
-    
 
     let fondobarra = this.state.isscroll == true ? "fondoa": "fondod"
               
@@ -333,7 +337,7 @@ const links = [
    
 
       <div className="contlogo">
-      <Link href="/" >
+      <Link href={genrouter} >
     <img className='logoimg'src="/static/logo1.png" alt="logotipo empresa" />
     </Link>
     </div>

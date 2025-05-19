@@ -13,7 +13,7 @@ var pdf = require('html-pdf');
 var soap = require('soap');
 const xml = require("xml-parse");
 const bcrypt = require('bcrypt'); 
-
+const ExcelJS = require('exceljs');
 const ComprasShema =  require("../models/comprasSass")
 const counterSchema= require("../models/counterSass")
 const ArticuloSchema = require("../models/articuloSass")
@@ -4868,4 +4868,134 @@ catch(error){
 
 
 
-module.exports = {editarPrecioCompra, getDbuserData,getAllClients, deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,updateUser, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };
+         async function findYearRegs(req, res) {
+  try {
+    const conn = await mongoose.connection.useDb(req.body.User.DBname);
+    const RegModelSass = conn.model('Reg', regSchema);
+
+    const currentYear = new Date().getFullYear();
+    const results = {};
+
+    for (let i = 0; i < 5; i++) {
+      const year = currentYear -1  - i;
+      const startOfYear = new Date(`${year}-01-01T00:00:00.000Z`);
+      const endOfYear = new Date(`${year}-12-31T23:59:59.999Z`);
+
+      const exists = await RegModelSass.exists({
+        Tiempo: { $gte: startOfYear, $lte: endOfYear }
+      });
+
+      results[year] = !!exists;
+    }
+
+    res.json(results);
+  } catch (err) {
+    console.error("Error al buscar registros por año:", err);
+    res.status(500).json({ error: "Error al analizar los años de registros" });
+  }
+}
+
+
+
+async function findDataYearRegs(req, res) {
+
+  const year = req.body.datos.year;
+  console.log(req.body)
+
+  try {
+    let conn = await mongoose.connection.useDb(req.body.User.user.DBname);
+    const RegModelSass = await conn.model('Reg', regSchema);
+    const ComprasModelSass = await conn.model('Compras', ComprasShema);
+    const VentaModelSass = await conn.model('Venta', ventasSchema);
+    const RegModelSassDelete = await conn.model('RegDelete', regSchemaDelete);
+
+let tiempoIni = new Date(`${year}-01-01T05:00:00.000Z`).setHours(0,0,0,0);
+let tiempoFin = new Date(`${year}-12-31T05:00:00.000Z`).setHours(23,59,59,999);
+
+console.log("Tiempo inicial:", tiempoIni, "-", new Date(tiempoIni).toLocaleString());
+console.log("Tiempo final:", tiempoFin, "-", new Date(tiempoFin).toLocaleString());
+
+let registros = await RegModelSass.find({
+  $and: [
+    { Tiempo: { $gte: tiempoIni } },
+    { Tiempo: { $lte: tiempoFin } },
+  ]
+});
+
+let compras = await ComprasModelSass.find({
+  $and: [
+    { Tiempo: { $gte: tiempoIni } },
+    { Tiempo: { $lte: tiempoFin } },
+  ]
+});
+
+let ventas = await VentaModelSass.find({
+  $and: [
+    { Tiempo: { $gte: tiempoIni } },
+    { Tiempo: { $lte: tiempoFin } },
+  ]
+});
+
+let registrosEliminados = await RegModelSassDelete.find({
+  $and: [
+    { Tiempo: { $gte: tiempoIni } },
+    { Tiempo: { $lte: tiempoFin } },
+  ]
+});
+console.log(registros)
+    // Crear libro de Excel
+    const workbook = new ExcelJS.Workbook();
+
+    // Opcional: proteger todo el libro (requiere ExcelJS 4.4.0+)
+    workbook.views = [{ password: process.env.PRIVATE_VALID_KEY }]; // No evita edición fuera de Excel
+
+    const sheets = [
+      { name: 'Registros', data: registros },
+      { name: 'Compras', data: compras },
+      { name: 'Ventas', data: ventas },
+      { name: 'Eliminados', data: registrosEliminados },
+    ];
+
+    for (const sheet of sheets) {
+      const ws = workbook.addWorksheet(sheet.name);
+      if (sheet.data.length > 0) {
+        ws.columns = Object.keys(sheet.data[0]._doc).map(key => ({ header: key, key }));
+        sheet.data.forEach(d => ws.addRow(d._doc));
+      } else {
+        ws.addRow(['Sin datos']);
+      }
+
+      // Protege cada hoja
+      await ws.protect(process.env.PRIVATE_VALID_KEY, {
+        selectLockedCells: true,
+        selectUnlockedCells: true,
+        formatCells: false,
+        formatColumns: false,
+        formatRows: false,
+        insertColumns: false,
+        insertRows: false,
+        deleteColumns: false,
+        deleteRows: false,
+        sort: false,
+        autoFilter: false,
+        pivotTables: false,
+      });
+    }
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=datos-${year}.xlsx`);
+
+    // Escribe el archivo en la respuesta
+    await workbook.xlsx.write(res);
+    res.end(); // Finaliza la respuesta correctamente
+
+  } catch (err) {
+    console.error("Error al generar Excel:", err);
+    res.status(500).json({ status: "error", error: "Error al generar el archivo Excel." });
+  }
+}
+
+
+
+
+module.exports = {findDataYearRegs,findYearRegs, editarPrecioCompra, getDbuserData,getAllClients, deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,updateUser, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };
