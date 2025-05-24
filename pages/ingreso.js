@@ -167,13 +167,9 @@ console.log(this.state)
    }
    else if(response.status =="error"){
 
-    if(response.message === "El correo ya esta registrado"){
-       this.setState({snackerror1:true, loading:false})
-    }
-   else if(response.message === "error al registrar"){
     this.setState({ loading:false})
-      alert("Error al registrar, vuelva a intentar")
-   }
+      alert(response.message)
+   
 }
   
 });}else {

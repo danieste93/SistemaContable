@@ -24,7 +24,6 @@ const mongoose = require('mongoose')
 module.exports = {
  create: async function(req, res, next) {
   
-
   let newDbName =  req.body.Usuario.trim() +"-"+ Math.floor(Math.random() * 100000);
   
   let conn = await mongoose.connection.useDb(newDbName);    
@@ -40,6 +39,7 @@ module.exports = {
   let ArticuloModelSass = await conn.model('Articulo', ArticuloShema);
 
   let previousUsers = await UserModelSass.find({ Email: req.body.Correo })
+    let previousUsers2 = await UserModelSass.find({ Usuario: req.body.Usuario })
   
 if (previousUsers.length > 0) {
       return res.status(200).send({
@@ -49,17 +49,27 @@ if (previousUsers.length > 0) {
       });
 
     }
+    if (previousUsers2.length > 0) {
+      return res.status(200).send({
+        success: false,
+        status:"error",
+                message: 'El Usuario ya esta registrado'
+      });
+
+    }
  
 
     await ComprasModelSass.createCollection()
     await VentaModelSass.createCollection()
     await RegModelSass.createCollection()
     await ArticuloModelSass.createCollection()
-    const session = await mongoose.startSession();  
-    session.startTransaction();
+    const MAX_RETRIES = 5;
 
+for (let i = 0; i < MAX_RETRIES; i++) {
+  const session = await mongoose.startSession();
     try {
     
+    session.startTransaction();
     const opts2 = { session};
     const opts= { session, new:true};
 let getUser = await UserModelSass.create([{
@@ -74,434 +84,215 @@ let getUser = await UserModelSass.create([{
        Membresia:"Premium"
         }], opts)
 
-await  CatModelSass.create([{
-    tipocat: "Ingreso",
-    subCategoria: [],
-    urlIcono:"/iconscuentas/apertura.png",
-    nombreCat:"Apertura",
-    idCat:9999999,
-    sistemCat:true,
-  }],opts2 )
+         await CatModelSass.create([
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], urlIcono:"/iconscuentas/apertura.png", nombreCat:"Apertura", idCat:9999999, sistemCat:true },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], nombreCat:"Sueldo", urlIcono:"/iconscuentas/cash2.png", idCat:1 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], nombreCat:"Negocios", urlIcono:"/iconscuentas/negocio.png", idCat:2 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], nombreCat:"Inversiones", urlIcono:"/iconscuentas/inversion.png", idCat:3 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], nombreCat:"Tienda Virtual", urlIcono:"/iconscuentas/venta1.png", idCat:4 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], nombreCat:"Punto de venta", urlIcono:"/iconscuentas/venta.png", idCat:5, sistemCat:true },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], nombreCat:"Ingreso Inventario", urlIcono:"/iconscuentas/ingresoinv.png", idCat:23, sistemCat:true },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Compra Inventario", urlIcono:"/iconscuentas/compra1.png", idCat:17, sistemCat:true },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Perdida Inventario", urlIcono:"/iconscuentas/lostinv.png", idCat:18, sistemCat:true },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Salida Precio Compra Inventario", urlIcono:"/iconscuentas/salidainv.png", idCat:19, sistemCat:true },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], nombreCat:"Credito", urlIcono:"/iconscuentas/cre.png", idCat:20, sistemCat:true },
+  { _id: new mongoose.Types.ObjectId(),tipocat: "Gasto", subCategoria: [], nombreCat:"Comida", urlIcono:"/iconscuentas/comida.png", idCat:6 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: ["Luz", "Agua", "Internet"], nombreCat:"Servicios Basicos", urlIcono:"/iconscuentas/casa.png", idCat:7 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Telefono", urlIcono:"/iconscuentas/celular.png", idCat:8 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Comida extra", urlIcono:"/iconscuentas/comida4.png", idCat:9 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Transporte", urlIcono:"/iconscuentas/taxi.png", idCat:10 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Transporte Propio", urlIcono:"/iconscuentas/auto.png", idCat:11 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Ropa", urlIcono:"/iconscuentas/ropa.png", idCat:12 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Salud", urlIcono:"/iconscuentas/salud1.png", idCat:13 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Lujos", urlIcono:"/iconscuentas/joyas.png", idCat:14 },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Mascotas", urlIcono:"/iconscuentas/mascota2.png", idCat:15 },
+  { _id: new mongoose.Types.ObjectId(),tipocat: "Gasto", subCategoria: [], nombreCat:"Viajes", urlIcono:"/iconscuentas/playa.png", idCat:16 },
+  { _id: new mongoose.Types.ObjectId(),tipocat: "Articulo", subCategoria: [], nombreCat:"GENERAL", urlIcono:"/iconscuentas/compra.png", idCat:21, sistemCat:true },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Articulo", subCategoria: [], nombreCat:"PANTALLA", urlIcono:"/iconscuentas/celular.png", idCat:22 }
+], opts2);
 
-  await  CatModelSass.create([{
-    tipocat: "Ingreso",
-    subCategoria: [],
-    nombreCat:"Sueldo",
-    urlIcono:"/iconscuentas/cash2.png",
-    idCat:1
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Ingreso",
-    subCategoria: [],
-    nombreCat:"Negocios",
-    urlIcono:"/iconscuentas/negocio.png",
-    idCat:2
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Ingreso",
-    subCategoria: [],
-    nombreCat:"Inversiones",
-    urlIcono:"/iconscuentas/inversion.png",
-    idCat:3
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Ingreso",
-    subCategoria: [],
-    nombreCat:"Tienda Virtual",
-    urlIcono:"/iconscuentas/venta1.png",
-    idCat:4
-  }],opts2 )
-
-  await  CatModelSass.create([{
-    tipocat: "Ingreso",
-    subCategoria: [],
-    nombreCat:"Punto de venta",
-    urlIcono:"/iconscuentas/venta.png",
-    idCat:5,
-    sistemCat:true,
-  }],opts2 )
-
-  await  CatModelSass.create([{
-    tipocat: "Ingreso",
-    subCategoria: [],
-    nombreCat:"Ingreso Inventario",
-    urlIcono:"/iconscuentas/ingresoinv.png",
-    idCat:16,
-    sistemCat:true,
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Compra Inventario",
-    urlIcono:"/iconscuentas/compra1.png",
-    idCat:17,
-    sistemCat:true,
-  }],opts2 )
- 
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Perdida Inventario",
-    urlIcono:"/iconscuentas/lostinv.png",
-    idCat:18,
-    sistemCat:true,
-  }],opts2 )
- 
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Salida Precio Compra Inventario",
-    urlIcono:"/iconscuentas/salidainv.png",
-    idCat:19,
-    sistemCat:true,
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Ingreso",
-    subCategoria: [],
-    nombreCat:"Credito",
-    urlIcono:"/iconscuentas/cre.png",
-    idCat:20,
-    sistemCat:true,
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Comida",
-    urlIcono:"/iconscuentas/comida.png",
-    idCat:6
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: ["Luz", "Agua", "Internet"],
-    nombreCat:"Servicios Basicos",
-    urlIcono:"/iconscuentas/casa.png",
-    idCat:7
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Telefono",
-    urlIcono:"/iconscuentas/celular.png",
-    idCat:8
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Comida extra",
-    urlIcono:"/iconscuentas/comida4.png",
-    idCat:9
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Transporte",
-    urlIcono:"/iconscuentas/taxi.png",
-    idCat:10
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Transporte Propio",
-    urlIcono:"/iconscuentas/auto.png",
-    idCat:11
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Ropa",
-    urlIcono:"/iconscuentas/ropa.png",
-    idCat:12
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Salud",
-    urlIcono:"/iconscuentas/salud1.png",
-    idCat:13
-  }],opts2 )
- 
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Lujos",
-    urlIcono:"/iconscuentas/joyas.png",
-    idCat:14
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Mascotas",
-    urlIcono:"/iconscuentas/mascota2.png",
-    idCat:15
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Gasto",
-    subCategoria: [],
-    nombreCat:"Viajes",
-    urlIcono:"/iconscuentas/playa.png",
-    idCat:16
-  }],opts2 )
-
-
-  await  CatModelSass.create([{
-    tipocat: "Articulo",
-    subCategoria: [],
-    nombreCat:"GENERAL",
-    urlIcono:"/iconscuentas/compra.png",
-    idCat:21,
-    sistemCat:true,
-  }],opts2 )
-  await  CatModelSass.create([{
-    tipocat: "Articulo",
-    subCategoria: [],
-    nombreCat:"PANTALLA",
-    urlIcono:"/iconscuentas/celular.png",
-    idCat:22
-  }],opts2 )
   
-  await  CuentasModelSass.create([{
+ await CuentasModelSass.create([
+  {_id: new mongoose.Types.ObjectId(),
     CheckedA: true,
     CheckedP: true,
     Visibility: true,
     Tipo: "Bancaria",
-    FormaPago:"Transferencia",
+    FormaPago: "Transferencia",
     NombreC: "Pichincha",
     DineroActual: 0,
     iDcuenta: 1,
     Descrip: "",
-    Permisos:["administrador","tesorero"],
-    urlIcono:"/iconscuentas/bank.png",
-    Background:{Seleccionado:"Imagen",
-      urlBackGround:"/fondoscuentas/bp.png",
-      colorPicked:"#ffffff"}
-      }], opts2 )
+    Permisos: ["administrador", "tesorero"],
+    urlIcono: "/iconscuentas/bank.png",
+    Background: {
+      Seleccionado: "Imagen",
+      urlBackGround: "/fondoscuentas/bp.png",
+      colorPicked: "#ffffff"
+    }
+  },
+  {_id: new mongoose.Types.ObjectId(),
+    CheckedA: true,
+    CheckedP: true,
+    Visibility: true,
+    Tipo: "Bancaria",
+    FormaPago: "Transferencia",
+    NombreC: "Produbanco",
+    DineroActual: 0,
+    iDcuenta: 2,
+    Descrip: "",
+    Permisos: ["administrador", "tesorero"],
+    urlIcono: "/iconscuentas/bank.png",
+    Background: {
+      Seleccionado: "Imagen",
+      urlBackGround: "/fondoscuentas/bpro.png",
+      colorPicked: "#ffffff"
+    }
+  },
+  {_id: new mongoose.Types.ObjectId(),
+    CheckedA: true,
+    CheckedP: true,
+    Visibility: true,
+    Tipo: "Bancaria",
+    FormaPago: "Transferencia",
+    NombreC: "Guayaquil",
+    DineroActual: 0,
+    iDcuenta: 6,
+    Descrip: "",
+    Permisos: ["administrador", "tesorero"],
+    urlIcono: "/iconscuentas/bank.png",
+    Background: {
+      Seleccionado: "Imagen",
+      urlBackGround: "/fondoscuentas/visa06.png",
+      colorPicked: "#ffffff"
+    }
+  },
+  {_id: new mongoose.Types.ObjectId(),
+    CheckedA: true,
+    CheckedP: true,
+    Visibility: true,
+    Tipo: "Tarjeta de Crédito",
+    FormaPago: "Tarjeta-de-Credito",
+    NombreC: "Visa",
+    DineroActual: 0,
+    iDcuenta: 3,
+    Descrip: "",
+    Permisos: ["administrador"],
+    urlIcono: "/iconscuentas/cardwallet.png",
+    Background: {
+      Seleccionado: "Imagen",
+      urlBackGround: "/fondoscuentas/visa05.png",
+      colorPicked: "#ffffff"
+    }
+  },
+  {_id: new mongoose.Types.ObjectId(),
+    CheckedA: true,
+    CheckedP: true,
+    Visibility: true,
+    Tipo: "Efectivo",
+    FormaPago: "Efectivo",
+    NombreC: "Billetera",
+    DineroActual: 0,
+    iDcuenta: 4,
+    Descrip: "",
+    Permisos: ["administrador"],
+    urlIcono: "/iconscuentas/wallet.png",
+    Background: {
+      Seleccionado: "Solido",
+      urlBackGround: "/fondoscuentas/amex1.png",
+      colorPicked: "#ef4f29"
+    }
+  },
+  {_id: new mongoose.Types.ObjectId(),
+    CheckedA: true,
+    CheckedP: true,
+    Visibility: true,
+    Tipo: "Efectivo",
+    FormaPago: "Efectivo",
+    NombreC: "Dinero en Casa",
+    DineroActual: 0,
+    iDcuenta: 7,
+    Descrip: "",
+    Permisos: ["administrador"],
+    urlIcono: "/iconscuentas/moneybox.png",
+    Background: {
+      Seleccionado: "Solido",
+      urlBackGround: "/fondoscuentas/amex1.png",
+      colorPicked: "#3c8ae0"
+    }
+  },
+  {_id: new mongoose.Types.ObjectId(),
+    CheckedA: true,
+    CheckedP: true,
+    Visibility: true,
+    Tipo: "Tarjeta de Débito",
+    FormaPago: "Tarjeta-de-Debito",
+    NombreC: "Amex",
+    DineroActual: 0,
+    iDcuenta: 5,
+    Descrip: "",
+    urlIcono: "/iconscuentas/amex.png",
+    Background: {
+      Seleccionado: "Imagen",
+      urlBackGround: "/fondoscuentas/amex1.png",
+      colorPicked: "#ffffff"
+    }
+  },
+  {_id: new mongoose.Types.ObjectId(),
+  CheckedA: false,
+  CheckedP: false,
+  Visibility: true,
+  Tipo: "Inventario",
+  FormaPago:"",
+  NombreC: "Inventario",
+  DineroActual: 0,
+  iDcuenta: 9999998,
+  Descrip: "",
+  Permisos:["administrador"],
+                            }
+  
+], opts2);
 
-      await  CuentasModelSass.create([{
-        CheckedA: true,
-        CheckedP: true,
-        Visibility: true,
-        FormaPago:"Transferencia",
-        Tipo: "Bancaria",
-        NombreC: "Produbanco",
-        DineroActual: 0,
-        iDcuenta: 2,
-        Descrip: "",
-        Permisos:["administrador","tesorero"],
-        urlIcono:"/iconscuentas/bank.png",
-        Background:{Seleccionado:"Imagen",
-        urlBackGround:"/fondoscuentas/bpro.png",
-        colorPicked:"#ffffff"}
-          }], opts2 )
 
-          await  CuentasModelSass.create([{
-            CheckedA: true,
-            CheckedP: true,
-            Visibility: true,
-            FormaPago:"Transferencia",
-            Tipo: "Bancaria",
-            NombreC: "Guayaquil",
-            DineroActual: 0,
-            iDcuenta: 6,
-            Descrip: "",
-            Permisos:["administrador","tesorero"],
-            urlIcono:"/iconscuentas/bank.png",
-            Background:{Seleccionado:"Imagen",
-            urlBackGround:"/fondoscuentas/visa06.png",
-            colorPicked:"#ffffff"}
-              }], opts2 )
-          await  CuentasModelSass.create([{
-            CheckedA: true,
-            CheckedP: true,
-            Visibility: true,
-            Tipo: "Tarjeta de Crédito",
-            FormaPago:"Tarjeta-de-Credito",
-            NombreC: "Visa",
-            DineroActual: 0,
-            iDcuenta: 3,
-            Descrip: "",
-            Permisos:["administrador"],
-            urlIcono:"/iconscuentas/cardwallet.png",
-            Background:{Seleccionado:"Imagen",
-            urlBackGround:"/fondoscuentas/visa05.png",
-            colorPicked:"#ffffff"}
-              }], opts2 )
-              
-              await  CuentasModelSass.create([{
-                CheckedA: true,
-                CheckedP: true,
-                Visibility: true,
-                FormaPago:"Efectivo",
-                Tipo: "Efectivo",
-                NombreC: "Billetera",
-                DineroActual: 0,
-                iDcuenta: 4,
-                Descrip: "",
-                Permisos:["administrador"],
-                urlIcono:"/iconscuentas/wallet.png",
-                Background:{Seleccionado:"Solido",
-                urlBackGround:"/fondoscuentas/amex1.png",
-                colorPicked:"#ef4f29"}
-                  }], opts2 )
-                  await  CuentasModelSass.create([{
-                    CheckedA: true,
-                    CheckedP: true,
-                    Visibility: true,
-                    FormaPago:"Efectivo",
-                    Tipo: "Efectivo",
-                    NombreC: "Dinero en Casa",
-                    DineroActual: 0,
-                    iDcuenta: 7,
-                    Descrip: "",
-                    Permisos:["administrador"],
-                    urlIcono:"/iconscuentas/moneybox.png",
-                    Background:{Seleccionado:"Solido",
-                    urlBackGround:"/fondoscuentas/amex1.png",
-                    colorPicked:"#3c8ae0"}
-                      }], opts2 )
-                  await  CuentasModelSass.create([{
-                    CheckedA: true,
-                    CheckedP: true,
-                    Visibility: true,
-                    Tipo: "Tarjeta de Débito",
-                    FormaPago:"Tarjeta-de-Debito",
-                    NombreC: "Amex",
-                    DineroActual: 0,
-                    iDcuenta: 5,
-                    Descrip: "",
-                    urlIcono:"/iconscuentas/amex.png",
-                    Background:{Seleccionado:"Imagen",
-                    urlBackGround:"/fondoscuentas/amex1.png",
-                    colorPicked:"#ffffff"},
-                    Permisos:["administrador"],
-                      }], opts2 )
+ await CounterModelSass.create([
+  {  _id: new mongoose.Types.ObjectId(), // ✅ nuevo ID
+    Contador: 1,
+    ContadorCat: 30,
+    ContadorRep: 1,
+    Contmascuenta: 8,
+    ContRegs: 1,
+    ContVentas: 1,
+    ContCompras: 1,
+    ContVendedores: 3,
+    ContSecuencial: 1,
+    ContCotizacion: 1,
+    ContPublicaciones: 1,
+    ContArticulos: 1000,
+    iDgeneral: 9999999
+  },
+  
+  {
+      _id: new mongoose.Types.ObjectId(), // ✅ nuevo ID
+    Data: [
+      "/fondoscuentas/amex1.png",
+      "/fondoscuentas/amex2.png",
+      "/fondoscuentas/amex3.png",
+      "/fondoscuentas/amex4.png",
+      "/fondoscuentas/mc01.png",
+      "/fondoscuentas/mc02.png",
+      "/fondoscuentas/visa01.png",
+      "/fondoscuentas/visa04.png",
+      "/fondoscuentas/visa05.png",
+      "/fondoscuentas/visa06.png",
+      "/fondoscuentas/visa07.png",
+      "/fondoscuentas/visa08.png",
+      "/fondoscuentas/bp.png",
+      "/fondoscuentas/bpro.png"
+    ],
+    iDgeneral: 9999996
+  }
+], opts2);
 
-                      await  CuentasModelSass.create([{
-                        CheckedA: false,
-                        CheckedP: false,
-                        Visibility: true,
-                        Tipo: "Inventario",
-                        FormaPago:"",
-                        NombreC: "Inventario",
-                        DineroActual: 0,
-                        iDcuenta: 9999998,
-                        Descrip: "",
-                        Permisos:["administrador","tesorero","vendedor"],
-                        urlIcono:"/iconscuentas/icon.png",
-                        Background:{Seleccionado:"Solido",
-                        urlBackGround:"/fondoscuentas/visa05.png",
-                        colorPicked:"#daa520"}
-                          }], opts2 )
-
-
- await CounterModelSass.create([{
-  Contador:1,
-  ContadorCat:30,
-  ContadorRep:1,
-  Contmascuenta:8,
-  ContRegs:1,
-  ContVentas:1,
-  ContCompras:1,
-  ContVendedores:3,
-  ContSecuencial:1,
-  ContCotizacion:1,
-  ContPublicaciones:1,
-  ContArticulos:1000,
-  iDgeneral:9999999
- }],opts2)
- await CounterModelSass.create([{
-  Data:{},
-  iDgeneral:9999998
- }],opts2)
-
- await CounterModelSass.create([{
-  Data:[
-    "/iconscuentas/amex.png",
-    "/iconscuentas/visa.png",
-    "/iconscuentas/mastercard.png",
-    "/iconscuentas/bill.png",
-    "/iconscuentas/blockchain.png",
-    "/iconscuentas/cardwallet.png",
-    "/iconscuentas/cash1.png",
-    "/iconscuentas/cash2.png",
-    "/iconscuentas/coins.png",
-    "/iconscuentas/icon.png",
-    "/iconscuentas/moneybox.png",
-    "/iconscuentas/paypal.png",
-    "/iconscuentas/wallet.png",
-    "/iconscuentas/walletcoin.png",
-    "/iconscuentas/venta.png",
-    "/iconscuentas/venta1.png",
-    "/iconscuentas/venta2.png",
-    "/iconscuentas/compra.png",
-    "/iconscuentas/compra1.png",
-    "/iconscuentas/negocio.png",
-    "/iconscuentas/negocios.png",
-    "/iconscuentas/negocios1.png",
-    "/iconscuentas/negocios2.png",
-    "/iconscuentas/tecnologia.png",
-    "/iconscuentas/tecnologia1.png",
-    "/iconscuentas/comida.png",
-    "/iconscuentas/comida1.png",
-    "/iconscuentas/comida2.png",
-    "/iconscuentas/comida3.png",
-    "/iconscuentas/comida4.png",
-    "/iconscuentas/comida5.png",
-    "/iconscuentas/comida6.png",
-    "/iconscuentas/comida7.png",
-    "/iconscuentas/comida8.png",
-    "/iconscuentas/internet.png",
-    "/iconscuentas/internet1.png",
-    "/iconscuentas/agua.png",
-    "/iconscuentas/luz.png",
-    "/iconscuentas/telefono.png",
-    "/iconscuentas/casa.png",
-    "/iconscuentas/mascota.png",
-    "/iconscuentas/mascota1.png",
-    "/iconscuentas/mascota2.png",
-    "/iconscuentas/auto.png",
-    "/iconscuentas/moto.png",
-    "/iconscuentas/gasolina.png",
-    "/iconscuentas/personas.png",
-    "/iconscuentas/personas1.png",
-    "/iconscuentas/personas2.png",
-    "/iconscuentas/playa.png",
-    "/iconscuentas/joyas.png",
-    "/iconscuentas/ropa.png",
-    "/iconscuentas/salud.png",
-    "/iconscuentas/deporte.png",
-    "/iconscuentas/entretenimiento.png",
-    "/iconscuentas/salud1.png",
-    "/iconscuentas/medico.png",
-    "/iconscuentas/pastillas.png",
-    "/iconscuentas/seguridad.png",
-    "/iconscuentas/tabaco.png",
-    "/iconscuentas/unicornio.png"
-  ],
-  iDgeneral:9999997
- }],opts2)
-
- await CounterModelSass.create([{
- Data:[
-  "/fondoscuentas/amex1.png",
-  "/fondoscuentas/amex2.png",
-  "/fondoscuentas/amex3.png",
-  "/fondoscuentas/amex4.png",
-  "/fondoscuentas/mc01.png",
-  "/fondoscuentas/mc02.png",
-  "/fondoscuentas/visa01.png",
-  "/fondoscuentas/visa04.png",
-  "/fondoscuentas/visa05.png",
-  "/fondoscuentas/visa06.png",
-  "/fondoscuentas/visa07.png",
-  "/fondoscuentas/visa08.png",
-  "/fondoscuentas/bp.png",
-  "/fondoscuentas/bpro.png",
-
-  ],
-  iDgeneral:9999996
- }],opts2)
-
- 
 
  await TiposModelSass.create([{
   Tipos:[
@@ -550,19 +341,29 @@ transporter.sendMail(mailOptions, function (err, res) {
 })
 
         await session.commitTransaction();
-        
-      return res.json({status: "Ok", message: "Exito en el registro", }); 
-         
+         return res.json({ status: "Ok", message: "Éxito en el registro" });
+    
       }
-      catch(error){
-        console.log(error)
-        await session.abortTransaction();
-        return res.json({status: "error", message: "error al registrar", error });
-      }finally {
+      catch(error){ 
+        
+            console.log("Intento fallido #" + (i + 1), error);
+        if (
+      i < MAX_RETRIES - 1 &&
+      error.hasErrorLabel &&
+      error.hasErrorLabel("TransientTransactionError")
+    ) {
+      console.log("🔁 Error transitorio, reintentando...",error);
+      continue; // intentar de nuevo
+    }
+
+    // 🚨 Error fatal o agotados los intentos
+    return res.json({ status: "error", message: "Error al registrar", error });
+     }finally {
         session.endSession();
+    
       }
    
-
+       }
 
 
 

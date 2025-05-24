@@ -238,7 +238,7 @@ class HelperFormapago extends Component {
         }
 
         createFormaPago=(e)=>{
-
+console.log(e)
             let ramdon = Math.floor(Math.random() * 1000);
     
             let newid = "FP-" +ramdon 

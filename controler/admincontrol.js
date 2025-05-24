@@ -2091,13 +2091,13 @@ for(let i=0;i<req.body.ArtComprados.length;i++){
 
   continue;
  }
-  let artic = await ArticuloModelSass.findById(req.body.ArtComprados[i]._id) 
 
-  if(artic == null){
-   
-      throw new Error("articulo no encontrado")
-    
-  }
+let artic = await ArticuloModelSass.findById(req.body.ArtComprados[i]._id);
+
+if (artic == null) {
+  throw new Error(`Artículo no encontrado o eliminado: "${req.body.ArtComprados[i].Titulo}" (Eqid: ${req.body.ArtComprados[i].Eqid})`);
+
+}
   else{
     let numeroExistencias = artic.Existencia
   let unidadesEliminadas = (req.body.ArtComprados[i].CantidadCompra) 
@@ -2204,8 +2204,17 @@ for(let i=0;i<req.body.ArtComprados.length;i++){
 
     }
     for(let x=0;x<req.body.Fpago.length;x++){
-       
-      const fixedImportFpago= new mongoose.Types.Decimal128(req.body.Fpago[x].Cantidad)
+      let val = ""
+      let c = req.body.Fpago[x].Cantidad;
+if (typeof c === 'number') {
+  
+  val = String(c)
+} else if (typeof c === 'string') {
+  // Elimina comillas extra si las tiene, pero deja el string
+  val=c
+}
+
+      const fixedImportFpago= new mongoose.Types.Decimal128(val)
     
     
      let update2= { $inc: { DineroActual:fixedImportFpago } }
@@ -2226,12 +2235,17 @@ for(let i=0;i<req.body.ArtComprados.length;i++){
       }
     }
    
-    }catch(error){
-      await session.abortTransaction();
-      session.endSession();
-      console.log(error, "errr")
-      return res.json({status: "Error", message: "error al registrar", error });
-    }
+    }catch (error) {
+  await session.abortTransaction();
+  session.endSession();
+  console.log(error, "errr");
+
+  return res.status(400).json({
+    status: "Error",
+    message: "Error al registrar",
+    error: error.message // Solo el mensaje, para que llegue limpio al frontend
+  });
+}
   
 
 
@@ -3396,6 +3410,7 @@ async function  generateFactCompra(req, res){
   const session = await mongoose.startSession();   
   session.startTransaction();
   try{
+  
     let Counterx =     await CounterModelSass.find({iDgeneral:9999999},null, {session} )
     let articulos = req.body.Comprobante.factura.detalles[0].detalle
     let insumos = articulos.filter(x=>x.insumo)
@@ -3506,11 +3521,12 @@ async function  generateFactCompra(req, res){
    
     }
     if(sinInsumos.length > 0){
-   
-      let articulosPorCrear = sinInsumos.filter(x=>x.itemSelected == null)
-      let articulosPorActualizar= sinInsumos.filter(x=>x.itemSelected)
+console.log(sinInsumos)
+  let articulosPorCrear = sinInsumos.filter(x => x.itemSelected == null);
+let articulosPorActualizar = sinInsumos.filter(x => x.itemSelected && x.itemSelected._id);
       
       if(articulosPorCrear.length > 0){
+        console.log("en creador")
         articulosCrear = articulosPorCrear.length
 
        
@@ -3537,7 +3553,7 @@ async function  generateFactCompra(req, res){
   let valido = true 
 let acuminsu = 1
 let newid = articulosPorCrear[x].codigoPrincipal[0]
-console.log(articulosPorCrear[x])
+
 while(valido){
  
   let findDistridi = await ArticuloModelSass.find({Diid:newid
@@ -3556,7 +3572,7 @@ if(findDistridi.length == 0){
 
 }
 
-console.log("salidmos del while")
+
 let idCuentaInv  =  await CuentasModelSass.find({iDcuenta:9999998}, null,{session} )
 
 let ivadata = articulosPorCrear[x].iva == null ? false:
@@ -3601,11 +3617,16 @@ articulosPorCrear[x].iva == false? false:false
 
       }
       if(articulosPorActualizar.length > 0){
-        let impuesto = parseFloat(insumos[x].impuestos[0].impuesto[0].tarifa[0]) 
-     let conImpuesto = parseFloat(insumos[x].precioUnitario[0]) * parseFloat(`1.${impuesto }`)
-            let precioUnitario = parseFloat(conImpuesto.toFixed(2))
+console.log("en actualizador")
+      
       
         for(let x = 0;x<articulosPorActualizar.length;x++){
+     
+  let impuesto = parseFloat(articulosPorActualizar[x].impuestos[0].impuesto[0].tarifa[0]) 
+        let conImpuesto = parseFloat(articulosPorActualizar[x].precioUnitario[0]) * parseFloat(`1.${impuesto }`)
+        let precioUnitario = parseFloat(conImpuesto.toFixed(2))
+
+
           let art = articulosPorActualizar[x].itemSelected
           let nData = articulosPorActualizar[x]
           if(articulosPorActualizar[x].Caduca){
@@ -3623,14 +3644,20 @@ articulosPorCrear[x].iva == false? false:false
             NuevoPrecioCompra= ActualInvertido / parseFloat(nData.cantidad[0])
             }
 
-            let updateAS = { Existencia: nuevaCantExistencias  ,
+            let updateAS = { 
+              
+              Existencia: nuevaCantExistencias  ,
               Precio_Compra:NuevoPrecioCompra ,
               CantidadCompra:parseFloat(nData.cantidad[0]),
+              Titulo:nData.descripcion[0],
+              Categoria:nData.categoria,
+              SubCategoria:nData.subcategoria,
               PrecioCompraTotal:ActualInvertido,
             }
               
                     
 let artupdate = await ArticuloModelSass.findByIdAndUpdate(art._id,updateAS,{ session, new:true} )
+
 if(artupdate == null ){
   throw new Error("Articulo no modificado, vuelva intentar en unos minutos")
 }
@@ -3640,7 +3667,11 @@ articulosActualizados.push(artupdate)
         }
       }
     }
-    const fixedImport= new mongoose.Types.Decimal128(valorInventario.toFixed(2))
+
+    
+
+    const fixedImport= new mongoose.Types.Decimal128(req.body.Fpago[0].Cantidad)
+
  
     let valornegativo = fixedImport  * (-1)            
     let update = { $inc: { DineroActual: valornegativo } }

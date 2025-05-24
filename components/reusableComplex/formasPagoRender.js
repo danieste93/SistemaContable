@@ -30,7 +30,7 @@ class ListVenta extends Component {
   
         this.setState({Cantidadval:e.target.value})
        
-        let dataKey = {Cantidad:parseFloat(e.target.value), Id:this.props.datos.Id}
+        let dataKey = {Cantidad:e.target.value, Id:this.props.datos.Id}
         this.props.sendPrecio(dataKey)
         
     }

@@ -57,19 +57,14 @@ class Contacto extends Component {
         .catch(error => console.error('Error:', error))
         .then(response => {console.log('DeleteCompra:', response)
 
-        if(response.message=="error al registrar"){
-         alert("Error en el sistema, porfavor intente en unos minutos")
-         this.setState({loading:false})
-        }  else if(response.message == "Existencias insuficientes" ){
-
-          this.props.errorExistencias(response.articulo)
-          
-        }else if(response.message == "Articulo Eliminado" ){
-
-          this.props.errorEliminado(response.articulo)
-          
-        }
-        
+       if (response.message === "Error al registrar") {
+  if (response.error && response.error.includes("Artículo no encontrado")) {
+    alert("Uno de los artículos fue eliminado: " + response.error);
+  } else {
+    alert("Error en el sistema, por favor intente en unos minutos");
+  }
+  this.setState({ loading: false });
+}
         
         else {
           this.props.dispatch(deleteCompra(response.Compra))

@@ -46,6 +46,7 @@ class ListVenta extends Component {
         EditCat:false,
         Addcat:false,
         precioFinal:0,
+        itemSelected:null,
      
     }
     channel2 = null;
@@ -55,14 +56,22 @@ class ListVenta extends Component {
     let articulos = this.props.state.RegContableReducer.Articulos
 
     let miart = articulos.filter(x=> x.Diid == articuloElegido.codigoPrincipal[0])
-
+console.log(miart)
     let newprecio =  this.testPrecioUni() * (parseFloat(articuloElegido.cantidad[0]))
  
     if(miart.length > 0){
-        this.setState({artSelected:miart[0],precioFinal: newprecio})
+        this.setState({artSelected:miart[0],
+               catSelect:miart[0].Categoria,
+            subCatSelect:miart[0].SubCategoria,
+            precioVenta:miart[0].Precio_Venta,
+             itemSelected:miart[0],
+            precioFinal: newprecio})
    
          this.props.sendSwich({...this.state,
-            precioFinal: newprecio,
+            catSelect:miart[0].Categoria,
+            subCatSelect:miart[0].SubCategoria,
+            precioVenta:miart[0].Precio_Venta,
+             precioFinal: newprecio,
              itemSelected:miart[0],
              item:this.props.datos})  
     }else{
@@ -91,12 +100,13 @@ class ListVenta extends Component {
 
 this.setState({tituloArts:e.target.value})
 
-let newstate = this.state
-
-newstate.tituloArts =  e.target.value
 
 
-    this.props.sendNombre({...this.newstate,
+
+
+
+    this.props.sendNombre({
+        tituloArts : e.target.value,
         item:this.props.datos})  
 
     }
@@ -124,7 +134,7 @@ newstate.tituloArts =  e.target.value
 
             let impuesto = parseFloat(this.props.datos.impuestos[0].impuesto[0].tarifa[0]) 
             let conImpuesto = parseFloat(this.props.datos.precioUnitario[0]) * parseFloat(`1.${impuesto }`)
-                   let precioUnitario = parseFloat(conImpuesto.toFixed(2))
+                   let precioUnitario = parseFloat(conImpuesto)
 
                    return precioUnitario
          
@@ -509,7 +519,9 @@ item})
 
             }
             SelectArt=(e)=>{
-               this.setState({artSelected:e,selectItem:false})
+               this.setState({artSelected:e,selectItem:false,
+                   itemSelected:e,
+               })
                this.props.sendSwich({...this.state,
                 itemSelected:e,
                 item:this.props.datos})  
@@ -519,7 +531,7 @@ item})
                 
             }
             deleteItem=()=>{
-                    this.setState({artSelected:""})
+                    this.setState({artSelected:"", itemSelected:null})
                     this.props.sendErrace({
                         item:this.props.datos})  
                 
@@ -673,7 +685,7 @@ return (
         >
 
             {this.state.catSelect.nombreCat}
-            <span style={{fontSize:"10px",marginTop:"2px"}}>      {this.state.subCatSelect} </span>
+            <span style={{fontSize:"10px",marginTop:"2px"}}>  {this.state.subCatSelect!="default"? this.state.subCatSelect:""} </span>
             
          
                         </div>

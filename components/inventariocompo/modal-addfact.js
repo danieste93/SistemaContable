@@ -93,7 +93,7 @@ class Contacto extends Component {
               newstate.TotalPago = parseFloat(TotalPago).toFixed(2)
               newstate.Userdata ={DBname:this.props.state.userReducer.update.usuario.user.DBname}
               newstate.fecha = this.state.xmlData.fechaAutorizacion[0]
-           
+           console.log(newstate)
              var lol = JSON.stringify(newstate)
              fetch(url, {
               method: 'POST', // or 'PUT'
@@ -430,7 +430,7 @@ console.log(data.tituloArts)
       let indexset = this.state.Comprobante.factura.detalles[0].detalle.indexOf(itemfind[0])
       let deepClone = JSON.parse(JSON.stringify(this.state.Comprobante));
   
-      deepClone.factura.detalles[0].detalle[indexset].descripcion = data.tituloArts
+      deepClone.factura.detalles[0].detalle[indexset].descripcion[0] = data.tituloArts
       this.setState({Comprobante:deepClone})
     }
 
