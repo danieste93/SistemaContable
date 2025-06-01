@@ -26,7 +26,7 @@ class ListVenta extends Component {
         caduca:false,
         mensajeComprobacion:"",
         iva:this.setIva(),
-        precioVenta: (this.testPrecioUni() *2 ).toFixed(2),
+        precioVenta: (this.testPrecioIndividual() *2 ).toFixed(2),
         insumo:false,
         selectItem:false,
         catSelect:{
@@ -47,17 +47,57 @@ class ListVenta extends Component {
         Addcat:false,
         precioFinal:0,
         itemSelected:null,
+        blockinsumo:false,
      
     }
     channel2 = null;
     componentDidMount(){
   
+
+const cantidadStr = parseFloat(this.props.datos.cantidad[0]).toFixed(2);
+const cantidad = parseFloat(cantidadStr);
+setTimeout(()=>{
+  if (!Number.isInteger(cantidad)) {
+  // Es un entero, incluso si era "1.00"
+  this.setState({blockinsumo:true, insumo:true,
+     catSelect:{
+                
+                    tipocat: "Gasto",
+                    subCategoria: [],
+                    nombreCat:"Comida",
+                    urlIcono:"/iconscuentas/comida.png",
+                    idCat:6
+                
+                },
+
+  })
+
+     this.props.sendSwich({...this.state,
+         blockinsumo:true, insumo:true,
+     catSelect:{
+                
+                    tipocat: "Gasto",
+                    subCategoria: [],
+                    nombreCat:"Comida",
+                    urlIcono:"/iconscuentas/comida.png",
+                    idCat:6
+                
+                },
+             item:this.props.datos
+            })  
+    
+  console.log("Es un entero, no hacer nada.");
+}   
+}, 1000)
+
+
+
     let articuloElegido = this.props.datos
     let articulos = this.props.state.RegContableReducer.Articulos
 
     let miart = articulos.filter(x=> x.Diid == articuloElegido.codigoPrincipal[0])
 console.log(miart)
-    let newprecio =  this.testPrecioUni() * (parseFloat(articuloElegido.cantidad[0]))
+    let newprecio =  this.testPrecioUni() 
  
     if(miart.length > 0){
         this.setState({artSelected:miart[0],
@@ -130,6 +170,18 @@ this.setState({tituloArts:e.target.value})
     }
   
     testPrecioUni(){
+        if(this.props.datos.impuestos){
+
+            let impuesto = parseFloat(this.props.datos.impuestos[0].impuesto[0].tarifa[0]) 
+            let conImpuesto = parseFloat(this.props.datos.precioTotalSinImpuesto[0]) * parseFloat(`1.${impuesto }`)
+                   let precioUnitario = parseFloat(conImpuesto)
+
+                   return precioUnitario
+         
+
+ }
+}
+ testPrecioIndividual(){
         if(this.props.datos.impuestos){
 
             let impuesto = parseFloat(this.props.datos.impuestos[0].impuesto[0].tarifa[0]) 
@@ -215,7 +267,7 @@ this.setState({tituloArts:e.target.value})
     
       }
       handleChangeSwitchInsumo=(e)=>{        
-    
+    if(!this.state.blockinsumo){
         if(this.state.artSelected !=""){
             alert("Error, articulo se asigno a inventario")
             this.setState({insumo:false})
@@ -272,6 +324,9 @@ this.setState({tituloArts:e.target.value})
                  item:this.props.datos})
         }
      
+    }
+    }else{
+        alert("insumoBloqueado")
     }
    
     
@@ -589,13 +644,13 @@ return (
              <div className="Artic100Fpago">
 
                 
-         <span className='FlexCenter'> <div type="number" name="Cantidad" className={` inputCustom `}  >{parseFloat(this.props.datos.cantidad[0]).toFixed(0)}</div> </span>
+         <span className='FlexCenter'> <div type="number" name="Cantidad" className={` inputCustom `}  >{parseFloat(this.props.datos.cantidad[0]).toFixed(2)}</div> </span>
    
         
              </div> 
              <div className="Artic100Fpago">
          <span className='FlexCenter'> $ <div type="number" name="Precio_Compra" className={` inputCustom ${precioErr}`}>{
-            this.testPrecioUni().toFixed(2)   }</div></span>
+            parseFloat(this.props.datos.precioUnitario[0]).toFixed(2)   }</div></span>
     
         
              </div>     
@@ -603,11 +658,10 @@ return (
          <span className='FlexCenter'> $ <div type="number" name="PrecioTotal" className={` inputCustom ${precioErr}`}>{
          
          
-         (parseFloat(this.props.datos.cantidad[0])
-         *
-    (       this.state.precioFinal )
          
-         ).toFixed(2)
+    (       this.state.precioFinal.toFixed(2) )
+         
+        
          
          
          }</div></span>

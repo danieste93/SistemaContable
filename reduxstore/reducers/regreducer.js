@@ -8,6 +8,8 @@ import {
     UPDATE_CLIENT,
     ADD_REGS,
     ADD_REGS_DELETE,
+    ADD_COMPRAS,
+    ADD_VENTAS,
     ADD_CAT,
     ADD_CLIENT,
     ADD_TIPE,
@@ -416,6 +418,28 @@ let misregs = state.Regs?state.Regs:[]
   
           return {
             ...state, Regs
+              
+          };
+          case   ADD_COMPRAS:
+  
+let misCompras = state.Compras?state.Compras:[]
+
+        let ComprasGen = misCompras.concat(action.payload.compras)
+       
+  
+          return {
+            ...state, Compras:ComprasGen
+              
+          };
+          case   ADD_VENTAS:
+  
+let misVentas = state.Ventas?state.Ventas:[]
+
+        let VentasGen = misVentas.concat(action.payload.ventas)
+       
+  
+          return {
+            ...state, Ventas:VentasGen
               
           };
           case   ADD_PUBLICACION:

@@ -1,10 +1,12 @@
 import React, { Component } from 'react'
 import fetchData from './funciones/fetchdata';
 import {connect} from 'react-redux';
+import Router from "next/router"
 import ModalTerminos from "./modal-terminoseliminarRegs"
 import { Animate } from 'react-animate-mount/lib/Animate';
 import { Button, Checkbox, FormControlLabel, Typography, Box } from '@material-ui/core';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import { logOut } from '../reduxstore/actions/myact'; 
 class InfoClean extends Component {
    state ={
     Years:{},
@@ -12,12 +14,20 @@ class InfoClean extends Component {
     showdata:false,
     selectYear:0,
     loading:false,
+    loading2:false,
     modalTerminos:false,
      aceptado: false
    }
   handleCheckboxChange = (event) => {
     this.setState({ aceptado: event.target.checked });
   };
+   logOut=()=>{
+  
+      this.props.dispatch(logOut())
+      Router.push("/ingreso")
+      localStorage.clear()
+    
+      }
    async componentDidMount (){
       setTimeout(function(){ 
         
@@ -80,13 +90,44 @@ class InfoClean extends Component {
   window.URL.revokeObjectURL(url);
   this.setState({ loading:false, showdata:true });
 };
+      sendDelete = async () => {
+  this.setState({ loading2:true, });
 
+  const response = await fetch(
+    "/public/deleteDataYearRegs",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+ 'x-access-token': this.props.state.userReducer.update.usuario.token,
+       
+        // Agrega tu token si usas auth
+      },
+      body: JSON.stringify({
+        datos:  this.state.selectYear ,
+        User: this.props.state.userReducer.update.usuario, // o el objeto necesario para DBname
+      }),
+    }
+  );
+
+  if (response.status == "error") {
+    alert("Error eliminadoDatos");
+    return;
+  }else{
+  alert("Se necesita relogear");
+this.logOut()
+  }
+
+
+
+
+};
         
       
 
     render () {
 const { Years, aceptado } = this.state;
-   console.log(this.state)
+  
         return ( 
 
          <div >
@@ -168,8 +209,10 @@ Liberar espacio de su Base de Datos
 </div>
     
 
-        <Button 
-        onClick={()=>{this.Onsalida()}}
+        
+        <Animate show={!this.state.loading2}>
+       <Button 
+        onClick={()=>{this.sendDelete()}}
           variant="contained"
           color="secondary"
           disabled={!aceptado}
@@ -186,6 +229,12 @@ Liberar espacio de su Base de Datos
         >
           Borrar
         </Button>
+      </Animate>
+
+             <Animate show={this.state.loading2}>
+        <div className='centrar' style={{marginTop:"20px"}}>   <CircularProgress/></div>
+       
+      </Animate>
       </Box>
 </div>
 </Animate>

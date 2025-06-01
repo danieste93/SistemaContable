@@ -651,6 +651,7 @@ CalcRegsCuentas=(cuentas)=>{
   cuentas.forEach(cuenta => {
     let registros  = this.props.regC.Regs.filter(x => x.CuentaSelec.idCuenta === cuenta._id   )
     let transregister  = this.props.regC.Regs.filter(x => x.Accion === "Trans" )
+    console.log(transregister)
     let Ingregister  = registros.filter(x => x.Accion === "Ingreso" )
     let Gasregister  = registros.filter(x => x.Accion === "Gasto"  )
     let Transregister  = transregister.filter(x => x.CuentaSelec.idCuenta === cuenta._id || x.CuentaSelec2.idCuenta === cuenta._id )

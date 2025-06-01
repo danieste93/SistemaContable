@@ -249,6 +249,12 @@ let getUser = await UserModelSass.create([{
   iDcuenta: 9999998,
   Descrip: "",
   Permisos:["administrador"],
+    Background: {
+      Seleccionado: "Solido",
+      urlBackGround: "/fondoscuentas/amex1.png",
+      colorPicked: "#3c8ae0"
+    }
+  ,
                             }
   
 ], opts2);
@@ -964,6 +970,7 @@ if(bcrypt.compareSync(pass, UsuarioFind[0].Password)) {
   },
 
   resetpassword: async function (req, res, next){
+    console.log(req.body)
     let MainConn = await mongoose.connection.useDb("datashop");  
     let UserModelSass = await MainConn.model('usuarios', UserSchema);
 
@@ -1005,7 +1012,7 @@ today.setSeconds(today.getSeconds() + 600);
       let subjectsting = `Solicitud de reinicio de contraseña en Contaluxe`;
      
       let deplytextsting =
-      `<p>Se solicito reiniciar su contraseña</p> <p>Si usted lo realizo ingrese al sigiente  <a href="https://www.contaluxe.com/usuarios/reset/${token}">ENLACE</a></p>`
+      `<p>Se solicito reiniciar su contraseña</p> <p>Si usted lo realizo ingrese al sigiente  <a href="https://www.activos.ec/usuarios/reset/${token}">ENLACE</a></p>`
         
       let textsting =
       `<p>Se solicito reiniciar su contraseña</p> <p>Si usted lo realizo ingrese al sigiente  <a href="http://localhost:3000/usuarios/reset/${token}">ENLACE</a></p>`

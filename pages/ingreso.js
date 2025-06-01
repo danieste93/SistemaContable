@@ -132,7 +132,7 @@ ValidatorForm.addValidationRule('minimo6', (value) => {
           
 registroFuncion=(e)=>{
 
-console.log(this.state)
+
 
   if(this.state.loading == false){
   
@@ -463,6 +463,10 @@ type="text"
 validators={['requerido']}
 errorMessages={['Escribe tu usuario'] }
 value={this.state.usuarioReg}
+ style={{
+    backgroundColor:  '#ffffff9e', 
+    borderRadius:"15px"
+  }}
 />
 </div>
 <div className="jcustomInputRegis">
@@ -512,6 +516,10 @@ type="password"
 validators={["requerido", "minimo6"]}
 errorMessages={['Escribe una contraseña válida', "Mínimo 6 caracteres"]}
 value={this.state.passReg} 
+ style={{
+    backgroundColor:  '#ffffff9e', 
+    borderRadius:"15px"
+  }}
 />
 </div>
 <div className="jcustomInputRegis">
@@ -528,6 +536,10 @@ type="password"
 validators={["requerido", "minimo6"]}
 errorMessages={['Escribe una contraseña válida', "Mínimo 6 caracteres"]}
 value={this.state.passReg2} 
+ style={{
+    backgroundColor:  '#ffffff9e', 
+    borderRadius:"15px"
+  }}
 />
 </div>
 

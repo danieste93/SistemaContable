@@ -38,6 +38,8 @@ export const UPDATE_REP_ADDREPS = 'UPDATE_REP_ADDREPS';
 
 export const ADD_REGS = 'ADD_REGS';
 export const ADD_REGS_DELETE = 'ADD_REGS_DELETE';
+export const ADD_VENTAS = 'ADD_VENTAS';
+export const ADD_COMPRAS = 'ADD_COMPRAS';
 export const ADD_CAT = 'ADD_CAT';
 export const ADD_VENTA = 'ADD_VENTA';
 export const ADD_ART = 'ADD_ART';
@@ -155,7 +157,14 @@ export const addRegs = registros => ({
   type: ADD_REGS,
   payload: { registros }
 });
-
+export const addCompras = compras => ({
+  type: ADD_COMPRAS,
+  payload: { compras }
+});
+export const addVentas = ventas => ({
+  type: ADD_VENTAS,
+  payload: { ventas }
+});
 
 export const addFirstRegsDelete = regs => ({
   type: ADD_FIRST_REGS_DELETE,

@@ -781,7 +781,7 @@ align-items: center;
                       justify-content: flex-end;
                       flex-flow: column;
                     }
-             .contenedorArticulos{
+             .contenedorArticulos-editArt{
               overflow-x: scroll;
               min-height: 235px;
               background: #ffffff7a;
@@ -1822,7 +1822,7 @@ shopping_cart
     align-items: center;
                   }
 
-             .contenedorArticulos{
+             .contenedorArticulos-editArt{
               overflow-x: scroll;
               min-height: 235px;
               background: #ffffff7a;

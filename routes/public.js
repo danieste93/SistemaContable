@@ -54,6 +54,7 @@ router.post('/solicitudllamada', MailerControl.newsolicitudllamada);
 
 router.post('/findYearRegs',Authentication, AdminControl.findYearRegs);
 router.post('/findDataYearRegs',Authentication, AdminControl.findDataYearRegs);
+router.post('/deleteDataYearRegs',Authentication, AdminControl.deleteDataYearRegs);
 
 
 

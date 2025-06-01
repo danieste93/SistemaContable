@@ -3533,8 +3533,8 @@ let articulosPorActualizar = sinInsumos.filter(x => x.itemSelected && x.itemSele
         for(let x = 0;x<articulosPorCrear.length;x++){
           
     
-          let impuesto = parseFloat(sinInsumos[x].impuestos[0].impuesto[0].tarifa[0]) 
-          let conImpuesto = parseFloat(sinInsumos[x].precioUnitario[0]) * parseFloat(`1.${impuesto }`)
+          let impuesto = parseFloat(articulosPorCrear[x].impuestos[0].impuesto[0].tarifa[0]) 
+          let conImpuesto = parseFloat(articulosPorCrear[x].precioUnitario[0]) * parseFloat(`1.${impuesto }`)
           let precioUnitario = parseFloat(conImpuesto.toFixed(2))
         
 
@@ -3591,7 +3591,7 @@ articulosPorCrear[x].iva == false? false:false
             Existencia:existencias,
             Calidad:"",
             Color:"",
-            Precio_Compra:parseFloat(Precio_Compra),
+            Precio_Compra:precioUnitario,
             Precio_Venta:articulosPorCrear[x].precioVenta,
             Precio_Alt:articulosPorCrear[x].precioVenta - (articulosPorCrear[x].precioVenta *0.20),
            
@@ -3600,7 +3600,7 @@ articulosPorCrear[x].iva == false? false:false
             Imagen:"",
             Medida:"Unidad",
             Tipo:"Producto",
-            Precio_Compra: parseFloat(Precio_Compra),
+          
             CantidadCompra: parseFloat(articulosPorCrear[x].cantidad[0]),
             PrecioCompraTotal:Precio_Compra*existencias,
             Caduca:caducable,
@@ -3798,11 +3798,13 @@ let Compra = await ComprasModelSass.create([datacompra], {new:true, session})
 
 
 let adicionador  = Counterx[0].ContRegs + counterRegs
-  let updatecounter = { $inc: { ContCompras: 1, }, 
+  let updatecounter = { 
                        ContRegs:adicionador + 1,
                        
-                       $inc: { ContArticulos: articulosCrear, }, 
-                           
+                       $inc: { ContArticulos: articulosCrear,
+                                ContCompras: 1,
+                        }, 
+                          
                                }
   await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session} )
  
@@ -4926,8 +4928,64 @@ catch(error){
   }
 }
 
+async function deleteDataYearRegs(req, res) {
 
+  const year = parseFloat(req.body.datos);
+  console.log(req.body)
+    console.log("deleRegss")
+    const session = await mongoose.startSession();  
+     session.startTransaction();
+   try {
+    let conn = await mongoose.connection.useDb(req.body.User.user.DBname);
+    const RegModelSass = await conn.model('Reg', regSchema);
+    const ComprasModelSass = await conn.model('Compras', ComprasShema);
+    const VentaModelSass = await conn.model('Venta', ventasSchema);
+    const RegModelSassDelete = await conn.model('RegDelete', regSchemaDelete);
 
+let tiempoIni = new Date(`${year}-01-01T05:00:00.000Z`).setHours(0,0,0,0);
+let tiempoFin = new Date(`${year}-12-31T05:00:00.000Z`).setHours(23,59,59,999);
+
+console.log("Tiempo inicial:", tiempoIni, "-", new Date(tiempoIni).toLocaleString());
+console.log("Tiempo final:", tiempoFin, "-", new Date(tiempoFin).toLocaleString());
+
+ await RegModelSass.deleteMany({
+  $and: [
+    { Tiempo: { $gte: tiempoIni } },
+    { Tiempo: { $lte: tiempoFin } },
+  ]
+});
+
+ await ComprasModelSass.deleteMany({
+  $and: [
+    { Tiempo: { $gte: tiempoIni } },
+    { Tiempo: { $lte: tiempoFin } },
+  ]
+});
+
+ await VentaModelSass.deleteMany({
+  $and: [
+    { Tiempo: { $gte: tiempoIni } },
+    { Tiempo: { $lte: tiempoFin } },
+  ]
+});
+
+ await RegModelSassDelete.deleteMany({
+  $and: [
+    { Tiempo: { $gte: tiempoIni } },
+    { Tiempo: { $lte: tiempoFin } },
+  ]
+});
+  await session.commitTransaction();
+  session.endSession();
+
+   res.status(200).send({status:"Ok",message:"eliminados exitozamente", })
+ } catch (err) {
+   await session.abortTransaction();
+                  session.endSession();
+    console.error("Error al elimiarregistros:", err);
+    res.status(500).json({ status: "error", error: "Error al eliminar registros" });
+  }
+ }
 async function findDataYearRegs(req, res) {
 
   const year = req.body.datos.year;
@@ -4952,6 +5010,9 @@ let registros = await RegModelSass.find({
     { Tiempo: { $lte: tiempoFin } },
   ]
 });
+registros.forEach(reg => {
+  reg.Estado = false;
+});
 
 let compras = await ComprasModelSass.find({
   $and: [
@@ -4973,7 +5034,10 @@ let registrosEliminados = await RegModelSassDelete.find({
     { Tiempo: { $lte: tiempoFin } },
   ]
 });
-console.log(registros)
+registrosEliminados.forEach(reg => {
+  reg.Estado = false;
+});
+
     // Crear libro de Excel
     const workbook = new ExcelJS.Workbook();
 
@@ -4990,8 +5054,26 @@ console.log(registros)
     for (const sheet of sheets) {
       const ws = workbook.addWorksheet(sheet.name);
       if (sheet.data.length > 0) {
-        ws.columns = Object.keys(sheet.data[0]._doc).map(key => ({ header: key, key }));
-        sheet.data.forEach(d => ws.addRow(d._doc));
+       // Unir todas las claves únicas de los objetos
+const allKeys = new Set();
+sheet.data.forEach(d => {
+  const obj = d._doc || d;
+  Object.keys(obj).forEach(key => allKeys.add(key));
+});
+
+// Crear columnas con todas las claves encontradas
+ws.columns = Array.from(allKeys).map(key => ({ header: key, key }));
+
+// Agregar las filas, usando solo las claves válidas
+sheet.data.forEach(d => {
+  const obj = d._doc || d;
+  const row = {};
+  allKeys.forEach(key => {
+    row[key] = obj[key] ?? ''; // vacío si no existe esa propiedad
+  });
+  ws.addRow(row);
+});
+
       } else {
         ws.addRow(['Sin datos']);
       }
@@ -5029,4 +5111,4 @@ console.log(registros)
 
 
 
-module.exports = {findDataYearRegs,findYearRegs, editarPrecioCompra, getDbuserData,getAllClients, deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,updateUser, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };
+module.exports = {deleteDataYearRegs,findDataYearRegs,findYearRegs, editarPrecioCompra, getDbuserData,getAllClients, deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,updateUser, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };

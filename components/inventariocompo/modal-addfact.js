@@ -4,6 +4,8 @@ import MuiAlert from '@material-ui/lab/Alert';
 import Autosuggestjw from '../suggesters/jwsuggest-autorender';
 import DropFileInput from "../drop-file-input/DropFileInputp12"
 import Xml2js from 'xml2js';
+import moment from "moment";
+import "moment/locale/es";
 import ListCompraFact from "./listCompra2RenderFact";
 import Animate from 'react-animate-mount/lib/Animate';
 import {connect} from 'react-redux';
@@ -254,7 +256,7 @@ if(response.articulosCreados.length > 0)
               };
           
               for (const key in obj) {
-                console.log(key)
+             
                   if (key === "comprobante" && Array.isArray(obj[key]) && obj[key].length > 0) {
                       resultado.comprobante = obj[key][0]; // Toma el primer comprobante
                   }
@@ -317,14 +319,51 @@ if(response.articulosCreados.length > 0)
                   console.log(xml)
      // Verificación del RUC del comprador
      let estructuraXml = {fechaAutorizacion:[getData.fechaAutorizacion],numeroAutorizacion:[getData.numeroAutorizacion]}
-
+if(xml.factura){
      if (xml.factura.infoFactura[0].identificacionComprador[0] != this.props.state.userReducer.update.usuario.user.Factura.ruc) {
        this.setState({ prevent1: true, preventData1: xml, preventxmlData:estructuraXml  });
      } else {
        this.setState({ xmlData: estructuraXml, Comprobante: xml });
      }
+     }else if(xml.comprobanteRetencion){
+         let add = {
+                  Estado: true,
+                  Tipo: "warning",
+                  Mensaje: "Archivo .XML incompatible, es un COMPROBANTE DE RETENCION"
+                };
+                this.setState({ Alert: add });
+     }else{
+         let add = {
+                  Estado: true,
+                  Tipo: "error",
+                  Mensaje: "Archivo .XML incompatible"
+                };
+                this.setState({ Alert: add });
+     }
                 });
-              } else {
+              } 
+              else if(result.factura){
+const fechaStr  = result.factura.infoFactura[0].fechaEmision[0]; // 
+
+const momentFecha = moment(fechaStr, "DD/MM/YYYY", true);
+
+// ✔️ Obtener un objeto `Date`
+const fechaDate = momentFecha.toDate();
+
+
+
+let estructuraXml = {fechaAutorizacion:[fechaDate],numeroAutorizacion:["Revisar"]}
+if(result.factura){
+     if (result.factura.infoFactura[0].identificacionComprador[0] != this.props.state.userReducer.update.usuario.user.Factura.ruc) {
+       this.setState({ prevent1: true, preventData1: result, preventxmlData:estructuraXml  });
+     } else {
+       this.setState({ xmlData: estructuraXml, Comprobante: result });
+     }
+     }
+
+              }
+              
+              else {
                 // Si no encuentra comprobante, muestra un mensaje de error
                 let add = {
                   Estado: true,

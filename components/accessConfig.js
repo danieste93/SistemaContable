@@ -12,6 +12,7 @@ import Email from "./modal-CorreoConfig"
 import fetchData from './funciones/fetchdata';
 import DatabaseUsageBar from './cuentascompo/SubCompos/dataBarUsage';
 import InfoClean from './modal-infoClean';
+import UploadData from "./modal-uploaddata"
 
  class accessPuntoVenta extends Component {
  
@@ -23,6 +24,7 @@ import InfoClean from './modal-infoClean';
       ElectroFact:false,
       infoClean:false,
       Trabajadores:false,
+      uploadData:false,
       Email:false,
       docsSize:{
         storage:0,
@@ -131,6 +133,12 @@ cloud_download_icon
 </span>
 <p> Descargar Información</p>
  </div>
+      <div className='donwload' onClick={()=>{this.setState({uploadData:true})}}>
+  <span className="material-icons" style={{width:"40px", fontSize:"25px"}}>
+publish_icon
+</span>
+<p> Subir Información</p>
+ </div>
     </div>
    
     </div>
@@ -153,6 +161,10 @@ cloud_download_icon
 
   <Animate show={this.state.infoClean}>
   <InfoClean Flecharetro ={()=>this.setState({infoClean:false})} />
+  </Animate>
+
+    <Animate show={this.state.uploadData}>
+  <UploadData Flecharetro ={()=>this.setState({uploadData:false})} />
   </Animate>
  
 
@@ -206,7 +218,7 @@ cloud_download_icon
     justify-content: center;
     align-items: center;
     width: 60%;
-    margin: auto;
+    margin: 5px auto;
     cursor:pointer;
     border-radius: 10px;
     padding: 5px;
