@@ -6,7 +6,8 @@ import {connect} from 'react-redux';
 import Cat from "../../components/cuentascompo/modalcategorias"
 import Addcat from '../cuentascompo/modal-addcat';
 import Edditcat from '../cuentascompo/modal-editcat';
-import Autosuggestjw from '../suggesters/jwsuggest-autorender';
+
+import BuscarArt from "./modal-buscarart";
 import ModalComprobacionGeneral from './usefull/modal-comprobacion-general';
 import ModalCategoriasArticulos from './modalCategoriasArticulos';
 class ListVenta extends Component {
@@ -174,9 +175,9 @@ this.setState({tituloArts:e.target.value})
 
             let impuesto = parseFloat(this.props.datos.impuestos[0].impuesto[0].tarifa[0]) 
             let conImpuesto = parseFloat(this.props.datos.precioTotalSinImpuesto[0]) * parseFloat(`1.${impuesto }`)
-                   let precioUnitario = parseFloat(conImpuesto)
+                   let precioUnitario = parseFloat(conImpuesto).toFixed(2)
 
-                   return precioUnitario
+                   return parseFloat(precioUnitario)
          
 
  }
@@ -334,11 +335,7 @@ this.setState({tituloArts:e.target.value})
    
  
    }
-      getSugerencias=()=>{
-        let data = this.props.state.RegContableReducer.Articulos?this.props.state.RegContableReducer.Articulos.filter(x=> x.Tipo != "Servicio" && x.Tipo != "Combo" ):""
-  
-return (data)
-       }
+      
     
     ComprobadorTipoArt=(cantidadErr)=>{
         
@@ -581,10 +578,7 @@ item})
                 itemSelected:e,
                 item:this.props.datos})  
             }
-            resetArtData=()=>{
-   
-                
-            }
+          
             deleteItem=()=>{
                     this.setState({artSelected:"", itemSelected:null})
                     this.props.sendErrace({
@@ -784,11 +778,7 @@ send
 
 </div>
         </Animate>
-        <Animate show={this.state.selectItem}>
-
-        <Autosuggestjw  sendClick={(e)=>{this.SelectArt(e)}} getvalue={(item)=>{console.log("")}} 
-        sugerencias={this.getSugerencias()} resetData={this.resetArtData}   /> 
-        </Animate>
+      
         <Animate show={this.state.modalCat}>
         <Cat 
          Addcat={()=>{this.setState({Addcat:true})}}
@@ -897,6 +887,15 @@ send
                                 
                                 />
                                 </Animate> 
+
+                                  <Animate show={this.state.selectItem}>
+<BuscarArt
+setArt={(e)=>{this.SelectArt(e)}}
+    Flecharetro={()=>{this.setState({selectItem:false})}}
+Articulos={this.props.state.RegContableReducer.Articulos
+  }
+/>
+           </Animate>
         </div>
     <style>
         {`.MuiFormControlLabel-root{

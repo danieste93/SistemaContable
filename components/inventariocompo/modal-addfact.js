@@ -91,11 +91,24 @@ class Contacto extends Component {
         
               var url = '/public/generate-factcompra';
               let newstate = this.state
+            let Deta = newstate.Comprobante.factura.detalles[0].detalle
+              
+const totalSumaItems = Deta.reduce((sum, item) => sum + item.precioFinal, 0);
+console.log(totalSumaItems)
+let diferencia = parseFloat((totalSumaItems - parseFloat(TotalValorCompra)).toFixed(2))
+console.log(diferencia)
+if(diferencia>0){
+  Deta[0].precioFinal =  Deta[0].precioFinal - diferencia
+}else if(diferencia<0)
+  {
+  Deta[0].precioFinal =  Deta[0].precioFinal + Math.abs(diferencia)
+}
+
               newstate.TotalValorCompra = parseFloat(TotalValorCompra).toFixed(2)
               newstate.TotalPago = parseFloat(TotalPago).toFixed(2)
               newstate.Userdata ={DBname:this.props.state.userReducer.update.usuario.user.DBname}
               newstate.fecha = this.state.xmlData.fechaAutorizacion[0]
-           console.log(newstate)
+          
              var lol = JSON.stringify(newstate)
              fetch(url, {
               method: 'POST', // or 'PUT'
@@ -494,8 +507,7 @@ console.log(data.tituloArts)
       let now  = new Date()
       if(this.state.xmlData !== ""){
        now = new Date(this.state.xmlData.fechaAutorizacion[0])
-       console.log("enxml")
-       console.log(now)
+       
       }
  
      

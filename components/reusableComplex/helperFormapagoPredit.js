@@ -63,34 +63,28 @@ class HelperFormapago extends Component {
               });
 
 
-              if(this.props.state.RegContableReducer.Distribuidores){
-                let distrifind = this.props.state.RegContableReducer.Distribuidores.filter(
-                  x=>x.Usuario == this.props.preData.infoTributaria[0].nombreComercial[0]
-                  )
 
-                  if(distrifind.length > 0){
-                    //console.log(distrifind)
-                  }else{
-                    this.setState({
-                 Ruc:this.props.preData.infoTributaria[0].ruc[0],
-        usuario:this.props.preData.infoTributaria[0].nombreComercial[0],
-        direccion:this.props.preData.infoTributaria[0].dirMatriz[0] ,
-                    })
-                    setTimeout(()=>{this.props.setuserData(this.state)})
+  const info = this.props.preData.infoTributaria?.[0] || {};
 
-                  }
-              }else{
-                this.setState({
-             Ruc:this.props.preData.infoTributaria[0].ruc[0],
-    usuario:this.props.preData.infoTributaria[0].nombreComercial[0],
-    direccion:this.props.preData.infoTributaria[0].dirMatriz[0] ,
-                })
-                setTimeout(()=>{this.props.setuserData(this.state)})
-              }
+this.setState({
+  Ruc: info.ruc?.[0] || '',
+  usuario: info.nombreComercial?.[0] || info.razonSocial?.[0] || '',
+  direccion: info.dirMatriz?.[0] || '',
+});
 
-        }
+this.props.setuserData({
+  ...this.state,
+  Ruc: info.ruc?.[0] || '',
+  usuario: info.nombreComercial?.[0] || info.razonSocial?.[0] || '',
+  direccion: info.dirMatriz?.[0] || '',
+});
 
-  addNewUser=()=>{
+                  
+
+
+}
+              addNewUser=()=>{
+              
         this.setState({readOnly:false, adduser:true, distriDisplay:true})
     }
 

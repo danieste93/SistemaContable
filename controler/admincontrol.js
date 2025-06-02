@@ -3430,9 +3430,8 @@ async function  generateFactCompra(req, res){
     if(insumos.length > 0){
    
       for(let x = 0;x<insumos.length;x++){
-        let catInsumo=  await CatModelSass.find({idCat:insumos[x].categoria.idCat}, null,{session, new:true} )
-        const fixedImport= new mongoose.Types.Decimal128(insumos[x].precioFinal.toFixed(2))
- 
+       const fixedImport= new mongoose.Types.Decimal128(JSON.stringify(insumos[x].precioFinal))
+       valorInsumos += insumos[x].precioFinal
         let impuesto = parseFloat(insumos[x].impuestos[0].impuesto[0].tarifa[0]) 
 
         let conImpuesto = parseFloat(insumos[x].impuestos[0].impuesto[0].baseImponible[0]) * parseFloat(`1.${impuesto }`)
@@ -3482,11 +3481,11 @@ async function  generateFactCompra(req, res){
                        nombreCuenta: req.body.Fpago[0].Cuenta.NombreC,
            },
         
-          CatSelect:{idCat:catInsumo[0].idCat,
-                        urlIcono:catInsumo[0].urlIcono,
-                        nombreCat:catInsumo[0].nombreCat,
-                        subCatSelect:catInsumo[0].subCatSelect,
-                        _id:catInsumo[0]._id,
+          CatSelect:{idCat:insumos[x].categoria.idCat,
+                        urlIcono:insumos[x].categoria.urlIcono,
+                        nombreCat:insumos[x].categoria.nombreCat,
+                        subCatSelect:insumos[x].subcategoria,
+                        _id:insumos[x].categoria._id,
                       },
                     Nota:"Insumo Facturado en la Compra N° "+Counterx[0].ContCompras ,
         
@@ -3521,7 +3520,7 @@ async function  generateFactCompra(req, res){
    
     }
     if(sinInsumos.length > 0){
-console.log(sinInsumos)
+
   let articulosPorCrear = sinInsumos.filter(x => x.itemSelected == null);
 let articulosPorActualizar = sinInsumos.filter(x => x.itemSelected && x.itemSelected._id);
       
@@ -3584,7 +3583,7 @@ articulosPorCrear[x].iva == false? false:false
             Diid:newid,
             Grupo:"",
             Categoria:articulosPorCrear[x].categoria,
-            Subcategoria:articulosPorCrear[x].subcategoria,
+            SubCategoria:articulosPorCrear[x].subcategoria,
             Departamento:"",
             Titulo:articulosPorCrear[x].descripcion[0],
             Marca:"",
@@ -3659,6 +3658,7 @@ console.log("en actualizador")
 let artupdate = await ArticuloModelSass.findByIdAndUpdate(art._id,updateAS,{ session, new:true} )
 
 if(artupdate == null ){
+  
   throw new Error("Articulo no modificado, vuelva intentar en unos minutos")
 }
 valorInventario += nData.precioFinal
@@ -3670,7 +3670,7 @@ articulosActualizados.push(artupdate)
 
     
 
-    const fixedImport= new mongoose.Types.Decimal128(req.body.Fpago[0].Cantidad)
+    const fixedImport= new mongoose.Types.Decimal128(valorInventario.toFixed(2))
 
  
     let valornegativo = fixedImport  * (-1)            
@@ -3765,6 +3765,16 @@ arrCuentas.push(cuenta2)
 
     }
 
+    let sumaTotalItems = valorInventario + valorInsumos
+
+ if(parseFloat(req.body.TotalPago) != sumaTotalItems){
+console.log(parseFloat(req.body.TotalPago))
+console.log(parseFloat(sumaTotalItems))
+
+throw new Error("la suma de los items no corresponde al total")
+}   
+
+
 
  let   datacompra ={
   arrRegs:arrRegs.map(x=>x._id),
@@ -3820,7 +3830,7 @@ let adicionador  = Counterx[0].ContRegs + counterRegs
     await session.abortTransaction();
     session.endSession();
     console.log(error, "errr")
-    return res.json({status: "Error", message: "error al registrar", error,regs:req.body });
+    return res.json({status: "Error", message: "error al registrar", error });
   }
 
   
@@ -4376,7 +4386,7 @@ res.status(200).send({message:"Iconos Actualizados", updadatedIcons })
             }
             async function sendSearch(req, res){
           
-            
+            console.log(req.body)
                 let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
                 let RegModelSass = await conn.model('Reg', regSchema);
                 const removeAccents = (str) => {
@@ -4450,10 +4460,14 @@ res.status(200).send({message:"Iconos Actualizados", updadatedIcons })
                 if (req.body.TiempoFilter != "") {  
                   let tiempoIni 
                   let tiempoFin 
-                  if(req.body.TiempoFilter == "Día"){
-                   tiempoIni = new Date(req.body.tiempo).setHours(0,0,0,0).getTime();
-                    tiempoFin =new Date(req.body.tiempo).setHours(23,59,59,999).getTime();
-
+                  if(req.body.TiempoFilter == "Dia"){
+                    let datePeriodIni = new Date(req.body.tiempo);
+                    datePeriodIni.setHours(0, 0, 0, 0); // establece hora local en 00:00:00.000
+                    tiempoIni= datePeriodIni.getTime();
+                    let datePeriodFin = new Date(req.body.tiempo);
+                    datePeriodFin.setHours(23,59,59,999); // establece hora local en 00:00:00.000
+                    tiempoFin= datePeriodFin.getTime();
+                 
                   }
                   else if(req.body.TiempoFilter == "Mes"){
                     fecha = new Date(req.body.tiempo)
@@ -4465,9 +4479,15 @@ res.status(200).send({message:"Iconos Actualizados", updadatedIcons })
                    }
 
                    else if(req.body.TiempoFilter == "Periodo"){
-                    tiempoIni = new Date(req.body.tiempoperiodoini).setHours(0,0,0,0).getTime();
-                     tiempoFin =new Date(req.body.tiempoperiodofin).setHours(23,59,59,999).getTime()
- 
+let datePeriodIni = new Date(req.body.tiempo);
+datePeriodIni.setHours(0, 0, 0, 0); // establece hora local en 00:00:00.000
+tiempoIni= datePeriodIni.getTime();
+
+let datePeriodFin = new Date(req.body.tiempoperiodofin);
+datePeriodFin.setHours(0, 0, 0, 0); // establece hora local en 00:00:00.000
+tiempoFin= datePeriodFin.getTime();
+
+                    
                    }
           
                    condicionesAnd.push({Tiempo: {$gte : tiempoIni}});

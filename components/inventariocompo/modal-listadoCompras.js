@@ -594,7 +594,7 @@ let filtrados=[]
 <MuiPickersUtilsProvider libInstance={moment} utils={MomentUtils}>
                <KeyboardDatePicker
           disableToolbar
-          format="D/MM/YYYY"
+          format="DD/MM/YYYY"
           margin="normal"
           id="date-picker-inline"
           label="Fecha de inicio "

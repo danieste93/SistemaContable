@@ -21,7 +21,7 @@ import TransrenderSearcher from './SubCompos/transrenderSearcher';
       regsBackend:[],
       tiempo: new Date(),
       tiempomensual: new Date(),
-      tiempoperiodoini: new Date(),
+    
       tiempoperiodofin: this.periodofin(),
       TiempoFilter:"",
       filters:false,
@@ -292,9 +292,11 @@ getDayName = ()=> {
     }
      handleChangeTiempoPeriodofin=(e)=>{
     
-       this.setState({
-         tiempoperiodofin:e._d
-       })
+          if(e){ 
+            this.setState({
+              tiempoperiodofin:e._d
+            })
+           }
       }
 
 miMinimoFilter=(registros)=>{
