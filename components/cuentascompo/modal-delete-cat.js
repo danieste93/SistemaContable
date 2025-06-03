@@ -197,7 +197,7 @@ this.deleteCat(this.props.catDelete)
    
         
         .maincontacto{
-          z-index: 1299;
+          z-index: 1301;
          width: 100vw;
          height: 100vh;
          background-color: rgba(0, 0, 0, 0.7);

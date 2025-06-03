@@ -6,6 +6,7 @@ import FilledInput from '@material-ui/core/FilledInput';
 import TextField from '@material-ui/core/TextField';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import {connect} from 'react-redux';
+import { CircularProgress } from '@material-ui/core';
 import SelectIcons from "./modal-select-icons"
 import {addcat} from "../../reduxstore/actions/regcont"
 class Contacto extends Component {
@@ -55,7 +56,9 @@ class Contacto extends Component {
         comprobador=()=>{
           if(this.state.loading == false){
             this.setState({loading:true})
-            let vals = {...this.state}
+            let vals = {...this.state,
+nombreCat:this.state.nombreCat.trim()
+            }
             if(this.state.newcat != "" && this.state.newcat != " "&& this.state.newcat != "  "){
               let minicat = this.state.newcat.trim()
               vals.subArr.push(minicat)
@@ -80,8 +83,9 @@ class Contacto extends Component {
         .catch(error => console.error('Error:', error))
         .then(response => {
           console.log('AddCat:', response)
-          if(response.message=="error al registrar"){
-            alert("Error en el sistema, vuelva a intentarlo en unos minutos ")
+          if(response.status=="error"){
+            alert(response.message)
+            this.setState({loading:false})
           }
           else{
           const categoria = response.categoria
@@ -266,10 +270,17 @@ console.log(this.state)
 
            </div>
 
-     
+     <Animate show={!this.state.loading}>
            <div className="jwContCenter">
   <button  onClick={this.comprobador} id="botonadd"  className="botoncontact ">Agregar</button>
 </div>
+</Animate>
+
+     <Animate show={this.state.loading}>
+      <div className='centrar'>
+        <CircularProgress/>
+      </div>
+</Animate>
 </div>
         </div>
     

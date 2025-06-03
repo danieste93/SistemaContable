@@ -1133,6 +1133,24 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
           let Counterx =   await CounterModelSass.find({iDgeneral:9999999})
           let updatee = req.body.valores
        
+ function normalizeText(text) {
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+const allCats = await CatModelSass.find({}, 'nombreCat'); // Solo traemos los nombres
+
+const yaExiste = allCats.some(cat =>
+  normalizeText(cat.nombreCat) === normalizeText(updatee.nombreCat)
+);
+
+if (yaExiste) {
+  return res.send({
+    status: "error",
+    message: "Nombre ya elegido, elija otro nombre para la categoría."
+  });
+}
+
+
           CatModelSass.create({
           tipocat: updatee.tipocat,
           subCategoria: updatee.subArr,
@@ -1141,7 +1159,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
           imagen:updatee.imagenes,
           urlIcono:updatee.urlIcono,
         },async (err, response)=>{
-          if (err)  return res.json({status: "Error", message: "error al registrar", err });
+          if (err)  return res.json({status: "error", message: "error al registrar", err });
           let updatecounter = {   $inc: { ContadorCat: 1}  }
             await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter )
           res.json({status: "Ok", message: "Categoria Creada", categoria:response});
