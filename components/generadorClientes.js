@@ -11,13 +11,14 @@ const exportarClienteExcel = (clientes) => {
   const titulo = `Lista de Clientes - ${fechaActual}`;
 
   // Definir los encabezados en el orden solicitado
-  const headers = ["ID", "Tipo ID", "Usuario", "Email", "Ciudad", "Dirección"];
+  const headers = ["ID", "Tipo ID", "Usuario","Telefono", "Email", "Ciudad", "Dirección"];
 
   // Crear los datos de las filas
   const filas = clientes.map(cliente => [
     cliente.Cedula ?? '',
     cliente.TipoID ?? '',
     cliente.Usuario ?? '',
+      cliente.Telefono ?? '',
     cliente.Email ?? '',
     cliente.Ciudad ?? '',
     cliente.Direccion ?? ''

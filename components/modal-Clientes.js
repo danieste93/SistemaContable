@@ -7,10 +7,11 @@ import {Animate} from "react-animate-mount"
 import {paginationPipe} from "../reduxstore/pipes/paginationFilter";
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 import ClientRender from "./ClienteRenderListView"
+
 import Pagination from "./Pagination";
 import { getClients } from '../reduxstore/actions/regcont';
 import fetchData from './funciones/fetchdata';
-import { CircularProgress } from '@material-ui/core';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import exportarClienteExcel from './generadorClientes';
 class Contacto extends Component {
   state={
@@ -78,7 +79,7 @@ let newstate = this.state
             Tipo:"error",
             Mensaje:"Error en el sistema, porfavor intente en unos minutos"
         }
-        this.setState({Alert: add, loading:false, waiting:false}) 
+        this.setState({Alert: add, loading:false,}) 
         }else{
             
         let add = {
@@ -86,7 +87,7 @@ let newstate = this.state
           Tipo:"success",
           Mensaje:"Clientes Ingresados"
       }
-      this.setState({Alert: add,loading:false, waiting:false})
+      this.setState({Alert: add,loading:false})
       setTimeout(()=>{this.Onsalida()},1000)
 
       
@@ -100,6 +101,28 @@ let newstate = this.state
 
         }
       }
+         onNext = () => {
+        this.setState({
+            ...this.state,
+            currentPage: this.state.currentPage + 1
+        });
+       
+    };
+
+    goPage = (n) => {
+        this.setState({
+            ...this.state,
+            currentPage: n
+        });
+    };
+    onPrev = () => {
+        const updatedState = {...this.state};
+        if(updatedState.currentPage >= 1){
+          updatedState.currentPage = this.state.currentPage - 1;
+          this.setState(updatedState);
+        }
+      
+    };
       obtenerextension = (articulos )=>{
         if(articulos === undefined) return 0
         const numero = articulos.length
@@ -140,7 +163,7 @@ let newstate = this.state
 
                     
                  let oldData = data[i]
-                 console.log(oldData)  
+              
               
 
                      dataAdd.push(oldData)
@@ -345,20 +368,11 @@ send
                     <div className="contBotonPago">
                   
 
-<Animate show={this.state.waiting}>
-<CountdownCircleTimer
-          isPlaying
-          size={190}
-          duration={8}
-          colors={["#A30000","#ffb608","#019ff7","#A6FB4"]}
-          colorsTime={[8,6,4,1]}
-          onComplete={() => ({ shouldRepeat: false, delay:0 })}
-        >
-          {renderTime}
-        </CountdownCircleTimer>
+<Animate show={this.state.loading}>
+<CircularProgress/>
      
    </Animate>
-   <Animate show={this.state.waiting == false}>
+   <Animate show={this.state.loading == false}>
    <button className={` btn btn-success botonedit2 `} onClick={()=>{this.comprobadorMasiveClient()}}>
 <p>Agregar</p>
 <i className="material-icons">
@@ -504,7 +518,7 @@ add
                 border-radius: 10px;
                 max-width: 800px;
                 margin: 8px;
-                width: 100%;
+                width: 90%;
                 height: 40vh;
         }
 

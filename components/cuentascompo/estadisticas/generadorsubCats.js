@@ -368,6 +368,9 @@ let stats = ""
                     this.setState({subCatClick:{}})
                   }else{
                     this.setState({subCatClick:item})
+                    if (catInventario){
+                      this.props.sendSubCat(item)
+                    }
                   }
                
                 
@@ -442,8 +445,8 @@ let stats = ""
         };
 
 let nombreCuenta = ""
-if(this.props.data.length>0){
-    nombreCuenta = this.props.data[0].CatSelect.nombreCat
+if(this.props.catClicked != ""){
+    nombreCuenta = this.props.catClicked
 }
 let setTotal =ingresosTotales
 if(catInventario){

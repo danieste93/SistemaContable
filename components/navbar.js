@@ -106,9 +106,9 @@ import Router from "next/router"
   }
 
   logOut=()=>{
-
-    this.props.dispatch(logOut())
     Router.push("/ingreso")
+    this.props.dispatch(logOut())
+
     localStorage.clear()
   
     }

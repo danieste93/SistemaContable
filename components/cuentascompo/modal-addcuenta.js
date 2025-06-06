@@ -15,6 +15,7 @@ import SelectFondo from "./modal-select-fondo"
 import Router from 'next/router';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import Radio from '@material-ui/core/Radio';
+import { CircularProgress } from '@material-ui/core';
 class ModalAddCuenta extends Component {
    state={
     Alert:{Estado:false},
@@ -54,47 +55,11 @@ class ModalAddCuenta extends Component {
   
        }, 200);
 
-  this.getid()
       
       }
 
     
 
-      getid=()=>{
-        let datos = {User: this.props.state.userReducer.update.usuario.user}
-        let lol = JSON.stringify(datos)
-        var url = '/cuentas/rtyhgf456/getallCounters';
-        
-        fetch(url, {
-          method: 'POST', // or 'PUT'
-          body: lol,
-          headers:{
-            'Content-Type': 'application/json',
-            "x-access-token": this.props.state.userReducer.update.usuario.token
-          }
-        }).then(res => res.json())
-        .catch(error => console.error('Error:', error))
-        .then(response => {
-          console.log('response:', response)
-            if(response.message == "error al decodificar el token"){
-           
-              alert("Session expirada, vuelva a iniciar sesion para continuar");
-                   
-              Router.push("/")
-            }else{
-              this.setState({idReg:response.cont.ContRegs, idCuenta:response.cont.Contmascuenta})
-            }
-      
-       
-        
-        });
-      
-      }
-
-    
-      oncheckboxChange=(e)=>{
-
-      }
 
       handleChangeIncTotal=()=>{
 this.setState({checkedA:!this.state.checkedA})
@@ -221,19 +186,16 @@ else if
   .catch(error => console.error('Error:', error))
   .then(response => {
     console.log( response)
-    if(response.message=="error al registrar"){
-      let add = {
+    if(response.status=="error"){
+            
+               let add = {
         Estado:true,
         Tipo:"error",
-        Mensaje:"Error en el sistema, porfavor intente en unos minutos"
+        Mensaje:response.message
     }
-    this.setState({loading:false, }) 
-    }
-    else if(response.message=="error al decodificar el token"){
-      alert("Session expirada, vuelva a iniciar sesion para continuar");
-      this.props.dispatch(logOut());
-      Router.push("/")
-    }
+    this.setState({loading:false,Alert:add }) 
+            
+          }
     else {
              
               
@@ -562,9 +524,20 @@ const Alert=(props)=> {
               </div>
               </Animate>
      
-           <div className="jwContCenter">
+    
+
+
+     <Animate show={!this.state.loading}>
+               <div className="jwContCenter">
   <button  onClick={this.comprobador} id="botonadd"  className="botoncontact jwPointer ">Agregar</button>
 </div>
+</Animate>
+
+     <Animate show={this.state.loading}>
+      <div className='centrar'>
+        <CircularProgress/>
+      </div>
+</Animate>
 </div>
         </div>
     

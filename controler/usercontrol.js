@@ -84,7 +84,7 @@ let getUser = await UserModelSass.create([{
        Membresia:"Premium"
         }], opts)
 
-         await CatModelSass.create([
+ const categoriasCreadas =  await CatModelSass.create([
   {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], urlIcono:"/iconscuentas/apertura.png", nombreCat:"Apertura", idCat:9999999, sistemCat:true },
   {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], nombreCat:"Sueldo", urlIcono:"/iconscuentas/cash2.png", idCat:1 },
   {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], nombreCat:"Negocios", urlIcono:"/iconscuentas/negocio.png", idCat:2 },
@@ -109,10 +109,10 @@ let getUser = await UserModelSass.create([{
   { _id: new mongoose.Types.ObjectId(),tipocat: "Gasto", subCategoria: [], nombreCat:"Viajes", urlIcono:"/iconscuentas/playa.png", idCat:16 },
   { _id: new mongoose.Types.ObjectId(),tipocat: "Articulo", subCategoria: [], nombreCat:"GENERAL", urlIcono:"/iconscuentas/compra.png", idCat:21, sistemCat:true },
   {_id: new mongoose.Types.ObjectId(), tipocat: "Articulo", subCategoria: [], nombreCat:"PANTALLA", urlIcono:"/iconscuentas/celular.png", idCat:22 }
-], opts2);
+], opts);
 
-  
- await CuentasModelSass.create([
+  const catApertura = categoriasCreadas.find(cat => cat.nombreCat === "Apertura");
+let cuentasCreadas = await CuentasModelSass.create([
   {_id: new mongoose.Types.ObjectId(),
     CheckedA: true,
     CheckedP: true,
@@ -257,7 +257,41 @@ let getUser = await UserModelSass.create([{
   ,
                             }
   
-], opts2);
+], opts);
+
+const registrosApertura = cuentasCreadas.map((cuenta, index) => {
+  return {
+    Accion: "Ingreso",
+    Tiempo: new Date().getTime(),
+    TiempoEjecucion: new Date().getTime(),
+    IdRegistro: 1 + index, // Asegúrate de que no se repitan
+    CuentaSelec: {
+      idCuenta: cuenta._id,
+      nombreCuenta: cuenta.NombreC,
+    },
+    CatSelect: {
+      idCat: catApertura.idCat,
+      urlIcono: catApertura.urlIcono,
+      nombreCat: catApertura.nombreCat,
+      subCatSelect: [],
+      _id: catApertura._id
+    },
+    Descripcion: "",
+    Importe: 0, // o el valor que quieras asignar en apertura
+    Nota: "",
+    Usuario: {
+   Nombre:"Sistema",
+    Id:"999999",
+    Tipo:"Sistema",
+    },
+    FormaPago: [],
+    LimiteCredito: 0
+  };
+});
+
+// Crear todos los registros de apertura en una sola operación
+await RegModelSass.insertMany(registrosApertura, { session });
+
 
 
  await CounterModelSass.create([
@@ -266,7 +300,7 @@ let getUser = await UserModelSass.create([{
     ContadorCat: 30,
     ContadorRep: 1,
     Contmascuenta: 8,
-    ContRegs: 1,
+    ContRegs: cuentasCreadas.length + 1,
     ContVentas: 1,
     ContCompras: 1,
     ContVendedores: 3,
@@ -296,7 +330,73 @@ let getUser = await UserModelSass.create([{
       "/fondoscuentas/bpro.png"
     ],
     iDgeneral: 9999996
-  }
+  },
+  { _id: new mongoose.Types.ObjectId(), // ✅ nuevo ID
+  Data:[
+    "/iconscuentas/amex.png",
+    "/iconscuentas/visa.png",
+    "/iconscuentas/mastercard.png",
+    "/iconscuentas/bill.png",
+    "/iconscuentas/blockchain.png",
+    "/iconscuentas/cardwallet.png",
+    "/iconscuentas/cash1.png",
+    "/iconscuentas/cash2.png",
+    "/iconscuentas/coins.png",
+    "/iconscuentas/icon.png",
+    "/iconscuentas/moneybox.png",
+    "/iconscuentas/paypal.png",
+    "/iconscuentas/wallet.png",
+    "/iconscuentas/walletcoin.png",
+    "/iconscuentas/venta.png",
+    "/iconscuentas/venta1.png",
+    "/iconscuentas/venta2.png",
+    "/iconscuentas/compra.png",
+    "/iconscuentas/compra1.png",
+    "/iconscuentas/negocio.png",
+    "/iconscuentas/negocios.png",
+    "/iconscuentas/negocios1.png",
+    "/iconscuentas/negocios2.png",
+    "/iconscuentas/tecnologia.png",
+    "/iconscuentas/tecnologia1.png",
+    "/iconscuentas/comida.png",
+    "/iconscuentas/comida1.png",
+    "/iconscuentas/comida2.png",
+    "/iconscuentas/comida3.png",
+    "/iconscuentas/comida4.png",
+    "/iconscuentas/comida5.png",
+    "/iconscuentas/comida6.png",
+    "/iconscuentas/comida7.png",
+    "/iconscuentas/comida8.png",
+    "/iconscuentas/internet.png",
+    "/iconscuentas/internet1.png",
+    "/iconscuentas/agua.png",
+    "/iconscuentas/luz.png",
+    "/iconscuentas/telefono.png",
+    "/iconscuentas/casa.png",
+    "/iconscuentas/mascota.png",
+    "/iconscuentas/mascota1.png",
+    "/iconscuentas/mascota2.png",
+    "/iconscuentas/auto.png",
+    "/iconscuentas/moto.png",
+    "/iconscuentas/gasolina.png",
+    "/iconscuentas/personas.png",
+    "/iconscuentas/personas1.png",
+    "/iconscuentas/personas2.png",
+    "/iconscuentas/playa.png",
+    "/iconscuentas/joyas.png",
+    "/iconscuentas/ropa.png",
+    "/iconscuentas/salud.png",
+    "/iconscuentas/deporte.png",
+    "/iconscuentas/entretenimiento.png",
+    "/iconscuentas/salud1.png",
+    "/iconscuentas/medico.png",
+    "/iconscuentas/pastillas.png",
+    "/iconscuentas/seguridad.png",
+    "/iconscuentas/tabaco.png",
+    "/iconscuentas/unicornio.png"
+  ],
+  iDgeneral:9999997
+ }
 ], opts2);
 
 

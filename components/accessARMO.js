@@ -1073,7 +1073,7 @@ list
     .visualization{
         display: flex;
         width: 100%;
-        
+            height: 40px;
         justify-content: space-around;
     margin: 17px 0px;
     max-width: 800px;

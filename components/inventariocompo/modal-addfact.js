@@ -656,6 +656,9 @@ done
                         <div className="Artic100Fpago ">
                             P.Individual
                         </div>
+                         <div className="Artic100Fpago ">
+                            Descuento
+                        </div>
                         <div className="Artic100Fpago ">
                             P.Total
                         </div>

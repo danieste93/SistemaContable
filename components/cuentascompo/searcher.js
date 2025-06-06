@@ -691,7 +691,9 @@ else{
   let datatosend = JSON.stringify({  
     Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
     Tipo:{DBname:this.props.state.userReducer.update.usuario.user.Tipo}, 
-    ...this.state
+   
+    ...this.state,
+     searcherOut:this.state.searcherOut.trim()
     })
        
  let url = "/public/sendSearch"   

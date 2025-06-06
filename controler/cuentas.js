@@ -862,14 +862,35 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
     let RegModelSass = await conn.model('Reg', regSchema);
       let CounterModelSass = await conn.model('Counter', counterSchema);
       let CatModelSass = await conn.model('Categoria', catSchema);
-  
+    let Counterx =   await CounterModelSass.find({iDgeneral:9999999})
+        
+
+ function normalizeText(text) {
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+const allC = await CuentasModelSass.find({}, 'NombreC'); // Solo traemos los nombres
+
+const yaExiste = allC.some(c =>
+  normalizeText(c.NombreC) === normalizeText(req.body.valores.NombreC,)
+);
+
+if (yaExiste) {
+  return res.send({
+    status: "error",
+    message: "Nombre ya elegido, elija otro nombre para la cuenta."
+  });
+}
+
+
+      
       const session = await mongoose.startSession();  
             
       session.startTransaction();
   
       try {
         const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.valores.Dinero).toFixed(2))
-  
+  console.log(Counterx[0])
   let cuentaActualizada = await  CuentasModelSass.create([{
     CheckedA: req.body.valores.checkedA,
     CheckedP: req.body.valores.checkedP,
@@ -877,7 +898,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
     Tipo: req.body.valores.Tipo,
     NombreC: req.body.valores.NombreC,
     DineroActual: fixedImport,
-    iDcuenta: req.body.valores.idCuenta,
+    iDcuenta: Counterx[0].Contmascuenta,
     Descrip: req.body.valores.DescripC,
     Permisos:req.body.Permisos,
     LimiteCredito:req.body.valores.limiteCredito,
@@ -899,14 +920,13 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
     Accion:"Ingreso",
     Tiempo: tiempo.getTime(),
     TiempoEjecucion:tiempo.getTime(),
-    IdRegistro:req.body.valores.idReg,
+    IdRegistro:Counterx[0].ContRegs,
     CuentaSelec:{
       idCuenta:cuentaActualizada[0]._id,
       nombreCuenta: cuentaActualizada[0].NombreC,
     
     },
   
-   
   
       CatSelect:{idCat:catApertura.idCat,
         urlIcono:catApertura.urlIcono,
@@ -932,10 +952,9 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
   
   let regApe = await RegModelSass.create([datatosend], {session})
   
-    let val =  req.body.valores.idReg+ 1
-    let updateCuentaval =  req.body.valores.idCuenta + 1
-    let updatecounter = {  ContRegs: val, Contmascuenta: updateCuentaval }
     
+ let updatecounter = { $inc: { Contmascuenta:1, ContRegs:1 } }
+
    await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session}  )
     await session.commitTransaction();    
     session.endSession();                    
@@ -945,7 +964,7 @@ return res.status(200).send({status: "Ok", message: "exeregs", registrosUpdate})
        
         await session.abortTransaction();
         session.endSession();
-        return res.json({status: "Error", message: "error al registrar", error });
+        return res.json({status: "error", message: "error al registrar", error });
       }
     };
     

@@ -8,7 +8,7 @@ import GraficadorSubPie from "./estadisticas/generadorsubCats"
 import GraficadorPieCuentas from "./estadisticas/generadorPieCuentas"
 import GraficadorPieCuentasSub from "./estadisticas/generadorPieCuentasSub"
 import GeneradorLine from "./estadisticas/GeneradorLine"
-
+import GraficadorSubPieInv from "./estadisticas/generadorsubCatsInv"
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import "moment/locale/es";
 import { install } from "resize-observer";
@@ -26,7 +26,10 @@ import Filtrostiempo from './SubCompos/filtrostiempo';
       allData:true,
       subCuentaDetail:false,
       catdetail:false,
+      subcatdetailInv:false,
       CategoriaElegida:{RegistrosF:[]},
+      CatClicked:{_id:"",nombreCat:""},
+      subCatArtClicked:{nombreSubCat:""},
       InvOption:"categoria",
       subCuentadata:[],
         TotalData:false,
@@ -35,6 +38,7 @@ import Filtrostiempo from './SubCompos/filtrostiempo';
         bundleSubCat:"Todo",
         excluidos:[],
         subCatRegs:[],
+         subCatRegsInv:[],
         downloadData:false,
 filteredTimeRegs:[],
     }
@@ -58,6 +62,25 @@ filteredTimeRegs:[],
         configData = (event) => {
 console.log(event)
           this.setState({filteredTimeRegs:event})
+          let getRegs = event.filter(x=>x.Accion != "Trans").filter(x=> x.CatSelect._id == this.state.CatClicked._id)     
+
+          if(this.state.catdetail){
+
+
+this.setState({subCatRegs:getRegs } )
+      
+            
+          }
+
+          if(this.state.subcatdetailInv){
+            console.log("dentro")
+            let subartRegs = getRegs.filter(objeto => 
+   objeto.Descripcion2 &&
+  objeto.Descripcion2.articulosVendidos.some(articulo => 
+    articulo.Categoria._id === this.state.subCatArtClicked._id))
+            this.setState({ subCatRegsInv:subartRegs})
+          }
+
 
          }
 
@@ -69,11 +92,15 @@ console.log(event)
           handleOptionChange = (event) => {
             this.setState({ InvOption: event.target.value });
           };
+           changetime=(event)=>{
+
+console.log(event)
+    }
           
 
     render() {
      
-     
+     console.log(this.state)
         
         let pieActive = this.state.Pie?"activeB":""
         let lineActive = this.state.Line?"activeB":""
@@ -84,6 +111,7 @@ console.log(event)
 
 
  const sendPiedata=(data)=>{
+console.log(data)
 
        let getRegs = this.state.filteredTimeRegs.filter(x=>x.Accion != "Trans").filter(x=> x.CatSelect._id == data._id)     
 
@@ -91,7 +119,8 @@ console.log(event)
         this.setState({catdetail:true})
 
         }, 400);
-        this.setState({ subCatRegs:getRegs, allData:false})
+        this.setState({ subCatRegs:getRegs, allData:false, 
+          CatClicked:data})
 
   }
 
@@ -108,13 +137,18 @@ let subCuentadata ={
   regs:getRegs,
   renderData:data
 }
+
     setTimeout(()=> {
      this.setState({subCuentaDetail:true})
 
      }, 400);
      this.setState({ subCuentadata:subCuentadata, allData:false})
 
-}
+
+
+    }
+
+   
 
         return (
             <div id="mainhomeapp"className="mainstats">
@@ -152,7 +186,10 @@ let subCuentadata ={
 </div> 
  
 <Filtrostiempo getData={this.configData}
- paramTimeData={this.paramTimeData} />
+ paramTimeData={this.paramTimeData}
+ sendChangeTime={this.changetime}
+ 
+ />
 
 <Animate show={this.state.allData}> 
 
@@ -183,6 +220,18 @@ let subCuentadata ={
 <div className="contcatdetail">
 <Animate show={this.state.catdetail}>
 <GraficadorSubPie data={this.state.subCatRegs}
+sendSubCat={(catArt)=>{
+
+     let getRegs = this.state.subCatRegs.filter(objeto => 
+  objeto.Descripcion2.articulosVendidos.some(articulo => 
+    articulo.Categoria._id === catArt._id
+  )
+);
+
+this.setState({catdetail:false,subCatRegsInv:getRegs, subcatdetailInv:true, subCatArtClicked:catArt })
+       
+}}
+catClicked={this.state.CatClicked.nombreCat}
  Flecharetro={()=>{
   setTimeout(()=> {
     this.setState({allData:true})
@@ -190,23 +239,29 @@ let subCuentadata ={
   this.setState( {catdetail:false, subCatRegs:[]})
 }}/>
 </Animate>
+<Animate show={this.state.subcatdetailInv}>
+  
+<GraficadorSubPieInv 
+catClicked={this.state.subCatArtClicked.nombreSubCat}
+data={this.state.subCatRegsInv}
+ Flecharetro={()=>{
+  setTimeout(()=> {
+    this.setState({catdetail:true})
+    }, 400); 
+  this.setState( {subcatdetailInv:false,  
+    subCatRegsInv:[]})}}
+/>
+
+
+</Animate>
 <Animate show={this.state.subCuentaDetail}>
 <GraficadorPieCuentasSub data={this.state.subCuentadata}
  Flecharetro={()=>{
-  
   setTimeout(()=> {
     this.setState({allData:true})
-
-    }, 400);
-  
-  this.setState( {subCuentaDetail:false,
-    
-    subCuentadata:[]})
-
-
-}
- 
- }
+    }, 400); 
+  this.setState( {subCuentaDetail:false,  
+    subCuentadata:[]})}}
 />
 </Animate>
 </div>
@@ -331,7 +386,7 @@ let subCuentadata ={
                    .percent{
                   display: flex;
                   align-items: center;
-                  border: 1px solid black;
+                 
                   border-radius: 19px;
                   font-weight: bold;
                   padding: 5px;
@@ -341,6 +396,8 @@ let subCuentadata ={
                   margin-left: 15px;
                       min-width: 60px;
     height: 30px;
+    border-bottom: 2px solid black;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
                    }
                   .npercent{
                    margin-left: 25px;
@@ -477,15 +534,11 @@ let subCuentadata ={
       background: linear-gradient(145deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
       border: 1px solid rgba(255, 255, 255, 0.5);
       border-radius: 15px;
-      box-shadow: 
-        inset 5px 5px 10px rgba(255, 255, 255, 0.2),
-        inset -5px -5px 10px rgba(0, 0, 0, 0.15),
-        5px 5px 15px rgba(0, 0, 0, 0.3),
-        -5px -5px 15px rgba(255, 255, 255, 0.3);
+        box-shadow: inset 3px 4px 15px rgba(255, 255, 255, 0.2), inset -4px -5px 5px rgba(0, 0, 0, 0.15), 3px 3px 4px rgba(0, 0, 0, 0.3), -5px -5px 9px rgba(255, 255, 255, 0.3);
       backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
-      justify-content: center;
+   justify-content: space-between;
  
     
                   cursor:pointer;

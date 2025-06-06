@@ -3,26 +3,38 @@ import { Pie, Line } from 'react-chartjs-2';
 import {Chart} from"chart.js"
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import 'chart.js/auto';
-
+import GenGroupRegs from '../SubCompos/GenGroupRegsCuentasNuevas';
 
 class Stats extends Component {
     state={
         Ingreso:true,
         Gasto:false,
-        excluidos:[]
+        excluidos:[], 
+        subCatClick:{},
 
     }
 
     componentDidMount(){
      
+     console.log(this.props)
+  
         }
 
-        filtrarVentasUnicasPorNota=(registros)=> {
+        FiltrarRegistroUnicoSistema=(registros)=> {
             const ventasFiltradas = [];
             const numerosVentaUnicos = new Set();
-          
+      let match = false
             registros.forEach((registro) => {
-              const match = registro.Nota.match(/Venta N°(\d+)/);
+              if(this.props.data[0].CatSelect.idCat==5){
+                 match = registro.Nota.match(/Venta N°(\d+)/);
+              }else if(this.props.data[0].CatSelect.idCat==16){
+                 match = registro.Nota.match(/Compra N°(\d+)/);
+              }else if(this.props.data[0].CatSelect.idCat==19){
+                 match = registro.Nota.match(/Precio-de-Compra Inventario \/\/ Venta Física N°(\d+)/);
+              }else if(this.props.data[0].CatSelect.idCat==17){
+                match = registro.Nota.match(/Compra N°(\d+)/);
+              }
+           
               if (match) {
                 const numeroVenta = match[1];
           
@@ -38,15 +50,70 @@ class Stats extends Component {
           }
 
           render() {
-    
+            console.log(this.state)
+            let DetallesPorrender = this.props.data
+            let showData = this.props.data
+            let catInventario = false
+            if(DetallesPorrender.length > 0){
+            catInventario = DetallesPorrender[0].CatSelect.idCat == 5?true:
+                            DetallesPorrender[0].CatSelect.idCat == 16?true:
+                            DetallesPorrender[0].CatSelect.idCat == 19?true:
+                            DetallesPorrender[0].CatSelect.idCat == 17?true:
+            false
+            }
+            let sumavalor = 0
+
+
+if(Object.keys(this.state.subCatClick).length != 0){
+if(catInventario){
+
+  console.log(this.state.subCatClick)
+if(this.state.subCatClick.nombreSubCat== "sin-subcategoria" ){
+showData = showData.filter(objeto => 
+  objeto.Descripcion2.articulosVendidos &&
+  objeto.Descripcion2.articulosVendidos.length > 0 &&
+  objeto.Descripcion2.articulosVendidos.some(articulo => 
+    articulo.SubCategoria === "default"|| articulo.SubCategoria === ""
+  )
+);
+}else{
+  showData = showData.filter(objeto => 
+  objeto.Descripcion2.articulosVendidos &&
+  objeto.Descripcion2.articulosVendidos.length > 0 &&
+  objeto.Descripcion2.articulosVendidos.some(articulo => 
+    articulo.SubCategoria === this.state.subCatClick._id
+  )
+);
+}
+
+
+
+  
+}else{
+ 
+  showData = showData.filter(objeto =>
+    objeto.CatSelect.subCatSelect == this.state.subCatClick.nombreSubCat
+  )
+
+}
+ }
+
+
+            if(this.state.excluidos.length > 0){
+              showData = showData.filter(item =>
+                !this.state.excluidos.some(obj => obj.nombreSubCat === item.CatSelect.subCatSelect)
+              );
+          
+            }
+
             let superdata = {labels: [],
                 datasets: [{
                    label: '',
                    data: [],
                 } ]  }
       //      let catInventario = this.state.CategoriaElegida.idCat == 5?true:false
-            let DetallesPorrender = this.props.data
         
+           
             let toggleObjeto =(array, objeto)=> {
                 const index = array.findIndex(item => item._id === objeto._id);
               
@@ -59,6 +126,7 @@ class Stats extends Component {
                 }
                 return array
               }
+
 
               let ingresosTotales = 0;
 let gastosTotales = 0;
@@ -84,7 +152,7 @@ let Colores = [
     "#FF8A33", // Naranja cálido
     "#FFD93D", // Amarillo intenso
     "#6BCB77", // Verde brillante
- 
+    "#4D96FF", // Azul vibrante
     "#8A5FFF", // Morado vivo
     "#FF5D8F", // Rosa fuerte
     "#4DD2FF", // Turquesa claro
@@ -97,7 +165,7 @@ let Colores = [
     "#FF7878", // Rojo fresa claro
     "#FFA07A", // Salmón
     "#668FFF", // Azul cielo medio
-
+    "#A780FF", // Lavanda
     "#FF9F9F", // Rosa suave
     "#4DC9E0", // Azul turquesa
     "#FFA860", // Naranja pastel fuerte
@@ -109,7 +177,7 @@ let Colores = [
     "#1E90FF", // Azul dodger
     "#FF69B4", // Rosa caliente
     "#FFB6C1", // Rosa claro
-   
+    "#8A2BE2", // Azul violeta
     "#FF6347", // Tomate
     "#FFF8DC", // Maíz
     "#ADFF2F", // Verde amarillo
@@ -134,63 +202,61 @@ let Colores = [
 
 // Objeto para almacenar categorías y evitar duplicados
 const categoriasMap = {};
-
+const categoriasMapInv = {};
 // Iterar sobre los detalles
 let segundoCont = 0
+
+
+   
+  
+
+   
+
+  const extraerCategoriasPrinicipales=(DetallesPorrender)=> { 
+
 for (let z = 0; z < DetallesPorrender.length; z++) {
- 
+
     let registro = DetallesPorrender[z];
-    let cat = registro.CatSelect;
+
+    let cat = registro.CatSelect.subCatSelect == "" ||registro.CatSelect.subCatSelect == undefined
+               ?"":registro.CatSelect.subCatSelect;
+
     let accion = registro.Accion;
     let importe = registro.Importe;
   
     // Identificador único de la categoría
-    let catId = 0
-    if(cat){
-    catId = cat._id;
-
+    
     // Si la categoría aún no existe en el mapa, inicialízala con los campos requeridos
-    if (!categoriasMap[catId]) {
+    if (!categoriasMap[cat]) {
    
-        categoriasMap[catId] = {
-            idCat: cat.idCat,
-            nombreCat: cat.nombreCat,
+        categoriasMap[cat] = {
+        
+            nombreSubCat: cat,
             totalImporte: 0,
             porcentaje: 0,
-            _id: cat._id,
+            
             Color:Colores[segundoCont]
         };
         segundoCont ++
     }
 
     // Sumar el importe a la categoría
-    categoriasMap[catId].totalImporte += importe;
+    categoriasMap[cat].totalImporte += importe;
 
     // Dependiendo de la acción, agregar la categoría al array correspondiente y sumar el importe
-    if (accion === "Ingreso") {
-        const RegistroFilterCat = this.state.excluidos.find(obj => obj._id === registro.CatSelect._id);
+   
+        
+        const RegistroFilterCat = this.state.excluidos.find(obj => obj.nombreSubCat == registro.CatSelect.subCatSelect);
         if (!RegistroFilterCat) {
             ingresosTotales += importe;
         }
      
         // Verificar si ya está en el array de categorías de ingreso, si no, agregarla
-        if (!categoriasIngreso.some(c => c._id === cat._id)) {
-            categoriasIngreso.push(categoriasMap[catId]);
+        if (!categoriasIngreso.some(c => c.nombreSubCat === cat)) {
+            categoriasIngreso.push(categoriasMap[cat]);
         }
-    } else if (accion === "Gasto") {
-        const RegistroFilterCat = this.state.excluidos.find(obj => obj._id === registro.CatSelect._id);
-        if (!RegistroFilterCat) {
-            gastosTotales += importe;
-        }
-       
-
-        // Verificar si ya está en el array de categorías de gasto, si no, agregarla
-        if (!categoriasGasto.some(c => c._id === cat._id)) {
-            categoriasGasto.push(categoriasMap[catId]);
-        }
-    }
+   
     
-}
 }
 // Calcular el porcentaje de cada categoría respecto al total de ingresos o gastos
 categoriasIngreso.forEach(cat => {
@@ -200,20 +266,81 @@ categoriasIngreso.forEach(cat => {
 categoriasGasto.forEach(cat => {
     cat.porcentaje = gastosTotales > 0 ? (cat.totalImporte / gastosTotales) * 100 : 0;
 });
-// Mostrar el resultado con las categorías separadas en ingresos y gastos
+
+return {categoriasIngreso, categoriasGasto}
+
+}
+
+
+const ventasUnicas = this.FiltrarRegistroUnicoSistema(DetallesPorrender);
+
+const extraerCategoriasConImporte =(ventasUnicas)=> {
+ 
+    let counter = 0
+
+
+    ventasUnicas.forEach((venta) => {
+    
+        venta.Descripcion2.articulosVendidos.forEach((articulo, i) => {
+          const categoria = articulo.SubCategoria;
+   
+            const idCat = articulo.SubCategoria =="" || articulo.SubCategoria == "default"?"sin-subcategoria":articulo.SubCategoria;
+  
+            if (!categoriasMapInv[idCat]) {
+   
+              categoriasMapInv[idCat] = {
+                  _id:idCat,
+                  nombreSubCat: idCat,
+                  totalImporte: 0,
+                  porcentaje: 0,
+                  Color:Colores[counter]
+              };
+              counter ++
+          }
+        
+            categoriasMapInv[idCat].totalImporte += articulo.PrecioCompraTotal;
+          
+            
+          
+       
+         
+       
+        });
+
+    });
+    
+    
+
+    const valoresArray = Object.values(categoriasMapInv);
+    
+
+    const filteredArray = valoresArray.filter(item1 => 
+      !this.state.excluidos.some(item2 => item2._id === item1._id)
+    );
+
+    sumavalor = filteredArray.reduce((acc, item) => acc + item.totalImporte, 0);
+      
+    valoresArray.forEach(cat => {
+      cat.porcentaje = sumavalor > 0 ? (cat.totalImporte / sumavalor) * 100 : 0;
+  });
+   
+  return valoresArray
+  
+  }
+  
   
 
-if(this.state.Ingreso){
-   datoTouP = categoriasIngreso
-  }else if(this.state.Gasto){
-    datoTouP = categoriasGasto
-  }
+let resultCats = extraerCategoriasPrinicipales(DetallesPorrender)
 
 
-
+    datoTouP = resultCats.categoriasIngreso
+    if(catInventario){
+        datoTouP = extraerCategoriasConImporte(ventasUnicas);
+    }
+ 
 
   for (let i = 0; i < datoTouP.length; i++) {
-    const objetoConCategoriaN = this.state.excluidos.find(obj => obj._id === datoTouP[i]._id);
+    const objetoConCategoriaN = this.state.excluidos.find(obj => obj.nombreSubCat === datoTouP[i].nombreSubCat);
     if (objetoConCategoriaN) {
         datoTouP[i].excluido = true;
         datoTouP[i].porcentaje = 0;
@@ -221,7 +348,7 @@ if(this.state.Ingreso){
 }
 
 let graficData = datoTouP.filter(elem => 
-    !this.state.excluidos.some(excluido => excluido._id === elem._id)
+    !this.state.excluidos.some(excluido => excluido.nombreSubCat === elem.nombreSubCat)
 );
 superdata = {
     labels: graficData.map(x=>x.nombreCat),
@@ -236,13 +363,31 @@ superdata = {
 
         }
 let stats = ""
+
+
         if(datoTouP.length >0){
+
             stats = datoTouP.sort((a, b) => b.totalImporte - a.totalImporte).map((item, i)=>{
-                let excluido = item.excluido?"excluido":""
+              let SelectedSubCat = this.state.subCatClick.nombreSubCat == item.nombreSubCat?"clickCat":""
+          
+              let excluido = item.excluido?"excluido":""
                 let bcolor = item.Color
-                return(<div className="crystal-rectangle" key={i} onClick={(e)=>{    
+                let nameSubCat = item.nombreSubCat==""?"sin-subcategoria":item.nombreSubCat
+                return(<div className={`crystal-rectangle ${SelectedSubCat} `}   key={i} onClick={(e)=>{
+                  
                   e.stopPropagation();
-                  this.props.sendData(item)}}
+                  if(this.state.subCatClick.nombreSubCat == item.nombreSubCat){
+                    this.setState({subCatClick:{}})
+                  }else{
+                    this.setState({subCatClick:item})
+                    
+                  }
+               
+                
+                }
+                
+                
+                }
                   
                   
                   >
@@ -258,10 +403,17 @@ let stats = ""
                       }}
                         
                         style={{background:bcolor}}>{item.porcentaje.toFixed(2)}%</div>
-                        <div className={`npercent ${excluido} `}  >{item.nombreCat}</div>
-        
+                        <div className={`npercent ${excluido} `}  >{nameSubCat}</div>
+        <style>
+        { `
+        .clickCat{
+        background: beige!important;
+        }
+        ` }
+        </style>
                     </div>
                     <div className="contvalores">${item.totalImporte.toFixed(2)}</div>
+                    
                 </div>)
              }) 
         }
@@ -301,15 +453,27 @@ let stats = ""
             },
             perspective: 200 // Ajustar la perspectiva
         };
+
+let nombreCuenta = ""
+if(this.props.catClicked != ""){
+    nombreCuenta = this.props.catClicked
+}
+let setTotal =ingresosTotales
+if(catInventario){
+
+  setTotal = sumavalor
+}
+
 return(
 <div>
-<div className="inggasCont">
-          <span className={`base ${activeB} `} onClick={()=>{this.setState({Ingreso:true, Gasto:false,excluidos:[] })}}>   <div className="asd">Ingreso</div> ${ingresosTotales.toFixed(2)}</span>
-          <span style={{fontSize:"40px"}}>|</span>
-          <span className={`base ${deactiveB} `} onClick={()=>{this.setState({Gasto:true, Ingreso:false,excluidos:[]})}} > <div className="asd">Gasto</div> ${gastosTotales.toFixed(2)}</span>
-          <span style={{fontSize:"40px"}}>|</span>
-          <span className={` baset`}  > <div className="asd">Total</div> ${(ingresosTotales - gastosTotales).toFixed(2)}</span>
-  </div>
+<img src="/static/flecharetro.png" alt="" className="flecharetro" 
+                onClick={  this.props.Flecharetro }
+                />
+<div className='centrar jwJustifySpace'>
+
+<p  className='subtituloArt' >Sub-Categorias de:  <span style={{fontStyle:"italic"}}>{nombreCuenta}</span> </p>
+<span className={` baset`}  > <div className="asd">Total</div> ${(setTotal).toFixed(2)}</span>
+</div>
   <div className="centrar contMainDataChart">
   <div className="cont-Prin">
   <Pie data={superdata} plugins={[ChartDataLabels]} options={options} />
@@ -318,9 +482,13 @@ return(
     {stats}
 </div>
   </div>
+  <div className="supercontreg">
+  <GenGroupRegs Registros={showData} cuentaSelect={{_id:0}} datosGene={{saldo:0, balance:0,saldoActive:false}} />  
+  </div>
   <style jsx >
                 {                                
                 `
+
  .baset{
                     margin-top:8px;
                 background-color: #f5f5f5; /* Gris claro neutro */
@@ -375,10 +543,20 @@ return(
     cursor: pointer;
     transition: transform 0.2s;
 }
+ .clickCat{
+        background: beige
+        }
+   
 
 .crystal-rectangle:hover {
     transform: scale(1.05); /* Efecto de agrandamiento al pasar el ratón */
 }
+    .selectedCat{
+                color:blue;
+                  height: 80px;
+
+                }
+
 
 /* Contenedor para el porcentaje y el nombre de la categoría */
 .contpercent {
@@ -398,8 +576,6 @@ return(
     font-weight: bold;
     font-size: 14px;
     text-align: center;
-    border-bottom: 2px solid black;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Clase adicional para la categoría excluida */
@@ -408,7 +584,15 @@ return(
     opacity: 0.6;
     color: #888;
 }
+       .clickCat{
+        background: beige;
+        }
 
+       .flecharetro{
+         height: 40px;
+         width: 40px;
+         padding: 5px;
+       }
 /* Nombre de la categoría */
 .npercent {
     font-size: 14px;
@@ -424,7 +608,8 @@ return(
     color: #4CAF50; /* Verde oscuro para resaltar */
     margin-top: 5px;
 }
-
+    
+                
                 
                 ` }
                 </style>

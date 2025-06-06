@@ -142,10 +142,6 @@ console.log(miart)
 this.setState({tituloArts:e.target.value})
 
 
-
-
-
-
     this.props.sendNombre({
         tituloArts : e.target.value,
         item:this.props.datos})  
@@ -645,9 +641,13 @@ return (
              <div className="Artic100Fpago">
          <span className='FlexCenter'> $ <div type="number" name="Precio_Compra" className={` inputCustom ${precioErr}`}>{
             parseFloat(this.props.datos.precioUnitario[0]).toFixed(2)   }</div></span>
+             </div>     
+                 <div className="Artic100Fpago">
+         <span className='FlexCenter'> $ <div type="number" name="Descuento" className={` inputCustom ${precioErr}`}>{
+            parseFloat(this.props.datos.descuento[0]).toFixed(2)   }</div></span>
     
         
-             </div>     
+             </div>  
              <div className="Artic100Fpago">
          <span className='FlexCenter'> $ <div type="number" name="PrecioTotal" className={` inputCustom ${precioErr}`}>{
          
@@ -969,9 +969,12 @@ Articulos={this.props.state.RegContableReducer.Articulos
                    width: 60%;           
                 border-radius: 11px;
                 transition:1s;
-                padding: 4px;}
+                padding: 3px;
+                text-align: start;
+                }
                .moneycont{
                    display:flex;
+                   
                }
                .miscien{
                 width: 80%;

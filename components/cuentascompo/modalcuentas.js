@@ -20,14 +20,14 @@ state={
   CuentasHabiles:[],
   editmode:false,
   CuentasD:[],
-  Buscador:false,
+  Buscador:true,
   visibility:false,
   cuentasSearcher:"",
 ModalDeleteC:false,
 }
 channel1 = null;
   async  componentDidMount(){
-    document.addEventListener("keydown", this.handleKeyDown);
+    
       if(!this.props.state.RegContableReducer.Tipos){
   
         let data = await fetchData(this.props.state.userReducer,
@@ -52,15 +52,7 @@ channel1 = null;
         
         }
 
-        handleKeyDown = (event) => {
-          // Si el buscador ya está activo, no hace falta reactivarlo
-          if (!this.state.Buscador) {
-            this.setState({ Buscador: true });
-          }
-        };
-        componentWillUnmount() {
-          document.removeEventListener("keydown", this.handleKeyDown);
-        }
+       
          
         onEditmode=()=>{
           
