@@ -78,7 +78,7 @@ this.setState({subCatRegs:getRegs } )
    objeto.Descripcion2 &&
   objeto.Descripcion2.articulosVendidos.some(articulo => 
     articulo.Categoria._id === this.state.subCatArtClicked._id))
-            this.setState({ subCatRegsInv:subartRegs})
+            this.setState({ subCatRegsInv:subartRegs,subCatRegs:getRegs})
           }
 
 
@@ -242,7 +242,7 @@ catClicked={this.state.CatClicked.nombreCat}
 <Animate show={this.state.subcatdetailInv}>
   
 <GraficadorSubPieInv 
-catClicked={this.state.subCatArtClicked.nombreSubCat}
+catClicked={this.state.subCatArtClicked}
 data={this.state.subCatRegsInv}
  Flecharetro={()=>{
   setTimeout(()=> {
@@ -540,9 +540,7 @@ data={this.state.subCatRegsInv}
       align-items: center;
    justify-content: space-between;
  
-    
                   cursor:pointer;
-     
     }
 
 

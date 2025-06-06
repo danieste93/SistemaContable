@@ -63,7 +63,7 @@ class Stats extends Component {
             }
             let sumavalor = 0
 
-
+console.log(catInventario)
 if(Object.keys(this.state.subCatClick).length != 0){
 if(catInventario){
 
@@ -278,12 +278,12 @@ const extraerCategoriasConImporte =(ventasUnicas)=> {
  
     let counter = 0
 
-
+console.log(ventasUnicas)
     ventasUnicas.forEach((venta) => {
     
         venta.Descripcion2.articulosVendidos.forEach((articulo, i) => {
-          const categoria = articulo.SubCategoria;
-   
+
+if(articulo.Categoria._id === this.props.catClicked._id){ 
             const idCat = articulo.SubCategoria =="" || articulo.SubCategoria == "default"?"sin-subcategoria":articulo.SubCategoria;
   
             if (!categoriasMapInv[idCat]) {
@@ -302,13 +302,13 @@ const extraerCategoriasConImporte =(ventasUnicas)=> {
           
             
           
-       
+       }  
          
        
         });
 
     });
-    
+    console.log(categoriasMapInv)
     
 
     const valoresArray = Object.values(categoriasMapInv);
@@ -456,7 +456,7 @@ let stats = ""
 
 let nombreCuenta = ""
 if(this.props.catClicked != ""){
-    nombreCuenta = this.props.catClicked
+    nombreCuenta = this.props.catClicked.nombreSubCat
 }
 let setTotal =ingresosTotales
 if(catInventario){

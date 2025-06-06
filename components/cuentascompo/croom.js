@@ -281,7 +281,7 @@ fetch("/cuentas/getcuentas", {
       
     
         if(filtradospornombre.length >0){
-          console.log(filtradospornombre)
+        
           let renderNewCuentas = filtradospornombre.map((cuenta,i)=>{
             let tintura = ()=>{
 
@@ -400,7 +400,7 @@ downloadCuentaRegs = ()=> {
     }).then(res => res.json())
     .catch(error => {console.error('Error:', error);
     })  .then(response => {  
-console.log(response)
+//console.log(response)
     if(response.status == 'error'){
     alert("error al actualizar registros")
    
@@ -651,7 +651,7 @@ CalcRegsCuentas=(cuentas)=>{
   cuentas.forEach(cuenta => {
     let registros  = this.props.regC.Regs.filter(x => x.CuentaSelec.idCuenta === cuenta._id   )
     let transregister  = this.props.regC.Regs.filter(x => x.Accion === "Trans" )
-    console.log(transregister)
+   
     let Ingregister  = registros.filter(x => x.Accion === "Ingreso" )
     let Gasregister  = registros.filter(x => x.Accion === "Gasto"  )
     let Transregister  = transregister.filter(x => x.CuentaSelec.idCuenta === cuenta._id || x.CuentaSelec2.idCuenta === cuenta._id )
