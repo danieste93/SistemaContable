@@ -111,7 +111,7 @@ console.log(event)
 
 
  const sendPiedata=(data)=>{
-console.log(data)
+
 
        let getRegs = this.state.filteredTimeRegs.filter(x=>x.Accion != "Trans").filter(x=> x.CatSelect._id == data._id)     
 
