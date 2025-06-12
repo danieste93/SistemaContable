@@ -174,7 +174,7 @@ console.log(this.props.data)
                     alert("Session expirada, vuelva a iniciar sesion para continuar");
                 
                 
-                    Router.push("/")
+                    Router.push("/ingreso")
                       
                   }
                   if(response.message=="error al registrar"){

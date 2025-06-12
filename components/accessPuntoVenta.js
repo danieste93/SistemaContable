@@ -845,7 +845,10 @@ this.startPuntoVentaData()
         
         handleDocType=(e)=>{
        
-    
+    if(e.target.value == "Factura"){
+           this.setState({ descuentoPer:0, descuentoVal:0})
+         this.saveToLocalStorage({ descuentoPer:0, descuentoVal:0})
+    }
          this.setState({doctype:e.target.value})
          this.saveToLocalStorage({doctype:e.target.value})
      }
@@ -880,7 +883,7 @@ this.startPuntoVentaData()
                         this.props.dispatch(cleanData());
                         alert("Session expirada, vuelva a iniciar sesion para continuar");
                                          
-                        Router.push("/")
+                        Router.push("/ingreso")
                            
                       }
                     }else if(response.status == 'Ok'){
@@ -1202,7 +1205,7 @@ this.setState({impresion:!this.state.impresion})
                   alert("Session expirada, vuelva a iniciar sesion para continuar");
               
                
-                  Router.push("/")
+                  Router.push("/ingreso")
                      
                 }
               }else if(response.status == 'Ok'){             
@@ -3228,7 +3231,7 @@ delete
                      <div  className="contFlex">
                      <div className="contTotales">
                
-                  
+                      <Animate show={this.state.doctype !="Factura"}>    
                <div className="grupoDatos">
          <div className="cDc1">
          <p style={{fontWeight:"bolder"}}>  Descuento (valor) </p>
@@ -3251,6 +3254,8 @@ delete
          </div>
 
          </div>
+</Animate> 
+
          <Animate show={this.state.doctype =="Factura" || this.state.doctype =="Cotizacion" }>
          <div className="grupoDatos">
                <div className="cDc1">

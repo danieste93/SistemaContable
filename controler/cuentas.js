@@ -2999,39 +2999,52 @@ await regis.remove()
   async function profesorAdd(req,res){
 
   }
-  async function getRegsbyCuentas(req,res){
-console.log(req.body)
-let conn = await mongoose.connection.useDb(req.body.User.DBname);
-let RegModelSass = await conn.model('Reg', regSchema);
+async function getRegsbyCuentas(req, res) {
+  try {
+    const conn = await mongoose.connection.useDb(req.body.User.DBname);
+    const RegModelSass = conn.model('Reg', regSchema);
+    const RegModelSassDelete = conn.model('RegDelete', regSchemaDelete);
 
+    const now = new Date();
+    const tiempoIni = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const tiempoFin = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-let fechamensual = new Date();
-  let tiempoIni = new Date(fechamensual.getFullYear(), fechamensual.getMonth(), 1).setHours(0,0,0,0);
-  let tiempoFin = new Date(fechamensual.getFullYear(), fechamensual.getMonth() + 1, 0).setHours(23,59,59,999);
+    const cuentas = req.body.Cuentas;
 
-req.body.Cuentas.forEach(async (x,i)=>{
-  let regsHabiles= []
-  let captureRegs=await RegModelSass.find({
-    $and: [
-      {Tiempo: {$gte : tiempoIni}},
-      {Tiempo: {$lte : tiempoFin}},
-      {"CuentaSelec.idCuenta": x._id},
-    ]
-  }).sort({ $natural: -1 })
+    const results = await Promise.all(
+      cuentas.map(async (cuenta) => {
+        const [regs, regsDelete] = await Promise.all([
+          RegModelSass.find({
+            Tiempo: { $gte: tiempoIni, $lte: tiempoFin },
+            "CuentaSelec.idCuenta": cuenta._id,
+          }).sort({ $natural: -1 }),
 
-  regsHabiles = [...regsHabiles, ...captureRegs]
-  
-  if((i+1)==req.body.Cuentas.length ){
-    res.status(200).send({status: "Ok", message: "getRegsbyCuentas", regsHabiles});
+          RegModelSassDelete.find({
+            Tiempo: { $gte: tiempoIni, $lte: tiempoFin },
+            "CuentaSelec.idCuenta": cuenta._id,
+          }).sort({ $natural: -1 }),
+        ]);
+
+        return { cuentaId: cuenta._id, regs, regsDelete };
+      })
+    );
+
+    // Extraer todos los registros en arrays planos si es necesario
+    const regsHabiles = results.flatMap(r => r.regs);
+    const regsHabilesDelete = results.flatMap(r => r.regsDelete);
+
+    res.status(200).send({
+      status: "Ok",
+      message: "getRegsbyCuentas",
+      regsHabiles,
+      regsHabilesDelete,
+    });
+  } catch (error) {
+    console.error("Error en getRegsbyCuentas:", error);
+    res.status(500).send({ status: "Error", message: error.message });
   }
+}
 
-})
-
-
-
-
-
-  }
   async function getAllReps(req, res){
     let conn = await mongoose.connection.useDb(req.body.User.DBname);
     let RepModelSass = await conn.model('Repeticion', repeticionSchema);

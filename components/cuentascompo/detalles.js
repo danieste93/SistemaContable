@@ -455,7 +455,7 @@ if(this.props.regC.Regs  || this.props.regC.RegsDelete ){
   }
 
 
-
+console.log(response)
 
 displayDetalles = this.OrderFilter(response)
 

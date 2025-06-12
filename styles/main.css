@@ -10,7 +10,11 @@ body{
 padding: 10px;
 
 }
-
+    .flecha {
+            cursor: pointer;
+            font-size: 15px;
+            color: #333;
+          }
 
 .downloadbutton {
   margin: 5px;

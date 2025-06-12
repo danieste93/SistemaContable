@@ -29,11 +29,20 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
       };
 
     const state = store.getState();
-    const genImpuestos=()=>{
+    const genImpuestos2=()=>{
         let codigoPorcentajeDeta = 4 // 0:0%  2:12%  3:14%  4:15% 5:5% 10:13% 
         let codigoDeta =2 //IVA:2 ICE:3 IRBPNR:5
         let artImpuestos  = ArtVent.filter(x=>x.Iva)
         let artSinImpuestos = ArtVent.filter(x=>x.Iva == false)
+
+        
+    let valdescuento = 0
+
+    if(TotalDescuento > 0 ){
+
+        valdescuento = (TotalDescuento / ArtVent.length).toFixed(2)
+        
+    }
         let dataImpuestos = ""
         if(artSinImpuestos.length > 0){
             let baseImponibleSinImpuestos = 0
@@ -44,7 +53,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
             let data = `            <totalImpuesto>\n`+
             `                <codigo>${2}</codigo>\n`+
             `                <codigoPorcentaje>${0}</codigoPorcentaje>\n`+
-            `                <baseImponible>${baseImponibleSinImpuestos.toFixed(2)}</baseImponible>\n`+
+            `                <baseImponible>${ (parseFloat(baseImponibleSinImpuestos.toFixed(2)) - TotalDescuento).toFixed(2)}</baseImponible>\n`+
             `                <tarifa>${0.00}</tarifa>\n`+
             `                <valor>${0.00}</valor>\n`+
             `            </totalImpuesto>\n`
@@ -55,17 +64,20 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
          let baseImponibleImpuestos = 0
          let valtotal = 0
                 for(let i=0;i<artImpuestos.length;i++){
-                    baseImponibleImpuestos += (artImpuestos[i].PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`))
+                    baseImponibleImpuestos += ((artImpuestos[i].PrecioCompraTotal-valdescuento) /  parseFloat(`1.${process.env.IVA_EC }`))
                     valtotal += (artImpuestos[i].PrecioCompraTotal)
                 }
+                console.log(TotalDescuento)
+                console.log(valtotal)
+                console.log(baseImponibleImpuestos)
               
             
             let data = `            <totalImpuesto>\n`+
             `                <codigo>${codigoDeta}</codigo>\n`+
             `                <codigoPorcentaje>${codigoPorcentajeDeta}</codigoPorcentaje>\n`+
-            `                <baseImponible>${baseImponibleImpuestos.toFixed(2)}</baseImponible>\n`+
+            `                <baseImponible>${ (parseFloat(baseImponibleImpuestos.toFixed(2)))}</baseImponible>\n`+
             `                <tarifa>${process.env.IVA_EC}</tarifa>\n`+
-            `                <valor>${(valtotal - baseImponibleImpuestos.toFixed(2)).toFixed(2)}</valor>\n`+
+            `                <valor>${((valtotal- TotalDescuento) - (parseFloat(baseImponibleImpuestos.toFixed(2)))).toFixed(2)}</valor>\n`+
             `            </totalImpuesto>\n`
          
             dataImpuestos += data
@@ -74,7 +86,78 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
         return dataImpuestos
        
     }   
- const   gendetalles=()=>{   
+    const genImpuestos = () => {
+  const codigoIVA = 2;
+  const codigoPorcentajeIVA = 4;
+  const tarifaIVA = parseFloat(process.env.IVA_EC); // Ej. 15 para 15%
+
+  const artConIVA = ArtVent.filter(x => x.Iva);
+  const artSinIVA = ArtVent.filter(x => !x.Iva);
+
+  const descuentoPorItem = TotalDescuento > 0 ? TotalDescuento / ArtVent.length : 0;
+
+  let dataImpuestos = "";
+
+  // --- Artículos SIN IVA ---
+  if (artSinIVA.length > 0) {
+    let baseSinIVA = 0;
+
+    for (const item of artSinIVA) {
+      const descuentoAplicado = descuentoPorItem;
+      const precioFinal = item.PrecioCompraTotal - descuentoAplicado;
+      baseSinIVA += precioFinal;
+    }
+
+    dataImpuestos +=
+      `            <totalImpuesto>\n` +
+      `                <codigo>${codigoIVA}</codigo>\n` +
+      `                <codigoPorcentaje>0</codigoPorcentaje>\n` +
+      `                <baseImponible>${baseSinIVA.toFixed(2)}</baseImponible>\n` +
+      `                <tarifa>0.00</tarifa>\n` +
+      `                <valor>0.00</valor>\n` +
+      `            </totalImpuesto>\n`;
+  }
+
+  // --- Artículos CON IVA ---
+  if (artConIVA.length > 0) {
+    let baseConIVA = 0;
+    let valorIVA = 0;
+
+    for (const item of artConIVA) {
+      const descuentoAplicado = descuentoPorItem;
+
+      const precioTotal = item.PrecioCompraTotal;
+      const precioFinalConDescuento = precioTotal - descuentoAplicado;
+
+      const baseItem = precioFinalConDescuento / (1 + tarifaIVA / 100);
+      const valorItemIVA = baseItem * (tarifaIVA / 100);
+
+      baseConIVA += baseItem;
+      valorIVA += valorItemIVA;
+    }
+
+    dataImpuestos +=
+      `            <totalImpuesto>\n` +
+      `                <codigo>${codigoIVA}</codigo>\n` +
+      `                <codigoPorcentaje>${codigoPorcentajeIVA}</codigoPorcentaje>\n` +
+      `                <baseImponible>${baseConIVA.toFixed(2)}</baseImponible>\n` +
+      `                <tarifa>${tarifaIVA.toFixed(2)}</tarifa>\n` +
+      `                <valor>${valorIVA.toFixed(2)}</valor>\n` +
+      `            </totalImpuesto>\n`;
+  }
+
+  return dataImpuestos;
+};
+
+ const   gendetalles2=()=>{   
+
+    let valdescuento = 0
+console.log(TotalDescuento)
+    if(TotalDescuento > 0 ){
+
+        valdescuento = (TotalDescuento / ArtVent.length).toFixed(2)
+        console.log(valdescuento)
+    }
 
         let nuevosDetalles = ArtVent.map(item =>{
             let codigoPorcentajeDeta =item.Iva? 4 : 0 // 0:0%  2:12%  3:14%  4:15% 5:5% 10:13% 
@@ -82,8 +165,8 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
 
           let tarifaDetal =item.Iva? parseFloat(process.env.IVA_EC) : 0
           let baseImponible =  (item.PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`)).toFixed(2)
-            let precioTotalSinImpuesto = item.Iva? baseImponible
-                                        :   item.PrecioCompraTotal.toFixed(2) 
+            let precioTotalSinImpuesto = item.Iva? baseImponible 
+                                        :   (item.PrecioCompraTotal ).toFixed(2) 
 
                 
                                    let valor  = item.Iva?  ((item.PrecioCompraTotal) - baseImponible).toFixed(2):0                      
@@ -94,8 +177,8 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
 `            <descripcion>${item.Titulo}</descripcion>\n`+
 `            <cantidad>${item.CantidadCompra}</cantidad>\n`+
 `            <precioUnitario>${(precioTotalSinImpuesto / item.CantidadCompra).toFixed(2)}</precioUnitario>\n`+
-`            <descuento>0</descuento>\n`+
-`            <precioTotalSinImpuesto>${precioTotalSinImpuesto}</precioTotalSinImpuesto>\n`+
+`            <descuento>${valdescuento}</descuento>\n`+
+`            <precioTotalSinImpuesto>${(precioTotalSinImpuesto - parseFloat(valdescuento)).toFixed(2)}</precioTotalSinImpuesto>\n`+
 `            <impuestos>\n`+
 `                <impuesto>\n`+
 `                    <codigo>${codigoDeta}</codigo>\n`+
@@ -113,6 +196,60 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
      
                return nuevosDetalles.join("")  
                    }
+                   const gendetalles = () => {
+  let valdescuentoBruto = 0;
+  if (TotalDescuento > 0) {
+    valdescuentoBruto = (TotalDescuento / ArtVent.length);
+  }
+
+  let nuevosDetalles = ArtVent.map(item => {
+    const tarifaIVA = item.Iva ? parseFloat(process.env.IVA_EC) : 0; // Ej: 15
+    const codigoPorcentajeDeta = item.Iva ? 4 : 0; 
+    const codigoDeta = 2;
+
+    // Precio con IVA incluido (total por item)
+    const precioConIVA = item.PrecioCompraTotal;
+
+    // Descuento sin IVA
+    const descuentoSinIVA = item.Iva ? valdescuentoBruto / (1 + tarifaIVA / 100) : valdescuentoBruto;
+
+    // Base imponible antes de descuento
+    const baseImponibleAntesDesc = item.Iva ? (precioConIVA / (1 + tarifaIVA / 100)) : precioConIVA;
+
+    // Base imponible después de descuento
+    const baseImponible = baseImponibleAntesDesc - descuentoSinIVA;
+
+    // Valor impuesto (IVA) después de descuento
+    const valorImpuesto = tarifaIVA > 0 ? baseImponible * (tarifaIVA / 100) : 0;
+
+    // Precio unitario base imponible por unidad (sin IVA)
+    const precioUnitario = baseImponible / item.CantidadCompra;
+
+    return (
+      `        <detalle>\n` +
+      `            <codigoPrincipal>${item.Eqid}</codigoPrincipal>\n` +
+      `            <codigoAuxiliar>00000${item.Eqid}</codigoAuxiliar>\n` +
+      `            <descripcion>${item.Titulo}</descripcion>\n` +
+      `            <cantidad>${item.CantidadCompra}</cantidad>\n` +
+      `            <precioUnitario>${precioUnitario.toFixed(2)}</precioUnitario>\n` +
+      `            <descuento>${descuentoSinIVA.toFixed(2)}</descuento>\n` +
+      `            <precioTotalSinImpuesto>${baseImponible.toFixed(2)}</precioTotalSinImpuesto>\n` +
+      `            <impuestos>\n` +
+      `                <impuesto>\n` +
+      `                    <codigo>${codigoDeta}</codigo>\n` +
+      `                    <codigoPorcentaje>${codigoPorcentajeDeta}</codigoPorcentaje>\n` +
+      `                    <tarifa>${tarifaIVA}</tarifa>\n` +
+      `                    <baseImponible>${baseImponible.toFixed(2)}</baseImponible>\n` +
+      `                    <valor>${valorImpuesto.toFixed(2)}</valor>\n` +
+      `                </impuesto>\n` +
+      `            </impuestos>\n` +
+      "        </detalle>\n"
+    );
+  });
+
+  return nuevosDetalles.join("");
+};
+
                    let razon = state.userReducer.update.usuario.user.Factura.razon 
                    let nombreComercial = state.userReducer.update.usuario.user.Factura.nombreComercial
                    let ruc = state.userReducer.update.usuario.user.Factura.ruc
@@ -148,17 +285,24 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
                                let totalSinImpuestos = 0
                                let baseImpoConImpuestos = 0
                                let baseImpoSinImpuestos = 0
+                                 let valdescuento = 0
+
+    if(TotalDescuento > 0 ){
+
+        valdescuento = (TotalDescuento / ArtVent.length).toFixed(2)
+       
+    }
                                if(artImpuestos.length > 0){
                                    for(let i=0;i<artImpuestos.length;i++){
-                                       totalSinImpuestos += (artImpuestos[i].PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`))
-                                       baseImpoConImpuestos += (artImpuestos[i].PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`))
+                                       totalSinImpuestos += ((artImpuestos[i].PrecioCompraTotal - valdescuento) /  parseFloat(`1.${process.env.IVA_EC }`))
+                                       baseImpoConImpuestos += ((artImpuestos[i].PrecioCompraTotal - valdescuento) /  parseFloat(`1.${process.env.IVA_EC }`))
                                    }
                                    
                                }
                                if(artSinImpuestos.length > 0){
                                    for(let i=0;i<artSinImpuestos.length;i++){
-                                       totalSinImpuestos += artSinImpuestos[i].PrecioCompraTotal
-                                       baseImpoSinImpuestos += artSinImpuestos[i].PrecioCompraTotal
+                                       totalSinImpuestos += artSinImpuestos[i].PrecioCompraTotal - valdescuento
+                                       baseImpoSinImpuestos += artSinImpuestos[i].PrecioCompraTotal - valdescuento
                                    }
                                }
                                
@@ -241,9 +385,9 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
                                 `        <tipoIdentificacionComprador>${tipoIdentificacionComprador}</tipoIdentificacionComprador>\n`+
                                 `        <razonSocialComprador>${razonSocialComprador}</razonSocialComprador>\n`+
                                 `        <identificacionComprador>${identificacionComprador}</identificacionComprador>\n`+
-                                `        <direccionComprador>${direccionComprador}</direccionComprador>`+
-                                `        <totalSinImpuestos>${totalSinImpuestos.toFixed(2)}</totalSinImpuestos>\n`+
-                                `        <totalDescuento>${totalDescuento.toFixed(2)}</totalDescuento>\n`+
+                                `        <direccionComprador>${direccionComprador}</direccionComprador>\n`+
+                                `        <totalSinImpuestos>${ (parseFloat(totalSinImpuestos.toFixed(2)) )}</totalSinImpuestos>\n`+
+                                `        <totalDescuento>${parseFloat(TotalDescuento).toFixed(2)}</totalDescuento>\n`+
                                 `        <totalConImpuestos>\n`+
                                 genImpuestos()+
                                 `        </totalConImpuestos>\n`+
@@ -281,7 +425,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
             let accumText = ""
             let mimapper =  Fpago.map(x=> accumText.concat(x.Detalles))
        
-/*
+
     const url = window.URL.createObjectURL(
         new Blob([docFirmado], { type: "text/plain"}),
       );
@@ -293,7 +437,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
     
      link.click()
      
-   */
+   
              
     
             

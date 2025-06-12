@@ -127,7 +127,7 @@ setTimets=(tiempoRes)=>{
           }
           this.setState({Alert: add})
           store.dispatch(logOut());
-          Router.push("/")
+          Router.push("/ingreso")
           }
       }
     
@@ -136,7 +136,7 @@ setTimets=(tiempoRes)=>{
    
        alert("Aplicacion off-line")
        store.dispatch(logOut());
-       Router.push("/")
+       Router.push("/ingreso")
        });
       
 
@@ -192,7 +192,7 @@ let tiempoRes = deco.exp  - tiempoAct
     }
     this.setState({Alert: add})
     store.dispatch(logOut());
-    Router.push("/")
+    Router.push("/ingreso")
     } }
 
   

@@ -434,7 +434,7 @@ render(){
                 
                 <div className="contArtVenta">
 <div className="firstcont">
-<ValidatorForm ref={this.props.datos._id} style={{width:"100%"}}>
+<ValidatorForm ref={this.props.datos._id} >
          <div className="maincontDetalles">
          
          <div className="contdetalle">  

@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import Header from "../components/header";
 
-import PUNTOVENTA from "../components/accessPuntoVenta";
+import PUNTOVENTA from "../components/accesPuntoVentaUX";
 
 
 

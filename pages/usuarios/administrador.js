@@ -675,9 +675,9 @@ const Alert=(props)=> {
 <Adminfunitem icono="attach_money" titulo="Cuentas" url="/registro-contable" />
   <Adminfunitem icono="app_registration" titulo="Inventario" url="/inventario" />
 
-  <Adminfunitem icono="local_atm" titulo="Venta" url="/punto-de-venta" />
-  <Adminfunitem icono="local_grocery_store" titulo="E-market" url="/administrador/control-compras" />
-  <Adminfunitem icono="book" titulo="Blogg" url="/blog" />
+  <Adminfunitem icono="local_atm" titulo="P.Venta" url="/punto-de-venta" />
+ {/* <Adminfunitem icono="local_grocery_store" titulo="E-market" url="/administrador/control-compras" />*/}
+  {/*<Adminfunitem icono="book" titulo="Blogg" url="/blog" />*/}
 </ div>
 
      </ div>

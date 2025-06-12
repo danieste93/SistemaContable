@@ -563,7 +563,7 @@ ingresador=(mival)=>{
         this.props.dispatch(logOut());
         alert("Session expirada, vuelva a iniciar sesion para continuar");
              
-        Router.push("/")
+        Router.push("/ingreso")
       }
       else if(response.message=="Exito registroIngGas individual") {
                  

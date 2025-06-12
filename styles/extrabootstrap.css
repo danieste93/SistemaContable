@@ -472,117 +472,87 @@ p {
   .invisible {
     visibility: hidden;
   }
-  .pagination {
-    display: flex;
-    padding-left: 0;
-    margin: 20px 0;
-    border-radius: 4px;
-  }
-  .pagination > li {
-    display: inline;
-  }
-  .pagination > li > a,
-  .pagination > li > span {
-    position: relative;
-    float: left;
-    padding: 6px 12px;
-    margin-left: -1px;
-    line-height: 1.42857143;
-    color: #337ab7;
-    text-decoration: none;
-    background-color: #ffffff;
-    border: 1px solid #dddddd;
-  }
-  .pagination > li > a:hover,
-  .pagination > li > span:hover,
-  .pagination > li > a:focus,
-  .pagination > li > span:focus {
-    z-index: 2;
-    color: #23527c;
-    background-color: #eeeeee;
-    border-color: #dddddd;
-  }
-  .pagination > li:first-child > a,
-  .pagination > li:first-child > span {
-    margin-left: 0;
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
-  }
-  .pagination > li:last-child > a,
-  .pagination > li:last-child > span {
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-  }
-  .pagination > .active > a,
-  .pagination > .active > span,
-  .pagination > .active > a:hover,
-  .pagination > .active > span:hover,
-  .pagination > .active > a:focus,
-  .pagination > .active > span:focus {
-    z-index: 3;
-    color: #ffffff;
-    cursor: default;
-    background-color: #337ab7;
-    border-color: #337ab7;
-  }
-  .pagination > .disabled > span,
-  .pagination > .disabled > span:hover,
-  .pagination > .disabled > span:focus,
-  .pagination > .disabled > a,
-  .pagination > .disabled > a:hover,
-  .pagination > .disabled > a:focus {
-    color: #777777;
-    cursor: not-allowed;
-    background-color: #ffffff;
-    border-color: #dddddd;
-  }
-  .pagination-lg > li > a,
-  .pagination-lg > li > span {
-    padding: 10px 16px;
-    font-size: 18px;
-    line-height: 1.3333333;
-  }
-  .pagination-lg > li:first-child > a,
-  .pagination-lg > li:first-child > span {
-    border-top-left-radius: 6px;
-    border-bottom-left-radius: 6px;
-  }
-  .pagination-lg > li:last-child > a,
-  .pagination-lg > li:last-child > span {
-    border-top-right-radius: 6px;
-    border-bottom-right-radius: 6px;
-  }
-  .pagination-sm > li > a,
-  .pagination-sm > li > span {
-    padding: 5px 10px;
-    font-size: 12px;
-    line-height: 1.5;
-  }
-  .pagination-sm > li:first-child > a,
-  .pagination-sm > li:first-child > span {
-    border-top-left-radius: 3px;
-    border-bottom-left-radius: 3px;
-  }
-  .pagination-sm > li:last-child > a,
-  .pagination-sm > li:last-child > span {
-    border-top-right-radius: 3px;
-    border-bottom-right-radius: 3px;
-  }
-  .active>.page-link, .page-link.active {
-    z-index: 3;
-    color: #fff;
-    background-color: #0a5fde;
-    border-color: #0a5fde;
+        /* Contenedor */
+.pagination {
+  display: flex;
+  list-style: none;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
 }
+
+/* Ítem de página */
+.page-item {
+  border-radius: 8px;
+  transition: transform 0.2s ease;
+  user-select: none;
+}
+
+/* Botón base */
 .page-link {
-  position: relative;
-  display: block;
-  padding: 5px 12px;
-  font-size: 16px;
-  color: black;
+  background: transparent;
+  border: none;
+  color: #cfd8dc;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
   cursor: pointer;
-  text-decoration: none;
-  background-color: ghostwhite;
-  border: 1px solid grey;
-  transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease, transform 0.1s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hover en habilitados */
+.page-item:not(.disabled):hover .page-link {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #10b981;
+  transform: translateY(-1px);
+}
+
+/* Active (click visual feedback) */
+.page-item:not(.disabled):active .page-link {
+  transform: scale(0.95);
+  background-color: rgba(16, 185, 129, 0.2);
+}
+
+/* Página activa marcada */
+.page-item.active .page-link {
+         background-color: rgb(0 159 174);
+    color: white;
+    font-weight: 600;
+}
+
+/* Deshabilitado visual */
+.page-item.disabled .page-link {
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+  background: transparent;
+  transform: none !important;
+}
+
+/* No hover ni click efecto en deshabilitado */
+.page-item.disabled:hover .page-link,
+.page-item.disabled:active .page-link {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Flechas */
+.flecha {
+  font-size: 20px;
+  color: #cfd8dc;
+  vertical-align: middle;
+  transition: color 0.2s ease;
+}
+
+/* Flechas deshabilitadas */
+.page-item.disabled .flecha {
+  color: rgba(255, 255, 255, 0.2);
 }

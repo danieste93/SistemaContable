@@ -192,7 +192,7 @@ acc+=valdata
                       alert("Session expirada, vuelva a iniciar sesion para continuar");
                   
                    
-                      Router.push("/")
+                      Router.push("/ingreso")
                          
                     }
                   }else if(response.status == 'Ok'){             
@@ -231,7 +231,7 @@ acc+=valdata
                 alert("Session expirada, vuelva a iniciar sesion para continuar");
             
              
-                Router.push("/")
+                Router.push("/ingreso")
                    
               }
             }else if(response.status == 'Ok'){             

@@ -78,7 +78,7 @@ resetPassword=()=>{
    this.setState({success:true})
    
  
-    Router.push("/")    
+    Router.push("/ingreso")    
    
   
  }

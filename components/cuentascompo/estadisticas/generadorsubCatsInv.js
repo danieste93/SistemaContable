@@ -284,13 +284,13 @@ console.log(ventasUnicas)
         venta.Descripcion2.articulosVendidos.forEach((articulo, i) => {
 
 if(articulo.Categoria._id === this.props.catClicked._id){ 
-            const idCat = articulo.SubCategoria =="" || articulo.SubCategoria == "default"?"sin-subcategoria":articulo.SubCategoria;
-  
-            if (!categoriasMapInv[idCat]) {
+            const idsubCat = articulo.SubCategoria =="" || articulo.SubCategoria == "default"?"sin-subcategoria":articulo.SubCategoria;
+          console.log(idsubCat)
+            if (!categoriasMapInv[idsubCat]) {
    
-              categoriasMapInv[idCat] = {
-                  _id:idCat,
-                  nombreSubCat: idCat,
+              categoriasMapInv[idsubCat] = {
+                  _id:idsubCat,
+                  nombreSubCat: idsubCat,
                   totalImporte: 0,
                   porcentaje: 0,
                   Color:Colores[counter]
@@ -298,7 +298,7 @@ if(articulo.Categoria._id === this.props.catClicked._id){
               counter ++
           }
         
-            categoriasMapInv[idCat].totalImporte += articulo.PrecioCompraTotal;
+            categoriasMapInv[idsubCat].totalImporte += articulo.PrecioCompraTotal;
           
             
           

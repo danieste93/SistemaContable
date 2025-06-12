@@ -94,9 +94,9 @@ class Contacto extends Component {
             let Deta = newstate.Comprobante.factura.detalles[0].detalle
               
 const totalSumaItems = Deta.reduce((sum, item) => sum + item.precioFinal, 0);
-console.log(totalSumaItems)
+
 let diferencia = parseFloat((totalSumaItems - parseFloat(TotalValorCompra)).toFixed(2))
-console.log(diferencia)
+
 if(diferencia>0){
   Deta[0].precioFinal =  Deta[0].precioFinal - diferencia
 }else if(diferencia<0)
@@ -121,11 +121,11 @@ if(diferencia>0){
             .catch(error => console.error('Error:', error))
             .then(response => {
               console.log('Response addfact:', response)
-              if(response.message=="error al registrar"){
+              if(response.status=="Error"){
                 let add = {
                   Estado:true,
                   Tipo:"error",
-                  Mensaje:"Error en el sistema, porfavor intente en unos minutos"
+                  Mensaje:response.message
               }
               this.setState({Alert: add, loading:false}) 
             } else if(response.message=="Factura ya ingresada"){
@@ -242,6 +242,32 @@ if(response.articulosCreados.length > 0)
         })
 
       }
+       agruparItemsPorCodigo(data) {
+  const agrupados = {};
+
+  data.forEach(item => {
+    const codigo = item.codigoPrincipal[0];
+    const cantidad = parseFloat(item.cantidad[0]);
+
+    if (agrupados[codigo]) {
+      // Sumar cantidades si ya existe el código
+      agrupados[codigo].cantidad += cantidad;
+    } else {
+      // Crear nueva entrada, manteniendo la estructura original
+      agrupados[codigo] = {
+        ...item,
+        cantidad: cantidad  // convertimos a número
+      };
+    }
+  });
+
+  // Convertir las cantidades nuevamente a string con 6 decimales, si quieres mantener ese formato
+  return Object.values(agrupados).map(item => ({
+    ...item,
+    cantidad: [item.cantidad.toFixed(6)]
+  }));
+}
+
       
       setChangeinput=(e)=>{
         this.setState({xmlData:{fechaAutorizacion:[""]},  Comprobante:"",})
@@ -317,12 +343,10 @@ if(response.articulosCreados.length > 0)
                 console.error('Error al parsear XML:', err);
                 return;
               }
-              console.log(result)
-             
             
               // Buscar cualquier objeto que tenga .comprobante[0]
               const getData = findComprobanteYFecha(result);
-            console.log(getData)
+          
             if (getData && getData.comprobante && getData.fechaAutorizacion) {
                 parserX.parseString(getData.comprobante, (err, xml) => {
                   if (err) {
@@ -330,6 +354,8 @@ if(response.articulosCreados.length > 0)
                     return;
                   }
                   console.log(xml)
+
+                  xml.factura.detalles[0].detalle = this.agruparItemsPorCodigo(xml.factura.detalles[0].detalle)
      // Verificación del RUC del comprador
      let estructuraXml = {fechaAutorizacion:[getData.fechaAutorizacion],numeroAutorizacion:[getData.numeroAutorizacion]}
 if(xml.factura){

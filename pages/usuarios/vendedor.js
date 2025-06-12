@@ -7,7 +7,7 @@ import {Animate} from "react-animate-mount"
 import {logOut} from "../../reduxstore/actions/myact"
 import Router from "next/router"
 import Modal from "../../components/cuentascompo/modal-ingreso"
-import {getClients,addFirstRegs,getArts,getDistribuidor,getAllcuentas,getCompras,getcuentas,getCounter, getVentas, gettipos,getcats, cleanData, } from "../../reduxstore/actions/regcont";
+import {getClients,addFirstRegsDelete,addFirstRegs,getArts,getDistribuidor,getAllcuentas,getCompras,getcuentas,getCounter, getVentas, gettipos,getcats, cleanData, } from "../../reduxstore/actions/regcont";
 /**
 * @author
 * @class admins
@@ -138,7 +138,7 @@ getCuentasyCatsIni=()=>{
    .then(response => {
   
      this.props.dispatch(addFirstRegs(response.regsHabiles));
- 
+ this.props.dispatch(addFirstRegsDelete(response.regsHabilesDelete));
       this.exeRegs()
    })
  
@@ -221,7 +221,7 @@ let tipoVend = this.props.state.userReducer !="" && this.props.state.userReducer
   <Adminfunitem icono="app_registration" titulo="Inventario" url="/inventario" />
 
   <Adminfunitem icono="local_atm" titulo="Venta" url="/punto-de-venta" />
-  <Adminfunitem icono="local_grocery_store" titulo="Emarket" url="/configuracion-emarket" />
+  {/* <Adminfunitem icono="local_grocery_store" titulo="Emarket" url="/configuracion-emarket" /> */}
   </div>
   <div className="contbarra">
 

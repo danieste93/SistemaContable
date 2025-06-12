@@ -3398,20 +3398,25 @@ async function  generateFactCompra(req, res){
   let RegModelSass = await conn.model('Reg', regSchema);
   let CuentasModelSass = await conn.model('Cuenta', accountSchema);
   let CatModelSass = await conn.model('Categoria', catSchema);
-
+    let Counterx =     await CounterModelSass.find({iDgeneral:9999999} )
   let claveAccess = req.body.Comprobante.factura.infoTributaria[0].claveAcceso[0]
   
   let findCompra = await ComprasModelSass.find({ClaveAcceso:claveAccess})
+ let findCompraID = await ComprasModelSass.find({CompraNumero:Counterx[0].ContCompras})
 
   if(findCompra.length > 0){
     res.send({status: "error", message: "Factura ya ingresada"});
-  }else{
+  }else if(findCompraID.length > 0){
+    res.send({status: "error", message: "Vuelva a intentarlo porfavor"});
+     }
+  
+  else{
 
   const session = await mongoose.startSession();   
   session.startTransaction();
   try{
   
-    let Counterx =     await CounterModelSass.find({iDgeneral:9999999},null, {session} )
+
     let articulos = req.body.Comprobante.factura.detalles[0].detalle
     let insumos = articulos.filter(x=>x.insumo)
     let sinInsumos = articulos.filter(x=>x.insumo == null)
@@ -3765,9 +3770,8 @@ arrCuentas.push(cuenta2)
 
     }
 
-    let sumaTotalItems = valorInventario + valorInsumos
-
- if(parseFloat(req.body.TotalPago) != sumaTotalItems){
+    let sumaTotalItems = (valorInventario + valorInsumos).toFixed(2)
+ if(parseFloat(req.body.TotalPago) != parseFloat(sumaTotalItems)){
 console.log(parseFloat(req.body.TotalPago))
 console.log(parseFloat(sumaTotalItems))
 
@@ -3830,7 +3834,7 @@ let adicionador  = Counterx[0].ContRegs + counterRegs
     await session.abortTransaction();
     session.endSession();
     console.log(error, "errr")
-    return res.json({status: "Error", message: "error al registrar", error });
+    return res.json({status: "Error", message: error, error });
   }
 
   

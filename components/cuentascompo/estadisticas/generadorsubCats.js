@@ -16,28 +16,33 @@ class Stats extends Component {
 
     componentDidMount(){
      
-     console.log(this.props)
+
   
         }
 
         FiltrarRegistroUnicoSistema=(registros)=> {
+  
             const ventasFiltradas = [];
             const numerosVentaUnicos = new Set();
       let match = false
             registros.forEach((registro) => {
-              if(this.props.data[0].CatSelect.idCat==5){
+              if(registro.CatSelect.idCat==5){
                  match = registro.Nota.match(/Venta N°(\d+)/);
-              }else if(this.props.data[0].CatSelect.idCat==16){
-                 match = registro.Nota.match(/Compra N°(\d+)/);
-              }else if(this.props.data[0].CatSelect.idCat==19){
+              }else if(registro.CatSelect.idCat==16){
+                 match = registro.Nota.match(/Compra N°(\d+)/)||
+                    registro.Nota.match(/Compra desde Edicion-Articulo N°(\d+)/)
+              }else if(registro.CatSelect.idCat==19){
                  match = registro.Nota.match(/Precio-de-Compra Inventario \/\/ Venta Física N°(\d+)/);
-              }else if(this.props.data[0].CatSelect.idCat==17){
-                match = registro.Nota.match(/Compra N°(\d+)/);
-              }
-           
+              }else if (registro.CatSelect.idCat == 17) {
+  match =
+    registro.Nota.match(/Compra N°(\d+)/) ||
+    registro.Nota.match(/Compra Edicion Articulo N°(\d+)/)||
+    registro.Nota.match(/Compra Facturada N°(\d+)/);
+}
+       
               if (match) {
                 const numeroVenta = match[1];
-          
+                
                 // Solo agregamos el registro si el número no ha sido registrado antes
                 if (!numerosVentaUnicos.has(numeroVenta)) {
                   numerosVentaUnicos.add(numeroVenta);
@@ -50,7 +55,7 @@ class Stats extends Component {
           }
 
           render() {
-            console.log(this.state)
+           
             let DetallesPorrender = this.props.data
             let showData = this.props.data
             let catInventario = false
@@ -258,7 +263,7 @@ categoriasGasto.forEach(cat => {
 return {categoriasIngreso, categoriasGasto}
 
 }
-console.log(DetallesPorrender)
+
 
 const ventasUnicas = this.FiltrarRegistroUnicoSistema(DetallesPorrender);
 
@@ -273,7 +278,7 @@ const extraerCategoriasConImporte =(ventasUnicas)=> {
           const categoria = articulo.Categoria;
    
             const idCat = categoria._id;
-  
+
             if (!categoriasMapInv[idCat]) {
    
               categoriasMapInv[idCat] = {
@@ -285,12 +290,13 @@ const extraerCategoriasConImporte =(ventasUnicas)=> {
               };
               counter ++
           }
-        
-            categoriasMapInv[idCat].totalImporte += articulo.PrecioCompraTotal;
+         if(venta.CatSelect.idCat == 19){
+        categoriasMapInv[idCat].totalImporte += articulo.Precio_Compra;
           
-            
+    }else{
+  categoriasMapInv[idCat].totalImporte += articulo.PrecioCompraTotal;
           
-       
+    }
          
        
         });
@@ -300,7 +306,7 @@ const extraerCategoriasConImporte =(ventasUnicas)=> {
     
 
     const valoresArray = Object.values(categoriasMapInv);
-    
+  
 
     const filteredArray = valoresArray.filter(item1 => 
       !this.state.excluidos.some(item2 => item2._id === item1._id)

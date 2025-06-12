@@ -45,7 +45,7 @@ class Contacto extends Component {
                 this.props.dispatch(logOut());
                 alert("Session expirada, vuelva a iniciar sesion para continuar");
                      
-                Router.push("/")
+                Router.push("/ingreso")
               }else{
                 this.setState({idReg:response.cont.ContRegs})
               }

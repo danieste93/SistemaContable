@@ -80,7 +80,7 @@ componentDidMount(){
                 this.props.dispatch(logOut());
                 alert("Session expirada, vuelva a iniciar sesion para continuar");
                      
-                Router.push("/")
+                Router.push("/ingreso")
               }else{
                 this.setState({idCompra:response.cont.ContCompras,idReg:response.cont.ContRegs,EqId:response.cont.ContArticulos})
               }
@@ -130,7 +130,7 @@ componentDidMount(){
                         PrecioCompraTotal:e.Precio_Compra|| 0,
                         CantidadCompra:1,
                         Categoria:e.Categoria,
-                        SubCategoria:e.Categoria,
+                        SubCategoria:e.SubCategoria,
                         CantidadCacl:1,
                         Medida:e.Medida,
                         Caduca:e.Caduca,
@@ -381,6 +381,7 @@ this.setState({ArtAddCalc:deepClone})
 return (data)
        }
     render () {
+
       let TotalPago = 0
       if(this.state.Fpago.length > 0){
 

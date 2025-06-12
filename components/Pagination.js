@@ -88,7 +88,7 @@ class Pagination extends Component {
 
         const prevButton = (<li className={prevButtonClass}>
             <button
-                className="page-link" onClick={this.onPrev} tabIndex="-1">Anterior</button>
+                className="page-link" onClick={this.onPrev} tabIndex="-1">            <i className="material-icons flecha" >keyboard_arrow_left</i></button>
         </li>);
 
         let nextButtonClass = 'page-item';
@@ -101,7 +101,7 @@ class Pagination extends Component {
             <li className={nextButtonClass}>
                 <button
                     disabled={this.isOnLastPage()}
-                    className="page-link" onClick={this.onNext}>Siguiente</button>
+                    className="page-link" onClick={this.onNext}>             <i className="material-icons flecha">keyboard_arrow_right</i> </button>
             </li>
         );
 
@@ -114,6 +114,15 @@ class Pagination extends Component {
                     {pages}
                     {nextButton}
                 </ul>
+  <style jsx >
+              { `
+        
+              
+              
+              `} 
+                 
+                   </style>
+
             </nav>
         );
     }
