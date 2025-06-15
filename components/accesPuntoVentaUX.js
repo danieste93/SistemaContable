@@ -1,12 +1,15 @@
 import React, { Component } from 'react'
 import postal from 'postal';
 import {connect} from 'react-redux';
-import Autosuggest from '../components/suggesters/jwsuggest-general-venta';
+import AutosuggestUX from '../components/suggesters/jwsuggest-clientesUX';
 import ModalAddIndividual from "../components/inventariocompo/modal-addArtIndividual"
 import ModalAddServ from "../components/inventariocompo/modal-addServicio"
 import ModalFormapago from "../components/reusableComplex/modal-addFormaPago"
 import ModalEditFormapago from "../components/reusableComplex/modal-editFormaPago"
-
+import Autosuggest from '../components/suggesters/jwsuggest-general-venta';
+import { ValidatorForm, TextValidator} from 'react-material-ui-form-validator';
+import Checkbox from '@material-ui/core/Checkbox';
+import ModalEditPrecioCompraServ from "./puntoventacompo/modal-editPrecioCompraServ"
 
 import ArticuloVentaUX from "./puntoventacompo/articuloventaRenderUX"
 import ReactToPrint from "react-to-print";
@@ -27,7 +30,14 @@ import BotonExpandible from './puntoventacompo/bexpansivo';
 import ArtRenderUX from './puntoventacompo/articuloListRenderUX';
 import {paginationPipe} from "../reduxstore/pipes/paginationFilter";
 import {Filtervalue,Searcher} from "./filtros/filtroeqid"
-import { Height } from '@material-ui/icons';
+
+import cotiGenetor from "../public/static/cotiTemplate"
+import notaGenetor from "../public/static/NotaTemplate"
+import Head from 'next/head';
+import Resultados from "./puntoventacompo/modal-cuentasVend"
+
+import GeneradorFactura  from "./snippets/GeneradorFactura"
+import SecureFirm from './snippets/getSecureFirm';
 
 
 class accessPuntoVentaUX extends Component {
@@ -53,7 +63,6 @@ class accessPuntoVentaUX extends Component {
                   UserSelect:false,
                           id:"",
                           usuario:"Consumidor Final",
-                        
                           correo:"activos.ec@gmail.com",
                           telefono:"",
                           ciudad:"",
@@ -102,6 +111,8 @@ class accessPuntoVentaUX extends Component {
            
 
      }
+     carrito = React.createRef(); 
+     pagos = React.createRef(); 
         componentRef = React.createRef(); 
           printRef  = React.createRef();
           channel1 = null;
@@ -111,6 +122,101 @@ class accessPuntoVentaUX extends Component {
      
   this.startPuntoVentaData()
   }
+   handleChangeIdentificacion = (e) => {
+        const { name, value } = e.target;
+    
+        // Validamos que el valor solo contenga números (permitiendo ceros a la izquierda)
+        if (/^\d*$/.test(value)) {
+            this.setState((prevState) => {
+                const nuevoTipoID = value.length > 10 ? "RUC" : "Cedula";
+    
+                return {
+                    Comprador: {
+                        ...prevState.Comprador,
+                        [name]: value,
+                        ClientID: nuevoTipoID
+                    }
+                };
+            });
+        }
+    };
+       handleChangeform=(e)=>{
+        this.setState((prevState) => ({
+            Comprador: {
+              ...prevState.Comprador,
+              [e.target.name] : e.target.value
+            }
+          }));
+         }
+         handleChangeSecuencial=(e)=>{
+    if(e.target.value >= this.state.secuencialBase){
+
+    
+    this.setState({
+    [e.target.name]:parseInt(e.target.value)
+    })}
+    else{
+
+        let add = {
+            Estado:true,
+            Tipo:"error",
+            Mensaje:`No se puede elegir un secuencial menor`
+        }
+        this.setState({Alert: add, }) 
+
+    }
+    } 
+         handleClientID = (e) => {
+            const { value } = e.target;
+            const { cedula } = this.state.Comprador;
+        
+            // Verificamos la longitud del campo cedula
+            if (cedula.length > 10 && value === "Cedula") {
+                this.setState({ 
+                    Alert: { 
+                        Estado: true, 
+                        Tipo: "error", 
+                        Mensaje: "Cedula solo hasta 10 dígitos"
+                    } 
+                });
+                return; // Salimos de la función sin actualizar el estado
+            }
+        
+            if (cedula.length <= 10 && value === "RUC") {
+                this.setState({ 
+                    Alert: { 
+                        Estado: true, 
+                        Tipo: "info", 
+                        Mensaje: "RUC debe tener más de 10 dígitos"
+                    } 
+                });
+                return;
+            }
+        
+            // Si la validación es correcta, actualizamos ClientID
+            this.setState((prevState) => ({
+                Comprador: {
+                    ...prevState.Comprador,
+                    ClientID: value
+                },
+                Alert: { Estado: false } // Reseteamos la alerta si todo está bien
+            }));
+        };
+        handleChangeGeneral=(e)=>{
+
+    this.setState({
+    [e.target.name]:e.target.value
+    })
+    }
+        handleDocType=(e)=>{
+       
+    if(e.target.value == "Factura"){
+           this.setState({ descuentoPer:0, descuentoVal:0})
+         this.saveToLocalStorage({ descuentoPer:0, descuentoVal:0})
+    }
+         this.setState({doctype:e.target.value})
+         this.saveToLocalStorage({doctype:e.target.value})
+     }
 
       comprobadorAddArt=(e)=>{
            
@@ -362,6 +468,18 @@ class accessPuntoVentaUX extends Component {
               }
   }
 
+  handleChangePrinter=()=>{
+this.setState({impresion:!this.state.impresion})
+    }
+
+  
+    comprobadorVentaPRIT=()=>{
+        if(this.state.impresion){
+                               
+            this.printRef.current.handleClick();
+        }
+    }
+
    loadFromLocalStorage=(state)=>{
  
         try{
@@ -404,44 +522,784 @@ class accessPuntoVentaUX extends Component {
           
     }
 
-     getAllArts=()=>{
-            
-              let datos = {User: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
-                  Tipo: this.props.state.userReducer.update.usuario.user.Tipo
-                }}
-              let lol = JSON.stringify(datos)
-              fetch("/public/engine/art", {
-                method: 'POST', // or 'PUT'
-                body: lol, // data can be `string` or {object}!
-                headers:{
-                  'Content-Type': 'application/json',
-                  "x-access-token": this.props.state.userReducer.update.usuario.token
-                }
-              }).then(res => res.json())
-              .catch(error => {console.error('Error:', error);
-                     })
-              .then(response => {  
-              
-                  if(response.status == 'error'){
-                
-                    if(response.message == "error al decodificar el token"){
-                      this.props.dispatch(logOut());
-                      this.props.dispatch(cleanData());
-                      alert("Session expirada, vuelva a iniciar sesion para continuar");
-                  
-                   
-                      Router.push("/ingreso")
-                         
+     comprobadorCoti=(IvaEC,valSinIva)=>{
+        if(this.state.loading == false){
+            this.setState({loading:true})
+                let TotalSum = 0
+                let SuperTotal = 0
+                let TotalPago = 0
+                let descuentoCalculo=0
+                if(this.state.Fpago.length > 0){
+        
+                    for(let i = 0; i<this.state.Fpago.length;i++){
+                    
+                        TotalPago = TotalPago + parseFloat(this.state.Fpago[i].Cantidad)
                     }
-                  }else if(response.status == 'Ok'){             
-      
-                      this.props.dispatch(getArts(response.articulosHabiles));
+                    
+                }
                 
-                  }
-              });
-      
-      
+                   if(this.state.ArtVent.length > 0){
+                       
+                       for (let i=0;i<this.state.ArtVent.length;i++){
+                   
+                        TotalSum= TotalSum + parseFloat(this.state.ArtVent[i].PrecioCompraTotal)
+                      
+                    }
+                   
+                  
+                   }
+                   if(this.state.descuentoVal > 0){
+                           
+                  SuperTotal = TotalSum -  parseFloat(this.state.descuentoVal)
+                }else{
+                    SuperTotal = TotalSum
+                }
+                
+                if(this.state.descuentoPer > 0){
+                    descuentoCalculo = (TotalSum * this.state.descuentoPer) / 100
+                    SuperTotal = SuperTotal -  parseFloat(descuentoCalculo)
+                }
+               
+             
+               let TotalDescuento = this.state.descuentoVal  + this.state.descuentoPer
+               if( SuperTotal > 0 ){   
+               if(this.state.outStock ==false){
+                       
+                                                       
+                                   
+                                   this.genCoti(SuperTotal,(SuperTotal - IvaEC), IvaEC,TotalDescuento )
+            
+            }else{
+                let add = {
+                    Estado:true,
+                    Tipo:"error",
+                    Mensaje:"Revice Cantidad de sus productos"
+                }
+                this.setState({Alert: add,loading:false}) 
+            }}else{
+                let add = {
+                    Estado:true,
+                    Tipo:"warning",
+                    Mensaje:"Agregue Productos"
+                }
+                this.setState({Alert: add, loading:false})
+              }
+        
+        }
+    }
+  genCoti = (SuperTotal, SubTotal, IvaEC, TotalDescuento ) => {
+
+
+            let nombreComercial = this.props.state.userReducer.update.usuario.user.Factura.nombreComercial
+           let tiempo = new Date()    
+            let mes = this.addCero(tiempo.getMonth()+1)
+            let dia = this.addCero(tiempo.getDate())
+            var date = dia+ "/"+ mes+"/"+tiempo.getFullYear()
+            let fechaEmision =date
+            let dirEstablecimiento=this.props.state.userReducer.update.usuario.user.Factura.dirEstab
+            let baseImponible =  SubTotal.toFixed(2)
+            let valorIVA = IvaEC.toFixed(2)
+            let cotiData = {
+                idCoti:this.state.idCoti,
+               SuperTotal,      
+               ciudadComprador:this.state.Comprador.UserSelect?this.state.Comprador.ciudad:'',                                     
+               TotalDescuento,
+               IvaEC:valorIVA,
+               fechaEmision,
+               nombreComercial,
+               dirEstablecimiento,
+               baseImponible:baseImponible,
+               Doctype: this.state.doctype,
+                UserId: this.state.Comprador.id,
+                razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
+                ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
+                estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
+                ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision,
+                secuencial:this.ceroMaker(this.state.secuencialGen),
+                obligadoContabilidad :this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO",
+                rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?true:false,
+                razonSocialComprador:this.state.Comprador.UserSelect?this.state.Comprador.usuario:'CONSUMIDOR FINAL',
+                identificacionComprador:this.state.Comprador.UserSelect?this.state.Comprador.cedula:'9999999999999',
+                direccionComprador:this.state.Comprador.UserSelect?this.state.Comprador.direccion:'',
+                ArticulosVendidos:this.state.ArtVent,
+                populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
+                LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
+                nombreComercial: this.props.state.userReducer.update.usuario.user.Factura.nombreComercial,
+                 Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
+                 Estado:"",
+                
+             };
+    
+
+     let newData = {html:cotiGenetor(cotiData),
+     //   correo: this.state.Comprador.correo ,
+     Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
+            correo:this.state.Comprador.correo,
+          allData:cotiData,
+          cotiToClient:this.state.cotiToClient
+}
+
+     fetch("/public/enviarCoti", {
+        method: 'POST', // or 'PUT'
+        body: JSON.stringify(newData), // data can be `string` or {object}!
+        headers:{
+          'Content-Type': 'application/json',
+          "x-access-token": this.props.state.userReducer.update.usuario.token
+        }
+      }).then(res => res.json())
+      .catch(error => console.error('Error:', error))
+      .then(response => {
+     
+        const url = window.URL.createObjectURL(
+            new Blob([Buffer.from(response.buffer)], { type: "application/pdf"}),
+          );
+     let link = document.createElement('a');
+        link.href = url;
+        link.setAttribute(
+          'download',
+          `Cotizacion ${newData.allData.nombreComercial}-${newData.allData.idCoti}`,
+        );
+        link.click()
+              
+               let add = {
+            Estado:true,
+            Tipo:"success",
+            Mensaje:"Cotización Generada"
+        }
+        this.setState({Alert: add, loading:false, cotiToClient:false,
+        
+        
+        }) 
+        setTimeout(()=>{ 
+            let cleanData = {
+              
+                userDisplay:false,
+           Comprador:{
+                  UserSelect:false,
+                          id:"",
+                          usuario:"Consumidor Final",
+                          correo:"activos.ec@gmail.com",
+                          telefono:"",
+                          ciudad:"",
+                          direccion:"xxxxxxxxxx",
+                          cedula:"9999999999999",
+                          idcuenta:"",
+                           ClientID:"Cedula",
+               
+                },
+                 readOnly:true,
+
+                SelectFormaPago:[],
+                Fcredito:[],
+                disableDoc:false,
+                ArtVent:[],
+                tipopago:"Contado",
+                Fpago:[  ],
+                descuentoPer:0,
+                descuentoVal:0,
+                arrPrecios:[],
+               
+
             }
+            this.setState(cleanData)
+
+            this.saveToLocalStorage(cleanData)
+        
+        },100)
+      })
+
+    
+  
+
+          }
+         
+           genfact = async (SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento ) => {
+         
+       
+          
+            let factGenerated = await GeneradorFactura(this.state.idVenta,this.state.idReg,this.state.Fpago,this.state.ArtVent, this.state.Comprador, this.state.secuencialGen, 
+
+                      SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento, 1 //ambiente 
+            )
+
+          
+          
+            if(factGenerated.status == "Ok"){
+            
+                fetch('/cuentas/generarventa', {
+                    method: 'POST', // or 'PUT'
+                    body: JSON.stringify(factGenerated.CompiladoFactdata), // data can be `string` or {object}!
+                    headers:{
+                      'Content-Type': 'application/json',
+                      "x-access-token": this.props.state.userReducer.update.usuario.token
+                    }
+                  }).then(res => res.json())
+                  .catch(error => console.error('Error:', error))
+                  .then(response => {
+                   console.log(response)
+                    if(response.message=="error al registrar"){
+                        let add = {
+                          Estado:true,
+                          Tipo:"error",
+                          Mensaje:"Error en el sistema, porfavor intente en unos minutos"
+                      }
+                    return {status:"Error",mensaje:`Error con la firma electronica, ${docFirmado.message}`}
+                      }
+                      else if(response.message=="fatalerror"){
+                         let add = {
+                             Estado:true,
+                             Tipo:"error",
+                             Mensaje:"Error en el sistema del SRI, porfavor intente mas tarde"
+                         }
+                         this.setState({Alert: add, loading:false}) 
+                      }
+                      else{
+                        let add = {
+                            Estado:true,
+                            Tipo:"success",
+                            Mensaje:"Factura Electrónica Generada Satisfactoriamente"
+                        }
+                        this.setState({Alert: add,
+                         loading:false,
+                      
+                     })
+                
+                  
+                       setTimeout(()=>{ 
+                                       
+                         let cleanData = { 
+
+                            idReg:response.updatedCounter.ContRegs,
+                            idVenta:response.updatedCounter.ContVentas,
+                            secuencialGen:response.updatedCounter.ContSecuencial,
+                            secuencialBase:response.updatedCounter.ContSecuencial,
+                            idCoti:response.updatedCounter.ContCotizacion,
+       
+                             loading:false,
+                             
+                             userDisplay:false,
+                          Comprador:{
+                  UserSelect:false,
+                          id:"",
+                          usuario:"Consumidor Final",
+                          correo:"activos.ec@gmail.com",
+                          telefono:"",
+                          ciudad:"",
+                          direccion:"xxxxxxxxxx",
+                          cedula:"9999999999999",
+                          idcuenta:"",
+                           ClientID:"Cedula",
+               
+                },
+                             disableDoc:false,
+                             SelectFormaPago:[],
+                             Fcredito:[],
+                             ArtVent:[],
+                             tipopago:"Contado",
+                             Fpago:[  ],
+                             descuentoPer:0,
+                             descuentoVal:0,
+                             arrPrecios:[],
+                            
+ 
+                         }
+                        this.setState(cleanData)
+                        this.saveToLocalStorage(cleanData)
+                        this.props.dispatch(addVenta(response.VentaGen));
+                        this.props.dispatch(addRegs(response.arrRegsSend));
+                        this.props.dispatch(updateCuentas(response.Cuentas));
+                        this.props.dispatch(updateArts(response.Articulos));
+                     },100)
+                       
+                        
+                }
+                })
+
+
+
+
+            }else if(factGenerated.status == "Error"){
+          
+                let messageShow  = factGenerated.mensaje
+
+                if(messageShow == 'Error :  Error en la factura, CLAVE ACCESO REGISTRADA,  undefined '){
+
+                    messageShow ="Ese Secuencial ya ha sido utilizado, aumente un numero en el secuencial"
+                }
+
+                let add = {
+                    Estado:true,
+                    Tipo:"error",
+                    Mensaje:messageShow
+                }
+                this.setState({Alert: add, loading:false}) 
+
+            }
+            
+      
+           }
+
+    comprobadorVenta=async(IvaEC,valSinIva)=>{
+        if(this.state.adduser == false){
+        if(this.state.loading == false){
+            this.setState({loading:true})
+                let TotalSum = 0
+                let SuperTotal = 0
+                let TotalPago = 0
+                let descuentoCalculo=0
+                if(this.state.Fpago.length > 0){
+        
+                    for(let i = 0; i<this.state.Fpago.length;i++){
+                    
+                        TotalPago = TotalPago + parseFloat(this.state.Fpago[i].Cantidad)
+                    }
+                    
+                }
+                
+                   if(this.state.ArtVent.length > 0){
+                       
+                       for (let i=0;i<this.state.ArtVent.length;i++){
+                   
+                        TotalSum= TotalSum + parseFloat(this.state.ArtVent[i].PrecioCompraTotal)
+                      
+                    }
+                   
+                  
+                   }
+                   if(this.state.descuentoVal > 0){
+                           
+                  SuperTotal = TotalSum -  parseFloat(this.state.descuentoVal)
+                }else{
+                    SuperTotal = TotalSum
+                }
+                
+                if(this.state.descuentoPer > 0){
+                    descuentoCalculo = (TotalSum * this.state.descuentoPer) / 100
+                    SuperTotal = SuperTotal -  parseFloat(descuentoCalculo)
+                }
+               
+             
+               let TotalDescuento = this.state.descuentoVal  + this.state.descuentoPer
+        
+               if(this.state.outStock ==false){
+                let tiempo = new Date()    
+                let mes = this.addCero(tiempo.getMonth()+1)
+                let dia = this.addCero(tiempo.getDate())
+                var date = dia+ "/"+ mes+"/"+tiempo.getFullYear()
+                let fechaEmision =date
+                if(this.state.tipopago =="Contado"){
+                    if( SuperTotal > 0 ){
+                            if(SuperTotal.toFixed(2) == TotalPago){
+                                if(this.state.impresion){
+                               
+                                    this.printRef.current.handleClick();
+                                }
+                                
+                                if (this.state.doctype =="Factura"){
+                                  
+                                    if(this.props.state.userReducer.update.usuario.user.Factura.validateFact && this.props.state.userReducer.update.usuario.user.Firmdata.valiteFirma){                
+                                        let bufferfile = ""                    
+                                        try {
+                                          bufferfile = await SecureFirm(this.props.state.userReducer )
+                                            console.log('Bufferfile obtenido:', bufferfile);
+                                        
+                                          } catch (error) {
+                                            console.error('Error al obtener bufferfile:', error);
+                                            alert("Error al firmar")
+                                            alert("Error al firmar",error)
+                                          }   
+
+                                            
+                                     this.genfact(SuperTotal,(SuperTotal - IvaEC), IvaEC,bufferfile,TotalDescuento )
+                               
+                              
+                                 
+                                    }else{
+                                        let add = {
+                                            Estado:true,
+                                            Tipo:"error",
+                                            Mensaje:"Es necesario validar la factura y firma digital"
+                                        }
+                                        this.setState({Alert: add, loading:false}) 
+                                    }
+                                }else if(this.state.doctype =="Nota de venta"){
+                                     
+                                    let numeroAuto = 0
+                                    let fechaAuto = ""
+                                    let secuencial = 0
+                                 
+                                 
+                                    let vendedorCont ={
+                                        Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
+                                        Id:this.props.state.userReducer.update.usuario.user._id,
+                                        Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
+                                    }
+                                    let accumText = ""
+                                    let mimapper =  this.state.Fpago.map(x=> accumText.concat(x.Detalles))
+                                    let PDFdata = {
+                                        idVenta:this.state.idVenta,
+                                        
+                                           SuperTotal,                                           
+                                           TotalDescuento,
+                                           ciudadComprador:this.state.Comprador.UserSelect?this.state.Comprador.ciudad:'',
+                                           fechaEmision,
+                                           nombreComercial:this.props.state.userReducer.update.usuario.user.Factura.nombreComercial,
+                                           dirEstablecimiento:this.props.state.userReducer.update.usuario.user.Factura.dirEstab,
+                                         
+                                           Doctype: this.state.doctype,
+                                            UserId: this.state.Comprador.id,
+                                            razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
+                                            ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
+                                            estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
+                                            ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision,
+                                            
+                                            obligadoContabilidad :this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO",
+                                            rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?true:false,
+                                            populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
+                                            razonSocialComprador:this.state.Comprador.UserSelect?this.state.Comprador.usuario:'CONSUMIDOR FINAL',
+                                            correoComprador:this.state.Comprador.UserSelect?this.state.Comprador.correo:'',
+                                            identificacionComprador:this.state.Comprador.UserSelect?this.state.Comprador.cedula:'9999999999999',
+                                            direccionComprador:this.state.Comprador.UserSelect?this.state.Comprador.direccion:'',
+                                            ciudadComprador:this.state.Comprador.UserSelect?this.state.Comprador.ciudad:'',
+                                            ArticulosVendidos:this.state.ArtVent,
+                                            LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
+                                            
+                                             Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
+                                            
+                                             detalles:mimapper.map((x)=>  x +" ")
+                                         };
+
+
+                                    let dataNotadeventa = {
+                                        numeroAuto:0,
+                                        fechaAuto:0,
+                                        ClaveAcceso:0,
+                                        Secuencial:0,
+                                        allData:PDFdata,
+                                        iDCating:5,
+                                        html:notaGenetor(PDFdata),
+                                                       numeroAuto,
+                                                        fechaAuto,
+                                                        secuencial,
+                                                          SuperTotal,                                           
+                                                          TotalDescuento,
+                                                        IvaEC,
+                                                          baseImponible:valSinIva,
+                                                          Doctype: this.state.doctype,
+                                                           UserId: this.state.Comprador.id,
+                                                           UserName:this.state.Comprador.usuario,
+                                                           Correo: this.state.Comprador.correo,
+                                                           Telefono: this.state.Comprador.telefono,
+                                                           Direccion: this.state.Comprador.direccion,
+                                                            Cedula:this.state.Comprador.cedula,
+                                                            Ciudad:this.state.Comprador.ciudad,
+                                                            ArticulosVendidos:this.state.ArtVent,
+                                                            FormasPago:this.state.Fpago,
+                                                            idVenta:this.state.idVenta,
+                                                            idRegistro:this.state.idReg,
+                                                            Tiempo: new Date().getTime(),
+                                                            Vendedor: vendedorCont,
+                                                            Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
+                                                            Estado:"",
+                                                            xmlDoc:"",
+                                                        };
+                                    fetch("/cuentas/generarventa", {
+                                        method: 'POST', // or 'PUT'
+                                        body: JSON.stringify(dataNotadeventa), // data can be `string` or {object}!
+                                        headers:{
+                                          'Content-Type': 'application/json',
+                                          "x-access-token": this.props.state.userReducer.update.usuario.token
+                                        }
+                                      }).then(res => res.json())
+                                      .catch(error => console.error('Error:', error))
+                                      .then(response => {
+                                          
+
+                                        if(response.status =="Error"){
+                                            let add = {
+                                              Estado:true,
+                                              Tipo:"error",
+                                              Mensaje:`Error en el sistema, ${response.error}porfavor intente en unos minutos`
+                                          }
+                                          this.setState({Alert: add, loading:false}) 
+                                          }else{
+                                          
+                                            let add = {
+                                                Estado:true,
+                                                Tipo:"success",
+                                                Mensaje:"Nota de Venta generada"
+                                            }
+                                            this.setState({Alert: add,})
+                                            this.props.dispatch(addVenta(response.VentaGen));
+                                            this.props.dispatch(addRegs(response.arrRegsSend));
+                                            this.props.dispatch(updateCuentas(response.Cuentas));
+                                            this.props.dispatch(updateArts(response.Articulos));
+                                            let cleanData = { 
+
+
+                       
+                                                idReg:response.updatedCounter.ContRegs,
+                                                idVenta:response.updatedCounter.ContVentas,
+                                                secuencialGen:response.updatedCounter.ContSecuencial,
+                                                secuencialBase:response.updatedCounter.ContSecuencial,
+                                                idCoti:response.updatedCounter.ContCotizacion,
+                           
+                                                 loading:false,
+                                                 
+                                                 userDisplay:false,
+                                                 Comprador:{
+                                                    UserSelect:false,
+                                                    id:"",
+                                                    usuario:"",
+                                                    correo:"",
+                                                    telefono:"",
+                                                    ciudad:"",
+                                                    direccion:"",
+                                                    cedula:"",
+                                                 },
+                                                 readOnly:true,
+                                                 disableDoc:false,
+                                                 SelectFormaPago:[],
+                                                 Fcredito:[],
+                                                 ArtVent:[],
+                                                 tipopago:"Contado",
+                                                 Fpago:[  ],
+                                                 descuentoPer:0,
+                                                 descuentoVal:0,
+                                                 arrPrecios:[],
+                                                
+                     
+                                             }
+                                            this.setState(cleanData)
+
+                                            this.saveToLocalStorage(cleanData)
+                                        
+                                            
+                                    }
+                                    })
+
+                                }
+                                  //fin primer if
+                               }else if(TotalPago > SuperTotal.toFixed(2)){
+                                let add = {
+                                    Estado:true,
+                                    Tipo:"Warning",
+                                    Mensaje:"El Pago es mayor al Total"
+                                }
+                                this.setState({Alert: add, loading:false})
+                            }else if(TotalPago < SuperTotal.toFixed(2) ){
+                          
+                                let add = {
+                                    Estado:true,
+                                    Tipo:"Error",
+                                    Mensaje:"Revice las Formas de Pago"
+                                }
+                                this.setState({Alert: add, loading:false})
+                            }
+
+
+                       }else{
+                        let add = {
+                            Estado:true,
+                            Tipo:"Warning",
+                            Mensaje:"Agregue Productos"
+                        }
+                        this.setState({Alert: add, loading:false})
+                      }
+                }else if(this.state.tipopago =="Credito"){
+                    if(SuperTotal > 0){
+                        if((SuperTotal - this.state.creditoCantidadIni) <= 0 ){
+                            let add = {
+                                Estado:true,
+                                Tipo:"Warning",
+                                Mensaje:"No se necesita generar un crédito"
+                            }
+                            this.setState({Alert: add,loading:false})  
+                        }
+        
+                       else if((SuperTotal - this.state.creditoCantidadIni)<=  this.state.Comprador.creditLimit ){
+                        if(this.state.impresion){
+                        
+                            this.printRef.current.handleClick();
+                        }
+                      
+                      
+                        let vendedorCont ={
+                            Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
+                            Id:this.props.state.userReducer.update.usuario.user._id,
+                            Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
+                        }
+
+                        let PDFdata = {
+                            idVenta:this.state.idVenta,
+
+                               SuperTotal,                                           
+                               TotalDescuento,
+                               ciudadComprador:this.state.Comprador.UserSelect?this.state.Comprador.ciudad:'',
+                               fechaEmision,
+                               nombreComercial:this.props.state.userReducer.update.usuario.user.Factura.nombreComercial,
+                               dirEstablecimiento:this.props.state.userReducer.update.usuario.user.Factura.dirEstab,
+                             
+                               Doctype: this.state.doctype,
+                                UserId: this.state.Comprador.id,
+                                razon:this.props.state.userReducer.update.usuario.user.Factura.razon ,
+                                ruc:this.props.state.userReducer.update.usuario.user.Factura.ruc,
+                                estab:this.props.state.userReducer.update.usuario.user.Factura.codigoEstab,
+                                ptoEmi:this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision,
+                                
+                                obligadoContabilidad :this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO",
+                                rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?true:false,
+                                populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
+                         
+                                razonSocialComprador:this.state.Comprador.UserSelect?this.state.Comprador.usuario:'CONSUMIDOR FINAL',
+                                correoComprador:this.state.Comprador.UserSelect?this.state.Comprador.correo:'',
+                                identificacionComprador:this.state.Comprador.UserSelect?this.state.Comprador.cedula:'9999999999999',
+                                direccionComprador:this.state.Comprador.UserSelect?this.state.Comprador.direccion:'',
+                                ArticulosVendidos:this.state.ArtVent,
+                                LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
+                                
+                                 Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
+                                
+                                 detalles:""
+                             };
+
+
+                        var dataexample = {
+                            html:notaGenetor(PDFdata),
+                            IvaEC,
+                            baseImponible:valSinIva,
+                            SuperTotal,
+                             TotalDescuento: TotalDescuento,
+                            Doctype: this.state.doctype,
+                            UserIdCuenta:this.state.Comprador.idcuenta,
+                             UserId: this.state.Comprador.id,
+                             UserName:this.state.Comprador.usuario,
+                             Correo: this.state.Comprador.correo,
+                             Telefono: this.state.Comprador.telefono,
+                             Direccion: this.state.Comprador.direccion,
+                             Cedula:this.state.Comprador.cedula,
+                              Ciudad:this.state.Comprador.ciudad,
+                              ArticulosVendidos:this.state.ArtVent,
+                              idVenta:this.state.idVenta,
+                              idRegistro:this.state.idReg,
+                              Tiempo: new Date().getTime(),
+                              Vendedor: vendedorCont,
+                              Cuotainicial: parseFloat(this.state.creditoCantidadIni),
+                              CreditoTotal: parseFloat((SuperTotal - this.state.creditoCantidadIni)),
+                              Fcredito:this.state.Fcredito,
+                              Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}   
+                           
+                           };
+                           
+                           fetch("/cuentas/generarcredito", {
+                            method: 'POST', // or 'PUT'
+                            body: JSON.stringify(dataexample), // data can be `string` or {object}!
+                            headers:{
+                              'Content-Type': 'application/json',
+                              "x-access-token": this.props.state.userReducer.update.usuario.token
+                            }
+                          }).then(res => res.json())
+                          .catch(error => console.error('Error:', error))
+                          .then(response => {
+                              
+                    
+                            if(response.message=="error al registrar"){
+                                let add = {
+                                  Estado:true,
+                                  Tipo:"error",
+                                  Mensaje:"Error en el sistema, porfavor intente en unos minutos"
+                              }
+                              this.setState({Alert: add, loading:false}) 
+                              }else{
+                                let add = {
+                                    Estado:true,
+                                    Tipo:"Success",
+                                    Mensaje:"Credito Generado"
+                                }
+                                let cleanData = {Alert: add,
+                                    loading:false,
+                                 
+                                    userDisplay:false,
+                                  Comprador:{
+                  UserSelect:false,
+                          id:"",
+                          usuario:"Consumidor Final",
+                          correo:"activos.ec@gmail.com",
+                          telefono:"",
+                          ciudad:"",
+                          direccion:"xxxxxxxxxx",
+                          cedula:"9999999999999",
+                          idcuenta:"",
+                           ClientID:"Cedula",
+               
+                },
+                                     readOnly:true,
+                                    loading:false,
+                                    SelectFormaPago:[],                
+                                    ArtVent:[],
+                                    tipopago:"Contado",
+                                    Fpago:[ ],
+                                    descuentoPer:0,
+                                    descuentoVal:0,
+                                    arrPrecios:[],
+                                    disableDoc:false,
+                                    Fcredito:[],
+                                }
+                                this.setState(cleanData)
+                                this.saveToLocalStorage(cleanData)
+                              
+                                this.props.dispatch(addVenta(response.creditoC[0]));
+                                this.props.dispatch(addRegs(response.arrRegsSend));
+                                this.props.dispatch(updateCuentas(response.Cuentas));
+                                this.props.dispatch(updateArts(response.Articulos));
+                         
+                            }
+                
+                        })
+        
+                    }
+                        
+                        else{
+                            let add = {
+                                Estado:true,
+                                Tipo:"Error",
+                                Mensaje:"Crédito insuficiente"
+                            }
+                            this.setState({Alert: add, loading:false})  
+                        }
+        
+        
+        
+                    }else{
+                        let add = {
+                            Estado:true,
+                            Tipo:"Error",
+                            Mensaje:"Ingrese productos para generar un crédito"
+                        }
+                        this.setState({Alert: add,loading:false})   
+                    }
+                }
+              
+            }else{
+                let add = {
+                    Estado:true,
+                    Tipo:"Error",
+                    Mensaje:"Revice Cantidad de sus productos"
+                }
+                this.setState({Alert: add,loading:false}) 
+            }
+        
+        } 
+    }else{
+        let add = {
+            Estado:true,
+            Tipo:"info",
+            Mensaje:"Porfavor, acepte o cancele el registro del cliente"
+        }
+        this.setState({Alert: add, loading:false}) 
+    }
+    }
+    
         regisUser=()=>{
      
             console.log("en regisUser")
@@ -586,8 +1444,7 @@ class accessPuntoVentaUX extends Component {
                           this.props.dispatch(logOut());
                           this.props.dispatch(cleanData());
                           alert("Session expirada, vuelva a iniciar sesion para continuar");
-                      
-                       
+                    
                           Router.push("/ingreso")
                              
                         }
@@ -1204,8 +2061,10 @@ calcularPagesToShow = () => {
     handleChangePrinter=()=>{
 this.setState({impresion:!this.state.impresion})
     }
+    
     addNewUser=()=>{
         this.setState({readOnly:false, 
+          NumberSelect:1,
             adduser:true, 
             userDisplay:true,
             Comprador:{
@@ -1237,7 +2096,7 @@ setPreciosPago=(e)=>{
             this.saveToLocalStorage({Fpago:newArr})
            }
 
-             handleDocType=(e)=>{
+    handleDocType=(e)=>{
        
     if(e.target.value == "Factura"){
            this.setState({ descuentoPer:0, descuentoVal:0})
@@ -1264,20 +2123,269 @@ setPreciosPago=(e)=>{
             this.saveToLocalStorage({ArtVent:newArr})
          }
            }
-           
+  handleNumberSelect = (num) => {
+    if (num === 0 || num === 1) {
+      this.setState({ NumberSelect: num });
+    } else if (num === 2) {
+      this.setState({ NumberSelect: 0 }, () => {
+        setTimeout(() => {
+          this.carrito.current?.scrollIntoView({ behavior: "smooth",block: "start"});
+        }, 300);
+      });
+    } else if (num === 4) {
+       
+   this.setState({Resultados:true, NumberSelect: 4 })
+    }
+  };   
+   handleScanError=(e)=>{
+       
+  if(e.length > 6){
+          if(e != null && e !=undefined && e !=""   ){
+          let findArt = this.props.state.RegContableReducer.Articulos.find(x => x.Eqid.toUpperCase().trim() == e.toUpperCase().trim())
+      
+          if(findArt == undefined){
+              let add = {
+                  Estado:true,
+                  Tipo:"error",
+                  Mensaje:"Articulo no encontado en la base de datos"
+              }
+              this.setState({Alert: add,loading:false})
+          }else{
+  
+              let findArtState = this.state.ArtVent.find(x => x.Eqid.toUpperCase().trim() == e.toUpperCase().trim())
+  
+  
+              if(findArtState == undefined){
+                  if(findArt.Tipo == "Producto"){
+  
+                      if(findArt.Existencia < 1){
+                          let message = `Los productos "${findArt.Titulo}" tiene existencias insuficientes para ser agregado` 
+                          let add = {
+                              Estado:true,
+                              Tipo:"error",
+                              Mensaje:message
+                          }
+                          this.setState({Alert: add,loading:false})
+                      }else{
+                          if(findArt.Caduca.Estado){
+                              let tiempoActual = new Date().getTime()
+                              let tiempoCaduca = new Date(findArt.Caduca.FechaCaducidad).getTime()
+                          
+                              if(tiempoActual > tiempoCaduca   ){
+                                  this.setState({ModalCaducado:true, itemCaduco:findArt})
+                              }else{
+                                  findArt.CantidadCompra=1
+                   
+                                  findArt.PrecioVendido= findArt.Precio_Venta
+                                  findArt.PrecioCompraTotal = findArt.Precio_Venta
+                      findArt.Unidad ="Gramos"
+                      findArt.CantidadCacl = 1
+                      findArt.TipoPrecio ="Venta"
+                      let nuevoarr = [...this.state.ArtVent, findArt]  
+                     
+                       
+                      this.setState({ArtVent:nuevoarr })
+                      this.saveToLocalStorage({ArtVent:nuevoarr})
+      
+                              }
+                          
+                          }else{
+                              findArt.CantidadCompra=1
+               
+                              findArt.PrecioVendido= findArt.Precio_Venta
+                              findArt.PrecioCompraTotal = findArt.Precio_Venta
+                  findArt.Unidad ="Gramos"
+                  findArt.CantidadCacl = 1
+                  findArt.TipoPrecio ="Venta"
+                  let nuevoarr = [...this.state.ArtVent, findArt]  
+                 
+                   
+                  this.setState({ArtVent:nuevoarr })
+                  this.saveToLocalStorage({ArtVent:nuevoarr})
+                  let add = {
+                      Estado:true,
+                      Tipo:"success",
+                      Mensaje:"Item agregado"
+                  }
+                  this.setState({Alert: add,loading:false})
+                          }
+                      }
+  
+                  }
+              }else{
+                  let add = {
+                      Estado:true,
+                      Tipo:"info",
+                      Mensaje:"Item ya ingresado"
+                  }
+                  this.setState({Alert: add,loading:false})
+              }
+          }}else{
+              
+              let add = {
+                  Estado:true,
+                  Tipo:"error",
+                  Mensaje:"Error al escanear vuelva a intentarlo"
+              }
+              this.setState({Alert: add,loading:false}) 
+          }
+      }
+  }
+      handleScan=(e)=>{
+        
+          let findArt = this.props.state.RegContableReducer.Articulos.find(x => x.Eqid.toUpperCase().trim() == e.toUpperCase().trim())
+          
+          if(findArt == undefined){
+              let add = {
+                  Estado:true,
+                  Tipo:"error",
+                  Mensaje:"Articulo no encontado en la base de datos"
+              }
+              this.setState({Alert: add,loading:false})
+          }else{
+  
+              let findArtState = this.state.ArtVent.find(x => x.Eqid.toUpperCase().trim() == e.toUpperCase().trim())
+  
+  
+              if(findArtState == undefined){
+                  if(findArt.Tipo == "Producto"){
+  
+                      if(findArt.Existencia < 1){
+                          let message = `Los productos "${findArt.Titulo}" tiene existencias insuficientes para ser agregado` 
+                          let add = {
+                              Estado:true,
+                              Tipo:"error",
+                              Mensaje:message
+                          }
+                          this.setState({Alert: add,loading:false})
+                      }else{
+                          if(findArt.Caduca.Estado){
+                              let tiempoActual = new Date().getTime()
+                              let tiempoCaduca = new Date(findArt.Caduca.FechaCaducidad).getTime()
+                          
+                              if(tiempoActual > tiempoCaduca   ){
+                                  this.setState({ModalCaducado:true, itemCaduco:findArt})
+                              }else{
+                                  findArt.CantidadCompra=1
+                   
+                                  findArt.PrecioVendido= findArt.Precio_Venta
+                                  findArt.PrecioCompraTotal = findArt.Precio_Venta
+                      findArt.Unidad ="Gramos"
+                      findArt.CantidadCacl = 1
+                      findArt.TipoPrecio ="Venta"
+                      let nuevoarr = [...this.state.ArtVent, findArt]  
+                     
+                       
+                      this.setState({ArtVent:nuevoarr })
+                      this.saveToLocalStorage({ArtVent:nuevoarr})
+      
+                              }
+                          
+                          }else{
+                              findArt.CantidadCompra=1
+               
+                              findArt.PrecioVendido= findArt.Precio_Venta
+                              findArt.PrecioCompraTotal = findArt.Precio_Venta
+                  findArt.Unidad ="Gramos"
+                  findArt.CantidadCacl = 1
+                  findArt.TipoPrecio ="Venta"
+                  let nuevoarr = [...this.state.ArtVent, findArt]  
+                 
+                   
+                  this.setState({ArtVent:nuevoarr })
+                  this.saveToLocalStorage({ArtVent:nuevoarr})
+                  let add = {
+                      Estado:true,
+                      Tipo:"success",
+                      Mensaje:"Item agregado"
+                  }
+                  this.setState({Alert: add,loading:false})
+                          }
+                      }
+  
+                  }
+              }else{
+                  let add = {
+                      Estado:true,
+                      Tipo:"info",
+                      Mensaje:"Item ya ingresado"
+                  }
+                  this.setState({Alert: add,loading:false})
+              }
+          }
+  
+      }
+      deleteUser=()=>{
+    
+          
+    
+     var data = {
+                  idCuenta:this.state.Comprador.idcuenta||"",
+                  Id:this.state.Comprador.id,
+                  Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}        
+                 }
+  
+    var lol = JSON.stringify(data)
+  
+     fetch('/users/delete', {
+       method: 'POST', // or 'PUT'
+       body: lol, // data can be `string` or {object}!
+       headers:{
+         'Content-Type': 'application/json',
+         "x-access-token": this.props.state.userReducer.update.usuario.token
+       }
+     }).then(res => res.json())
+     .catch(error => console.error('Error:', error))
+     .then(response => {
+     
+      if(response.message=="error al registrar"){
+          let add = {
+            Estado:true,
+            Tipo:"error",
+            Mensaje:"Error en el sistema, porfavor intente en unos minutos"
+        }
+        this.setState({Alert: add, loading:false}) 
+        }else if(response.message=="Cuentas no 0"){
+          let add = {
+              Estado:true,
+              Tipo:"error",
+              Mensaje:"No se puede eliminar usuario, que tenga deudas o valores a favor"
+          }
+          this.setState({Alert: add, loading:false}) 
+        }else{
+          let add = {
+              Estado:true,
+              Tipo:"success",
+              Mensaje:"Usuario Eliminador"
+          }
+          this.setState({Alert: add, loading:false}) 
+          this.resetUserData();
+              this.getUA()
+        }
+         
+     })
+  
+      }
+        
   render() {
 
 console.log(this.state)
 let nombreComercial = ""
 let dirEstab =""
 let generarRimpeNota = ""
-let SuggesterReady =    <CircularProgress  />              
+let SuggesterReady =    <CircularProgress  />  
+let SuggesterReady2 =    <CircularProgress  />              
 if(this.props.state.RegContableReducer.Clients){
   
-    SuggesterReady =  <Autosuggest placeholder="Busca Clientes"
+    SuggesterReady =  <AutosuggestUX placeholder="Busca Clientes"
+                       clientData={this.state.Comprador}
                      sendClick={this.setUserData}  
                       sugerencias={this.props.state.RegContableReducer.Clients}
                        resetData={this.resetUserData}  />  
+        SuggesterReady2 =  <Autosuggest placeholder="Busca Clientes"
+                         sendClick={this.setUserData}  
+                          sugerencias={this.props.state.RegContableReducer.Clients}
+                           resetData={this.resetUserData}  />                     
 }
 let logogen = ""
 if(this.props.state.userReducer){
@@ -1383,12 +2491,12 @@ if(this.state.descuentoPer > 0){
         let editadd= this.state.userEditMode? "editadd":""
 
 
-      
+   let renderArts = []    
 
 let generadorArticulosLista = <CircularProgress />  
 if(this.props.state.RegContableReducer.Articulos){
             let arts = this.props.state.RegContableReducer.Articulos
-            let renderArts = []
+           
             if(this.state.valorAbuscar.trim() ==""){
                 renderArts=  arts 
             }else{
@@ -1409,7 +2517,8 @@ if(this.props.state.RegContableReducer.Articulos){
                                                                                     datos={item} 
                                                                                     updateArtimg={this.updateArtImg}
                                                                                     Cuenta={ ()=> {let miC = this.props.state.RegContableReducer.Cuentas.filter(x => x.iDcuenta ==item.Bodega_Inv )
-                                                                                           return miC
+                                                                                     
+                                                                                      return miC
                                                                                         }
                                                                                              }
                                                                                     sendArt={(e)=>{
@@ -1473,13 +2582,14 @@ if(this.props.state.RegContableReducer.Articulos){
                                                                 />))
 
     console.log(this.state)
-
+ 
 return(<div className='mainCompo'>
 <div className='contenedor'>
     
 <Sidebar
+getNumber={this.state.NumberSelect}
 ArtVent={this.state.ArtVent.length}
-NumberSelect={(num)=> this.setState({NumberSelect:num})} /> 
+NumberSelect={this.handleNumberSelect} /> 
 
 <div className='contVisual'>
 
@@ -1505,7 +2615,7 @@ NumberSelect={(num)=> this.setState({NumberSelect:num})} />
 </div>
 <div className="contPages">
                     <Pagination
-                        totalItemsCount={this.obtenerextension(this.props.state.RegContableReducer.Articulos)}
+                        totalItemsCount={this.obtenerextension(renderArts)}
                         currentPage={this.state.currentPage}
                         perPage={this.state.perPage}
                         pagesToShow={this.calcularPagesToShow()}
@@ -1515,9 +2625,8 @@ NumberSelect={(num)=> this.setState({NumberSelect:num})} />
                     />
                 </div>
 </div>
-<div className='contCar'>
-  <div className='vertCont'>
-<div className="datos">
+<div className='contCar' ref={this.carrito}>
+  <div className="datos">
   <select
     className="docRounded"
     disabled={this.state.disableDoc}
@@ -1528,9 +2637,28 @@ NumberSelect={(num)=> this.setState({NumberSelect:num})} />
     <option value="Nota de venta" className="option-nota">Nota de Venta</option>
     <option value="Cotizacion" className="option-cotizacion">Cotización</option>
   </select>
-</div>
+  <div className='contClient jwFlex'>
+    <div style={{width:"28px"}}>
+  <Animate show={!this.state.Comprador.UserSelect}>  
+    
+   <button className=" btn btn-success customAddb " onClick={this.addNewUser}
+                    >
+   <span className="material-icons">
+  add
+  </span>  
+  </button>
 
-<div className='contenedorartsventa'>
+  </Animate> 
+  
+  </div>
+                         
+  
+  {SuggesterReady} 
+</div>
+  </div>
+  <div className='vertCont'>
+
+<div className='contenedorartsventa' >
   
   {generadorArticulosListaVenta}
   </div>
@@ -1542,6 +2670,7 @@ NumberSelect={(num)=> this.setState({NumberSelect:num})} />
     <p>${SuperTotal.toFixed(2)}</p>
   </div>
 </div></div>
+<Animate show={SuperTotal > 0 }>
   <div className="contContado">
                     <div className="contContadoButtons">
                    
@@ -1576,30 +2705,371 @@ NumberSelect={(num)=> this.setState({NumberSelect:num})} />
       <span className="material-icons">add</span>
     </button>
   </div>
-  <div className="pago-info">
+  <div className="pago-info" ref={this.pagos}>
     <p className="pago-label">Total Pago:</p>
     <p className="pago-total">${TotalPago.toFixed(2)}</p>
   </div>
 </div>
 
                           </div>
+
                           </div>
+                          </Animate>
+<Animate show={SuperTotal > 0 && SuperTotal === TotalPago}>
+                             <div className="contSubOptions">
+
+                                              <div className="impresion">
+                                              <i className="material-icons"style={{fontSize:"30px"}}>
+                                                  print
+                                                  </i>
+                                            
+                                            
+                                              <Checkbox
+                             name="impresion"
+                                  checked={this.state.impresion}
+                                  onChange={this.handleChangePrinter}
+                                  inputProps={{ 'aria-label': 'primary checkbox' }}
+                                />
+                                              </div>
+                                              <Animate show={this.state.doctype =="Cotizacion"}>  <div className="impresion">
+                                              <i className="material-icons"style={{fontSize:"30px"}}>
+                                                  email
+                                                  </i>
+                                            
+                                            
+                                              <Checkbox
+                             name="impresion"
+                                  checked={this.state.cotiToClient}
+                                    onChange={()=>{
+       
+       if(this.state.Comprador.UserSelect){
+           
+       this.setState({cotiToClient:!this.state.cotiToClient})
+      
+   }else{
+       let add = {
+           Estado:true,
+           Tipo:"error",
+           Mensaje:"Seleccione un usuario"
+       }  
+       this.setState({Alert: add, cotiToClient:false})
+   }
+   
+   }}
+                                  inputProps={{ 'aria-label': 'primary checkbox' }}
+                                />
+                                
+                                              </div>
+                                              </Animate>
+ 
+                                                </div>
+                                              </Animate>
+                                         <ReactToPrint 
+                                             trigger={() => <React.Fragment/>}
+                                             content={() => this.componentRef.current}
+                                             ref={this.printRef}
+                                          
+                                           
+                                         />
+
+                                         <div className='centrar'>
+                   <Animate show={!this.state.loading}>                       
                           <button
   className={`confirm-button ${SuperTotal > 0 && TotalPago > 0 && SuperTotal === TotalPago ? 'enabled' : 'disabled'}`}
   onClick={() => {
     if (SuperTotal > 0 && TotalPago > 0 && SuperTotal === TotalPago) {
-      // Tu lógica de confirmación
+      
+      if(this.state.doctype =="Factura" || this.state.doctype =="Nota de venta"){
+        this.comprobadorVenta(IvaEC,valSinIva)
+      }else if(this.state.doctype =="Cotizacion"){
+        this.comprobadorCoti(IvaEC,valSinIva)
+      }
+
+
     }
   }}
   disabled={!(SuperTotal > 0 && TotalPago > 0 && SuperTotal === TotalPago)}
 >
   Continuar
 </button>
+</Animate>
+   <Animate show={this.state.loading}>    
+    <CircularProgress/>    
+    </Animate>
+</div>
 </div>
 </div>
   </Animate>
     <Animate show={this.state.NumberSelect == 1}>
-Clientes
+   <div className='cont1'>
+ <div className=" userwrap">
+                     
+                        <div className="contSuggester">
+                        <div className="jwseccionCard buttoncont">
+
+   <Animate show={this.state.Comprador.UserSelect}>                       
+<div className="contButtonsUserSelect">
+ <button type="button" className=" btn btn-primary botonedit" onClick={()=>{this.setState({readOnly:false, userEditMode:true})}}>
+<p>Editar</p>
+
+<span className="material-icons">
+create
+</span>
+
+</button>
+<button type="" className=" btn btn-danger botonedit" onClick={this.deleteUser}>
+<p>Eliminar</p>
+
+<span className="material-icons">
+delete
+</span>
+
+</button>
+</div>
+</Animate> 
+
+<Animate show={!this.state.Comprador.UserSelect}>  
+ <button className=" btn btn-success botonedit" onClick={this.addNewUser}>
+ <span className="material-icons">
+add
+</span>
+<p>Cliente</p>
+
+
+</button>
+</Animate> 
+
+</div>
+                       
+
+{SuggesterReady2} 
+                        </div>
+                        
+                     
+                        <div className={  `contUsuario ${activeadd} ${editadd} `}>
+                        <Animate show={this.state.userDisplay}>
+                        <ValidatorForm
+   
+   onSubmit={this.regisUser}
+   onError={errors => console.log(errors)}
+>
+<div className="contenidoForm">
+    <div className="customInput">
+        <div className="jwminilogo">
+    <span className="material-icons">
+account_circle
+</span>
+</div>
+      <TextValidator
+      label="Nombre"
+       onChange={this.handleChangeform}
+       name="usuario"
+       type="text"         
+       validators={['requerido']}
+       errorMessages={['Ingresa un nombre'] }
+       value={this.state.Comprador.usuario}
+       InputProps={{
+        readOnly: this.state.readOnly,
+        style: this.state.readOnly ? { pointerEvents: "none", backgroundColor: "#f0f0f0" } : {}
+      }}
+   />
+   
+   
+   </div>
+   <div className="customInput">
+        <div className="jwminilogo">
+    <span className="material-icons">
+mail
+</span>
+</div>
+      <TextValidator
+      label="Correo"
+       onChange={this.handleChangeform}
+       name="correo"
+       type="mail"
+   
+       validators={['requerido']}
+       errorMessages={['Escribe un correo'] }
+      
+       value={this.state.Comprador.correo}
+       InputProps={{
+        readOnly: this.state.readOnly,
+        style: this.state.readOnly ? { pointerEvents: "none", backgroundColor: "#f0f0f0" } : {}
+      }}
+   />
+   
+   
+   </div>
+
+   <div className="customInput">
+        <div className="jwminilogo">
+    <span className="material-icons">
+    house
+</span>
+</div>
+      <TextValidator
+      label="Dirección"
+       onChange={this.handleChangeform}
+       name="direccion"
+       type="text"
+       validators={['requerido']}
+       errorMessages={['Ingresa un nombre'] }
+       value={this.state.Comprador.direccion}
+       InputProps={{
+        readOnly: this.state.readOnly,
+        style: this.state.readOnly ? { pointerEvents: "none", backgroundColor: "#f0f0f0" } : {}
+      }}
+   />
+   
+   
+   </div>
+   <div className="customInput">
+        <div className="jwminilogo">
+    <span className="material-icons">
+    perm_identity
+</span>
+</div>
+<select className="ClieniDInput" value={this.state.Comprador.ClientID} onChange={this.handleClientID} disabled= {CheckReadOnly} >
+          <option value="Cedula"> Cédula</option>
+    <option value="RUC" > RUC </option>
+    <option value="Pasaporte" > Pasaporte </option>
+         </select>
+   
+   </div>
+   <div className="customInput">
+        <div className="jwminilogo">
+    <span className="material-icons">
+    perm_identity
+</span>
+</div>
+      <TextValidator
+      label="Número Identificación"
+       onChange={this.handleChangeIdentificacion}
+       name="cedula"
+       type="text"
+       validators={['requerido']}
+       errorMessages={['Ingresa '] }
+       value={this.state.Comprador.cedula}
+       InputProps={{
+        readOnly: this.state.readOnly,
+        style: this.state.readOnly ? { pointerEvents: "none", backgroundColor: "#f0f0f0" } : {}
+      }}
+   />
+   
+   
+   </div>
+   <div className="customInput">
+        <div className="jwminilogo">
+    <span className="material-icons">
+phone
+</span>
+</div>
+      <TextValidator
+      label="Teléfono"
+       onChange={this.handleChangeformNumeros}
+       name="telefono"
+       type="text"
+     
+       validators={[]}
+       errorMessages={[]}
+       value={this.state.Comprador.telefono}
+       InputProps={{
+        readOnly: this.state.readOnly,
+        style: this.state.readOnly ? { pointerEvents: "none", backgroundColor: "#f0f0f0" } : {}
+      }}
+   />
+
+   </div>
+ 
+  
+   <div className="customInput">
+        <div className="jwminilogo">
+    <span className="material-icons">
+    location_city
+</span>
+</div>
+      <TextValidator
+      label="Ciudad"
+       onChange={this.handleChangeform}
+       name="ciudad"
+       type="text"
+       validators={[]}
+       errorMessages={[] }
+       value={this.state.Comprador.ciudad}
+    
+       InputProps={{
+        readOnly: this.state.readOnly,
+        style: this.state.readOnly ? { pointerEvents: "none", backgroundColor: "#f0f0f0" } : {}
+     
+      }}
+   />
+
+   
+   </div>
+  
+   </div>
+   <div className="contb">
+      <Animate show={this.state.adduser}>
+      <div className="contbregis">
+
+      <button className=" btn btn-success botonflex" type='submit'>
+<p>Registrar</p>
+<span className="material-icons">
+done
+</span>
+
+</button>
+
+<button className=" btn btn-danger botonflex" onClick={(e)=>{
+    e.preventDefault()
+     e.stopPropagation();
+    this.resetUserData();
+    this.setState({adduser:false, readOnly:true,userDisplay:false})}}>
+<p>Cancelar</p>
+<span className="material-icons">
+cancel
+</span>
+
+</button>
+</div>
+      </Animate>
+
+      <Animate show={this.state.userEditMode}>
+      <div className="contbregis">
+
+      <button type='button' className=" btn btn-primary botonflex" onClick={this.editUser}>
+<p>Guardar</p>
+<span className="material-icons">
+done
+</span>
+
+</button>
+
+<button className=" btn btn-danger botonflex" onClick={(e)=>{
+        e.preventDefault()
+        e.stopPropagation();
+    this.resetUserData();
+    this.setState({userEditMode:false, readOnly:true})}}>
+<p>Cancelar</p>
+<span className="material-icons">
+cancel
+</span>
+
+</button>
+</div>
+      </Animate>
+
+      
+      
+      
+                        </div>
+</ValidatorForm>
+</Animate>
+                        </div>
+                     
+                    </div>
+
+</div>
   </Animate>
 </div>
 </div>
@@ -1649,10 +3119,242 @@ Clientes
     
     </Alert>
   </Snackbar>
+<div style={{display:"none"}}>
+                <div  className="Areaimpresion" ref={this.componentRef}>  
+                   
+                   <img className='logoPrint'src={logogen} alt="logotipo empresa"/>
+                  
+                                <p className="tituloArtEdit">{nombreComercial}</p>
+                                <p className="subtituloArtPrint">{dirEstab}</p>
+                                <p className="textoArt">--------------------------------------------------</p>
+                                <div className="dataarea" >
+                                <div className="grupoDatosPrint" >
+                                <div className="cDc1" >
+                                <p className='textoArtTituloPrint'>  Cliente: </p>
+                                </div> 
+                                <div className="cDc2" >
+                                    <p className='textoArt'> {this.state.Comprador.usuario} </p>  
+                                </div> 
+                                </div> 
+                                <div className="grupoDatosPrint" >
+                                <div className="cDc1" >
+                                <p className='textoArtTituloPrint'>  ID: </p>
+                                </div> 
+                                <div className="cDc2" >
+                                    <p className='textoArt'> {this.state.Comprador.cedula} </p>  
+                                </div> 
+                                </div>
+                                <div className="grupoDatosPrint" >
+                                <div className="cDc1" >
+                                <p className='textoArtTituloPrint'>  Correo: </p>
+                                </div> 
+                                <div className="cDc2" >
+                                    <p className='textoArt'> {this.state.Comprador.correo} </p>  
+                                </div> 
+                                </div>
+                                <div className="grupoDatosPrint" >
+                                <div className="cDc1" >
+                                <p className='textoArtTituloPrint'>  Dirección: </p>
+                                </div> 
+                                <div className="cDc2" >
+                                    <p className='textoArt'> {this.state.Comprador.direccion} </p>  
+                                </div> 
+                                </div>
+                                <p className="textoArt">--------------------------------------------------</p>
+                          
+                            
+                                <div className="grupoDatosPrint" >
+                                <div className="cDc1" >
+                                <p className='textoArtTituloPrint'>  Fecha: </p>
+                                </div> 
+                                <div className="cDc2" >
+                                    <p className='textoArt'>  {date} </p>  
+                                </div> 
+                                </div> 
+                                <div className="grupoDatosPrint" >
+                                <div className="cDc1" >
+                                <p className='textoArtTituloPrint'>  Hora: </p>
+                                </div> 
+                                <div className="cDc2" >
+                                    <p className='textoArt'>  {hora} </p>  
+                                </div> 
+                                </div>
+                              
+                                <div className="grupoDatosPrint" >
+                                <div className="cDc1" >
+                                <p className='textoArtTituloPrint'>  Venta Nº: </p>
+                                </div> 
+                                <div className="cDc2" >
+                                    <p className='textoArt'>  {this.state.idVenta} </p>  
+                                </div> 
+                                </div> 
+                                <div className="grupoDatosPrint" >
+                                <div className="cDc1" >
+                                <p className='textoArtTituloPrint'>  Cajero: </p>
+                                </div> 
+                                <div className="cDc2" >
+                                    <p className='textoArt'>  {UserCont.Usuario} </p>  
+                                </div> 
+                                </div> 
+                                
+                                </div>  
+                                <p className="textoArt">--------------------------------------------------</p>
+                           
+                                <div className=" contarticulos">
+                                <div className=" contTitulosPrint">
+                              
+                                       <div className="titulo2Print">
+                                           Nombre
+                                       </div>
+                                       <div className="ArticImp">
+                                           Cant
+                                       </div>
+                                       <div className="ArticImp">
+                                           Val
+                                       </div>
+                                      
+                               </div>
+                               {generadorArticulosListaImpresion}
+                               </div>
+                               <p className="textoArt">--------------------------------------------------</p>
+                             
+                                <div className="contTotalesPrint">
+                                <div className="grupoDatos">
+              <div className="cDc1x">
+              <p className="textoArtTituloPrint">  Descuento(val) </p>
+            
+              </div>
+              <div className={`cDc2 percentFlexImp`}>
+              <p className={`textoArt`}>${parseFloat(this.state.descuentoVal).toFixed(2)}    </p>
+            
+              </div>
+
+              </div>
+              <div className="grupoDatos">
+              <div className="cDc1x ">
+              <p className="textoArtTituloPrint">  Descuento(%) </p>
+            
+              </div>
+              <div className={`cDc2 percentFlexImp`}>
+              <p className={`textoArt`}>${descuentoCalculo.toFixed(2)} </p>
+             
+              </div>
+
+              </div>
+              <Animate show={this.state.doctype =="Factura"}>
+              <div className="grupoDatos">
+                    <div className="cDc1x">
+              <p className="textoArtTituloPrint">  Subtotal </p>
+            
+              </div>
+              <div className={`cDc2 percentFlexImp `}>
+                <p className="textoArt">${SubTotal.toFixed(2)}</p>
+            
+              </div>
+                    </div>
+                    </Animate>
+                    <Animate show={this.state.doctype =="Nota de venta"}>
+              <div className="grupoDatos">
+                    <div className="cDc1">
+              <p className="textoArtTituloPrint">  Subtotal </p>
+            
+              </div>
+              <div className={`cDc2 percentFlexImp `}>
+                <p className="textoArtTituloPrint">${SubTotalNota.toFixed(2)}</p>
+            
+              </div>
+                    </div>
+                    </Animate>
+                    <Animate show={this.state.doctype =="Factura"}>
+              <div className="grupoDatos">
+                    <div className="cDc1x">
+              <p className="textoArtTituloPrint">  IVA({process.env.IVA_EC } %) </p>
+            
+              </div>
+              <div className={`cDc2 inputDes `}>
+                <p className="textoArt"> ${IvaEC.toFixed(2)}</p>
+            
+              </div>
+                    </div>
+                    </Animate>
+                    <hr  />
+              <div className="grupoDatos totalcontPrint">
+                    <div className="cDc1x">
+              <p  className='subtituloArt '>  Total: </p>
+            
+              </div>
+              <div className={`cDc2 `}>
+                <p className="subtituloArt">${SuperTotal.toFixed(2)}</p>            
+              </div>
+                    </div> 
+                                </div>
+                                <hr className='finalline'  />
+                                <div className='finalData'>
+<p>
+    {generarRimpeNota}
+</p>
+<p>
+Documento electrónico generado en activos.ec
+</p>
+</div>
+
+                                  </div>
+                </div>
+   <Animate show={this.state.Resultados}>
+<Resultados
+    updateData ={()=>{this.getAllArts()}}
+    FilteredRegs = {this.props.state.RegContableReducer.Regs}
+ 
+  Flecharetro={()=>{this.setState({Resultados:false, NumberSelect:0})}} 
+/>
+                    </Animate >
+                        <Animate show={this.state.modalEditServ}>
+                                            <ModalEditPrecioCompraServ 
+                                            data={this.state.serviceToEdit}
+                                            sendServData={this.setServData}
+                                            Flecharetro={()=>{this.setState({modalEditServ:false})}} 
+                                            />
+                                        </Animate >   
 
       <style jsx>
                 {                              
                  `
+                 .customInput {
+    display: flex
+;
+    align-items: center;
+    margin: 10px 0px;
+    justify-content: flex-start;
+}
+    .jwminilogo {
+    width: 15%;
+    padding-top: 20px;
+}
+                    .contButtonsUserSelect{
+                    display:flex;
+                    flex-flow:column;
+                }
+    .contSuggester {
+                    display: flex;
+                    align-items: center;
+                    flex-flow: row;
+                   flex-wrap: wrap;
+                    justify-content: center;
+                 }
+                    .contbregis{
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+                    .contenidoForm {
+    flex: 1;
+    display: flex
+;
+    flex-flow: column;
+    justify-content: flex-end;
+
+}
                  .pago-container {
   display: flex;
   justify-content: space-between;
@@ -1706,6 +3408,14 @@ Clientes
   text-transform: uppercase;
   margin: 0;
 }
+  .customAddb{
+  height: 25px;
+    display: flex
+;
+    justify-content: center;
+    align-items: center;
+    width: 25px;
+}}
 
 .pago-total {
   font-size: 24px;
@@ -1720,7 +3430,7 @@ Clientes
 }
 
                  .mainCompo{
-                 background:#e5e5e5;
+                     background: #f5f5f5;
                  }
                  .contenedor{
                      padding: 5px;
@@ -1746,25 +3456,106 @@ width: 100%;
                  .contVisual{
                  margin-top:50px;
                   margin-left:50px;
-                  width:100%;
+                  width:95%;
                   height: 100%;
                  }
+                   .botonedit{
+                    display:flex;
+                    padding:4px;
+                    margin: 4px;
+                }
+                .botonedit p{
+                    margin:0px
+                }
                  .cont0{
+               
                 display:flex;
                 flex-wrap: wrap;
                 justify-content: space-around;
-                margin-left: 5px;
+                margin-left: 15px;
+        
 
                  }
-                .contArts{
+                   .cont1{
+                 width:90%;
+                display:flex;
+                flex-wrap: wrap;
+                justify-content: space-around;
+                margin-left: 15px;
+        
+
+                 }
+
+.logoPrint{
+    width: 100px;
+    border-radius: 15px;
+    margin: 5px;
+   }
+   .tituloPrint {
+    width: 50%;
+   }
+   .subtituloArtPrint{
+   padding: 5px;
+    text-align: center;
+    font-style: italic;
+    font-size: 15px;
+   }
+    .contarticulos{
     width: 95%;
-    max-width: 900px;
+    
+  }
+    .dataarea{
+    width: 100%;
+    margin-left:15px;
+   }
+   .contTitulosPrint{
+   
+    width: 100%;
+    display:flex; 
+    font-weight: bolder;
+    justify-content: space-around;
+    text-align: center;
+   }
+    .Areaimpresion{
     display: flex;
     flex-flow: column;
+  
+    align-items: center;
+}
+
+                     .tituloArtEdit{
+   
+        font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin: 15px 0px;
+
+    }      
+    .textoArtTituloPrint{
+         font-size: 15px;
+    font-weight: bold;
+    }        
+                .react-autosuggest__input {
+    height: 30px;
+    padding: 0px 20px;
+    font-family: Helvetica, sans-serif;
+    font-weight: 300;
+    font-size: 16px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    text-align: center;
+    width: 150px;
+}
+                .contArts{
+ flex:1;
+      min-width: 800px;
+    display: flex;
+    flex-flow: column;
+      margin-right:15px
     }
     .listadoArticulos{
     margin-top: 10px;
-    background: #e5e5e5;
+       background: #f5f5f5;
     padding: 7px;
     min-height: 55vh;
     max-height: 700px;
@@ -1791,6 +3582,8 @@ width: 100%;
     background: white;
     border-radius: 15px;
     padding: 5px;
+    min-height:600px;
+    
     
                  display: flex
 ;
@@ -1891,6 +3684,20 @@ width: 100%;
   margin: 0;
   transition: color 0.3s ease;
 }
+  .textoArtTituloPrint{
+         font-size: 15px;
+    font-weight: bold;
+    }        
+     .textoArt{
+        font-size:14px;
+    }
+     .grupoDatosPrint{
+                    display: flex;
+                 
+                    margin-top: 15px;
+                    width: 100%;
+                   }
+       
 
 .total-value p:hover {
   color: #059669; /* Verde más intenso al hacer hover */
@@ -1907,10 +3714,21 @@ width: 100%;
 
 
 .datos {
-  width: fit-content;
-      margin: auto;
+  width: 100%;
+    display: flex
+;
+    flex-flow: column;
+    align-items: center;
+    width: 100%;
 }
-
+ .articeadd{
+                    background: #d2ffd2;
+                    border-bottom: 5px solid black;
+                }
+                .editadd{
+                    background: #bbd8f7;
+                    border-bottom: 5px solid black;
+                }
 
 
 .docRounded {
@@ -1956,17 +3774,70 @@ border: 1px solid rgba( 255, 255, 255, 0.18 );
   font-size: 13px;
   border-radius:10px;
 }
+  .contUsuario{
+                    width: 100%;
+                    transition: 1s;
+                    border-radius: 12px;
+                    padding: 10px;
+                    max-width: 1000px;
+            
+                
+                }
+                    .contSubOptions{
+                    display: flex
+;
+    justify-content: flex-end;
+                    }
 
-
-
+.impresion{
+    width: 90px;
+    display: flex;
+    border: 1px solid #1ffc8b;
+    justify-content: center;
+    align-items: center;
+    margin-left:10px;
+    border-radius: 20px;
+}
 
   .vertCont{
     background: white;
     margin-bottom: 20px;
   }
-
+      .contTotalesPrint{
+    width: 100%;  
+} 
+    .titulo2Print{
+        width: 60%;  
     
+    }
+    @media print {
+
+    .titulo2Print{
+        width: 60%;  
+    
+    }
+    .ArticImp{
+        width: 20%;  
+        
+        max-width:250px;
+        justify-content: center;
+    }
+}
+  @media only screen and (max-width: 768px) { 
+
+    .contArts{
+ 
+      min-width: 300px;
+ 
+    }
+      .contCar{
+      max-width: 450px;
+      }
+  
+  }
+      
                  `} 
+                
                  
                    </style>
 

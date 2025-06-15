@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const fallbackImages = [
   "/iconspv/a1.png",
@@ -12,10 +12,13 @@ const fallbackImages = [
 ];
 
 export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta }) {
+  let getCuenta = Cuenta()
   const [expanded, setExpanded] = useState(false);
   const [clicked, setClicked] = useState(false);
   const [flipped, setFlipped] = useState(false);
+    const [visible, setVisible] = useState(false);
   const [imageSrc, setImageSrc] = useState("");
+const cardRef = useRef(null);
 
   useEffect(() => {
     if (datos.Imagen && datos.Imagen[0]) {
@@ -26,10 +29,15 @@ export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta }) {
       let miart = datos
       miart.Imagen[0] = fallbackImages[random]
       updateArtimg(miart)  
-      console.log(miart)
-
 
     }
+
+     // Animación con timeout
+    const timer = setTimeout(() => {
+     setVisible(true)
+    }, 500);
+
+    return () => clearTimeout(timer); // limpieza del timeout
   }, [datos]);
 
   const handleToggleTitle = () => {
@@ -58,7 +66,9 @@ export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta }) {
 
   return (
 <div
-  className={`card-container ${flipped ? "flipped" : ""} ${
+id="cardCont"
+ref={cardRef}
+  className={`card-container ${visible ? "visibleXD" : ""} ${flipped ? "flipped" : ""} ${
     datos.Existencia === 0 && datos.Tipo !== "Servicio" ? "" : "hoverable"
   }`}
   onClick={handleClick}
@@ -80,16 +90,23 @@ export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta }) {
     e.stopPropagation();
    
   }} >
-                {expanded || datos.Titulo.length <= 15
+                {expanded || datos.Titulo.length <= 30
                   ? datos.Titulo
-                  : `${datos.Titulo.slice(0, 15)}...`}
+                  : `${datos.Titulo.slice(0, 30)}...`}
               </span>
-             {datos.Titulo.length > 15 && (
+             {datos.Titulo.length > 30 && (
   <div className="tooltip">{datos.Titulo}</div>
 )}
             </div>
             <div className="right">
+               <span className="exis">{datos.Tipo=="Producto"?datos.Existencia: 
+                                       datos.Tipo=="Servicio"?"∞":""  
+                
+                }</span>
               <span className="price">{formatPrice(datos.Precio_Venta)}</span>
+           
+           
+           
             </div>
           </div>
         </div>
@@ -99,26 +116,76 @@ export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta }) {
           <div className="arrow" onClick={toggleFlip}>
             ⬅
           </div>
-          <div className="details">
-            <p>Más info:</p>
-            <p>Categoría: {datos.Categoria.nombreCat || "N/A"}</p>
-            <p>Stock: {datos.Existencia}</p>
+       <div className="firstBackCont ">
+        {/* Parte izquierda */}
+         <div className="categoria-info">
+     <div className="categoria-titulo">Cat:</div>
+          <div className="categoria-nombre">{datos.Categoria.nombreCat}</div>
+          <div className="subcategoria">{datos.SubCategoria=="default"?"":datos.SubCategoria}</div>
+</div>
+        {/* Parte derecha (imagen) */}
+        <div className="categoria-icono">
+          <img src={datos.Categoria.urlIcono} alt="Icono categoría" />
+        </div>
+      </div>
+       <div className="custonCont">
+     <div className="categoria-titulo">IVA:</div>
+          <div className="categoria-nombre"><i
+  className="material-icons"
+  style={{
+    color: datos.Iva ? 'green' : 'red'
+  }}
+>
+  {datos.Iva ? 'done' : 'block'}
+</i></div>
           </div>
+ <div className="custonCont">
+     <div className="categoria-titulo">Tipo:</div>
+          <div className="categoria-nombre">{datos.Tipo}</div>
+          </div>
+ <div className="custonCont">
+     <div className="categoria-titulo">Bodega:</div>
+          <div className="categoria-nombre">{getCuenta[0].NombreC}</div>
+          </div>
+
+      {/* Parte inferior (ID centrado) */}
+      <div className="categoria-id">ID: {datos.Eqid}</div>
         </div>
       </div>
 
       <style jsx>{`
+      .custonCont{
+     
+    display: flex
+;
+    align-items: center;
+    justify-content: space-between; 
+      }
+      .firstBackCont{
+      display:flex;
+     align-items: center;
+    justify-content: space-between;
+      }
+
         .card-container {
           perspective: 1000px;
+           flex: 1 1 130px;         /* crecen, se encogen, ancho mínimo */
+  max-width: 130px;  
           width: 130px;
-          height: 170px;
+          height: 180px;
           margin: 3px;
-          
+          margin-bottom:6px;
+          opacity:0;
+          transition:1s;
         }
+          .visibleXD{
+          opacity:1;
+          }
 
         .card {
+
   width: 100%;
-  height: 100%;
+    height: 100%;
   position: relative;
   transform-style: preserve-3d;
   transition: transform 0.5s ease, box-shadow 0.5s ease;
@@ -127,6 +194,73 @@ export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta }) {
   background-color: white;
 }
 
+.categoria-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  max-width: 400px;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+}
+
+.top-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.categoria-info {
+margin-top:5px;
+  display: flex;
+  flex-direction: column;
+}
+
+.categoria-titulo {
+  font-size: 14px;
+  color: #666;
+  font-weight: bold;
+}
+
+
+
+.categoria-nombre {
+  font-size: 12px;
+
+  color: #333;
+}
+
+.subcategoria {
+  font-size: 12px;
+  color: grey;
+}
+
+.categoria-icono img {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
+}
+
+.categoria-id {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: #777;
+}
+
+.left{
+  width: 100%;
+  
+    height: 40px;
+    display: flex
+;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
         .card.clicked {
           transform: scale(0.90);
         }
@@ -148,9 +282,13 @@ export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta }) {
           width: 100%;
           height: 100%;
           backface-visibility: hidden;
-          padding: 16px;
+          padding: 8px;
+          padding-top:12px;
           box-sizing: border-box;
           border-radius: 12px;
+              display: flex;
+    flex-flow: column;
+    justify-content: space-between;
         }
 
         .front {
@@ -164,15 +302,16 @@ export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta }) {
 
         .arrow {
           position: absolute;
-          top: 6px;
-          right: 10px;
-          font-size: 18px;
+            top: -2px;
+    right: 1px;
+          font-size: 16px;
           cursor: pointer;
         }
 
         .product-image {
-          width: 80%;
-          margin: 0 auto 12px;
+          width: 75%;
+          max-width: 90px;
+          margin: auto ;
           display: block;
           border-radius: 8px;
           object-fit: contain;
@@ -182,6 +321,8 @@ export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta }) {
           display: flex;
           justify-content: space-between;
           align-items: center;
+          flex-flow: column;
+}
         }
 
         .title {
@@ -214,7 +355,21 @@ export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta }) {
 .title:hover + .tooltip {
   display: block;
 }
-
+.right{
+    flex-flow: row;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 96%;
+}
+    .exis{
+           background:rgba(23, 163, 184, 0.81);
+    padding: 3px;
+    border-radius: 50%;
+    width: 14px;
+    text-align: center;
+    color: white;
+    font-size: 12px;}
         .price {
           font-weight: bold;
           color: #222;
@@ -237,6 +392,19 @@ export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta }) {
   transform: scale(1.03);
   cursor: pointer;
 }
+
+.cardCont {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: all 400ms ease;
+}
+
+/* Clase que activa la animación */
+.cardCont.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
       `}</style>
     </div>
   );

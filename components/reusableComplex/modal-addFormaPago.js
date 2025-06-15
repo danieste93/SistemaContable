@@ -1,6 +1,11 @@
 import { Input } from '@material-ui/core';
 import React, { Component } from 'react'
 import {connect} from 'react-redux';
+
+
+
+
+
 import Cuentas from "../cuentascompo/modalcuentas"
 import { Animate } from 'react-animate-mount/lib/Animate';
 

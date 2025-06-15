@@ -20,13 +20,19 @@ state={
   CuentasHabiles:[],
   editmode:false,
   CuentasD:[],
-  Buscador:true,
+  Buscador:false,
   visibility:false,
   cuentasSearcher:"",
 ModalDeleteC:false,
 }
 channel1 = null;
   async  componentDidMount(){
+
+        setTimeout(()=>{ 
+        
+        this.setState({Buscador:true})
+
+       }, 800);
     
       if(!this.props.state.RegContableReducer.Tipos){
   

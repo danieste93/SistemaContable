@@ -1,16 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
 
 import Carrito from '../puntoventacompo/carritoAnimado';
 
-export default function sidebarPVUX({NumberSelect, ArtVent}) {
-  const [selected, setSelected] = useState(0);
-
-  const icons = [
-    { name: "calculate" },
-    { name: "emoji_people" },
-    { name: "payment" },
-    { name: "settings" },
-  ];
+export default function sidebarPVUX({NumberSelect, ArtVent,getNumber}) {
+  console.log(getNumber)
+  const [selected, setSelected] = useState(getNumber);
+ useEffect(() => {
+    setSelected(getNumber);
+  }, [getNumber]);
+ 
 
   return (
     <div className="sidebarPVUX">
@@ -19,28 +17,53 @@ export default function sidebarPVUX({NumberSelect, ArtVent}) {
       </div>
 
       <div className="icons">
-        {icons.map((icon, index) => (
-          <div
-            key={index}
-            className={`icon-wrapper ${selected === index ? "selected" : ""}`}
-            onClick={() => {setSelected(index) 
-NumberSelect(index)
-            }}
-          >
-            <i className="material-icons">{icon.name}</i>
-          </div>
-        ))}
+       <div
+          className={`icon-wrapper ${selected === 0 ? "selected" : ""}`}
+          onClick={() => {
+            setSelected(0);
+            NumberSelect(0);
+          }}
+        >
+          <i className="material-icons">home</i>
+        </div>
+           <div
+          className={`icon-wrapper ${selected === 1 ? "selected" : ""}`}
+          onClick={() => {
+            setSelected(1);
+            NumberSelect(1);
+          }}
+        >
+          <i className="material-icons">emoji_people</i>
+        </div>
+           <div
+          className={`icon-wrapper ${selected === 2 ? "selected" : ""}`}
+          onClick={() => {
+            setSelected(2);
+            NumberSelect(2);
+          }}
+        >
+          <Carrito ArtVent={ArtVent}/>
+        </div>
+      
       </div>
 
       <div className="info">
-        <Carrito ArtVent={ArtVent}/>
+     <div
+          className={`icon-wrapper ${selected === 4 ? "selected" : ""}`}
+          onClick={() => {
+            setSelected(4);
+            NumberSelect(4);
+          }}
+        >
+          <i className="material-icons">attach_money</i>
+        </div>
       </div>
 
       <style jsx>{`
         .sidebarPVUX {
         position:fixed;
           width: 60px;
-          height: 90vh;
+          height: 95vh;
           background-color: #00c2d4;
           border-radius: 40px;
           display: flex;

@@ -435,7 +435,7 @@ console.log(TotalDescuento)
       `Consultores Asociados 001-001-100.xml`,
     );
     
-     link.click()
+   //  link.click()
      
    
              

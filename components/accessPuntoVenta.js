@@ -3655,13 +3655,7 @@ Documento electrónico generado en activos.ec
                         Flecharetro={()=>{this.setState({modalEditServ:false})}} 
                         />
                     </Animate >   
-                    <Animate show={this.state.modalEditServ}>
-                        <ModalEditPrecioCompraServ 
-                        data={this.state.serviceToEdit}
-                        sendServData={this.setServData}
-                        Flecharetro={()=>{this.setState({modalEditServ:false})}} 
-                        />
-                    </Animate > 
+                 
                     
                       
                     <BarcodeReader
@@ -4071,7 +4065,7 @@ margin-bottom:0px;
 }
 .contbregis{
     display: flex;
-    justify-content: center;
+        justify-content: space-around;
     margin-top: 20px;
 }
 
