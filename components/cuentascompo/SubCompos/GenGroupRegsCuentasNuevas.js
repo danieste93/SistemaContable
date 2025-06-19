@@ -138,7 +138,7 @@ export default class GenGroupRegs extends Component {
               }
               let regist = [...grupo.registros]
          
-              let registrosInvetidos = regist
+              let registrosInvetidos = regist.sort((a, b) => b.Tiempo - a.Tiempo);
             
               let generadorRegistros = registrosInvetidos.length > 0 
               ? registrosInvetidos.map((detail, i) => (
@@ -188,10 +188,19 @@ export default class GenGroupRegs extends Component {
             <div className="supercontreg">
                 {detallesrender}
                 <style >
-                {   
+                {  
+                 
 
 
-`   .imporing{
+`  
+
+.supercontreg{
+    width: 98%;
+    max-width: 800px;
+
+}
+
+.imporing{
  color: blue;
 }
 .imporgas{

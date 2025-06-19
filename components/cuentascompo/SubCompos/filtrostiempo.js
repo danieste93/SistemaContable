@@ -6,6 +6,7 @@ import {addFirstRegs} from "../../../reduxstore/actions/regcont";
 import {  KeyboardDatePicker,  MuiPickersUtilsProvider } from "@material-ui/pickers";
 import moment from "moment";
 import MomentUtils from '@date-io/moment';
+
 class Stats extends Component {
     state={
         diario:false,

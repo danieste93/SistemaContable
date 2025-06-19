@@ -3861,21 +3861,58 @@ filtrados.forEach( async (reg)=>{
 
 res.send({status: "Ok", message: "registros del vendedor",inv:filtrados, });
 }
-async function  vendData (req, res){
+async function vendData(req, res) {
+  console.log(req.body)
+  try {
+    const conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
+    const TiposModelSass = await conn.model('tiposmodel', tipoSchema);
+    const RegModelSass = await conn.model('Reg', regSchema);
+   // const CuentasModelSass = await conn.model('Cuenta', accountSchema);
 
-    let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
-    let TiposModelSass = await conn.model('tiposmodel', tipoSchema);
-    let RegModelSass = await conn.model('Reg', regSchema);
-    let CuentasModelSass = await conn.model('Cuenta', accountSchema);  
+    //const cuentasHabiles = await CuentasModelSass.find({ Permisos: req.body.Usuario.Tipo });
+   // const Allcuentas = await CuentasModelSass.find({});
+    const tiposHabiles = await TiposModelSass.find({});
 
-    let cuentasHabiles = await CuentasModelSass.find({Permisos:req.body.Usuario.Tipo})
-    let Allcuentas = await CuentasModelSass.find({})
-    let tiposHabiles = await TiposModelSass.find({})
-    let regsHabiles = await RegModelSass.find({'Usuario.Id' :req.body.Usuario._id })
- 
+    // Obtener fecha de hoy con rango de horas (00:00:00 - 23:59:59)
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0); // Inicio del día
+    const mañana = new Date(hoy);
+    mañana.setDate(hoy.getDate() + 1); // Inicio del siguiente día
 
-    res.send({status: "Ok", message: "registros del vendedor", regsHabiles,cuentasHabiles,tiposHabiles,Allcuentas});
+    // Construir filtro base por fecha
+    const filtroReg = {
+     
+  $and: [
+    { Tiempo: { $gte: hoy } },
+    { Tiempo: { $lte: mañana } },
+  ]
+
+    };
+
+    // Si no es administrador, agregar filtro por usuario
+    if (req.body.Usuario.Tipo !== "administrador") {
+      filtroReg['Usuario.Id'] = req.body.Usuario._id;
+    }
+
+console.log()
+
+    const regsHabiles = await RegModelSass.find(filtroReg);
+
+    res.send({
+      status: "Ok",
+      message: "registros del vendedor",
+      regsHabiles,
+   //   cuentasHabiles,
+      tiposHabiles,
+     // Allcuentas
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ status: "Error", message: "Error al obtener los datos", error: err });
+  }
 }
+
 
 async function  testingsend (req, res){
 

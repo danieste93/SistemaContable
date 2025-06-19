@@ -609,7 +609,8 @@ pabutton=(e)=>{
     this.setState({Pasivos:!this.state.Pasivos})
 }
 editCustomCuenta=(e)=>{
-  if(e.Tipo== "Inventario" ){
+ 
+/*  if(e.Tipo== "Inventario" ){
     let add = {
       Estado:true,
       Tipo:"error",
@@ -617,8 +618,10 @@ editCustomCuenta=(e)=>{
   }
   this.setState({Alert: add})
   }else{
-this.setState({CuentaEditar:e,EditCuenta:true})
+
 }
+*/
+this.setState({CuentaEditar:e,EditCuenta:true})
 }
 
 

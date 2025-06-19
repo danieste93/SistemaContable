@@ -145,7 +145,7 @@ ref={cardRef}
           </div>
  <div className="custonCont">
      <div className="categoria-titulo">Bodega:</div>
-          <div className="categoria-nombre">{getCuenta[0].NombreC}</div>
+          <div className="categoria-nombre">{getCuenta[0]?.NombreC}</div>
           </div>
 
       {/* Parte inferior (ID centrado) */}

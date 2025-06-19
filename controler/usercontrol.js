@@ -95,6 +95,9 @@ let getUser = await UserModelSass.create([{
   {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Compra Inventario", urlIcono:"/iconscuentas/compra1.png", idCat:17, sistemCat:true },
   {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Perdida Inventario", urlIcono:"/iconscuentas/lostinv.png", idCat:18, sistemCat:true },
   {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Salida Precio Compra Inventario", urlIcono:"/iconscuentas/salidainv.png", idCat:19, sistemCat:true },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], nombreCat:"Excedente Caja", urlIcono:"/iconscuentas/exedentecaja.png", idCat:24, sistemCat:true },
+  {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], nombreCat:"Cierre Caja", urlIcono:"/iconscuentas/cierrecaja.png", idCat:25, sistemCat:true },
+
   {_id: new mongoose.Types.ObjectId(), tipocat: "Ingreso", subCategoria: [], nombreCat:"Credito", urlIcono:"/iconscuentas/cre.png", idCat:20, sistemCat:true },
   { _id: new mongoose.Types.ObjectId(),tipocat: "Gasto", subCategoria: [], nombreCat:"Comida", urlIcono:"/iconscuentas/comida.png", idCat:6 },
   {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: ["Luz", "Agua", "Internet"], nombreCat:"Servicios Basicos", urlIcono:"/iconscuentas/casa.png", idCat:7 },
@@ -107,6 +110,7 @@ let getUser = await UserModelSass.create([{
   {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Lujos", urlIcono:"/iconscuentas/joyas.png", idCat:14 },
   {_id: new mongoose.Types.ObjectId(), tipocat: "Gasto", subCategoria: [], nombreCat:"Mascotas", urlIcono:"/iconscuentas/mascota2.png", idCat:15 },
   { _id: new mongoose.Types.ObjectId(),tipocat: "Gasto", subCategoria: [], nombreCat:"Viajes", urlIcono:"/iconscuentas/playa.png", idCat:16 },
+    { _id: new mongoose.Types.ObjectId(),tipocat: "Gasto", subCategoria: [], nombreCat:"Faltante Caja", urlIcono:"/iconscuentas/faltantecaja.png", idCat:26, sistemCat:true  },
   { _id: new mongoose.Types.ObjectId(),tipocat: "Articulo", subCategoria: [], nombreCat:"GENERAL", urlIcono:"/iconscuentas/compra.png", idCat:21, sistemCat:true },
   {_id: new mongoose.Types.ObjectId(), tipocat: "Articulo", subCategoria: [], nombreCat:"PANTALLA", urlIcono:"/iconscuentas/celular.png", idCat:22 }
 ], opts);
@@ -248,7 +252,7 @@ let cuentasCreadas = await CuentasModelSass.create([
   DineroActual: 0,
   iDcuenta: 9999998,
   Descrip: "",
-  Permisos:["administrador"],
+  Permisos:["administrador", "tesorero", "vendedor"],
     Background: {
       Seleccionado: "Solido",
       urlBackGround: "/fondoscuentas/amex1.png",

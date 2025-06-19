@@ -11,8 +11,7 @@ function escapeRegexCharacters(str) {
   }
   
   function getSuggestions(value, props) {
-    console.log(value)
-        
+   
     if (value === '') {
       return [];
     }
@@ -42,7 +41,7 @@ let userFilter = props.filter(x=> x.Usuario.toLowerCase().includes(value.toLower
       this.loadFromLocalStorage()
 
       if(this.props.clientData){
-console.log(this.props)
+
         this.setState({UserSelect:this.props.clientData.UserSelect})
  
       if(this.props.clientData.usuario != "Consumidor Final"){
@@ -55,7 +54,7 @@ console.log(this.props)
     }
 
  componentDidUpdate(prevProps) {
-  console.log(this.props)
+
     // Verifica si clientData cambió
     if (
       this.props.clientData !== prevProps.clientData &&

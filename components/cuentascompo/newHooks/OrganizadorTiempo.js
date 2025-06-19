@@ -5,8 +5,10 @@ import "moment/locale/es";
 import moment from "moment";
 import MomentUtils from '@date-io/moment';
 import postal from 'postal';
+import { CircularProgress } from '@material-ui/core';
 class OrganizarTiempo extends Component {
 state={
+  downloadData:false,
     diario:true,
     mensual:false,
     periodo:false,
@@ -29,15 +31,91 @@ componentDidMount(){
    this.props.sendDataTime(this.state.tiempo)
   
    let displayRegs = this.props.Regs
+   console.log(displayRegs)
   
   this.filterTime(displayRegs)
+}
+
+   downloadTimeRegs=async()=>{
+        let datos = {
+          User: {DBname:this.props.usuarioGen.user.DBname,
+          },
+        
+          diario:this.state.diario,
+          mensual:this.state.mensual,
+          periodo:this.state.periodo,
+          tiempoperiodoini:this.state.tiempoperiodoini,
+          tiempoperiodofin:this.state.tiempoperiodofin,
+          tiempo:this.state.tiempo,
+          tiempomensual:this.state.tiempomensual
+        }
+        let lol = JSON.stringify(datos)
+        this.setState({downloadData:true})
+            fetch("/cuentas/getregstime", {
+            method: 'POST', // or 'PUT'
+            body: lol, // data can be `string` or {object}!
+            headers:{
+            'Content-Type': 'application/json',
+            "x-access-token": this.props.usuarioGen.token
+            }
+            }).then(res => res.json())
+            .catch(error => {console.error('Error:', error);
+            })  .then(response => {  
+              console.log(response)
+            if(response.status == 'error'){
+              alert("error al actualizar registros")
+             
+                }
+              else{
+                let misarrs = this.props.Regs.slice() 
+                let displayRegs
+                console.log(this.props.usuarioGen)
+              if (this.props.usuarioGen.user.Tipo == "administrador") {
+  displayRegs = response.regsHabiles;
+} else {
+  displayRegs = response.regsHabiles.filter(reg => reg.Usuario?.Id === this.props.usuarioGen.user._id);
+}
+
+console.log(displayRegs)
+
+                let finalars= misarrs.concat(displayRegs)
+             let sinRepetidosObjeto= finalars.filter((value, index, self) => {
+                  return(            
+                    index === self.findIndex((t) => (
+                      t._id === value._id && t._id === value._id
+                    ))
+                )
+          
+                });
+               
+            this.props.addnewData(sinRepetidosObjeto);
+                this.setState({downloadData:false})
+              }
+          })
+        
+      }
+
+componentDidUpdate(prevProps) {
+  // Verifica si filtroUsuario cambió
+  if (this.props.filtroUsuario !== prevProps.filtroUsuario) {
+
+    let displayRegs = this.props.Regs;
+   
+    this.filterTime(displayRegs);
+  }
 }
 
 
 
 
 filterTime =(regs)=>{
-    let displayRegs = regs
+let displayRegs = [];
+
+if (this.props.filtroUsuario === "Todos") {
+  displayRegs = regs;
+} else {
+  displayRegs = regs.filter(reg => reg.Usuario?.Id === this.props.filtroUsuario);
+}
     let  DetallesPorrender = []
     let  tiemposet = {tiempo:"",filter:""}
     if(this.state.diario){
@@ -50,6 +128,8 @@ filterTime =(regs)=>{
       else if(this.state.periodo){
         DetallesPorrender = this.PeriodoFilter(displayRegs)
       }
+
+      
     
 
       this.props.ProcessRegs(DetallesPorrender)
@@ -255,13 +335,13 @@ render(){
     let diarioval = this.state.diario?"activeval":"";
     let mensualval = this.state.mensual?"activeval":"";
     let periodoval = this.state.periodo?"activeval":"";
-
+if(this.props.Regs){
     if(this.state.diario){
    
-      let DetallesPorrender = this.DiaryFilter(this.props.Regs)
+    //  let DetallesPorrender = this.DiaryFilter(this.props.Regs)
    
     }
-
+}
     return ( 
 <div className="organizador">
 <div className="cont-Bt2">
@@ -269,7 +349,17 @@ render(){
 <div  id="diario" className={`botongeneral jwPointer ${diarioval}  `}onClick={ this.buttonsp}>Diario</div>
 <div id="mensual" className={`botongeneral jwPointer ${mensualval} `}onClick={ this.buttonsp}>Mensual</div>
 <div id="periodo" className={`botongeneral jwPointer ${periodoval} `}onClick={ this.buttonsp}> Periodo</div>
-
+<div className="Contdonwloadbutton">
+                              <Animate show={!this.state.downloadData}>
+                              <button className="downloadbutton"onClick={this.downloadTimeRegs} >       <span className="material-icons">
+                                 search
+                  </span></button>
+                  
+                  </Animate>
+                  <Animate show={this.state.downloadData}>
+                  <CircularProgress />
+                  </Animate>
+                  </div> 
 
 </div>
 <div className="contfiltros">

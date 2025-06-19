@@ -1939,6 +1939,281 @@ let ventasHabiles = await VentaModelSass.findById(req.body.datos._id)
 res.status(200).send({status: "Ok", message: "venddata",ventasHabiles });
 } 
 
+  async function genCierreCaja(req, res){
+    console.log(req.body)
+   let conn = await mongoose.connection.useDb(req.body.User.DBname);
+   let RegModelSass = await conn.model('Reg', regSchema);
+       let CatModelSass = await conn.model('Categoria', catSchema);
+     let CounterModelSass = await conn.model('Counter', counterSchema);
+              let CuentasModelSass = await conn.model('Cuenta', accountSchema);
+
+        const session = await mongoose.startSession();   
+       session.startTransaction();
+     
+     try{
+ let allCreatedRegs = []
+ let allCuentas = []
+if(req.body.datos.text == "Cerrar Caja"){
+
+      let catIngInv=  await CatModelSass.find({idCat:25}, null,{session, new:true} )
+      let Counterx =     await CounterModelSass.find({iDgeneral:9999999},null, {session} )
+         
+  let datareg= {
+          
+             Documento:"Reg",
+             Accion:"Ingreso",   
+           Tiempo:new Date().getTime(),
+           TiempoEjecucion:new Date().getTime(),
+           IdRegistro:Counterx[0].ContRegs,
+         
+           CuentaSelec:{idCuenta:req.body.datos.cuenta._id,
+                        nombreCuenta: req.body.datos.cuenta.NombreC,
+                      },
+         
+                      CatSelect:{
+                        idCat:catIngInv[0].idCat,
+                       urlIcono:catIngInv[0].urlIcono,
+                       nombreCat:catIngInv[0].nombreCat,
+                       subCatSelect:catIngInv[0].subCatSelect,
+                       _id:catIngInv[0]._id,
+                  
+                     },
+         
+           Nota:"Caja "+ req.body.datos.cuenta.NombreC + " cerrada con el valor de: $"+ req.body.datos.cuenta.DineroActual.$numberDecimal,
+           Descripcion:"",
+
+           Estado:true,
+           urlImg:[],
+           Valrep:"",
+           TipoRep:"No",
+           Importe:0,
+           Usuario:{
+             Nombre:req.body.datos.UserData.Usuario,
+             Id:req.body.datos.UserData._id,
+             Tipo:req.body.datos.UserData.Tipo,
+              
+           }}
+           
+           let reg2 =  await RegModelSass.create([datareg],{session})
+           
+ allCreatedRegs.push(reg2[0])
+   let updateCounterVenta = {      
+      $inc: { ContRegs: 1, }
+    }
+
+await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updateCounterVenta,{session} )
+     
+   await session.commitTransaction();    
+                session.endSession();       
+  return res.send({status: "Ok", message: "cierre exitoso", registrosGenerados:allCreatedRegs   });
+               
+}else if(req.body.datos.text == "Registrar faltante y cerrar"){
+
+      let catIngInv=  await CatModelSass.find({idCat:25}, null,{session, new:true} )
+      let catGas=  await CatModelSass.find({idCat:26}, null,{session, new:true} )
+   
+      const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.datos.val).toFixed(2))
+      let Counterx =     await CounterModelSass.find({iDgeneral:9999999},null, {session} )
+    let dataregGas= {
+          
+             Documento:"Reg",
+             Accion:"Gasto",   
+           Tiempo:new Date().getTime(),
+           TiempoEjecucion:new Date().getTime(),
+           IdRegistro:Counterx[0].ContRegs,
+         
+           CuentaSelec:{idCuenta:req.body.datos.cuenta._id,
+                        nombreCuenta: req.body.datos.cuenta.NombreC,
+                      },
+         
+                      CatSelect:{
+                        idCat:catGas[0].idCat,
+                       urlIcono:catGas[0].urlIcono,
+                       nombreCat:catGas[0].nombreCat,
+                       subCatSelect:catGas[0].subCatSelect,
+                       _id:catGas[0]._id,
+                  
+                     },
+         
+           Nota:"Faltante de caja ",
+           Descripcion:"",
+
+           Estado:true,
+           urlImg:[],
+           Valrep:"",
+           TipoRep:"No",
+           Importe:fixedImport,
+           Usuario:{
+             Nombre:req.body.datos.UserData.Usuario,
+             Id:req.body.datos.UserData._id,
+             Tipo:req.body.datos.UserData.Tipo,
+              
+           }}   
+        
+     let reg3 =  await RegModelSass.create([dataregGas],{session})
+   allCreatedRegs.push(reg3[0])                 
+            let updateInv = { $inc: { DineroActual:fixedImport * (-1) } }
+            let cuentaUpdate=  await CuentasModelSass.findByIdAndUpdate(req.body.datos.cuenta._id,updateInv,{session, new:true})
+allCuentas.push(cuentaUpdate)
+  let datareg= {
+          
+             Documento:"Reg",
+             Accion:"Ingreso",   
+           Tiempo:new Date().getTime(),
+           TiempoEjecucion:new Date().getTime(),
+           IdRegistro:Counterx[0].ContRegs + 1,
+         
+           CuentaSelec:{idCuenta:req.body.datos.cuenta._id,
+                        nombreCuenta: req.body.datos.cuenta.NombreC,
+                      },
+         
+                      CatSelect:{
+                        idCat:catIngInv[0].idCat,
+                       urlIcono:catIngInv[0].urlIcono,
+                       nombreCat:catIngInv[0].nombreCat,
+                       subCatSelect:catIngInv[0].subCatSelect,
+                       _id:catIngInv[0]._id,
+                  
+                     },
+         
+           Nota:"Caja "+ req.body.datos.cuenta.NombreC + " cerrada con el valor de: $"+ (parseFloat(req.body.datos.cuenta.DineroActual.$numberDecimal) - req.body.datos.val ),
+           Descripcion:"",
+
+           Estado:false,
+           urlImg:[],
+           Valrep:"",
+           TipoRep:"No",
+           Importe:0,
+           Usuario:{
+             Nombre:req.body.datos.UserData.Usuario,
+             Id:req.body.datos.UserData._id,
+             Tipo:req.body.datos.UserData.Tipo,
+              
+           }}
+           
+           let reg2 =  await RegModelSass.create([datareg],{session})
+           
+ allCreatedRegs.push(reg2[0])
+   let updateCounterVenta = {      
+      $inc: { ContRegs: 2, }
+    }
+
+await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updateCounterVenta,{session} )
+     
+  // await session.commitTransaction();    
+                session.endSession();       
+  return res.send({status: "Ok", message: "reg faltante y cierre exitoso", registrosGenerados:allCreatedRegs, allCuentas   });
+               
+}else if(req.body.datos.text == "Registrar exedente y cerrar"){
+
+      let catIngInv=  await CatModelSass.find({idCat:25}, null,{session, new:true} )
+      let catGas=  await CatModelSass.find({idCat:24}, null,{session, new:true} )
+   
+      const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.datos.val).toFixed(2))
+      let Counterx =     await CounterModelSass.find({iDgeneral:9999999},null, {session} )
+    let dataregGas= {
+          
+             Documento:"Reg",
+             Accion:"Ingreso",   
+           Tiempo:new Date().getTime(),
+           TiempoEjecucion:new Date().getTime(),
+           IdRegistro:Counterx[0].ContRegs,
+         
+           CuentaSelec:{idCuenta:req.body.datos.cuenta._id,
+                        nombreCuenta: req.body.datos.cuenta.NombreC,
+                      },
+         
+                      CatSelect:{
+                        idCat:catGas[0].idCat,
+                       urlIcono:catGas[0].urlIcono,
+                       nombreCat:catGas[0].nombreCat,
+                       subCatSelect:catGas[0].subCatSelect,
+                       _id:catGas[0]._id,
+                  
+                     },
+         
+           Nota:"Excedente de caja ",
+           Descripcion:"",
+
+           Estado:true,
+           urlImg:[],
+           Valrep:"",
+           TipoRep:"No",
+           Importe:fixedImport,
+           Usuario:{
+             Nombre:req.body.datos.UserData.Usuario,
+             Id:req.body.datos.UserData._id,
+             Tipo:req.body.datos.UserData.Tipo,
+              
+           }}   
+        
+     let reg3 =  await RegModelSass.create([dataregGas],{session})
+   allCreatedRegs.push(reg3[0])                 
+            let updateInv = { $inc: { DineroActual:fixedImport  } }
+            let cuentaUpdate=  await CuentasModelSass.findByIdAndUpdate(req.body.datos.cuenta._id,updateInv,{session, new:true})
+allCuentas.push(cuentaUpdate)
+  let datareg= {
+          
+             Documento:"Reg",
+             Accion:"Ingreso",   
+           Tiempo:new Date().getTime(),
+           TiempoEjecucion:new Date().getTime(),
+           IdRegistro:Counterx[0].ContRegs + 1,
+         
+           CuentaSelec:{idCuenta:req.body.datos.cuenta._id,
+                        nombreCuenta: req.body.datos.cuenta.NombreC,
+                      },
+         
+                      CatSelect:{
+                        idCat:catIngInv[0].idCat,
+                       urlIcono:catIngInv[0].urlIcono,
+                       nombreCat:catIngInv[0].nombreCat,
+                       subCatSelect:catIngInv[0].subCatSelect,
+                       _id:catIngInv[0]._id,
+                  
+                     },
+         
+           Nota:"Caja "+ req.body.datos.cuenta.NombreC + " cerrada con el valor de: $"+ (parseFloat(req.body.datos.cuenta.DineroActual.$numberDecimal) + req.body.datos.val ),
+           Descripcion:"",
+
+           Estado:false,
+           urlImg:[],
+           Valrep:"",
+           TipoRep:"No",
+           Importe:0,
+           Usuario:{
+             Nombre:req.body.datos.UserData.Usuario,
+             Id:req.body.datos.UserData._id,
+             Tipo:req.body.datos.UserData.Tipo,
+              
+           }}
+           
+           let reg2 =  await RegModelSass.create([datareg],{session})
+           
+ allCreatedRegs.push(reg2[0])
+   let updateCounterVenta = {      
+      $inc: { ContRegs: 2, }
+    }
+
+await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updateCounterVenta,{session} )
+     
+  // await session.commitTransaction();    
+                session.endSession();       
+  return res.send({status: "Ok", message: "reg faltante y cierre exitoso", registrosGenerados:allCreatedRegs, allCuentas   });
+               
+}
+
+
+ 
+     }   catch(error){
+         await session.abortTransaction();
+         session.endSession();
+         console.log(error, "errr")
+         return res.json({status: "Error", message: error.name, error:error.message });
+       }
+
+} 
+
   async function getVentasByTime(req, res){
 
     let conn = await mongoose.connection.useDb(req.body.User.DBname);
@@ -3045,6 +3320,8 @@ async function getRegsbyCuentas(req, res) {
   }
 }
 
+
+
   async function getAllReps(req, res){
     let conn = await mongoose.connection.useDb(req.body.User.DBname);
     let RepModelSass = await conn.model('Repeticion', repeticionSchema);
@@ -3766,4 +4043,4 @@ let newTime = new Date(req.body.fechaAuto).getTime()
  }
 
 }
-module.exports = {uploadFact,agregarNotaCredito,getRegsDeleteTime,getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};
+module.exports = {genCierreCaja,uploadFact,agregarNotaCredito,getRegsDeleteTime,getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};

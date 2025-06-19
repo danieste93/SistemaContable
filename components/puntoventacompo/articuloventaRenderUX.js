@@ -1,6 +1,6 @@
 import React from "react";
 import { ValidatorForm, TextValidator} from 'react-material-ui-form-validator';
-
+import { Animate } from "react-animate-mount/lib/Animate";
 
 class ArticuloVentaRender extends React.Component {
   
@@ -55,6 +55,13 @@ class ArticuloVentaRender extends React.Component {
             // remove rule when it is not needed
             ValidatorForm.removeValidationRule('stock');
         }
+        
+      checkService=(service)=>{
+      
+       let data = service.Tipo == "Servicio"? true:false
+      
+       return data
+      }
 
  handleChangeCantidad=(e)=>{
         let item = this.props.datos
@@ -276,11 +283,17 @@ item})
             <small>IVA</small>
             </span>
 </div>
+   <Animate show={this.checkService(this.props.datos)}>
+  <button  className="btn btn-primary mybtn " onClick={()=>{this.props.setService(this.props.datos)}}><span className="material-icons">
+  settings
+  </span></button>
+  </Animate>
           </div>
 
         
         </div>
   </ValidatorForm>  
+      
         <i
           className="material-icons borrar"
           onClick={ ()=>{this.props.deleteitem(this.props.datos)}}
@@ -321,6 +334,16 @@ item})
             border: 1px solid #ccc;
         
           }
+                .mybtn{
+                    padding: 2px;
+                    margin: 1px;
+                    height: 20px;
+                 
+                   }
+                    .mybtn span{
+                 font-size:16px
+                 
+                   }
 
           .precio-container {
             display: flex;

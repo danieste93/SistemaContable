@@ -258,7 +258,7 @@ if(cuentaX.Permisos.includes("auxiliar")){
        
               </div>
               <div id =""className="cDc2 alinemiento"style={{border:"none"}} >
-              <select name="Tipo" id="selectipo" style={{width:"100%"}} className="tipe" value={this.state.Tipo}onChange={this.handleChangeGeneral} >
+              <select name="Tipo" id="selectipo" disabled={this.props.CuentaEditar.Tipo === "Inventario"?true:false} style={{width:"100%"}} className="tipe" value={this.state.Tipo}onChange={this.handleChangeGeneral} >
 
 <option value="No$"> </option>
 {this.getTipeCuentas()}

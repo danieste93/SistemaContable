@@ -4,7 +4,7 @@ const cuentasController = require('../controler/cuentas');
 const Counter = require("../controler/counter")
 const Authentication = require("../controler/middleware/auth")
 
-
+router.post('/genCierreCaja',Authentication, cuentasController.genCierreCaja);
 router.post('/getmaindata',Authentication, cuentasController.getMainData);
 router.post('/getcuentasregs',Authentication, cuentasController.getCuentasRegs);
 router.post('/getregstime',Authentication, cuentasController.getRegsTime);

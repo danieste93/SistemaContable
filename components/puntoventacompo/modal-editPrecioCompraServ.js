@@ -57,9 +57,10 @@ Configuración de Servicio
 
 </div> 
 <div className="Scrolled">
-<div className='contBotonesExtra'>
+  
+<div style={{display:"none"}} className='contBotonesExtra'>
    <button className={` btn btn-primary botonedit2 extrabutton`} >
-<span>Anexar Registro</span>
+
 
 
 </button>

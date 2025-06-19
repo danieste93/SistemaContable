@@ -7,21 +7,26 @@ import MuiAlert from '@material-ui/lab/Alert';
 import OrganizadorTiempo from "../cuentascompo/newHooks/OrganizadorTiempo"
 import GenGroupRegs from '../cuentascompo/SubCompos/GenGroupRegsCuentasNuevas';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import {addFirstRegs,addRegs,gettipos,getcuentas} from "../../reduxstore/actions/regcont"
-
+import {addFirstRegs,addRegs,gettipos,getcuentas, updateCuenta} from "../../reduxstore/actions/regcont"
+import fetchData from "../funciones/fetchdata"
+import HelperCont from "./helperCont"
 class Contacto extends Component {
    
 state={
+  helperCont:false,
+  loading:false,
   fechaSeleccionada:"",
   filtrosTiempo:false,
   ShowDetalles:"",
+  filtroVend:"Todos",
   DetallesCuenta:false,
+  CantidadContada:"",
   Cuentas:true,
   genTrans:false,
-  CuentaSelect:{NombreC:"",_id :""},
+  CuentaSelect:{NombreC:"",_id :"",DineroActual:{$numberDecimal:"0"}},
 
   CantidadAtrans:"",
-
+testron:"asd",
   
   Alert:{Estado:false},
   CuentaDestinoAll:"",
@@ -30,6 +35,7 @@ state={
   tiempo: new Date(),
   Allcuentas:this.props.state.RegContableReducer.Cuentas,
   Regs:[],
+  registrosCrudos:null,
   ProcessRegs:null,
   diario:false,
   mensual:false,
@@ -51,7 +57,74 @@ channel1 = null;
       
       
       }
+      setUsuarioSeleccionado = (e) => {
+  this.setState({ filtroVend: e.target.value });
+};
+handleCerrarCaja=async(text,val)=>{
+    if(!this.state.loading){
+  this.setState({loading:true})
+   let data = await fetchData(this.props.state.userReducer,
+           "/cuentas/genCierreCaja",
+           {text,val,cuenta:this.state.CuentaSelect,UserData:this.props.state.userReducer.update.usuario.user})
+           console.log(data)
 
+       if(data.status == "Error"){
+alert("Error")
+
+        }else{
+  if(data.message == "cierre exitoso"){
+            this.props.dispatch(addRegs(data.registrosGenerados))
+  
+    }else if(data.message == "reg faltante y cierre exitoso"){
+     this.props.dispatch(updateCuenta(data.allCuentas[0]))
+    this.props.dispatch(addRegs(data.registrosGenerados))
+  
+    }
+
+
+           let CuentaSelect = {NombreC:"",_id :"",DineroActual:{$numberDecimal:"0"}}
+    this.setState({CuentaSelect, 
+      ShowDetalles:"",
+      DetallesCuenta:false, 
+      Cuentas:true,
+       genTrans:false,
+       loading:false, 
+    
+    })
+      this.channel1.publish('updateDataVend', {
+    message: 'enviado desde reset'
+  });
+
+
+        }
+           
+         
+}
+}
+
+ generarOpcionesUsuarios = (registros) => {
+  
+  if(registros){
+  // Crear un Set para evitar usuarios duplicados
+  const usuariosUnicos = new Map();
+
+  registros.forEach(reg => {
+    const usuario = reg.Usuario;
+    if (usuario && usuario.Id && !usuariosUnicos.has(usuario.Id)) {
+      usuariosUnicos.set(usuario.Id, usuario.Nombre);
+    }
+  });
+
+  return (
+    <>
+      <option value="Todos">Todos</option>
+      {[...usuariosUnicos.entries()].map(([id, nombre]) => (
+        <option key={id} value={id}>{nombre}</option>
+      ))}
+    </>
+  );
+  }
+};
       getVendData=()=>{
         console.log("en venddata")
         let datos = {Usuario: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
@@ -78,7 +151,7 @@ channel1 = null;
           this.props.dispatch(addFirstRegs(response.regsHabiles));
           this.props.dispatch(gettipos(response.tiposHabiles));
 
-          this.setState({filtrosTiempo:true,})
+          this.setState({filtrosTiempo:true,registrosCrudos:response.regsHabiles})
         }
       
         })
@@ -167,7 +240,9 @@ this.setState({Alert: add, loading:false})
       }
 
 
-    
+   setUsuarioSeleccionado = (e) => {
+  this.setState({ filtroVend: e.target.value });
+};
     
       Onsalida=()=>{
         document.getElementById('maincuentasVend').classList.remove("entradaaddc")
@@ -186,7 +261,9 @@ this.setState({Alert: add, loading:false})
                 
         })
           }  
-      
+        handleCantidadContada = (e) => {
+    this.setState({ CantidadContada: e.target.value });
+  };
       
       handleChangeGeneral=(e)=>{
 
@@ -231,9 +308,34 @@ this.setState({Alert: add, loading:false})
         }
   
     render () {
-
-
 console.log(this.state)
+  const actual = parseFloat(this.state.CuentaSelect.DineroActual.$numberDecimal);
+    const contado = parseFloat(this.state.CantidadContada);
+    const diferencia = contado - actual;
+
+    let mensaje = '';
+    let estiloMensaje = '';
+    let estiloBoton = 'azul';
+    let textoBoton = 'Cerrar Caja';
+    let absoluteVal= Math.abs(actual - contado)
+
+    if (this.state.CantidadContada !== '') {
+      if (contado < actual) {
+        mensaje = `Faltan $${(absoluteVal).toFixed(2)}`;
+        estiloBoton = 'rojo';
+        textoBoton = 'Registrar faltante y cerrar';
+      } else if (contado > actual) {
+        mensaje = `Sobra $${(absoluteVal).toFixed(2)}`;
+        estiloBoton = 'tomate';
+        textoBoton = 'Registrar exedente y cerrar';
+      }
+    }
+
+    const botonDeshabilitado =
+      this.state.CantidadContada === '' || parseFloat(this.state.CantidadContada) === 0;
+
+
+
 
       let flechaval = this.state.filtrosTiempo?"▲":"▼"
      
@@ -247,7 +349,7 @@ console.log(this.state)
       let cuentasEnPosecion = this.state.Allcuentas.length > 0? this.state.Allcuentas.filter(x => x.CheckedP).map(x=>x._id):[]
       let arrValidos = this.props.state.RegContableReducer.Cuentas? this.props.state.RegContableReducer.Cuentas.map(x=>x._id):[]
       let cuentasValidas = this.props.state.RegContableReducer.Cuentas? this.props.state.RegContableReducer.Cuentas.filter(x =>x.CheckedP == true ):[]
-console.log(cuentasEnPosecion)
+
       const Alert=(props)=> {
         return <MuiAlert elevation={6} variant="filled" {...props} />;
       }
@@ -275,13 +377,13 @@ if(this.state.ProcessRegs){
 
 
 
-let RegsIng = this.state.ProcessRegs.filter(x => x.Accion=="Ingreso" && x.Usuario.Id == this.props.state.userReducer.update.usuario.user._id &&  cuentasEnPosecion.includes(x.CuentaSelec.idCuenta) ).reverse()
-let RegsGas = this.state.ProcessRegs.filter(x => x.Accion=="Gasto" && x.Usuario.Id  == this.props.state.userReducer.update.usuario.user._id   &&  cuentasEnPosecion.includes(x.CuentaSelec.idCuenta)) .reverse()
+let RegsIng = this.state.ProcessRegs.filter(x => x.Accion=="Ingreso"  &&  cuentasEnPosecion.includes(x.CuentaSelec.idCuenta) )
+let RegsGas = this.state.ProcessRegs.filter(x => x.Accion=="Gasto"   &&  cuentasEnPosecion.includes(x.CuentaSelec.idCuenta)) 
 
 
 
-let RegsIngAvailable  = this.state.ProcessRegs.filter(x => x.Accion=="Ingreso" && arrValidos.includes(x.CuentaSelec.idCuenta) && x.Usuario.Id == this.props.state.userReducer.update.usuario.user._id ) 
-let DetallesAvailable  = this.state.ProcessRegs.filter(x =>  arrValidos.includes(x.CuentaSelec.idCuenta) && (x.Accion=="Ingreso" ||x.Accion=="Gasto")  && x.Usuario.Id == this.props.state.userReducer.update.usuario.user._id ) 
+let RegsIngAvailable  = this.state.ProcessRegs.filter(x => x.Accion=="Ingreso" && arrValidos.includes(x.CuentaSelec.idCuenta) ) 
+let DetallesAvailable  = this.state.ProcessRegs.filter(x =>  arrValidos.includes(x.CuentaSelec.idCuenta) && (x.Accion=="Ingreso" ||x.Accion=="Gasto")  ) 
 
 
 
@@ -303,16 +405,23 @@ for(let i = 0;i<this.props.regC.Cuentas.length;i++){
   for(let j = 0;j<sinRepetidosObjeto.length;j++){
 
     if(sinRepetidosObjeto[j].idCuenta == this.props.regC.Cuentas[i]._id    ){
-      getCuentasToRender.push(this.props.regC.Cuentas[i])
+    
+      let cuentaInt =this.props.regC.Cuentas[i]
+  
+      let cajaCerrada = this.state.ProcessRegs.filter(reg=>reg.CatSelect.idCat == 25 && sinRepetidosObjeto[j].idCuenta == reg.CuentaSelec.idCuenta )
+console.log(cajaCerrada)
+      if(cajaCerrada.length > 0){
+        cuentaInt.cerrada = true
+      }
+
+      getCuentasToRender.push(cuentaInt)
     }
 
   }
  
 }}
 
-
-
-console.log(this.state.ProcessRegs)
+console.log(getCuentasToRender)
 
 let transGenerated = this.state.ProcessRegs.filter(x =>x.Accion=="Trans"  && x.Usuario.Id == this.props.state.userReducer.update.usuario.user._id)
 
@@ -320,13 +429,13 @@ if(transGenerated.length > 0){
  
   TransferenciasTotales = transGenerated.reduce( (acc, obj)=>  acc + obj.Importe, 0).toFixed(2);
 }
-console.log(transGenerated)
+
 
 
 
 if(this.state.CuentaSelect._id != ""){
 
-   DetallesCuenta  = this.state.ProcessRegs.filter(x =>  x.CuentaSelec.idCuenta == this.state.CuentaSelect._id && x.Usuario.Id == this.props.state.userReducer.update.usuario.user._id   )
+   DetallesCuenta  = this.state.ProcessRegs.filter(x =>  x.CuentaSelec.idCuenta == this.state.CuentaSelect._id  )
    
 
 }
@@ -352,7 +461,7 @@ if(this.state.CuentaSelect != ""){
     x.CuentaSelec._id==this.state.CuentaSelect._id
     ))
     let datasum  = transGeneratedthiscount.reduce( (acc, obj)=>  acc + obj.Importe, 0)
-  let  RegsFiltraCuenta  = this.state.ProcessRegs.filter(x =>  x.CuentaSelec.idCuenta == this.state.CuentaSelect._id  && x.Usuario.Id == this.props.state.userReducer.update.usuario.user._id )
+  let  RegsFiltraCuenta  = this.state.ProcessRegs.filter(x =>  x.CuentaSelec.idCuenta == this.state.CuentaSelect._id   )
     Restante = RegsFiltraCuenta.reduce((acc, item)=>{
             
       if(item.Accion == "Ingreso"){
@@ -446,7 +555,7 @@ let comp2 = DiaComplete?false:
    let   RegsFiltradosCuenta = []
     
         if(this.state.ProcessRegs) {
-          RegsFiltradosCuenta  = this.state.ProcessRegs.filter(x =>  x.CuentaSelec.idCuenta == cuenta._id  && x.Usuario.Id == this.props.state.userReducer.update.usuario.user._id )
+          RegsFiltradosCuenta  = this.state.ProcessRegs.filter(x =>  x.CuentaSelec.idCuenta == cuenta._id  )
         
       
 
@@ -497,7 +606,7 @@ let comp2 = DiaComplete?false:
        
         
           </div>
-          <Animate show={comp2 && comp3}>
+          <Animate show={  comp3&&!cuenta.cerrada&&cuenta.DineroActual.$numberDecimal > 0 }>
           <div className='transcont' onClick={(e)=>{
 
 
@@ -521,7 +630,7 @@ let comp2 = DiaComplete?false:
           this.setState({Alert: add, loading:false}) 
           }
         }}>
-          <span>Cierre Diario</span>
+          <span>Cierre</span>
         <i className="material-icons " >  send</i>
         </div>
         </Animate>
@@ -541,10 +650,11 @@ let comp2 = DiaComplete?false:
 background: white;
 margin: 5px;
 border-radius: 10px;
-padding: 15px 9px 15px 8px;
-width: 96%;
+padding:9px;
+width: 90%;
 margin-left: 2%;
         }
+
         .titilulo{
           font-weight: bold;
           font-size: 20px;
@@ -569,7 +679,7 @@ margin-left: 2%;
         }
         .transcont{
           align-items: center;
-          width: 113px;
+          
           display: flex;
           border: 1px solid;
           border-radius: 9px;
@@ -594,6 +704,10 @@ margin-left: 2%;
             max-width: 200px;
               justify-content: flex-end;
              }
+              .supercontreg{
+    width: 90%;
+    max-width: 800px;
+}
         
              .invisiblex{
               display: none;
@@ -655,12 +769,28 @@ Resultados
 <CircularProgress/>
 </Animate>
 <Animate show={this.state.filtrosTiempo}>
+ <Animate show={this.props.state.userReducer.update.usuario.user.Tipo == "administrador"}> 
+  <div className='contFilterUser centrar'>
+<select className='selectUser' onChange={this.setUsuarioSeleccionado} value={this.state.filtroVend}>
+  {this.generarOpcionesUsuarios(this.state.registrosCrudos)}
+</select>
+</div>
+</Animate>
 <OrganizadorTiempo 
-  Regs={this.props.state.RegContableReducer.Regs}
-  sendDataTime={this.getDatatime}
-  ProcessRegs={(regs)=>{
-   
+addnewData={(sinRepetidosObjeto)=>{
+    this.props.dispatch(addFirstRegs(sinRepetidosObjeto))
+     this.channel1.publish('updateDataVend', {
+    message: 'enviado desde reset'
+  });
 
+}}
+usuarioGen={this.props.state.userReducer.update.usuario}
+ Regs={this.props.state.RegContableReducer.Regs}
+  sendDataTime={this.getDatatime}
+  filtroUsuario={this.state.filtroVend}
+  ProcessRegs={(regs)=>{
+ 
+   
     this.setState({ProcessRegs:regs})}}
   Timesend={(data)=>{
   
@@ -694,7 +824,7 @@ if(newstate == "diario"){
   <div className="contExtradata">
   <div className="grupodatosResumen2" 
   onClick={()=>{
-    let CuentaSelect = { NombreC:"Ingresos",_id :""}
+    let CuentaSelect = { NombreC:"Ingresos",_id :"",DineroActual:{$numberDecimal:"0"}}
     this.setState({CuentaSelect, 
       ShowDetalles:"AllIng",
       DetallesCuenta:true, 
@@ -718,7 +848,7 @@ if(newstate == "diario"){
 
   </div>
   <div className="grupodatosResumen2"  onClick={()=>{
-    let CuentaSelect = { NombreC:"Gastos",_id :""}
+    let CuentaSelect = { NombreC:"Gastos",_id :"",DineroActual:{$numberDecimal:"0"}}
     this.setState({CuentaSelect, 
       ShowDetalles:"AllGas",
       DetallesCuenta:true, 
@@ -744,7 +874,7 @@ if(newstate == "diario"){
   </div>
   <div className="contExtradata">
   <div className="grupodatosResumen2"  onClick={()=>{
-    let CuentaSelect = { NombreC:"Dinero Disponible",_id :""}
+    let CuentaSelect = { NombreC:"Dinero Disponible",_id :"",DineroActual:{$numberDecimal:"0"}}
     this.setState({CuentaSelect, 
       ShowDetalles:"DetallesAvailable",
       DetallesCuenta:true, 
@@ -769,7 +899,7 @@ if(newstate == "diario"){
   </div>
   <div className="grupodatosResumen2"
   onClick={()=>{
-    let CuentaSelect = { NombreC:"Total Trans",_id :""}
+    let CuentaSelect = { NombreC:"Total Trans",_id :"",DineroActual:{$numberDecimal:"0"}}
     this.setState({CuentaSelect, 
       ShowDetalles:"AllTrans",
       DetallesCuenta:true, 
@@ -799,6 +929,7 @@ if(newstate == "diario"){
   
   </div>
   </div> 
+  <div className='lowData'>
   <Animate show={this.state.Cuentas}>
 
 <div className="contTipos">
@@ -810,7 +941,7 @@ if(newstate == "diario"){
   <img src="/static/flecharetro.png" alt="" className="flecharetro" 
                   onClick={()=>{this.setState({DetallesCuenta:false,
                      Cuentas:true, 
-                     CuentaSelec:{NombreC:""},
+                     CuentaSelect:{NombreC:"",_id :"",DineroActual:{$numberDecimal:"0"}},
                      ShowDetalles:""})
                   
                 }  }
@@ -821,6 +952,8 @@ if(newstate == "diario"){
                   {detallesrender}
                   </div>
 </Animate>
+
+{/*
 <Animate show={this.state.genTrans}>
 <div className="contTrans">
 <div className="grupodatosCuentasvend">
@@ -894,7 +1027,68 @@ Aceptar
 </div>
 
 </div>
+</Animate> */}
+
+
+<Animate show={this.state.genTrans}>
+  <img src="/static/flecharetro.png" alt="" className="flecharetro" 
+                  onClick={()=>{this.setState({genTrans:false,
+                     Cuentas:true, 
+                     CuentaSelect:{NombreC:"",_id :"",DineroActual:{$numberDecimal:"0"}},
+                     ShowDetalles:""})
+                  
+                }  }
+                  />
+  <div className="cierre-caja-panel">
+        <div className="fila">
+          <label>Nombre Cuenta:</label>
+          <span>{this.state.CuentaSelect.NombreC}</span>
+        </div>
+
+        <div className="fila">
+          <label>Cantidad Actual:</label>
+          <span>${parseFloat(this.state.CuentaSelect.DineroActual.$numberDecimal).toFixed(2)}</span>
+        </div>
+
+        <div className="fila">
+          <label>Cantidad Contada:</label>
+            <input
+            type="number"
+            value={this.state.CantidadContada}
+            onChange={this.handleCantidadContada}
+            placeholder="Ingrese monto contado"
+            min="0"
+          />
+
+          <div className='activeButton' onClick={()=>this.setState({helperCont:true})}> 
+            <span className='material-icons'>exposure_icon</span> </div>
+        </div>
+
+
+     {mensaje && (
+          <div className={`mensaje-estado ${estiloMensaje}`}>
+            {mensaje}
+          </div>
+        )}
+        <div className="boton-contenedor">
+        <Animate show={this.state.loading}>
+<CircularProgress/>
+        </Animate>
+          <Animate show={!this.state.loading}>
+ <button
+            className={estiloBoton}
+            onClick={()=>this.handleCerrarCaja(textoBoton,absoluteVal)}
+            disabled={botonDeshabilitado}
+          >        {textoBoton}
+          </button>
+        </Animate>
+           
+           </div>
+      </div>
+
+
 </Animate>
+</div>
 </div>
 </div>
 
@@ -905,7 +1099,117 @@ Aceptar
     
     </Alert>
   </Snackbar>
+
+  <Animate show={this.state.helperCont}>
+
+  <HelperCont 
+  sendData ={(e)=>{this.setState({CantidadContada:e})}}
+  Flecharetro={()=>{this.setState({helperCont:false})}}
+  />
+  </Animate>
+
            <style jsx >{`
+           .cierre-caja-panel {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 25px;
+  background-color: #f7f9fc;
+  border: 1px solid #dfe4ea;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.fila label {
+  font-weight: 600;
+  color: #2f3542;
+  font-size: 16px;
+}
+
+.fila span {
+  color: #1e272e;
+  font-size: 16px;
+}
+
+.fila input {
+  padding: 6px 10px;
+  font-size: 15px;
+  width: 150px;
+  border: 1px solid #ced6e0;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.fila input:focus {
+  border-color: #1e90ff;
+}
+
+.boton-contenedor {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.boton-contenedor button {
+ 
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.boton-contenedor button:hover {
+  background-color: #0c70d1;
+}
+  button {
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: white;
+}
+
+button.azul {
+  background-color: #1e90ff;
+}
+
+button.azul:hover {
+  background-color: #0c70d1;
+}
+
+button.rojo {
+  background-color: #e74c3c;
+}
+
+button.rojo:hover {
+  background-color: #c0392b;
+}
+  button.tomate {
+  background-color:rgb(255, 132, 31);
+}
+
+button.tomate:hover {
+  background-color:rgb(236, 129, 6);
+}
+
+button:disabled {
+  background-color: #dcdde1;
+  color: #7f8c8d;
+  cursor: not-allowed;
+}
+
 
            /* ContVendedores*/
            .headercroom{
@@ -914,7 +1218,7 @@ Aceptar
            .ContDineroManjear{
             display:flex;
             justify-content: center;
-            width: 100%;
+            width: 95%;
             max-width: 600px;
           }
           .contRegistrosDetallado{                    
@@ -922,7 +1226,7 @@ Aceptar
             width: 100%;
             align-items: center;
             display: flex;
-            justify-content: center;
+            justify-content: flex-start;
             flex-flow: column;
             background: whitesmoke;
            }
@@ -933,17 +1237,39 @@ Aceptar
             min-width: 155px;
             max-width: 300px;
             width: 50%;
-            border-bottom: 2px outset;
+          
             border-radius: 9px;
             margin: 0px 5px;
             padding: 6px 8px;
-            border: 1px solid black;
-            box-shadow: 0px 3px 2px black;
+        font-family: 'Segoe UI', sans-serif;
+            box-shadow: 0px 2px 1px black;
             cursor:pointer;
             background: #f8f8ff9e;
         }
             
             }
+        .activeButton{
+            background: blue;
+margin-left: 5px;
+    display: flex;
+   
+   width: 33px;
+   height: 33px;
+    border-radius: 10px;
+    border-bottom: 1px solid;
+    justify-content: center;
+    align-items: center;}
+
+    .activeButton span{
+        color: white;
+    font-size: 20px;
+    width: 20px;
+    cursor:pointer;
+    }
+    .lowData{
+        display: flex
+;
+    flex-flow: column;}
             .ContData{
              
               display: flex;
@@ -956,8 +1282,11 @@ Aceptar
               padding: 10px;
               
               }
+              .selectUser{
+              border-radius: 11px;
+              margin-top: 10px;
+              }
               .ContDataSucess{
-             
                 display: flex;
                 flex-flow: column;
                 width: 100%;
@@ -971,13 +1300,12 @@ Aceptar
               display: flex;
               justify-content: center;
               align-items: center;
-              
               min-width: 200px;
               width: 100%;
               border-bottom: 2px outset ;
               border-radius: 9px;
               }
-              
+           
             .cDc1resumen{
 
            
@@ -1100,7 +1428,7 @@ Aceptar
                       flex-flow: column;
                      
                       height: 90vh;
-                      padding: 5px;
+                      
                      
                      }
 

@@ -42,6 +42,7 @@ import SecureFirm from './snippets/getSecureFirm';
 
 class accessPuntoVentaUX extends Component {
      state={
+      errorSecuencial:false,
       NumberSelect:0,
       createServ:false,
         cuentasmodal:false,
@@ -115,13 +116,35 @@ class accessPuntoVentaUX extends Component {
      pagos = React.createRef(); 
         componentRef = React.createRef(); 
           printRef  = React.createRef();
+          listadoRef = React.createRef();
           channel1 = null;
           componentDidMount(){
              
      this.loadFromLocalStorage()
      
   this.startPuntoVentaData()
+   window.addEventListener('resize', this.handleResize);
+    this.handleResize(); // Llamada inicial
   }
+
+    componentWillUnmount() {
+    window.removeEventListener('resize', this.handleResize);
+  }
+
+
+  handleResize = () => {
+    const contenedor = this.listadoRef.current;
+    if (contenedor) {
+      const contenedorWidth = contenedor.offsetWidth;
+      const itemWidth = 130 + 6; // 130px width + 6px margin (3px x 2)
+      const itemsPorLinea = Math.floor(contenedorWidth / itemWidth);
+      const nuevoPerPage = Math.min(30, Math.max(8, itemsPorLinea * 2));
+      this.setState({ perPage: nuevoPerPage  });
+    }
+  };
+
+
+
    handleChangeIdentificacion = (e) => {
         const { name, value } = e.target;
     
@@ -140,6 +163,8 @@ class accessPuntoVentaUX extends Component {
             });
         }
     };
+
+
        handleChangeform=(e)=>{
         this.setState((prevState) => ({
             Comprador: {
@@ -760,8 +785,8 @@ this.setState({impresion:!this.state.impresion})
                             Mensaje:"Factura Electrónica Generada Satisfactoriamente"
                         }
                         this.setState({Alert: add,
-                         loading:false,
-                      
+                         loading:false, 
+                       errorSecuencial:false,
                      })
                 
                   
@@ -824,7 +849,7 @@ this.setState({impresion:!this.state.impresion})
 
                 if(messageShow == 'Error :  Error en la factura, CLAVE ACCESO REGISTRADA,  undefined '){
 
-                    messageShow ="Ese Secuencial ya ha sido utilizado, aumente un numero en el secuencial"
+                    messageShow ="Ese Secuencial ya ha sido utilizado, se ha aumentado un numero. Vuelva a intentar"
                 }
 
                 let add = {
@@ -832,7 +857,7 @@ this.setState({impresion:!this.state.impresion})
                     Tipo:"error",
                     Mensaje:messageShow
                 }
-                this.setState({Alert: add, loading:false}) 
+                this.setState({Alert: add, loading:false, errorSecuencial:true, secuencialGen:this.state.secuencialGen + 1 }) 
 
             }
             
@@ -2134,7 +2159,7 @@ setPreciosPago=(e)=>{
       });
     } else if (num === 4) {
        
-   this.setState({Resultados:true, NumberSelect: 4 })
+   this.setState({Resultados:true })
     }
   };   
    handleScanError=(e)=>{
@@ -2609,7 +2634,7 @@ NumberSelect={this.handleNumberSelect} />
        <i className="material-icons buttonSearch">search</i>
 
 </div>
-<div className='listadoArticulos'>
+<div ref={this.listadoRef} className='listadoArticulos'>
 
   {generadorArticulosLista} 
 </div>
@@ -2716,6 +2741,13 @@ NumberSelect={this.handleNumberSelect} />
                           </div>
                           </Animate>
 <Animate show={SuperTotal > 0 && SuperTotal === TotalPago}>
+
+<Animate show={this.state.errorSecuencial}>
+       <div className="centrar spaceAround contsecuencial"> 
+               <span > Secuencial</span>
+               <input type="number" name="secuencialGen" className='percentInput' value={this.state.secuencialGen} onChange={this.handleChangeSecuencial }/>
+               </div>
+</Animate>
                              <div className="contSubOptions">
 
                                               <div className="impresion">
@@ -3302,7 +3334,7 @@ Documento electrónico generado en activos.ec
                 </div>
    <Animate show={this.state.Resultados}>
 <Resultados
-    updateData ={()=>{this.getAllArts()}}
+
     FilteredRegs = {this.props.state.RegContableReducer.Regs}
  
   Flecharetro={()=>{this.setState({Resultados:false, NumberSelect:0})}} 
@@ -3631,6 +3663,18 @@ width: 100%;
   transition: background-color 0.3s ease, transform 0.2s ease;
   cursor: pointer;
   margin-top: 16px;
+}
+
+.contsecuencial{
+    margin:10px;
+    width:90%;
+    
+}
+.contsecuencial input{
+    border-radius: 26px;
+    padding: 7px;
+    text-align:center;
+        width: 30%;
 }
 
 .confirm-button.enabled {
