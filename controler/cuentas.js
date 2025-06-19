@@ -2100,7 +2100,7 @@ allCuentas.push(cuentaUpdate)
 
 await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updateCounterVenta,{session} )
      
-  // await session.commitTransaction();    
+   await session.commitTransaction();    
                 session.endSession();       
   return res.send({status: "Ok", message: "reg faltante y cierre exitoso", registrosGenerados:allCreatedRegs, allCuentas   });
                
@@ -2197,7 +2197,7 @@ allCuentas.push(cuentaUpdate)
 
 await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updateCounterVenta,{session} )
      
-  // await session.commitTransaction();    
+  await session.commitTransaction();    
                 session.endSession();       
   return res.send({status: "Ok", message: "reg faltante y cierre exitoso", registrosGenerados:allCreatedRegs, allCuentas   });
                

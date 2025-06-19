@@ -328,16 +328,41 @@ IVA
 
      validators={ ["requerido"] }
      errorMessages={ ["requerido"]  }
-    
+     InputProps={{
+      disableUnderline: true, // Elimina el subrayado del input
+      style: {
+        pointerEvents: "none", // Bloquea la interacción del input, evita el cursor de escritura
+      },
+    }}
+    style= {{
+      cursor: "pointer",
+      backgroundColor: "rgb(39 98 255 / 10%)",
+      padding:"2px",
+      borderRadius: "5px",
+      borderBottom:"1px solid black"
+    } }
  /> 
     </div>
     <div  className="contdetalleAI"> 
     <TextValidator
     label="Sub Categoria"
-
+   onClick={()=>{ this.setState({categoriaModal:true})}}
      name="SubCategoria"
      type="text"
   value={this.state.subCatSelect}
+   InputProps={{
+      disableUnderline: true, // Elimina el subrayado del input
+      style: {
+        pointerEvents: "none", // Bloquea la interacción del input, evita el cursor de escritura
+      },
+    }}
+    style= {{
+      cursor: "pointer",
+      backgroundColor: "rgb(39 98 255 / 10%)",
+      padding:"2px",
+      borderRadius: "5px",
+      borderBottom:"1px solid black"
+    } }
  /> 
     </div>
         
