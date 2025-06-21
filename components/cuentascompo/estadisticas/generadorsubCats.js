@@ -478,7 +478,7 @@ return(
     {stats}
 </div>
   </div>
-  <div className="supercontreg">
+  <div className="contRegistros centrar">
   <GenGroupRegs Registros={showData} cuentaSelect={{_id:0}} datosGene={{saldo:0, balance:0,saldoActive:false}} />  
   </div>
   <style jsx >

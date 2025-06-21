@@ -66,7 +66,7 @@ handleCerrarCaja=async(text,val)=>{
    let data = await fetchData(this.props.state.userReducer,
            "/cuentas/genCierreCaja",
            {text,val,cuenta:this.state.CuentaSelect,UserData:this.props.state.userReducer.update.usuario.user})
-           console.log(data)
+          
 
        if(data.status == "Error"){
 alert("Error")
@@ -126,7 +126,7 @@ alert("Error")
   }
 };
       getVendData=()=>{
-        console.log("en venddata")
+        
         let datos = {Usuario: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
           Tipo: this.props.state.userReducer.update.usuario.user.Tipo,
         _id:this.props.state.userReducer.update.usuario.user._id
@@ -145,7 +145,7 @@ alert("Error")
         .catch(error => {console.error('Error:', error);
                })
         .then(response => {  
-        console.log(response)
+       
           if(response.status == 'error'){}
         else if(response.status == 'Ok'){
           this.props.dispatch(addFirstRegs(response.regsHabiles));
@@ -191,7 +191,7 @@ headers:{
 }
 }).then(res => res.json()).then(response =>{
  
- console.log("response",response)
+ 
  if(response.message=="error al registrar"){
   let add = {
     Estado:true,
@@ -308,7 +308,7 @@ this.setState({Alert: add, loading:false})
         }
   
     render () {
-console.log(this.state)
+
   const actual = parseFloat(this.state.CuentaSelect.DineroActual.$numberDecimal);
     const contado = parseFloat(this.state.CantidadContada);
     const diferencia = contado - actual;
@@ -408,8 +408,8 @@ for(let i = 0;i<this.props.regC.Cuentas.length;i++){
     
       let cuentaInt =this.props.regC.Cuentas[i]
   
-      let cajaCerrada = this.state.ProcessRegs.filter(reg=>reg.CatSelect.idCat == 25 && sinRepetidosObjeto[j].idCuenta == reg.CuentaSelec.idCuenta )
-console.log(cajaCerrada)
+      let cajaCerrada = this.state.ProcessRegs.filter(reg=>reg.Accion != "Trans").filter(reg=>reg.CatSelect.idCat == 25 && sinRepetidosObjeto[j].idCuenta == reg.CuentaSelec.idCuenta )
+
       if(cajaCerrada.length > 0){
         cuentaInt.cerrada = true
       }
@@ -421,7 +421,7 @@ console.log(cajaCerrada)
  
 }}
 
-console.log(getCuentasToRender)
+
 
 let transGenerated = this.state.ProcessRegs.filter(x =>x.Accion=="Trans"  && x.Usuario.Id == this.props.state.userReducer.update.usuario.user._id)
 

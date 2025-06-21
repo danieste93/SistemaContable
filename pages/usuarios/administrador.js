@@ -178,7 +178,7 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
  logOut=()=>{
 
   this.props.dispatch(logOut())
-  Router.push("/")
+  Router.push("/ingreso")
   localStorage.clear()
 
   }

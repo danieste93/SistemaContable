@@ -106,7 +106,7 @@ import Router from "next/router"
   }
 
   logOut=()=>{
-    Router.push("/ingreso")
+  
     this.props.dispatch(logOut())
 
     localStorage.clear()
@@ -251,7 +251,7 @@ settings
 </button>
         </Dropdown.Item>
         <Dropdown.Item href="#/action-2">
-        <Link href="/" ><a style={{textDecoration:"none"}}>
+        <Link href="/ingreso" ><a style={{textDecoration:"none"}}>
         <button className=" btn btn-danger btnDropDowm"  onClick={this.logOut}>
         <span className="material-icons">
 logout

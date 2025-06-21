@@ -17,7 +17,7 @@ import Filtrostiempo from './SubCompos/filtrostiempo';
 
  class Stats extends Component {
     state={
-   
+   ultimoEstado:"Ingreso",
       Cuentas:false,
       Categorias:true,
       Pie:true, 
@@ -190,14 +190,23 @@ let subCuentadata ={
  sendChangeTime={this.changetime}
  
  />
-
+<div className='jwFlex column center'>
 <Animate show={this.state.allData}> 
 
   <Animate show={this.state.Pie}>  
     
   <Animate show={this.state.Categorias}>  
  <GraficadorPie data={this.state.filteredTimeRegs}
-                 criterio={"categoria"}
+                ultimoEstado={(e)=>{console.log(e)
+                  if(e.Ingreso){
+                    this.setState({ultimoEstado:"Ingreso"})
+                  }else if(e.Gasto){
+                    this.setState({ultimoEstado:"Gasto"})
+                  }
+
+                }}
+                estadoInyecto={this.state.ultimoEstado}
+                criterio={"categoria"}
                    sendData={sendPiedata} />
   </Animate>
   <Animate show={this.state.Cuentas}>  
@@ -264,6 +273,7 @@ data={this.state.subCatRegsInv}
     subCuentadata:[]})}}
 />
 </Animate>
+</div>
 </div>
 </div>
 

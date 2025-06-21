@@ -313,12 +313,12 @@ Selecciona un fondo
             padding:4px;
             margin:5px
              }
-             .MainContIcon{
+          .MainContIcon{
               display: flex;
               flex-flow: row-reverse;
               border:0px solid black;
-              border-radius:0px
-            
+              border-radius:0px;
+               
              }
              .borderEdit{
               border:1px solid black;
@@ -370,8 +370,11 @@ Selecciona un fondo
                 left: 0%;
                 }
 .headercontactIcon{
-  display:flex;
-  align-items: center;
+      display: flex
+;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
 }
                 
                   .tituloventa{

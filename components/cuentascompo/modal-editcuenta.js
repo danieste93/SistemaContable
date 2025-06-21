@@ -8,7 +8,7 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import {connect} from 'react-redux';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
-
+import { CircularProgress } from '@material-ui/core';
 import Checkbox from '@material-ui/core/Checkbox';
 import postal from 'postal';
 import SelectIcons from "./modal-select-icons"
@@ -18,6 +18,7 @@ import RadioGroup from '@material-ui/core/RadioGroup';
 import Radio from '@material-ui/core/Radio';
 class ModalEditCuenta extends Component {
    state={
+    loading:false,
     filtrosflecha:false,
     Alert:{Estado:false},
     checkedA:true,
@@ -129,6 +130,7 @@ if(cuentaX.Permisos.includes("auxiliar")){
         })
         }
         comprobador=()=>{
+          if(!this.state.loading){
           if(this.state.Tipo != "" && this.state.Tipo != "No$" ){
             document.getElementById('selectipo').classList.remove("errequerido")
           }
@@ -195,7 +197,7 @@ if(cuentaX.Permisos.includes("auxiliar")){
   
   });
           }
-
+}
 
         }
 
@@ -524,8 +526,15 @@ if(cuentaX.Permisos.includes("auxiliar")){
 
               </div>
               </Animate>
-           <div className="jwContCenter">
+<div className="jwFlex column centrar">
+              <Animate show={this.state.loading}>
+              <CircularProgress/>
+
+              </Animate>
+<Animate show={!this.state.loading}>
   <button  onClick={this.comprobador} id="botonadd"  className="botoncontact ">Editar</button>
+              </Animate>
+           
 </div>
 </div>
         </div>
@@ -565,7 +574,7 @@ justify-content: space-around;
 cursor:pointer;
   height: 100%;
   margin-left: 15px;
-
+margin-top:20px;
   font-size: 2vmax;
   padding: 0 16px;
   border-radius: 10px;
@@ -584,7 +593,7 @@ cursor:pointer;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   border: none;
-  width: 60%;
+  
 max-width:300px;
     box-shadow: -4px 6px 8px #635c5cc4;
 }

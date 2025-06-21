@@ -5,6 +5,8 @@ const Authentication = require("../controler/middleware/auth")
 
 router.post('/register', userController.create);
 
+router.post('/googleLogin', userController.googleLogin);
+
 
 router.post('/register-seller',Authentication, userController.registerSeller);
 router.post('/register-autoclient', userController.registerSeller);

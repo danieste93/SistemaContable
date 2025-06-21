@@ -308,8 +308,9 @@ Selecciona un icono
               display: flex;
               flex-flow: row-reverse;
               border:0px solid black;
-              border-radius:0px
-            
+              border-radius:0px;
+                width: 100px;
+                min-width: 100px;
              }
              .borderEdit{
               border:1px solid black;
@@ -361,8 +362,11 @@ Selecciona un icono
                 left: 0%;
                 }
 .headercontactIcon{
-  display:flex;
-  align-items: center;
+      display: flex
+;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
 }
                 
                   .tituloventa{

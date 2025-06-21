@@ -298,7 +298,15 @@ if(articulo.Categoria._id === this.props.catClicked._id){
               counter ++
           }
         
-            categoriasMapInv[idsubCat].totalImporte += articulo.PrecioCompraTotal;
+          if(venta.Accion == "Ingreso"){
+ categoriasMapInv[idsubCat].totalImporte += articulo.PrecioCompraTotal;
+          }else  if(venta.Accion == "Gasto"){
+ categoriasMapInv[idsubCat].totalImporte += articulo.Precio_Compra
+
+          }
+
+
+           
           
             
           
@@ -482,7 +490,7 @@ return(
     {stats}
 </div>
   </div>
-  <div className="supercontreg">
+  <div className="centrar">
   <GenGroupRegs Registros={showData} cuentaSelect={{_id:0}} datosGene={{saldo:0, balance:0,saldoActive:false}} />  
   </div>
   <style jsx >

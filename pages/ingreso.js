@@ -17,6 +17,8 @@ import {logOut} from "../reduxstore/actions/myact"
 import { cleanData} from "../reduxstore/actions/regcont";
 import Checkbox from '@material-ui/core/Checkbox';
 import Link from "next/link"
+import LoginGoogle from '../components/loginGoogle';
+
 class Mainpage extends Component {
  state = {
     correoLogin:"",
@@ -111,6 +113,7 @@ ValidatorForm.addValidationRule('minimo6', (value) => {
  });
 
     }//fin did
+
     handleChangeCondiciones=(e)=>{
       this.setState({
         condiciones: !this.state.condiciones
@@ -144,6 +147,7 @@ registroFuncion=(e)=>{
                TelefonoContacto:this.state.telefonoReg,
                Correo:this.state.emailReg.toLowerCase(),
                Contrasena:this.state.passReg,
+               Imagen:"",
                RegistradoPor:"usuario",
                Confirmacion:false,
                }
@@ -162,7 +166,7 @@ registroFuncion=(e)=>{
 
    if(response.status === "Ok"){
             
-   this.setState({ modal:true,loading:false})
+   this.setState({ modal:true,loading:false, userPorLogin:response.data})
       
    }
    else if(response.status =="error"){
@@ -252,6 +256,39 @@ registroFuncion=(e)=>{
    
   console.log(response)
   }
+  handleGoogleLogin= async (response) => {
+
+    console.log(response)
+  if(response.message == "Exito en el registro" || response.message == "Exito en el login"){
+          this.channel1.publish('setTokenTimer', {
+            message: response.data.decodificado
+         });
+          const usuario = response.data
+          let localstate = {userReducer: usuario.user, }
+
+
+          const serializedState = JSON.stringify(localstate)
+          localStorage.setItem("state", serializedState)
+          this.props.dispatch(cleanData());
+          this.props.dispatch(logOut());
+          this.props.dispatch(updateUser({usuario}))  
+
+
+         if(usuario.user.Tipo === "administrador"){
+              Router.push("/usuarios/administrador")
+            
+            }
+            else if(usuario.user.Tipo=== "vendedor"|| response.data.user.Tipo === "tesorero" ){
+              Router.push("/usuarios/vendedor")
+            }
+        
+        }else{
+          alert("Error en el login")
+this.setState({loading:false})
+        }
+
+
+   }
   loginRegisFacebook= (response) => {
    if(response.status != 'unknown'){
       let passgenerator = response.id 
@@ -312,6 +349,7 @@ registroFuncion=(e)=>{
     };
 
  render() {
+  let Client_ID = "642525073015-81k5i1a9s8vdr4495kfgdncnuidls40e.apps.googleusercontent.com"
     const Alert=(props)=> {
         return <MuiAlert elevation={6} variant="filled" {...props} />;
       }
@@ -399,11 +437,23 @@ registroFuncion=(e)=>{
 					
 			</div>
 			<div className="social-login" >
-				<h3 >Ingresa con </h3>
+				<h3 >Ingresa con: </h3>
 				<div className="social-icons">
-				
-					<a href="#" className="social-login__icon fab fa-facebook"></a>
-					<FacebookLogin
+				<div className='center column'>
+<Animate show={this.state.loading}>
+  <CircularProgress/>
+</Animate>
+<Animate show={!this.state.loading}>
+ <LoginGoogle 
+ onClick={()=>{ console.log("generado click");this.setState({loading:true})}}
+onResult = { this.handleGoogleLogin}
+getError={()=>{this.setState({loading:false})}}
+/>
+</Animate>
+</div>
+        
+
+				{	/*<FacebookLogin
  size="medium"
     appId="1072382560151619"
 
@@ -419,7 +469,7 @@ registroFuncion=(e)=>{
       
       )}
     
-    />
+    />*/}
 				</div>
 			</div>
 	
@@ -586,11 +636,37 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
 	</div>
 
 
-{ this.state.modal &&  <Modal flechafun={()=>{this.setState({modal:false,   registro:false,
+{ this.state.modal &&  <Modal flechafun={()=>{
+       const usuario = this.state.userPorLogin
+          let localstate = {userReducer: usuario.user, }
+
+
+          const serializedState = JSON.stringify(localstate)
+          localStorage.setItem("state", serializedState)
+          this.props.dispatch(cleanData());
+          this.props.dispatch(logOut());
+          this.props.dispatch(updateUser({usuario}))  
+
+
+         if(usuario.user.Tipo === "administrador"){
+              Router.push("/usuarios/administrador")
+            
+            }
+            else if(usuario.user.Tipo=== "vendedor"|| response.data.user.Tipo === "tesorero" ){
+              Router.push("/usuarios/vendedor")
+            }
+  
+  this.setState({modal:false,   registro:false,
     login:true,})}} datos={this.state.datos} />}
        
             <Animate show={this.state.resetpass}>
-            <Modalreset flechafun={()=>{this.setState({resetpass:false, login:true})}}  />
+            <Modalreset flechafun={()=>{
+            
+              
+              this.setState({resetpass:false, login:true})}} 
+              
+              
+              />
             </Animate>
 
             <Snackbar open={this.state.snackerror1} autoHideDuration={6000} onClose={handleClose}>
@@ -828,7 +904,7 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
 .social-icons {
 	display: flex;
 	align-items: center;
-	justify-content: center;
+	justify-content: space-around;
 }
 
 .social-login__icon {

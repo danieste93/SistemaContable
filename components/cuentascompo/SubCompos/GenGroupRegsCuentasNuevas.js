@@ -195,7 +195,7 @@ export default class GenGroupRegs extends Component {
 `  
 
 .supercontreg{
-    width: 98%;
+    width: 100%;
     max-width: 800px;
 
 }

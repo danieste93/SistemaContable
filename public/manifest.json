@@ -1,8 +1,9 @@
 
 {
-    "name": "Contaluxe",
-    "short_name": "Contalux",
-    "start_url": "/",
+    "name": "Sistema Contable Activos",
+    "short_name": "Activos",
+    "start_url": "/ingreso",
+    "lang": "es-EC",
     "scope": "/",
     "display": "standalone",
     "background_color": "white",
@@ -31,6 +32,12 @@
         "type": "image/png",
         "purpose":"any maskable"
       }, 
+        {
+    "src": "favicons/maskable-icon-512",
+    "sizes": "512x512",
+    "type": "image/png",
+    "purpose": "any maskable"
+  },
       {
      
         "src": "favicons/android-icon-192x192.png",
@@ -40,7 +47,7 @@
       }, 
       {
      
-        "src": "favicons/android-icon-512x512.png",
+        "src": "favicons/android-chrome-512x512",
         "sizes": "512x512",
         "type": "image/png"
 

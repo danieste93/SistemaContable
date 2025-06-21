@@ -19,6 +19,7 @@ import Router from 'next/router';
 import {logOut} from "../reduxstore/actions/myact"
 import "../styles/extrabootstrap.css"
 import "../styles/main.css"
+import {GoogleOAuthProvider} from "@react-oauth/google"
 //import 'bootstrap/dist/css/bootstrap.min.css';
 export const saveToLocalStorage=(state)=>{
   try{
@@ -99,7 +100,7 @@ setTimets=(tiempoRes)=>{
   this.setState({Alert: add})
 
   store.dispatch(logOut());
-  Router.push("/")
+  Router.push("/ingreso")
    },(tiempoRes*1000))
 }
 
@@ -171,7 +172,7 @@ this.channel1.subscribe('setTokenTimer', (data) => {
  this.setState({Alert: add})
 
  store.dispatch(logOut());
- Router.push("/")
+ Router.push("/ingreso")
   },tiempoRestanteSegundos)
     
   });
@@ -213,7 +214,8 @@ const wb = new Workbox("sw.js", { scope: "/" });
 
 
   render(){
- 
+   let Client_ID = "642525073015-81k5i1a9s8vdr4495kfgdncnuidls40e.apps.googleusercontent.com"
+  
     const handleClose = (event, reason) => {
       let AleEstado = this.state.Alert
       AleEstado.Estado = false
@@ -228,6 +230,7 @@ return <MuiAlert elevation={6} variant="filled" {...props} />;
   return (
 
     <Provider store={store}>
+      <GoogleOAuthProvider clientId={Client_ID}>
          <Head>
     
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
@@ -310,7 +313,7 @@ return <MuiAlert elevation={6} variant="filled" {...props} />;
         <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>    
     </Alert>
   </Snackbar>
-
+ </GoogleOAuthProvider>
   <style jsx global>{`
           .page-transition-enter {
             opacity: 0;

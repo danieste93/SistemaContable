@@ -7,14 +7,25 @@ import 'chart.js/auto';
 
 class Stats extends Component {
     state={
-        Ingreso:true,
+        Ingreso:false,
         Gasto:false,
         excluidos:[]
 
     }
 
     componentDidMount(){
+
+        if(this.props.estadoInyecto == "Ingreso"){
+     this.setState({Ingreso:true})
+
+        }else  if(this.props.estadoInyecto == "Gasto"){
+     this.setState({Gasto:true})
+
+        }
      
+        }
+        componentWillUnmount(){
+            this.props.ultimoEstado(this.state)
         }
 
         filtrarVentasUnicasPorNota=(registros)=> {
@@ -242,7 +253,10 @@ let stats = ""
                 let bcolor = item.Color
                 return(<div className="crystal-rectangle" key={i} onClick={(e)=>{    
                   e.stopPropagation();
-                  this.props.sendData(item)}}
+                  this.props.sendData(item)
+                     this.props.ultimoEstado(this.state)
+                
+                }}
                   
                   
                   >
