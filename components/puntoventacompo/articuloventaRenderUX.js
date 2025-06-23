@@ -309,9 +309,12 @@ item})
                 background: #d3f1f4;
             border-radius: 10px;
             padding: 5px;
-            margin: 10px 0;
+            
             position: relative;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                max-width: 380px;
+    margin: auto;
+    margin-bottom:10px
           }
 
           .imagen {

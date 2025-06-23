@@ -18,6 +18,11 @@ const accountSchema = new Schema({
       type: Boolean, 
      
       },
+       Clase: {
+         type: String, 
+         default:"normal"
+         },
+      
       Tipo: {
          type: String, 
         

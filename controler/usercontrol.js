@@ -121,9 +121,18 @@ editDistri:async function(req,res){
   res.status(200).send({updateDistri})
  },
  registerSeller: async function(req, res, next) {
-  try {
+
+
+
       let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
       let ClienteModelSass = await conn.model('Cliente', clientSchema);
+ let CuentasModelSass = await conn.model('Cuenta', accountSchema);
+  let RegModelSass = await conn.model('Reg', regSchema);
+       let CounterModelSass = await conn.model('Counter', counterSchema);
+       let CatModelSass = await conn.model('Categoria', catSchema);
+     let Counterx =   await CounterModelSass.find({iDgeneral:9999999})
+      
+    
 
       // Verificamos si existe un usuario con el mismo Email, Cedula, Usuario o Telefono
       const existingUser = await ClienteModelSass.findOne({
@@ -149,6 +158,112 @@ editDistri:async function(req,res){
           });
       }
 
+      const session = await mongoose.startSession();  
+            
+      session.startTransaction();
+
+  try {
+
+      let idCuentaUser = ""
+      let aperturaReg =[]
+      let newCount=[]
+      if(req.body.Cuenta){
+
+ function normalizeText(text) {
+
+  if(text == undefined){
+    return text
+  }else{
+  return text
+    .normalize("NFD") // Descompone los caracteres con tilde
+    .replace(/[\u0300-\u036f]/g, "") // Elimina los acentos/diacríticos
+    .toLowerCase() // Convierte a minúsculas
+    .trim(); // Elimina espacios al inicio y al final
+    }
+}
+const allC = await CuentasModelSass.find({}, 'NombreC'); // Solo traemos los nombres
+
+const yaExiste = allC.some(c =>
+  normalizeText(c.NombreC) === normalizeText(req.body.Usuario)
+);
+if (yaExiste) {
+  return res.send({
+    status: "error",
+    message: "Nombre ya elegido, elija otro nombre para la cuenta."
+  });
+}
+ let cuentaActualizada = await  CuentasModelSass.create([{
+    CheckedA: false,
+    CheckedP: false,
+    Visibility: true,
+    Tipo:"Cuentas por Cobrar",
+    NombreC: req.body.Usuario,
+    DineroActual: 0,
+    Clase:req.body.Clase,
+    iDcuenta: Counterx[0].Contmascuenta,
+    Descrip: "",
+    Permisos: ["administrador","vendedor","tesorero"],
+    LimiteCredito:0,
+    FormaPago:"Efectivo",
+    Background:{
+      Seleccionado:'Solido',
+    urlBackGround:'',
+    colorPicked:"#ffffff"},
+    urlIcono:"/iconscuentas/icon.png"
+  
+      }], {session} )
+        console.log(cuentaActualizada)
+  idCuentaUser = cuentaActualizada[0]._id
+newCount.push(cuentaActualizada[0])
+  let tiempo =new Date()
+  
+  let catApertura = await CatModelSass.findOne({idCat:9999999}, null,{session})
+ 
+  let datatosend={
+    Accion:"Ingreso",
+    Tiempo: tiempo.getTime(),
+    TiempoEjecucion:tiempo.getTime(),
+    IdRegistro:Counterx[0].ContRegs,
+    CuentaSelec:{
+      idCuenta:cuentaActualizada[0]._id,
+      nombreCuenta: cuentaActualizada[0].NombreC,
+    
+    },
+  
+  
+      CatSelect:{idCat:catApertura.idCat,
+        urlIcono:catApertura.urlIcono,
+          nombreCat:catApertura.nombreCat,
+        subCatSelect:[],
+      _id:catApertura._id
+      },
+  
+      
+    Descripcion:"",
+    Importe:0,
+    Nota:"",
+    Usuario:{
+      Nombre:req.body.vendedorCont.Nombre,
+      Id:req.body.vendedorCont.Id,
+      Tipo:req.body.vendedorCont.Tipo,
+  
+    },
+    FormaPago:"Efectivo",
+    LimiteCredito:0
+    
+  }
+
+ let regApe = await RegModelSass.create([datatosend], {session})
+  aperturaReg.push(regApe[0])
+  
+ let updatecounter = { $inc: { Contmascuenta:1, ContRegs:1 } }
+
+  await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session}  )
+ 
+      }
+
+
+
       // Crear nuevo usuario
       const newUser = new ClienteModelSass({
           Usuario: req.body.Usuario,
@@ -161,13 +276,18 @@ editDistri:async function(req,res){
           Ciudad: req.body.Ciudad,
           Direccion: req.body.Direccion,
           Cedula: req.body.Cedula,
-          TipoID: req.body.TipoID
+          TipoID: req.body.TipoID,
+          IDcuenta:idCuentaUser
       });
 
-      await newUser.save();
-      return res.json({ status: "Ok", message: "Usuario agregado exitosamente!!!", user: newUser });
+        await newUser.save({ session });
+            await session.commitTransaction();    
+    session.endSession();
+      return res.json({ status: "Ok", message: "Usuario agregado exitosamente!!!", user: newUser,regs:aperturaReg,cuenta:newCount });
   } catch (error) {
-      return res.json({ status: "error", message: "Error al registrar", error });
+    console.log(error)
+      return res.json({ status: "error", message: "Error al registrar", error:error.message });
+      
   }
 },
 
@@ -257,22 +377,145 @@ logOut: function(req,res){
 
 let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
   let ClienteModelSass = await conn.model('Cliente', clientSchema);
-let options = {new:true} 
+   let CuentasModelSass = await conn.model('Cuenta', accountSchema);
+  let RegModelSass = await conn.model('Reg', regSchema);
+       let CounterModelSass = await conn.model('Counter', counterSchema);
+       let CatModelSass = await conn.model('Categoria', catSchema);
+     let Counterx =   await CounterModelSass.find({iDgeneral:9999999})
+     
+ const session = await mongoose.startSession();  
+            
+      session.startTransaction();
 
-let update = {
-  Usuario: req.body.Usuario,
-  Telefono: req.body.Telefono,
-  Email:req.body.Correo,
-  Ciudad:req.body.Ciudad,
-  Direccion:req.body.Direccion,
-  Cedula:req.body.Cedula,
-  TipoID:req.body.TipoID
+ try {
+
+   const cliente = await ClienteModelSass.findById(req.body.Id, null, { session });
+
+  if (!cliente) throw new Error('Cliente no encontrado');
+console.log(cliente)
+
+
+ let idCuentaUser = cliente.IDcuenta
+      let aperturaReg =[]
+      let newCount=[]
+      if(req.body.Cuenta && (cliente.IDcuenta == "" || cliente.IDcuenta == null )){
+
+ function normalizeText(text) {
+
+  if(text == undefined){
+    return text
+  }else{
+  return text
+    .normalize("NFD") // Descompone los caracteres con tilde
+    .replace(/[\u0300-\u036f]/g, "") // Elimina los acentos/diacríticos
+    .toLowerCase() // Convierte a minúsculas
+    .trim(); // Elimina espacios al inicio y al final
+    }
 }
-ClienteModelSass.findByIdAndUpdate(req.body.Id, update, options, (err, userUpdated) =>{
-  if(err) return res.status(500).send({message:"error al actualizar"})
+const allC = await CuentasModelSass.find({}, 'NombreC'); // Solo traemos los nombres
 
-  res.status(200).send({user: userUpdated})
-})
+const yaExiste = allC.some(c =>
+  normalizeText(c.NombreC) === normalizeText(req.body.Usuario)
+);
+if (yaExiste) {
+  return res.send({
+    status: "error",
+    message: "Nombre ya elegido, elija otro nombre para la cuenta."
+  });
+}
+ let cuentaActualizada = await  CuentasModelSass.create([{
+    CheckedA: false,
+    CheckedP: false,
+    Visibility: true,
+    Tipo:"Cuentas por Cobrar",
+    NombreC: req.body.Usuario,
+    DineroActual: 0,
+    Clase:req.body.Clase,
+    iDcuenta: Counterx[0].Contmascuenta,
+    Descrip: "",
+    Permisos: ["administrador","vendedor","tesorero"],
+    LimiteCredito:0,
+    FormaPago:"Efectivo",
+    Background:{
+      Seleccionado:'Solido',
+    urlBackGround:'',
+    colorPicked:"#ffffff"},
+    urlIcono:"/iconscuentas/icon.png"
+  
+      }], {session} )
+        
+  idCuentaUser = cuentaActualizada[0]._id
+newCount.push(cuentaActualizada[0])
+  let tiempo =new Date()
+  
+  let catApertura = await CatModelSass.findOne({idCat:9999999}, null,{session})
+ 
+  let datatosend={
+    Accion:"Ingreso",
+    Tiempo: tiempo.getTime(),
+    TiempoEjecucion:tiempo.getTime(),
+    IdRegistro:Counterx[0].ContRegs,
+    CuentaSelec:{
+      idCuenta:cuentaActualizada[0]._id,
+      nombreCuenta: cuentaActualizada[0].NombreC,
+    
+    },
+  
+  
+      CatSelect:{idCat:catApertura.idCat,
+        urlIcono:catApertura.urlIcono,
+          nombreCat:catApertura.nombreCat,
+        subCatSelect:[],
+      _id:catApertura._id
+      },
+  
+      
+    Descripcion:"",
+    Importe:0,
+    Nota:"",
+    Usuario:{
+      Nombre:req.body.vendedorCont.Nombre,
+      Id:req.body.vendedorCont.Id,
+      Tipo:req.body.vendedorCont.Tipo,
+  
+    },
+    FormaPago:"Efectivo",
+    LimiteCredito:0
+    
+  }
+
+ let regApe = await RegModelSass.create([datatosend], {session})
+  aperturaReg.push(regApe[0])
+  
+ let updatecounter = { $inc: { Contmascuenta:1, ContRegs:1 } }
+
+  await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session}  )
+ 
+      }
+  
+      // Actualizar campos directamente
+  cliente.Usuario = req.body.Usuario;
+  cliente.Telefono = req.body.Telefono;
+  cliente.Email = req.body.Correo;
+  cliente.Ciudad = req.body.Ciudad;
+  cliente.Direccion = req.body.Direccion;
+  cliente.Cedula = req.body.Cedula;
+  cliente.TipoID = req.body.TipoID;
+  cliente.IDcuenta = idCuentaUser;
+
+  // Guardar con la sesión activa
+  await cliente.save({ session });
+
+  await session.commitTransaction();
+  session.endSession();
+  return res.json({ status: "Ok", message: "Usuario editado exitosamente!!!", user: cliente,regs:aperturaReg,cuenta:newCount });
+  
+
+ }catch (error) {
+    console.log(error)
+      return res.json({ status: "error", message: "Error al registrar", error:error.message });
+      
+  }
  },
 
  update: function(req,res, next){
@@ -776,7 +1019,7 @@ UserModelSass.findOne({
 })
     },
     deleteUser:async function (req, res, next){
-   
+   console.log(req.body)
       let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
       let ClienteModelSass = await conn.model('Cliente', clientSchema);
       let CuentasModelSass = await conn.model('Cuenta', accountSchema);
@@ -790,7 +1033,7 @@ UserModelSass.findOne({
         })
        }else{
         let cuentaData = await CuentasModelSass.findById(req.body.idCuenta, null)
-      
+      console.log(cuentaData)
 
         if(cuentaData.DineroActual == 0 ){
           ClienteModelSass.findOneAndDelete({_id:usuario.Id},  (err,user)=>{

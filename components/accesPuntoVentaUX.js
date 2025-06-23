@@ -42,6 +42,7 @@ import SecureFirm from './snippets/getSecureFirm';
 
 class accessPuntoVentaUX extends Component {
      state={
+      createCount:false,
       errorSecuencial:false,
       NumberSelect:0,
       createServ:false,
@@ -109,6 +110,7 @@ class accessPuntoVentaUX extends Component {
                           secuencialBase:0,
                           userDisplay:false,
                           adduser:false,
+                          userLoading:false
            
 
      }
@@ -121,7 +123,13 @@ class accessPuntoVentaUX extends Component {
           componentDidMount(){
              
      this.loadFromLocalStorage()
-     
+          
+            ValidatorForm.addValidationRule('requerido', (value) => {
+             if (value.trim() === "" ) {
+                 return false;
+             }
+             return true;
+         });
   this.startPuntoVentaData()
    window.addEventListener('resize', this.handleResize);
     this.handleResize(); // Llamada inicial
@@ -1078,6 +1086,7 @@ this.setState({impresion:!this.state.impresion})
                                                     usuario:"",
                                                     correo:"",
                                                     telefono:"",
+                                                        idcuenta:"",
                                                     ciudad:"",
                                                     direccion:"",
                                                     cedula:"",
@@ -1324,76 +1333,30 @@ this.setState({impresion:!this.state.impresion})
         this.setState({Alert: add, loading:false}) 
     }
     }
-    
-        regisUser=()=>{
-     
-            console.log("en regisUser")
-      
-       var datar = {Usuario:this.state.Comprador.usuario,
-                   TelefonoContacto:this.state.Comprador.telefono,
-                   Ciudad:this.state.Comprador.ciudad,
-                   Cedula:this.state.Comprador.cedula,
-                   Direccion:this.state.Comprador.direccion,
-                   Correo:this.state.Comprador.correo.toLowerCase(),
-                   Contrasena:"abc123",
-                   RegistradoPor:"Vendedor",
-                   Confirmacion:true,
-                   TipoID:this.state.Comprador.ClientID,
-                   Userdata:  {DBname:this.props.state.userReducer.update.usuario.user.DBname   }               
-                   }
-                 
-      var lol = JSON.stringify(datar)
-    
-       fetch('/users/register-seller', {
-         method: 'POST', // or 'PUT'
-         body: lol, // data can be `string` or {object}!
-         headers:{
-           'Content-Type': 'application/json',
-           "x-access-token": this.props.state.userReducer.update.usuario.token
-         }
-       }).then(res => res.json())
-       .catch(error => console.error('Error:', error))
-       .then(response => {
-      
-        if(response.status=="error"){
-            let add = {
-              Estado:true,
-              Tipo:"error",
-              Mensaje:response.message
-          }
-          this.setState({Alert: add, loading:false,}) 
-          }
-    
-      
-          else{
-    
-    
-        this.setState({ 
-            Comprador:{...this.state.Comprador,
-                UserSelect:true ,
-                id:response.user._id,
-            },
-            
+        handleChangeformNumeros = (e) => {
+        const { name, value } = e.target;
         
-                        readOnly:true,
-                        adduser:false,
-                     
-                        idcuenta:null,
-                        creditLimit:0,
-                        tipopago:"Contado",
-    
-                    }) 
-                    this.props.dispatch(addClient(response.user));
-                    
-                 
-                   
-    
-                }     
-       })
-    
+        // Validamos que el valor solo contenga números (permitiendo ceros a la izquierda)
+        if (/^\d*$/.test(value)) {
+            this.setState((prevState) => ({
+                Comprador: {
+                    ...prevState.Comprador,
+                    [name]: value
+                }
+            }));
         }
-        editUser=()=>{
+
+
+
+    };
        
+        editUser=()=>{
+            this.setState({userLoading:true})
+         let vendedorCont ={
+                            Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
+                            Id:this.props.state.userReducer.update.usuario.user._id,
+                            Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
+                        }
             
     
        var data = {
@@ -1405,8 +1368,10 @@ this.setState({impresion:!this.state.impresion})
                    Direccion:this.state.Comprador.direccion,
                    Cedula:this.state.Comprador.cedula,
                    Userdata:  {DBname:this.props.state.userReducer.update.usuario.user.DBname   }   ,            
-                    TipoID:this.state.Comprador.ClientID
-                
+                    TipoID:this.state.Comprador.ClientID,
+                    Cuenta:this.state.createCount,
+                     
+                                               vendedorCont  
                 }
     
       var lol = JSON.stringify(data)
@@ -1421,22 +1386,31 @@ this.setState({impresion:!this.state.impresion})
        }).then(res => res.json())
        .catch(error => console.error('Error:', error))
        .then(response => {
-        if(response.message=="error al actualizar"){
-            let add = {
-              Estado:true,
-              Tipo:"error",
-              Mensaje:"Error al actualizar, porfavor intente en unos minutos"
-          }
-          this.setState({Alert: add, loading:false,}) 
-          }
-          else{
+        console.log(response)
+        if(response.status=="error"){
+                let add = {
+                  Estado:true,
+                  Tipo:"error",
+                  Mensaje:response.message
+              }
+              this.setState({Alert: add, userLoading:false,}) 
+              }else{
             this.props.dispatch(updateClient(response.user));
+             if(response.cuenta.length>0){
+                          this.props.dispatch(addCuenta(response.cuenta[0]));
+                        
+                        }
+                        if(response.regs.length>0){
+                          this.props.dispatch(addRegs(response.regs));
+                        
+                        }
         this.setState({
             Comprador:{
                 ...this.state.Comprador,
                 UserSelect:true,
+                idcuenta:response.user.IDcuenta
             },
-             
+                userLoading:false,
             readOnly:true,
             userEditMode:false,
             })
@@ -1482,9 +1456,15 @@ this.setState({impresion:!this.state.impresion})
           
           
                 }
+               
             regisUser=()=>{
          
-        
+         this.setState({userLoading:true})
+           let vendedorCont ={
+                            Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
+                            Id:this.props.state.userReducer.update.usuario.user._id,
+                            Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
+                        }
           
            var datar = {Usuario:this.state.Comprador.usuario,
                        TelefonoContacto:this.state.Comprador.telefono,
@@ -1493,10 +1473,14 @@ this.setState({impresion:!this.state.impresion})
                        Direccion:this.state.Comprador.direccion,
                        Correo:this.state.Comprador.correo.toLowerCase(),
                        Contrasena:"abc123",
+                       Clase:"Cliente",
                        RegistradoPor:"Vendedor",
+                       Cuenta:this.state.createCount,
                        Confirmacion:true,
                        TipoID:this.state.Comprador.ClientID,
-                       Userdata:  {DBname:this.props.state.userReducer.update.usuario.user.DBname   }               
+                       Userdata:  {DBname:this.props.state.userReducer.update.usuario.user.DBname,
+                                               },   
+                                               vendedorCont            
                        }
                      
           var lol = JSON.stringify(datar)
@@ -1511,37 +1495,42 @@ this.setState({impresion:!this.state.impresion})
            }).then(res => res.json())
            .catch(error => console.error('Error:', error))
            .then(response => {
-          
+          console.log(response)
             if(response.status=="error"){
                 let add = {
                   Estado:true,
                   Tipo:"error",
                   Mensaje:response.message
               }
-              this.setState({Alert: add, loading:false,}) 
-              }
-        
-          
-              else{
+              this.setState({Alert: add, userLoading:false,}) 
+              } else{
         
         
             this.setState({ 
                 Comprador:{...this.state.Comprador,
                     UserSelect:true ,
                     id:response.user._id,
+                    idcuenta:response.user.IDcuenta
                 },
                 
-            
+                userLoading:false,
                             readOnly:true,
                             adduser:false,
                          
-                            idcuenta:null,
-                            creditLimit:0,
-                            tipopago:"Contado",
+                           
+                            
+                            
         
                         }) 
                         this.props.dispatch(addClient(response.user));
+                        if(response.cuenta.length>0){
+                          this.props.dispatch(addCuenta(response.cuenta[0]));
                         
+                        }
+                        if(response.regs.length>0){
+                          this.props.dispatch(addRegs(response.regs));
+                        
+                        }
                      
                        
         
@@ -1549,59 +1538,7 @@ this.setState({impresion:!this.state.impresion})
            })
         
             }
-            editUser=()=>{
-           
-                
-        
-           var data = {
-                        Id:this.state.Comprador.id,
-                       Usuario:this.state.Comprador.usuario,
-                       Telefono:this.state.Comprador.telefono,
-                       Correo:this.state.Comprador.correo.toLowerCase(),
-                       Ciudad:this.state.Comprador.ciudad,
-                       Direccion:this.state.Comprador.direccion,
-                       Cedula:this.state.Comprador.cedula,
-                       Userdata:  {DBname:this.props.state.userReducer.update.usuario.user.DBname   }   ,            
-                        TipoID:this.state.Comprador.ClientID
-                    
-                    }
-        
-          var lol = JSON.stringify(data)
-        
-           fetch('/users/update-seller', {
-             method: 'POST', // or 'PUT'
-             body: lol, // data can be `string` or {object}!
-             headers:{
-               'Content-Type': 'application/json',
-               "x-access-token": this.props.state.userReducer.update.usuario.token
-             }
-           }).then(res => res.json())
-           .catch(error => console.error('Error:', error))
-           .then(response => {
-            if(response.message=="error al actualizar"){
-                let add = {
-                  Estado:true,
-                  Tipo:"error",
-                  Mensaje:"Error al actualizar, porfavor intente en unos minutos"
-              }
-              this.setState({Alert: add, loading:false,}) 
-              }
-              else{
-                this.props.dispatch(updateClient(response.user));
-            this.setState({
-                Comprador:{
-                    ...this.state.Comprador,
-                    UserSelect:true,
-                },
-                 
-                readOnly:true,
-                userEditMode:false,
-                })
-               
-            }
-           })
-        
-            }
+          
 
              editFormaPago=(e)=>{
                this.setState({editFormaPago:true, SelectFormaPago:e})
@@ -1762,6 +1699,27 @@ calcularPagesToShow = () => {
             }else{
               return n
             }
+          }
+          handleCheckbox=(e)=>{
+
+
+              if(this.state.createCount && 
+                this.state.Comprador.idcuenta != "" && 
+                this.state.userEditMode){
+let add = {
+           Estado:true,
+           Tipo:"info",
+           Mensaje:"No se puede desasignar la cuenta de un cliente"
+       }  
+       this.setState({Alert: add})
+              }else{
+
+                this.setState({createCount:!this.state.createCount})
+
+              }
+
+            
+
           }
           setPrecios=(e)=>{
            
@@ -2031,6 +1989,8 @@ calcularPagesToShow = () => {
         this.saveToLocalStorage({Fpago:newstate})
     }
     setUserData=(e)=>{
+      console.log(e)
+     let checkbox = e.IDcuenta && e.IDcuenta != ""? true:false
      let data ={
         Comprador:{
             id:e._id,
@@ -2046,6 +2006,7 @@ calcularPagesToShow = () => {
             ClientID:e.TipoID,
 
         },
+        createCount:checkbox,
         adduser:false,
         userDisplay:true,     
         tipopago:"Contado",
@@ -2837,7 +2798,7 @@ NumberSelect={this.handleNumberSelect} />
  <div className=" userwrap">
                      
                         <div className="contSuggester">
-                        <div className="jwseccionCard buttoncont">
+                        <div className="jwseccionCard buttoncont2">
 
    <Animate show={this.state.Comprador.UserSelect}>                       
 <div className="contButtonsUserSelect">
@@ -2955,19 +2916,7 @@ mail
    
    
    </div>
-   <div className="customInput">
-        <div className="jwminilogo">
-    <span className="material-icons">
-    perm_identity
-</span>
-</div>
-<select className="ClieniDInput" value={this.state.Comprador.ClientID} onChange={this.handleClientID} disabled= {CheckReadOnly} >
-          <option value="Cedula"> Cédula</option>
-    <option value="RUC" > RUC </option>
-    <option value="Pasaporte" > Pasaporte </option>
-         </select>
-   
-   </div>
+
    <div className="customInput">
         <div className="jwminilogo">
     <span className="material-icons">
@@ -3038,20 +2987,44 @@ phone
 
    
    </div>
+      <div className="customInput">
+        <div className="jwminilogo " style={{padding:0}} >
+    <span className="material-icons">
+    perm_identity
+</span>
+</div>
+<select className="ClieniDInput" value={this.state.Comprador.ClientID} onChange={this.handleClientID} disabled= {CheckReadOnly} >
+          <option value="Cedula"> Cédula</option>
+    <option value="RUC" > RUC </option>
+    <option value="Pasaporte" > Pasaporte </option>
+         </select>
+   
+   </div>
+    <div className="customInput">
+        <div className="jwminilogo" style={{padding:0}}>
+    <span className="material-icons">
+   account_balance_wallet
+</span>
+</div>
+<div className='alinearInicio'>
+  <span>Cuenta</span>
+    <Checkbox
+      name="crearCuenta"
+      disabled ={this.state.readOnly}
+          checked={this.state.createCount}
+          onChange={this.handleCheckbox}
+          inputProps={{ 'aria-label': 'primary checkbox' }}
+        />
+</div>
+    
+   
+   </div>
   
    </div>
    <div className="contb">
       <Animate show={this.state.adduser}>
       <div className="contbregis">
-
-      <button className=" btn btn-success botonflex" type='submit'>
-<p>Registrar</p>
-<span className="material-icons">
-done
-</span>
-
-</button>
-
+       
 <button className=" btn btn-danger botonflex" onClick={(e)=>{
     e.preventDefault()
      e.stopPropagation();
@@ -3063,20 +3036,25 @@ cancel
 </span>
 
 </button>
-</div>
-      </Animate>
-
-      <Animate show={this.state.userEditMode}>
-      <div className="contbregis">
-
-      <button type='button' className=" btn btn-primary botonflex" onClick={this.editUser}>
-<p>Guardar</p>
+ <div className='jwFlex column'>
+<Animate show={!this.state.userLoading}>
+      <button className=" btn btn-success botonflex" type='submit' >
+<p>Registrar</p>
 <span className="material-icons">
 done
 </span>
 
 </button>
+</Animate>
+<Animate show={this.state.userLoading}>
+  <CircularProgress/>
+</Animate>
+</div>
+</div>
+      </Animate>
 
+      <Animate show={this.state.userEditMode}>
+      <div className="contbregis">
 <button className=" btn btn-danger botonflex" onClick={(e)=>{
         e.preventDefault()
         e.stopPropagation();
@@ -3088,6 +3066,24 @@ cancel
 </span>
 
 </button>
+     
+ <div className='jwFlex column'>
+<Animate show={!this.state.userLoading}>
+     <button type='button' className=" btn btn-primary botonflex" onClick={this.editUser}>
+<p>Guardar</p>
+<span className="material-icons">
+done
+</span>
+
+</button>
+</Animate>
+<Animate show={this.state.userLoading}>
+  <CircularProgress/>
+</Animate>
+</div>
+
+
+
 </div>
       </Animate>
 
@@ -3350,12 +3346,23 @@ Documento electrónico generado en activos.ec
 
       <style jsx>
                 {                              
-                 `
+                 `.userwrap{
+                     width: 100%;
+                         width: 100%;
+    display: flex
+;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+
+                 }
                  .customInput {
     display: flex
 ;
     align-items: center;
-    margin: 10px 0px;
+    margin: 10px 0px;.
+        width: 40%;
+  min-width: 215px;
     justify-content: flex-start;
 }
     .jwminilogo {
@@ -3364,7 +3371,7 @@ Documento electrónico generado en activos.ec
 }
                     .contButtonsUserSelect{
                     display:flex;
-                    flex-flow:column;
+                   
                 }
     .contSuggester {
                     display: flex;
@@ -3372,19 +3379,22 @@ Documento electrónico generado en activos.ec
                     flex-flow: row;
                    flex-wrap: wrap;
                     justify-content: center;
+                    margin-bottom:20px;
                  }
                     .contbregis{
     display: flex;
     justify-content: space-around;
     margin-top: 20px;
+        margin-bottom: 20px;
 }
 
                     .contenidoForm {
-    flex: 1;
+    
     display: flex
 ;
-    flex-flow: column;
-    justify-content: flex-end;
+   aling-items:center;
+    justify-content: space-around;
+    flex-wrap: wrap;
 
 }
                  .pago-container {
@@ -3487,8 +3497,8 @@ width: 100%;
     }
                  .contVisual{
                  margin-top:50px;
-                  margin-left:50px;
-                  width:95%;
+                  margin-left:60px;
+                  width:100%;
                   height: 100%;
                  }
                    .botonedit{
@@ -3504,12 +3514,12 @@ width: 100%;
                 display:flex;
                 flex-wrap: wrap;
                 justify-content: space-around;
-                margin-left: 15px;
+                margin-left: 5px;
         
 
                  }
                    .cont1{
-                 width:90%;
+                 width:93%;
                 display:flex;
                 flex-wrap: wrap;
                 justify-content: space-around;
@@ -3692,6 +3702,13 @@ width: 100%;
   color: #6b7280;
   cursor: not-allowed;
 }
+  .buttoncont2{
+  display: flex;
+    flex-flow: column;
+    align-items: center;
+    width: 160px;
+
+  }
     .accClass{
     width:10%;
 }
@@ -3822,7 +3839,7 @@ border: 1px solid rgba( 255, 255, 255, 0.18 );
                     width: 100%;
                     transition: 1s;
                     border-radius: 12px;
-                    padding: 10px;
+               
                     max-width: 1000px;
             
                 
@@ -3875,7 +3892,15 @@ border: 1px solid rgba( 255, 255, 255, 0.18 );
  
     }
       .contCar{
-      max-width: 450px;
+      max-width: 500px;
+      }
+  
+  }
+        @media only screen and (max-width: 1235px) { 
+
+    
+      .contCar{
+      max-width: 650px;
       }
   
   }

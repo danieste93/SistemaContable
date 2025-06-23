@@ -335,7 +335,10 @@ console.log(cuentasSinInv)
     
         </div>
         </div>
-        <Animate show={this.state.Buscador}>
+       
+<div className="contcuentasCx">
+  <div>
+   <Animate show={this.state.Buscador}>
      <div className="buscadorCuentas">
      <div className="react-autosuggest__container">
     <input autoFocus name="cuentasSearcher" className="react-autosuggest__input" onChange={this.handleChangeSearcher} placeholder="Busca tus Cuentas" /> 
@@ -343,8 +346,10 @@ console.log(cuentasSinInv)
       </div>
      </div>
      </Animate>
-<div className="contcuentasCx">
+     </div>
+     <div className='coninternoCuentas'>
  {generadorDeCuentas}
+ </div>
 </div>
      
         </div>
@@ -437,13 +442,19 @@ console.log(cuentasSinInv)
            .contcuentasCx{
             padding: 5px;
             display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
+            flex-flow:column;
     height: 78%;
-    overflow-y: scroll;
+
+           }
+    .coninternoCuentas{
+           display: flex;
+    justify-content: space-around;
+        overflow-y: scroll;
     overflow-x: hidden;
     align-items: center;
-           }
+    flex-wrap:wrap;
+    height: 100%;
+    }
 
 .nombrem{
   font-weight: bold;

@@ -73,6 +73,12 @@ html {
   justify-content: space-around;
 }
 
+.alinearInicio{
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
  
    
   @keyframes sharpen {

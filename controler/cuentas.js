@@ -890,7 +890,7 @@ if (yaExiste) {
   
       try {
         const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.valores.Dinero).toFixed(2))
-  console.log(Counterx[0])
+  
   let cuentaActualizada = await  CuentasModelSass.create([{
     CheckedA: req.body.valores.checkedA,
     CheckedP: req.body.valores.checkedP,
