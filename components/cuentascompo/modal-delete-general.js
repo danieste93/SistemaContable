@@ -4,7 +4,7 @@ import {connect} from 'react-redux';
 import {updateCuenta,deleteReg} from "../../reduxstore/actions/regcont"
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
-class Contacto extends Component {
+class ModalDeleteGeneral extends Component {
    
   state={
     Alert:{Estado:false},
@@ -330,4 +330,4 @@ const mapStateToProps = state=>  {
   }
 };
 
-export default connect(mapStateToProps, null)(Contacto);
+export default connect(mapStateToProps, null)(ModalDeleteGeneral);

@@ -827,7 +827,7 @@ apple
 </span>
 Logo
 </div>
-{this.state.urlLogoEmp !="" && <img style={{maxHeight:"100px", maxWidth:"100px",}} src={this.state.urlLogoEmp} />}
+{this.state.urlLogoEmp !="" && <img style={{maxHeight:"100px", maxWidth:"60px",}} src={this.state.urlLogoEmp} />}
 </div>
 <input type="file"
  className="Logo" name="rimagen" onChange={this.handleChangeLogo}
@@ -1089,6 +1089,7 @@ ok
        .jwminilogoEF{
         width: 20%;
         display: flex;
+            align-items: center;
     
        }
 .passClient{

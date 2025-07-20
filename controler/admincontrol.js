@@ -2067,7 +2067,6 @@ if(req.body.formasdePago){
 
 const deleteCompra= async (req, res, next)=>{
 
-   console.log(req.body)
   let conn = await mongoose.connection.useDb(req.body.UserData.DBname);
 
   let RegModelSass = await conn.model('Reg', regSchema);
@@ -2106,15 +2105,15 @@ if (artic == null) {
   if (unidadesActuales < 0) {
     // apenas encuentres uno con error, responde y termina
     let articulo = { Titulo: artic.Titulo, Eqid: artic.Eqid };
-    return res.status(200).send({
-        status: "error",
-        message: "Existencias insuficientes",
-        articulo
-    });
+  
+
+       const error = new Error("Existencias insuficientes");
+  error.articulo = req.body.ArtComprados[i];
+  throw error;
 }
 }
 }
-    console.log("entrando Valdata")
+    
   
     let Compra = await ComprasModelSass.findByIdAndDelete(req.body._id, { session })
 
@@ -2129,7 +2128,10 @@ if (artic == null) {
   
       let artic = await ArticuloModelSass.findById(req.body.ArtComprados[i]._id,null,{ session}) 
       if(artic == null){
-        throw new Error("articulo no encontrado")
+     const error = new Error("Artículo no encontrado");
+  error.articulo = req.body.ArtComprados[i];
+  throw error;
+
       }
    
       
@@ -2167,7 +2169,7 @@ if (artic == null) {
   throw new Error("sin arrRegs q eliminar")
   }
     for(let y=0;y<req.body.arrRegs.length;y++){
-      console.log("entrando arrRegs")
+    
     let regdata =  await RegModelSass.findByIdAndRemove(req.body.arrRegs[y], { session })
 
     if(regdata == null){
@@ -2241,9 +2243,9 @@ if (typeof c === 'number') {
   console.log(error, "errr");
 
   return res.status(400).json({
-    status: "Error",
-    message: "Error al registrar",
-    error: error.message // Solo el mensaje, para que llegue limpio al frontend
+    status: "error",
+    message: error.message,
+   // Solo el mensaje, para que llegue limpio al frontend
   });
 }
   
@@ -3611,7 +3613,7 @@ articulosPorCrear[x].iva == false? false:false
              Iva:ivadata,
              Bodega_Inv_Nombre: idCuentaInv[0].NombreC,
              Bodega_Inv:9999998,
-        
+        Barcode:articulosPorCrear[x].Barcode
           }
 
           let art = await ArticuloModelSass.create([dataArtNew], { session})
@@ -3657,6 +3659,7 @@ console.log("en actualizador")
               Categoria:nData.categoria,
               SubCategoria:nData.subcategoria,
               PrecioCompraTotal:ActualInvertido,
+              Barcode:nData.Barcode
             }
               
                     

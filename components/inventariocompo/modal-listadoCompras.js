@@ -360,11 +360,11 @@ periodo:false
       }
       }
       handleChangeTiempo=(e)=>{
-
+          if(e){ 
         this.setState({
           tiempo:e._d
         })
-       
+       }
        
          }
          masunmes=()=>{
@@ -753,7 +753,7 @@ let filtrados=[]
         
         
         errorExistencias={(data)=>{
-    console.log(data)
+    
           let add = {
             Estado:true,
             Tipo:"error",
@@ -762,8 +762,18 @@ let filtrados=[]
           this.setState({deleteCompra:false, Alert: add })
         }}
 
+            sendError={(data)=>{
+    
+          let add = {
+            Estado:true,
+            Tipo:"error",
+            Mensaje:data.message
+        }
+          this.setState({deleteCompra:false, Alert: add })
+        }}
+
         errorEliminado={(data)=>{
-          console.log(data)
+         
                 let add = {
                   Estado:true,
                   Tipo:"error",

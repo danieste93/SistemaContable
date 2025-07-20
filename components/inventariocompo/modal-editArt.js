@@ -19,6 +19,7 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { reorder } from "../reusableComplex/herlperDrag"
 import Cat from "./modalCategoriasArticulos"
 import { BorderBottom } from '@material-ui/icons';
+import BarcodeReader from 'react-barcode-reader'
 class Contacto extends Component {
    
   state={
@@ -90,6 +91,7 @@ class Contacto extends Component {
         Precio_Venta_Total: this.props.data.Precio_Venta_Lote,
         DistribuidorID:this.props.data.Diid,
         Barcode:this.props.data.Barcode,
+          Codigo_de_Barras:this.props.data.Barcode,
   }
     componentDidMount(){
     
@@ -114,6 +116,14 @@ class Contacto extends Component {
 });
       
       }
+       handleScan=(e)=>{
+     console.log("on scan", e)
+     this.setState({Codigo_de_Barras:e, Barcode:e})
+       }
+       handleScanError=(e)=>{
+     console.log("on error", e)
+     
+        }
       handleClickPC = () => {
         this.setState({ clickedPC: true, changePrecioCompra:true });
         setTimeout(() => {
@@ -617,6 +627,7 @@ console.log(TotalPP, TotalPago)
 let newimg = this.state.urlImg.filter(x=> x !=img)
 this.setState({urlImg:newimg})
      }
+     
     render () {
       console.log(this.state)
       let flechaval = this.state.masCampos?"▲":"▼"
@@ -1009,20 +1020,19 @@ var addToObject = function (obj, key, value, index) {
 };
  let dataModel ={
         Iva: this.state.Iva,
-        Caduca: this.state.Caduca,
+    /*    Caduca: this.state.Caduca,*/
+      Codigo_de_Barras:{requerido:false,Tipo:"number"},
         Titulo: {requerido:true,Tipo:"text"},
         Categoria: {requerido:true,Tipo:"text"},
         SubCategoria: {requerido:false,Tipo:"text"},
         Garantia: {requerido:true,Tipo:"text"},
-     
-
-    
-        
+  
       }
+
       let dataModel2 ={
      
         DistribuidorID: {requerido:false,Tipo:"text"},
-        Barcode:{requerido:false,Tipo:"text"},
+      
         Grupo: {requerido:false,Tipo:"text"},
         Departamento: {requerido:false,Tipo:"text"},    
         Color: {requerido:false,Tipo:"text"},
@@ -1031,8 +1041,6 @@ var addToObject = function (obj, key, value, index) {
         Descripcion: {requerido:false,Tipo:"text"},
   
 
-    
-        
       }
 
 
@@ -1203,6 +1211,70 @@ return(
                        `}</style>
                   </div>)
   }
+  else if(datillos[0]=="Codigo_de_Barras"){
+    return(
+      <div key={i} className="contdetalleAIaddindi">
+   
+   <TextValidator
+      label={datillos[0]}
+      
+       name={datillos[0]}
+       type={datillos[1].Tipo}
+    value={this.state[datillos[0]]}
+  
+       
+      
+   /> 
+   <div className='xbutton' onClick={()=>{
+  this.setState({Codigo_de_Barras:"", Barcode:""})
+  
+   }}>x</div>
+                  <style >{`  
+                  .xbutton{
+            
+      background: red;
+      display: flex
+  ;
+      height: 16px;
+      padding: 1px;
+      border-radius: 10px;
+      width: 16px;
+      text-align: center;
+      justify-content: center;
+      color: white;
+      font-size: 11px;
+      font-family: system-ui;
+      cursor: pointer;
+      border-bottom: 1px solid black;
+                  }
+               .boxp{
+                display: flex;
+                justify-content: space-between;
+                margin: 10px;
+                width: 80%;
+                align-items: center;
+              }
+             
+                      .contdetalleAIaddindi {
+                        display: flex;
+                        flex-wrap: wrap;
+                        justify-content: center;
+                        margin: 25px;
+                        padding: 5px;
+                        border-radius: 9px;
+                        box-shadow: 0px 1px 0px black;
+                        width: 50%;
+                        max-width: 225px;
+                        min-width: 225px;
+                        background: azure;
+          }
+     
+        
+    
+                      
+                       `}</style>
+                  </div>)
+   }
 
 else{
   let requerido = datillos[1].requerido ?["requerido"]:["vacio"]
@@ -1709,6 +1781,12 @@ shopping_cart
         }
         ArtData={this.props.data}
         Flecharetro={()=>this.setState({changePrecioCompra:false})}  />}
+            <BarcodeReader
+                     onError={this.handleScanError}
+                     onScan={this.handleScan}
+                     minLength={5}
+                     />       
+                  
                     <style jsx>{`
            .datarenderCont{
         

@@ -21,14 +21,14 @@ import LoginGoogle from '../components/loginGoogle';
 
 class Mainpage extends Component {
  state = {
-    correoLogin:"",
-    passLogin:"",
+    username:"",
+    password:"",
     registro:false,
     login:true,
-    passReg:"",
+    newPassword:"",
     passReg2:"",
      telefonoReg:"",
-    emailReg:"",
+    email:"",
     usuarioReg:"",
     snackerror1:false,
     snackerror2:false,
@@ -125,6 +125,12 @@ ValidatorForm.addValidationRule('minimo6', (value) => {
             [e.target.name] : e.target.value
         })
          }
+         handleChangeformPass=(e)=>{   
+this.setState({
+            newPassword : e.target.value
+        })
+
+         }
 
          generadorTokens=()=>{
           console.log("en generadador tokens ")
@@ -140,13 +146,13 @@ registroFuncion=(e)=>{
   if(this.state.loading == false){
   
     this.setState({loading:true})
-    if(this.state.passReg2 == this.state.passReg){
+    if(this.state.passReg2 == this.state.newPassword){
       if(this.state.condiciones){
    var url = '/users/register';
    var data = {Usuario:this.state.usuarioReg.trim().replace(" ", "-"),
                TelefonoContacto:this.state.telefonoReg,
-               Correo:this.state.emailReg.toLowerCase(),
-               Contrasena:this.state.passReg,
+               Correo:this.state.email.toLowerCase(),
+               Contrasena:this.state.newPassword,
                Imagen:"",
                RegistradoPor:"usuario",
                Confirmacion:false,
@@ -194,8 +200,8 @@ registroFuncion=(e)=>{
   if(this.state.loading == false){
     this.setState({loading:true})
     var url = '/users/authenticate';
-    var data = {Correo:this.state.correoLogin.toLowerCase(),
-                Contrasena:this.state.passLogin
+    var data = {Correo:this.state.username.toLowerCase(),
+                Contrasena:this.state.password
                               }
   
    var lol = JSON.stringify(data)
@@ -370,11 +376,12 @@ this.setState({loading:false})
 			<div className="login">
       <div className="loginSeccion">
             <ValidatorForm
+            autoComplete="on"
    id="forming"
    onSubmit={this.loginFuncion}
    onError={errors => console.log(errors)}
 >
-<div className="contenidoForm">
+<div className="contenidoFormini">
     <div className="customInputIndex">
         <div className="jwminilogoIndex">
         <img src="/icons/account_box.svg" alt=""/>
@@ -382,13 +389,19 @@ this.setState({loading:false})
       <TextValidator
       label="Correo"
        onChange={this.handleChangeform}
-       name="correoLogin"
-       type="email"
+       name="username" // ✅ Safari reconoce esto
+      type="email"
+      autoComplete="username" // ✅ Activar autocompletado
        validators={['requerido',"correoval"]}
        errorMessages={['Escribe tu correo Electronico',"Escribe un correo válido"]
       
       }
-       value={this.state.correoLogin}
+       value={this.state.username}
+        style={{
+    backgroundColor:  '#ffffff9e', 
+    borderRadius:"15px",
+     minWidth:"200px"
+  }}
    />
    </div>
    <div className="customInputIndex">
@@ -398,11 +411,17 @@ this.setState({loading:false})
    <TextValidator
        label="Contraseña"
        onChange={this.handleChangeform}
-       name="passLogin"
-       type="password"
+        name="password" // ✅ Safari reconoce esto
+      type="password"
+      autoComplete="current-password" // ✅ Activar autocompletado
        validators={["requerido", "minimo6"]}
        errorMessages={['Escribe una contraseña válida', "Mínimo 6 dígitos"]}
-       value={this.state.passLogin} 
+       value={this.state.password} 
+             style={{
+    backgroundColor:  '#ffffff9e', 
+    borderRadius:"15px",
+     minWidth:"200px"
+  }}
    />
    </div>
    </div>
@@ -493,11 +512,11 @@ undo
     
        
     <ValidatorForm
-
+autoComplete="on"
 onSubmit={ this.registroFuncion}
 onError={errors => console.log(errors)}
 >
-<div className="RegisSeccion">
+<div className="SeccionRegistro">
 
 <div className="jcustomInputRegis">
 <div className="jwminilogoIndex">
@@ -515,7 +534,8 @@ errorMessages={['Escribe tu usuario'] }
 value={this.state.usuarioReg}
  style={{
     backgroundColor:  '#ffffff9e', 
-    borderRadius:"15px"
+    borderRadius:"15px",
+     minWidth:"200px"
   }}
 />
 </div>
@@ -528,11 +548,17 @@ email
 <TextValidator
 label="Correo Electrónico*"
 onChange={this.handleChangeform}
-name="emailReg"
+name="email"
 type="email"
+autoComplete="username"  
 validators={['requerido',"correoval"]}
 errorMessages={['Escribe tu correo Electronico',"Escribe un correo válido"]}
-value={this.state.emailReg} 
+value={this.state.email} 
+ style={{
+    backgroundColor:  '#ffffff9e', 
+    borderRadius:"15px",
+     minWidth:"200px"
+  }}
 />
 </div>
 <div className="jcustomInputRegis">
@@ -549,6 +575,11 @@ type="number"
 validators={["minimo7"]}
 errorMessages={["Mínimo 7 números"]}
 value={this.state.telefonoReg} 
+ style={{
+    backgroundColor:  '#ffffff9e', 
+    borderRadius:"15px",
+     minWidth:"200px"
+  }}
 />
 </div>
 
@@ -560,15 +591,17 @@ vpn_key
 </div>
 <TextValidator
 label="Contraseña*"
-onChange={this.handleChangeform}
-name="passReg"
+onChange={this.handleChangeformPass}
+name="new-password"
 type="password"
+ autoComplete="new-password"
 validators={["requerido", "minimo6"]}
 errorMessages={['Escribe una contraseña válida', "Mínimo 6 caracteres"]}
-value={this.state.passReg} 
+value={this.state.newPassword} 
  style={{
     backgroundColor:  '#ffffff9e', 
-    borderRadius:"15px"
+    borderRadius:"15px",
+     minWidth:"200px"
   }}
 />
 </div>
@@ -581,6 +614,7 @@ vpn_key
 <TextValidator
 label="Confirma Contraseña*"
 onChange={this.handleChangeform}
+autoComplete="off"  
 name="passReg2"
 type="password"
 validators={["requerido", "minimo6"]}
@@ -588,7 +622,8 @@ errorMessages={['Escribe una contraseña válida', "Mínimo 6 caracteres"]}
 value={this.state.passReg2} 
  style={{
     backgroundColor:  '#ffffff9e', 
-    borderRadius:"15px"
+    borderRadius:"15px",
+    minWidth:"200px"
   }}
 />
 </div>
@@ -690,7 +725,8 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
             <style jsx> {`
            
             form{
-                    width:100%
+                    width:100%!important;
+                    
                 }
                 .custonCondiciones{
                   border: 1px solid darkblue;
@@ -735,8 +771,12 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
 	height: 100%;
 }
 .customContrasena{
-  width:100px;
-  margin-top:20px;
+     width: 85px;
+    margin-top: 20px;
+    background: #ffffffa6;
+    border-bottom: 1px solid black;
+    border-radius: 20px;
+    padding: 5px;
 }
 .screen__background {		
 	position: absolute;
@@ -820,7 +860,9 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
   display: flex;
   align-items: center;
   margin:10px 0px;
-  justify-content: center;
+
+ width:85%;
+    justify-content: space-around;
 }
 .login__input {
 	border: none;
@@ -870,6 +912,9 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
 	margin-left: auto;
 	color: #7875B5;
 }
+  .button__text{
+  color:black
+  }
 .loginbutton{
     
   width: 129px;
@@ -914,8 +959,9 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
 	text-shadow: 0px 0px 8px #7875B5;
 }
 .jwminilogoIndex{
-  width: 19%;
+  width: 15%;
   padding-top: 20px;
+      margin-right: 10px;
 }
 .social-login__icon:hover {
 	transform: scale(1.5);	
@@ -927,7 +973,13 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
     align-items: flex-start;
     padding-top: 100px;
     padding-left: 19px;
+  
 }
+     .contenidoFormini{
+ 
+    width: 100%;
+ 
+  }
 .RegisSeccion{
   display: flex;
     justify-content: center;
@@ -936,6 +988,13 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
     padding-top: 5px;
     padding-left: 10px;
 }
+    .SeccionRegistro{
+        display: flex;
+    flex-flow: column;
+    align-items: flex-start;
+   
+    padding-left: 10px;
+    }
 .customRegis{
 margin-top:0px;
 }

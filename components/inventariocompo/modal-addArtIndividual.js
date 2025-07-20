@@ -13,6 +13,7 @@ import DropFileInput from "../drop-file-input/DropFileInput"
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import BarcodeReader from 'react-barcode-reader'
 
 class Contacto extends Component {
    
@@ -30,7 +31,7 @@ class Contacto extends Component {
   proveedor:"",
   idCompra:"",
   Medida:"Unidades",
-  Cantidad:0,
+  Cantidad:"",
   Precio_Compra:0,
 
    valUnitario:"",
@@ -65,7 +66,7 @@ class Contacto extends Component {
         Descripcion: "",
         DistribuidorID:"",
         Barcode:"",
-    
+    Codigo_de_Barras:"",
         Precio_Venta: 1,
         Precio_Alt: 1,
         urlImg:"",
@@ -115,6 +116,16 @@ if(populares){
 });
       
       }
+
+ handleScan=(e)=>{
+console.log("on scan", e)
+this.setState({Codigo_de_Barras:e, Barcode:e})
+  }
+  handleScanError=(e)=>{
+console.log("on error", e)
+
+   }
+
       getid=()=>{
         let datos = {User: this.props.state.userReducer.update.usuario.user}
         let lol = JSON.stringify(datos)
@@ -252,15 +263,11 @@ this.setState({CuentasInv:response.cuentasHabiles})
         }
         handleChangeValor=(e)=>{
     
-         if(e.target.value == "" || e.target.value == " " ){
+       
           this.setState({
-            Cantidad:e.target.value
+            Cantidad:parseFloat(e.target.value.trim())
             })
-         }else{
-          this.setState({
-            Cantidad:parseFloat(e.target.value)
-            })
-         }
+         
           
         }
         createArt=()=>{
@@ -271,6 +278,7 @@ this.setState({CuentasInv:response.cuentasHabiles})
             let newstate = {...this.state}
        
             newstate.Usuario ={DBname:this.props.state.userReducer.update.usuario.user.DBname}
+            newstate.Cantidad = this.state.Cantidad == ""?0:this.state.Cantidad
             var lol = JSON.stringify(newstate)
             fetch(url, {
               method: 'POST', // or 'PUT'
@@ -565,6 +573,7 @@ let buttonactivevtotal= this.state.Vtotal?"buttonactive":""
         Iva: this.state.Iva,
        // Caduca: this.state.Caduca,
         EqId: {requerido:true,Tipo:"text"},
+        Codigo_de_Barras:{requerido:false,Tipo:"number"},
         Titulo: {requerido:true,Tipo:"text"},
         Categoria: {requerido:true,Tipo:"text"},
         SubCategoria: {requerido:false,Tipo:"text"},
@@ -577,7 +586,7 @@ let buttonactivevtotal= this.state.Vtotal?"buttonactive":""
       let dataModel2 ={
      
         DistribuidorID: {requerido:false,Tipo:"text"},
-        Barcode:{requerido:false,Tipo:"text"},
+        
         Grupo: {requerido:false,Tipo:"text"},
         Departamento: {requerido:false,Tipo:"text"},    
         Color: {requerido:false,Tipo:"text"},
@@ -740,6 +749,72 @@ else if(datillos[0]=="SubCategoria"){
                      `}</style>
                 </div>)
 }
+else if(datillos[0]=="Codigo_de_Barras"){
+  return(
+    <div key={i} className="contdetalleAIaddindi">
+ 
+ <TextValidator
+    label={datillos[0]}
+    
+     name={datillos[0]}
+     type={datillos[1].Tipo}
+  value={this.state[datillos[0]]}
+
+   
+    
+    
+ /> 
+ <div className='xbutton' onClick={()=>{
+this.setState({Codigo_de_Barras:"", Barcode:""})
+
+ }}>x</div>
+                <style >{`  
+                .xbutton{
+          
+    background: red;
+    display: flex
+;
+    height: 16px;
+    padding: 1px;
+    border-radius: 10px;
+    width: 16px;
+    text-align: center;
+    justify-content: center;
+    color: white;
+    font-size: 11px;
+    font-family: system-ui;
+    cursor: pointer;
+    border-bottom: 1px solid black;
+                }
+             .boxp{
+              display: flex;
+              justify-content: space-between;
+              margin: 10px;
+              width: 80%;
+              align-items: center;
+            }
+           
+                    .contdetalleAIaddindi {
+                      display: flex;
+                      flex-wrap: wrap;
+                      justify-content: center;
+                      margin: 25px;
+                      padding: 5px;
+                      border-radius: 9px;
+                      box-shadow: 0px 1px 0px black;
+                      width: 50%;
+                      max-width: 225px;
+                      min-width: 225px;
+                      background: azure;
+        }
+   
+      
+  
+                    
+                     `}</style>
+                </div>)
+ }
+
 else{
   return(
     <div key={i} className="contdetalleAIaddindi">
@@ -1011,7 +1086,7 @@ let datarender2 = dataArray2.map((datillos,i,)=>{
     <div  className="contdetalleAIaddindi"> 
     <div className="boxp">
     <button className={`buttonTotal ${buttonactiveVunit}`} onClick={(e)=>{e.preventDefault(); this.setState({Vunitario:true, Vtotal:false})}}>V.Unitario</button>
-    <button className={`buttonTotal ${buttonactivevtotal}`} onClick={(e)=>{e.preventDefault();this.setState({Vunitario:false, Vtotal:true})}}>V.Total</button>
+  {/*<button className={`buttonTotal ${buttonactivevtotal}`} onClick={(e)=>{e.preventDefault();this.setState({Vunitario:false, Vtotal:true})}}>V.Total</button>*/}  
     </div>
     </div>
 <Animate show={this.state.Vunitario}>
@@ -1209,7 +1284,11 @@ add_circle_outline
         
         />
         </Animate> 
-
+   <BarcodeReader
+          onError={this.handleScanError}
+          onScan={this.handleScan}
+          minLength={5}
+          />
 
            <style jsx>{`
            .datarenderCont{

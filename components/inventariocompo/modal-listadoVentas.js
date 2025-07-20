@@ -748,11 +748,11 @@ if(!this.props.state.RegContableReducer.Ventas){
 
       }
       handleChangeTiempo=(e)=>{
-
+ if(e){ 
         this.setState({
           tiempo:e._d
         })
-        
+         }
        
          }
          handleChangeTiempoPeriodofin=(e)=>{

@@ -10,7 +10,7 @@ import Autosuggest from '../components/suggesters/jwsuggest-general-venta';
 import { ValidatorForm, TextValidator} from 'react-material-ui-form-validator';
 import Checkbox from '@material-ui/core/Checkbox';
 import ModalEditPrecioCompraServ from "./puntoventacompo/modal-editPrecioCompraServ"
-
+import ModalDeleteGeneral from './cuentascompo/modal-delete-general';
 import ArticuloVentaUX from "./puntoventacompo/articuloventaRenderUX"
 import ReactToPrint from "react-to-print";
 import ArticuloVentaRenderImpersion from "./puntoventacompo/articuloventaRenderImpresion"
@@ -42,6 +42,7 @@ import SecureFirm from './snippets/getSecureFirm';
 
 class accessPuntoVentaUX extends Component {
      state={
+      ModalDeleteGeneral:false,
       createCount:false,
       errorSecuencial:false,
       NumberSelect:0,
@@ -2220,7 +2221,7 @@ setPreciosPago=(e)=>{
       handleScan=(e)=>{
         
           let findArt = this.props.state.RegContableReducer.Articulos.find(x => x.Eqid.toUpperCase().trim() == e.toUpperCase().trim())
-          
+          if(!this.state.createArt && !this.state.createServ){
           if(findArt == undefined){
               let add = {
                   Estado:true,
@@ -2299,7 +2300,7 @@ setPreciosPago=(e)=>{
                   this.setState({Alert: add,loading:false})
               }
           }
-  
+  }
       }
       deleteUser=()=>{
     
@@ -2810,7 +2811,7 @@ create
 </span>
 
 </button>
-<button type="" className=" btn btn-danger botonedit" onClick={this.deleteUser}>
+<button type="" className=" btn btn-danger botonedit" onClick={()=>{this.setState({modalDelete:true})}}>
 <p>Eliminar</p>
 
 <span className="material-icons">
@@ -3343,6 +3344,16 @@ Documento electrónico generado en activos.ec
                                             Flecharetro={()=>{this.setState({modalEditServ:false})}} 
                                             />
                                         </Animate >   
+                                             <Animate show={this.state.modalDelete}> 
+                                                <ModalDeleteGeneral
+                                                 sendSuccess={(e)=>{console.log(e)}}
+                                                 sendError={()=>{console.log("deleteerror")}}
+                                                itemTodelete={this.state.Comprador}
+                                                 mensajeDelete={{mensaje:"Estas seguro quieres eliminar esta Cliente", url:"/users/delete" }}
+                                                Flecharetro={()=>this.setState({modalDelete:false})}
+                                          
+                                                />
+                                                   </Animate>
 
       <style jsx>
                 {                              

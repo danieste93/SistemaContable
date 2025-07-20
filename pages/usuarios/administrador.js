@@ -19,11 +19,7 @@ import {Chart} from"chart.js"
 import 'chart.js/auto';
 import AddCero from '../../components/funciones/addcero';
 
-//import "../../styles/macbutton.scss"
-/**
-* @author
-* @class admins
-**/
+
 
 class admins extends Component {
   state = {
@@ -943,21 +939,16 @@ plugins: {
 
 </div>
 </div>
-  <Animate show={this.state.modalagregador}>
-<Modal updateData={()=>{ }}  cuentaToAdd={this.state.cuentaToAdd}  flechafun={()=>{this.setState({modalagregador:false})}}/>
-   </Animate>
+  
+{this.state.modalagregador && <Modal updateData={()=>{ }}  cuentaToAdd={this.state.cuentaToAdd}  flechafun={()=>{this.setState({modalagregador:false})}}/>
+  }
    <Snackbar open={this.state.Alert.Estado} autoHideDuration={5000} onClose={handleClose}>
     <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
         <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>    
     </Alert>
   </Snackbar>
   <style jsx>{`
-   .contagregador i{
-    font-size: 75px;
-    transition: 1s;
-    margin-right:5px
-
-  }
+   
 .balanceCont{
  
 }
@@ -988,6 +979,7 @@ font-size:25px
  
   padding-top: 20px;
 }
+
 .custonBarrasCuentas{
   height: 300px;
 

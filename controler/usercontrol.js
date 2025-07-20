@@ -1019,33 +1019,34 @@ UserModelSass.findOne({
 })
     },
     deleteUser:async function (req, res, next){
-   console.log(req.body)
-      let conn = await mongoose.connection.useDb(req.body.Userdata.DBname);
+console.log(req.body)
+      let conn = await mongoose.connection.useDb(req.body.User.DBname);
       let ClienteModelSass = await conn.model('Cliente', clientSchema);
       let CuentasModelSass = await conn.model('Cuenta', accountSchema);
-      let usuario  = req.body
-      if(req.body.idCuenta == ""){
-        ClienteModelSass.findOneAndDelete({_id:usuario.Id},  (err,user)=>{
+      let usuario  = req.body.item
+   
+      if(req.body.idcuenta == ""){
+        ClienteModelSass.findOneAndDelete({_id:usuario.id},  (err,user)=>{
 
           if(err) res.status(500).send({message:"error al eliminare el usuario"})
        
-          return res.status(200).send({status: "usuario eliminado",Usuario:user} )
+          return res.status(200).send({status: "usuario eliminado",Usuario:user, Cuenta:[]} )
         })
        }else{
         let cuentaData = await CuentasModelSass.findById(req.body.idCuenta, null)
       console.log(cuentaData)
 
         if(cuentaData.DineroActual == 0 ){
-          ClienteModelSass.findOneAndDelete({_id:usuario.Id},  (err,user)=>{
+          ClienteModelSass.findOneAndDelete({_id:usuario.id},  (err,user)=>{
             if(err) res.status(500).send({message:"error al eliminare el usuario",err})
 
-            CuentasModelSass.findOneAndDelete({_id:usuario.idCuenta},  (err,cuenta)=>{
+            CuentasModelSass.findOneAndDelete({_id:usuario.idcuenta},  (err,cuenta)=>{
 
               if(err) res.status(500).send({message:"error al cuenta"})
                       
             })
  
-            return res.status(200).send({status: "usuario eliminado",Usuario:user} ) 
+            return res.status(200).send({status: "usuario eliminado",Usuario:user, Cuenta:cuenta} ) 
           })
        
         }else{
@@ -1053,10 +1054,6 @@ UserModelSass.findOne({
         }
        
        }
-   
-     
-
-  
 
     },
     getUserCoins:function(req, res, next){

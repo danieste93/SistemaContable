@@ -42,11 +42,13 @@ class ListVenta extends Component {
         subCatSelect:"",
         artSelected:"",
         tituloArts:this.props.datos.descripcion[0],
+        tituloArtFactura:this.props.datos.descripcion[0],
         modalCat:false,
         modalCatArt:false,
         EditCat:false,
         Addcat:false,
         precioFinal:0,
+        Barcode:"",
         itemSelected:null,
         blockinsumo:false,
      
@@ -91,13 +93,13 @@ setTimeout(()=>{
 }   
 }, 1000)
 
-
+console.log(this.props.datos)
 
     let articuloElegido = this.props.datos
     let articulos = this.props.state.RegContableReducer.Articulos
 
     let miart = articulos.filter(x=> x.Diid == articuloElegido.codigoPrincipal[0])
-console.log(miart)
+
     let newprecio =  this.testPrecioUni() 
  
     if(miart.length > 0){
@@ -105,8 +107,12 @@ console.log(miart)
                catSelect:miart[0].Categoria,
             subCatSelect:miart[0].SubCategoria,
             precioVenta:miart[0].Precio_Venta,
-             itemSelected:miart[0],
-            precioFinal: newprecio})
+             
+             tituloArts:miart[0].Titulo,
+            precioFinal: newprecio,
+          Barcode:miart[0].Barcode }
+        
+        )
    
          this.props.sendSwich({...this.state,
             catSelect:miart[0].Categoria,
@@ -114,7 +120,10 @@ console.log(miart)
             precioVenta:miart[0].Precio_Venta,
              precioFinal: newprecio,
              itemSelected:miart[0],
-             item:this.props.datos})  
+              tituloArts:miart[0].Titulo,
+             item:this.props.datos,
+             Barcode:miart[0].Barcode  }
+            )  
     }else{
         
         this.setState({precioFinal: newprecio})
@@ -126,6 +135,69 @@ console.log(miart)
 
    
     }
+     componentDidUpdate(prevProps) {
+    // Detectar el cambio de props.sendMasterInsumo
+    if (prevProps.sendMasterInsumo !== this.props.sendMasterInsumo) {
+ if(!this.state.blockinsumo && this.state.artSelected ==""){
+  
+       
+            if(this.state.insumo == false){
+            this.setState({insumo:!this.state.insumo,
+                catSelect:{
+                
+                    tipocat: "Gasto",
+                    subCategoria: [],
+                    nombreCat:"Comida",
+                    urlIcono:"/iconscuentas/comida.png",
+                    idCat:6
+                
+                },
+
+
+            })
+            this.props.sendSwich({...this.state,
+                catSelect:{       
+                    tipocat: "Gasto",
+                    subCategoria: [],
+                    nombreCat:"Comida",
+                    urlIcono:"/iconscuentas/comida.png",
+                    idCat:6     
+                },
+                insumo:!this.state.insumo,
+                 item:this.props.datos})  
+        }else{
+            this.setState({insumo:!this.state.insumo,
+                catSelect:{
+                    tipocat: "Articulo",
+                    subCategoria: [],
+                    nombreCat: "GENERAL",
+                    imagen: [],
+                    urlIcono: "/iconscuentas/compra.png",
+                    idCat: 21,
+                
+                },
+
+
+            })
+            this.props.sendSwich({...this.state,
+                catSelect:{       
+                    tipocat: "Articulo",
+                    subCategoria: [],
+                    nombreCat: "GENERAL",
+                    imagen: [],
+                    urlIcono: "/iconscuentas/compra.png",
+                    idCat: 21,
+                  
+                },
+                insumo:!this.state.insumo,
+                 item:this.props.datos})
+        }
+     
+    
+    }
+
+    }
+  }
     sendCat=()=>{
         let Cats = this.props.state.RegContableReducer.Categorias
       if(Cats.length > 0){
@@ -477,6 +549,15 @@ value={this.state.unidadProducto}
                 item,
                 precioIndi})
             }
+            handleChangeBarcode=(e)=>{
+
+                    this.setState({Barcode:e.target.value})
+        
+                this.props.sendSwich({...this.state,              
+                                Barcode:e.target.value,
+                    item:this.props.datos})  
+           } 
+        
         handleChangeCantidad=(e)=>{
             let item = this.props.datos
          
@@ -567,10 +648,24 @@ item})
 
             }
             SelectArt=(e)=>{
+                console.log(e)
+                let newprecio =  this.testPrecioUni() 
                this.setState({artSelected:e,selectItem:false,
-                   itemSelected:e,
+               
+               catSelect:e.Categoria,
+            subCatSelect:e.SubCategoria,
+            precioVenta:e.Precio_Venta,
+             tituloArts:e.Titulo,
+              precioFinal: newprecio,
+          Barcode:e.Barcode
                })
                this.props.sendSwich({...this.state,
+                  catSelect:e.Categoria,
+            subCatSelect:e.SubCategoria,
+            precioVenta:e.Precio_Venta,
+             tituloArts:e.Titulo,
+               precioFinal: newprecio,
+          Barcode:e.Barcode,
                 itemSelected:e,
                 item:this.props.datos})  
             }
@@ -608,7 +703,7 @@ let item = this.props.datos
 let estiloElegido = this.state.artSelected != ""?"artElegido":""
 let idArt =this.state.artSelected != ""?this.state.artSelected.Eqid :""
 let itemSelected =this.state.artSelected != ""?"done" :"error"
-let tituloSelected = this.state.artSelected  != ""?this.state.artSelected.Titulo :""
+let tituloSelected = this.state.artSelected  != ""?this.state.tituloArtFactura :""
 
 return (  
          
@@ -704,7 +799,7 @@ return (
       label=""
     />
            </div>  
-             <div className="Artic100Fpago">
+           { /* <div className="Artic100Fpago">
           
           
           <FormControlLabel
@@ -719,7 +814,7 @@ return (
       }
       label=""
     />
-           </div> 
+           </div> */}
            <div className="Artic100Fpago"    >
 <div className='botonweb'
             //generarcat
@@ -738,6 +833,20 @@ return (
          
                         </div>
   </div>              
+    <div className="Artic100Fpago" style={{display:"flex", justifyContent:"center"}}    >
+<input
+
+className={` inputCantidad `}
+  onChange={this.handleChangeBarcode}
+  name="barcode"
+  type="number"
+  placeholder={"00000"}
+value={this.state.Barcode}
+
+ 
+/> 
+        
+    </div>
            <div className="accClass">
   <span className="material-icons">
 {itemSelected}
@@ -1027,7 +1136,14 @@ Articulos={this.props.state.RegContableReducer.Articulos
                  
                    }
                  
-
+  .inputCantidad{
+    width: 80%;       
+    border: none;
+    border-bottom: 1px solid blue;
+    margin-bottom: 4px;
+    text-align: center;
+    border-radius: 8px;
+}
                    
                    .ArticRes{
                     width: 23%;  

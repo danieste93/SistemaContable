@@ -26,7 +26,12 @@ class Contacto extends Component {
 
 channel1 = null;
   async  componentDidMount(){
-    document.addEventListener("keydown", this.handleKeyDown);
+ 
+     setTimeout(()=>{ 
+        
+        this.setState({Buscador:true})
+
+       }, 800);
     this.channel1 = postal.channel();
     this.channel1.subscribe('desdeingreso', (data) => {
        
@@ -50,7 +55,7 @@ channel1 = null;
           }
         };
         componentWillUnmount() {
-          document.removeEventListener("keydown", this.handleKeyDown);
+        
         }
          
         onEditmode=()=>{
@@ -90,12 +95,13 @@ channel1 = null;
             generadorDeSubCategorias = this.state.subCategoria.map((subc, i)=>(
              <div key={i} className="minisub"
              onClick={()=>{
+              document.getElementById('maincontcat').classList.remove("entrada")
                  let data={
                    estado:this.state,
                    subcat:subc
                  }
               setTimeout(()=>{        this.props.sendsubCatSelect(data)},500)
-              document.getElementById('maincontcat').classList.remove("entradaCat")
+              
              }}
              
              >
@@ -107,7 +113,11 @@ channel1 = null;
            if(this.props.state.RegContableReducer.Categorias){
             if(this.props.state.RegContableReducer.Categorias.length > 0){
           
-              let catFiltradas = this.props.state.RegContableReducer.Categorias.filter(x=> x.sistemCat == false && x.tipocat == "Articulo")
+              let catFiltradas = this.props.state.RegContableReducer.Categorias.filter(x=> {
+console.log(x)
+return(x.sistemCat == false && x.tipocat == "Articulo")
+
+              })
               
                 generadorDeCategorias = this.filtroCategorias(catFiltradas).map((cat,i)=>{
           
@@ -128,7 +138,7 @@ channel1 = null;
                    
                     setTimeout(()=>{        this.props.sendCatSelect(cat)},300)
                     if(document.getElementById('maincontcat')){
-                    document.getElementById('maincontcat').classList.remove("entradaCat")
+                    document.getElementById('maincontcat').classList.remove("entrada")
                   }
                     
                   }         
@@ -176,13 +186,13 @@ channel1 = null;
          <div >
 
 <div id="maincontcat" className="maincontcat" >
-            <div className="contcontacto"  >
+            <div className="contcontactoCA"  >
         
                 <div className="headercontact cuentasheader">
              
               <div className="tituloventa">
                 
-              <p> Categorias de Articulos </p>
+              <p> Art & Serv </p>
            
         </div>
 
@@ -199,11 +209,13 @@ channel1 = null;
    setTimeout(()=>{   this.props.Flecharetro3()},500)
     
        
-       document.getElementById('maincontcat').classList.remove("entradaCat")
+       document.getElementById('maincontcat').classList.remove("entrada")
        }}>  close</i>
     
      </div>
         </div>
+        <div className="contcuentasCx">
+           <div>
         <Animate show={this.state.Buscador}>
      <div className="buscadorCuentas">
      <div className="react-autosuggest__container">
@@ -214,12 +226,13 @@ channel1 = null;
       </div>
      </div>
      </Animate>
+     </div>
 <div className="contcuentas">
 {generadorDeCategorias}
 </div>
-
+</div>
 <div className={`subcatCont ${subCatActive}`}>
-<div className=" contcontactoSub">
+<div className=" contcontactoCASub">
 <div className="headercontact cuentasheader">
 <div className="tituloventa">
                 
@@ -315,11 +328,11 @@ this.setState({subcatCont:false})
             border-radius:  0px 0px 11px 10px;
            }
            .contcuentas{
-            padding: 5px;
+        
             display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-    height: 78%;
+    height: 100%;
     overflow-y: scroll;
     overflow-x: hidden;
     align-items: center;
@@ -465,7 +478,7 @@ this.setState({subcatCont:false})
          overflow: hidden;
          border-bottom: 3px solid black
        }
-       .contcontacto{
+       .contcontactoCA{
          margin-top:5px;
         border-radius: 15px;
         width: 98%;
@@ -474,14 +487,22 @@ this.setState({subcatCont:false})
        
          border-bottom: 5px solid black;
        }
-          .contcontactoSub{
+          .contcontactoCASub{
          margin-top:5px;
         border-radius: 15px;
-        width: 72%;
+        width: 95%;
+        paddding:5px;
                background-color: white;
          height: 100%;
        
      }
+          .contcuentasCx{
+            padding: 5px;
+            display: flex;
+            flex-flow:column;
+    height: 78%;
+
+           }
          .contSubCate{
          background-color: white;
          }
@@ -513,7 +534,7 @@ this.setState({subcatCont:false})
        .tituloventa{
          display: flex;
          align-items: center;
-         font-size: 30px;
+         font-size: 25px;
          font-weight: bolder;
          text-align: center;
          justify-content: space-around;
@@ -603,14 +624,14 @@ this.setState({subcatCont:false})
                .marginador{
                 margin: 0px 2px 15px 2px;
                }
-         .contcontacto{
+         .contcontactoCA{
           width: 95%;
          }
           }
           @media only screen and (min-width: 600px) { 
          
 
-              .contcontacto{
+              .contcontactoCA{
        
          width: 70%;
       

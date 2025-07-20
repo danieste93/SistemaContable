@@ -353,9 +353,9 @@ if(this.props.state.userReducer != ""){
   </Animate>
 
 
-<Animate show={this.state.modalagregador}>
-<Modal  cuentaToAdd={this.state.cuentaToAdd} updateData={()=>{ console.log("updatedata")}}   flechafun={()=>{this.setState({modalagregador:false})}}/>
-</Animate>
+
+{this.state.modalagregador&&<Modal  cuentaToAdd={this.state.cuentaToAdd} updateData={()=>{ console.log("updatedata")}}   flechafun={()=>{this.setState({modalagregador:false})}}/>
+}
 
 <Animate show={this.state.modaledit}>
 <Modaledit CuentaEdit={this.state.EditReg} flechafun={()=>{this.setState({modaledit:false})}}/>

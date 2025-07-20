@@ -16,6 +16,7 @@ import Prevent from "../cuentascompo/modal-prevent"
 import CircularProgress from '@material-ui/core/CircularProgress';
 class Contacto extends Component {
    state={
+    masterInsumo:false,
     Alert:{Estado:false},
     xmlData:{fechaAutorizacion:[""]},
     Errorlist:[],
@@ -243,20 +244,24 @@ if(response.articulosCreados.length > 0)
 
       }
        agruparItemsPorCodigo(data) {
+        console.log(data)
   const agrupados = {};
 
   data.forEach(item => {
     const codigo = item.codigoPrincipal[0];
     const cantidad = parseFloat(item.cantidad[0]);
+    const PrecioTotal = parseFloat(item.precioTotalSinImpuesto[0]);
 
     if (agrupados[codigo]) {
       // Sumar cantidades si ya existe el código
       agrupados[codigo].cantidad += cantidad;
+      agrupados[codigo].precioTotalSinImpuesto += PrecioTotal;
     } else {
       // Crear nueva entrada, manteniendo la estructura original
       agrupados[codigo] = {
         ...item,
-        cantidad: cantidad  // convertimos a número
+        cantidad: cantidad,
+        precioTotalSinImpuesto:PrecioTotal  // convertimos a número
       };
     }
   });
@@ -264,7 +269,8 @@ if(response.articulosCreados.length > 0)
   // Convertir las cantidades nuevamente a string con 6 decimales, si quieres mantener ese formato
   return Object.values(agrupados).map(item => ({
     ...item,
-    cantidad: [item.cantidad.toFixed(6)]
+    cantidad: [item.cantidad.toFixed(6)],
+    precioTotalSinImpuesto: [item.precioTotalSinImpuesto.toFixed(6)],
   }));
 }
 
@@ -436,8 +442,7 @@ if(result.factura){
 
     sendSwich2=(data)=>{
      
-console.log("in switch")
-console.log(data.tituloArts)
+
       let valinsumo = data.insumo? true:null
       let valiva = data.iva? true:null
 
@@ -475,6 +480,8 @@ console.log(data.tituloArts)
               subcategoria: data.subCatSelect,
               precioFinal: parseFloat(data.precioFinal),
               itemSelected: data.itemSelected,
+              Barcode:data.Barcode,
+              descripcion:[data.tituloArts],
               precioVenta:parseFloat(data.precioVenta)
             };
           }
@@ -488,7 +495,7 @@ console.log(data.tituloArts)
 
     sendItem=(data)=>{
      
-    
+    console.log(data)
       setTimeout(()=>{
         let itemfind =  this.state.Comprobante.factura.detalles[0].detalle.filter(x=>x.codigoPrincipal[0] == data.item.codigoPrincipal[0])  
         let indexset = this.state.Comprobante.factura.detalles[0].detalle.indexOf(itemfind[0])
@@ -577,10 +584,12 @@ let TotalValorCompra = 0
               Errorlist={this.state.Errorlist} 
               datos={item}
               sendSwich={this.sendSwich}
+
               sendErrace={this.sendErrace}
               sendExp={(e)=>{this.SetExp(e)}} 
               sendItem={this.sendItem}
               sendNombre={this.setName}
+              sendMasterInsumo={this.state.masterInsumo}
               />
            )
           })
@@ -691,17 +700,21 @@ done
                         <div className="Artic100Fpago ">
                             P.Venta
                         </div>
-                        <div className="Artic100Fpago ">
+                        <div className="Artic100Fpago masterInsumo" onClick={()=>{this.setState({masterInsumo:!this.state.masterInsumo})}}>
+                  
                             Insumo
                         </div>
                         <div className="Artic100Fpago ">
                             IVA
                         </div>
-                        <div className="Artic100Fpago ">
+                        {/*<div className="Artic100Fpago ">
                             Caduca
-                        </div>
+                        </div>*/}
                         <div className="Artic100Fpago ">
                             Categoria
+                        </div>
+                         <div className="Artic100Fpago ">
+                            Codigo Barras
                         </div>
                         <div className="accClass ">
                             Item
@@ -981,6 +994,12 @@ SendAceptar={()=>{   this.setState({xmlData:this.state.preventxmlData, Comproban
   text-align:center;
 
 }
+  .masterInsumo{
+  border-radius: 12px;
+    padding: 1px;
+    background: #c5def8;
+    cursor: pointer;
+    border-bottom: 2px solid black;}
 
 .totalp{
   text-align: center;
@@ -989,6 +1008,7 @@ SendAceptar={()=>{   this.setState({xmlData:this.state.preventxmlData, Comproban
   margin-bottom: 0px;
   margin-left: 21px;
 }  
+
             .fecha{
               font-size: 20px;
     margin: 10px;

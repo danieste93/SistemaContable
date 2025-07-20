@@ -40,16 +40,28 @@ class Modal extends Component {
          
             return(<div className="jwSeccionCard jwContFlexCenter " style={{flexFlow:"column"}}> 
               <img src="/static/vistillo.png" className="imgventa"/>
-              <p className="subtituloArt" style={{marginTop:"25px"}}>Tu registro fue exitoso</p>
+             <h2 className="subtituloArt" style={{ fontSize: "24px", color: "#333", fontWeight: "600", marginBottom: "10px" }}>
+    ¡Registro exitoso!
+  </h2>
 
-              <p>Revisa tu correo electrónico y confirma tu cuenta</p>
+  <p style={{ fontSize: "16px", color: "#555", marginBottom: "10px" }}>
+    Te hemos enviado un correo de confirmación.
+  </p>
 
-              <p>Si no lo encuentra revisa tu bandeja de correo no deseado y seleccionalo como deseado</p>
+  <p style={{ fontSize: "15px", color: "#777", marginBottom: "10px" }}>
+    Si no lo ves en tu bandeja de entrada, revisa la carpeta de spam y márcalo como correo deseado.
+  </p>
 
-              <p>Ya Puedes iniciar sesion</p>
+  <p style={{ fontSize: "15px", color: "#555", marginBottom: "30px" }}>
+    click en continuar para iniciar sesión.
+  </p>
 
               <div className="contbotonventa">
- <button  className="botonventa " onClick={this.onFlechaRetro}>Continuar</button>
+ <button  className="botonventa " onClick={this.onFlechaRetro}
+   
+  
+ 
+ >Continuar</button>
  </div>
             </div>)
                     
@@ -67,9 +79,10 @@ class Modal extends Component {
               <div style={{width:"100%", display:"flex", justifyContent:"flex-start"}}>
 
            
-            <img src="/static/flecharetro.png" alt="" className="flecharetro" onClick={this.onFlechaRetro}/>
+           
             </div>
             <div className="jwCard jwW100percent bgwhite">
+             
       {this.modalCont()}
             </div>
   
@@ -223,11 +236,7 @@ margin-bottom:0px;
   
     padding: 17px 8px 2px 8px;
    }
-.cDc1{
-  width: 50%;
-  text-align: left;
-  
-}
+
              .contTituloCont1{
               margin-top:10px;
                display:flex;
@@ -291,6 +300,7 @@ margin: 5px
 }
 
              .botonventa{
+             cursor:pointer;
             
               margin-top: 17px;
     border-radius: 10px;
@@ -379,7 +389,7 @@ margin: 5px
     border-radius: 30px;
     margin-bottom: 5%;
     width: 90%;
-    background-color: white;
+   
     padding: 10px;
     display: flex;
     justify-content: center;

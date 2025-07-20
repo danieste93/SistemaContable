@@ -31,6 +31,7 @@ try{
    
    var signaturesQuantity = certBags[Forge.oids.certBag];
 
+   console.log(signaturesQuantity)
 
 for (let z = 0 ;z<signaturesQuantity.length;z++){
   
@@ -57,17 +58,24 @@ for (let z = 0 ;z<signaturesQuantity.length;z++){
  break
     }
     else if(/CONSEJO DE LA JUDICATURA/i.test(entidad)){
-       
 
-       
        issuerName = 'CN=ENTIDAD DE CERTIFICACION ICERT-EC,OU=SUBDIRECCION NACIONAL DE SEGURIDAD DE LA INFORMACION DNTICS,O=CONSEJO DE LA JUDICATURA,L=DM QUITO,C=EC';
+      break
     }
 
 } else {
-       
-
-   issuerName = 'CN=ENTIDAD DE CERTIFICACION ICERT-EC,OU=SUBDIRECCION NACIONAL DE SEGURIDAD DE LA INFORMACION DNTICS,O=CONSEJO DE LA JUDICATURA,L=DM QUITO,C=EC';
-}
+      
+    // 🔧 BLOQUE MODIFICADO: cuando no hay friendlyName
+    let cert = signaturesQuantity[z].cert;
+    let issuer = cert.issuer.attributes.map(attr => `${attr.value}`).join(',');
+    console.log(issuer)
+    if (/UANATACA/i.test(issuer)) {
+      issuerName = 'CN=UANATACA CA2 2016,C=ES,L=Barcelona (see current address at www.uanataca.com/address),2.5.4.97=#0c0f56415445532d413636373231343939,O=UANATACA S.A.,OU=TSP-UANATACA';
+      break;
+    } else if (/ICERT-EC|CONSEJO DE LA JUDICATURA/i.test(issuer)) {
+      issuerName = 'CN=ENTIDAD DE CERTIFICACION ICERT-EC,OU=SUBDIRECCION NACIONAL DE SEGURIDAD DE LA INFORMACION DNTICS,O=CONSEJO DE LA JUDICATURA,L=DM QUITO,C=EC';
+      break;
+    }}
 }
 
 

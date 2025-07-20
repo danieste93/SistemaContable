@@ -17,7 +17,7 @@ class Contacto extends Component {
     loading:false,
     idReg:"",
     EqId:"",
-    PrecioCompraServ:0,
+    PrecioCompraServ:"",
   tiempo: new Date().getTime(),
   modalComprobacion:false,
     Alert:{Estado:false},
@@ -182,6 +182,7 @@ if(populares){
         let newstate = {...this.state}
 
         newstate.Usuario ={DBname:this.props.state.userReducer.update.usuario.user.DBname}
+        newstate.PrecioCompraServ = this.state.PrecioCompraServ == ""?0:this.state.PrecioCompraServ
         
         var lol = JSON.stringify(newstate)
 
@@ -385,8 +386,8 @@ IVA
     <TextValidator
     label="Precio Compra"
      onChange={this.handleChangeGeneral}
-     name="PrecioCompraServ"
-     type="text"
+     name="PrecioCompraServ" 
+     type="number"
   value={this.state.PrecioCompraServ}
         placeHolder="0"
   
@@ -467,7 +468,7 @@ add
     
     </Alert>
   </Snackbar>
-  <Animate show={this.state.categoriaModal}>
+ {this.state.categoriaModal &&
        <Cat
 
        sendCatSelect={(cat)=>{
@@ -484,8 +485,8 @@ add
               
         }
        } 
-       />
-        </Animate >  
+       />}
+        
                  <Animate show={this.state.modalComprobacion}>
                         <ModalComprobacionGeneral 
                         Flecharetro={()=>{this.setState({modalComprobacion:false})}}
