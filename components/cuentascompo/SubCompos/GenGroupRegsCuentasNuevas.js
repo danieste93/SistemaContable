@@ -1,8 +1,9 @@
 import React, { Component } from 'react'
 import Inggas from './inggasCuentas';
+import { connect } from 'react-redux';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import moment from "moment";
-export default class GenGroupRegs extends Component {
+ class GenGroupRegs extends Component {
     render() {
 
 
@@ -148,6 +149,7 @@ export default class GenGroupRegs extends Component {
                     classNames="fade"
                   >
                     <Inggas
+                      userData={this.props.state.userReducer}
                       reg={detail}
                       in={i}
                       cuentaActual={this.props.cuentaSelect}
@@ -298,3 +300,12 @@ export default class GenGroupRegs extends Component {
         )
     }
 }
+
+const mapStateToProps = state=>  {
+   
+  return {
+      state
+  }
+};
+
+export default connect(mapStateToProps, null)(GenGroupRegs);

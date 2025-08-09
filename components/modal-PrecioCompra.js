@@ -40,7 +40,7 @@ class Contacto extends Component {
     this.setState({ justificacion: e.target.value });
   };
 
-  handleEnviar = async (esMayor, esMenor) => {
+  handleEnviar = async (esMayor, esMenor,cantidadEsCero) => {
     this.setState({loading:true})
     if(this.state.loading === false){
     let data= {
@@ -48,6 +48,7 @@ class Contacto extends Component {
       PrecioCompraNuevo: this.state.precioCompra,
       Justificacion: this.state.justificacion,
       Fpago:this.state.Fpago,
+      cantidadEsCero,
       esMayor,esMenor,
       allData:this.props,
     }
@@ -56,7 +57,7 @@ class Contacto extends Component {
     let dataSend = await fetchData(this.props.User,
       "/public/editarPrecioCompra",
     data)
-
+console.log(dataSend)
       if(dataSend.status == "Ok"){
         this.props.updatePrecioCompra(dataSend)
         this.Onsalida()
@@ -77,15 +78,14 @@ let newCantidad = Cantidad
 
     const totalOriginal = PrecioCompra * newCantidad;
     const totalNuevo = precioCompra * newCantidad;
-
-    const esMayor = totalNuevo > totalOriginal;
+     const esMayor = totalNuevo > totalOriginal;
     const esMenor = totalNuevo < totalOriginal;
 let SumaTotal = 0
     if(esMayor && this.state.Fpago.length > 0){
 this.state.Fpago.forEach(x=>  SumaTotal += x.Cantidad)
     }
     console.log(SumaTotal)
-    const cantidadEsCero = newCantidad === 0;
+    const cantidadEsCero = newCantidad === 0? true : false;
 let validadorSum = SumaTotal === (totalNuevo - totalOriginal)?true:false
     const puedeEnviar =
       cantidadEsCero ||
@@ -176,7 +176,7 @@ let validadorSum = SumaTotal === (totalNuevo - totalOriginal)?true:false
                            
               <Animate  show={!this.state.loading}>
               <button
-                  onClick={()=>{this.handleEnviar(esMayor, esMenor)}}
+                  onClick={()=>{this.handleEnviar(esMayor, esMenor,cantidadEsCero)}}
                   className="botonenviar"
                   disabled={!puedeEnviar}
                 >

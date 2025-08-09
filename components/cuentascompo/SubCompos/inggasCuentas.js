@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import { Animate } from "react-animate-mount";
 import postal from 'postal';
+import fetchData from '../../funciones/fetchdata';
+import ViewVenta from '../../modal-viewventas';
 export default class inggas extends Component {
     state={
         masDetalles:false,
@@ -8,6 +10,9 @@ export default class inggas extends Component {
         filtersUsers:false,
         filtersExe:false,
         filtersUsersDelete:false,
+        viewVenta:false,
+        dataventa:"",
+        
     }
     channel1 = null;
     channel2 = null;
@@ -15,7 +20,7 @@ export default class inggas extends Component {
     
        this.channel1 = postal.channel();
       this.channel2 = postal.channel();
-
+console.log(this.props)
 
     }
     
@@ -57,8 +62,8 @@ export default class inggas extends Component {
 
 let deleteReg = this.props.reg.TiempoDelete != null?true:false
 let dataProvider = this.props.reg
-
-
+console.log(this.props)
+let matchVenta = null;
 let importeCheck = ""
 let cuenta1Check = ""
 let cuenta2Check = ""
@@ -69,8 +74,11 @@ let descripCheck = ""
 let notaCheck = ""
 let userCheck = ""
 let upcont=''
-
-
+if(dataProvider.Accion == "Ingreso"){
+if ( dataProvider.CatSelect.idCat == 5) {
+  matchVenta = dataProvider.Nota && dataProvider.Nota.match(/Venta N°(\d+)/);
+}
+}
 if(this.state.version != "Act"){
   dataProvider= this.props.reg.Versiones[this.state.version]
   importeCheck= this.props.reg.Importe == this.props.reg.Versiones[this.state.version].Importe?"":"enfatizado"
@@ -289,7 +297,32 @@ console.log(this.props)
 
 
 <div className="regcentral">
-<p className={`  ${notaCheck} `} >{dataProvider.Nota}</p>
+<p
+  className={`  ${notaCheck} `}
+  style={
+    matchVenta
+      ? { color: "#1976d2", textDecoration: "underline", cursor: "pointer" }
+      : {}
+  }
+  onClick={
+    matchVenta
+      ? async (e) => {
+          e.stopPropagation();
+          e.preventDefault()
+          // Aquí puedes poner la función que desees para el hipervínculo
+          // Por ejemplo: this.handleVentaClick();
+       
+          let data = await fetchData(this.props.userData,
+      "/public/getVentaID", {id: matchVenta[1]});
+    console.log(data);
+    if(data.status == "Ok"){
+        this.setState({viewVenta:true, dataventa:data.findVenta[0]});
+    }
+     }  : undefined
+  }
+>
+  {dataProvider.Nota}
+</p>
 {genNombreCuentas()}
 </div>
 <div className="regfinal">
@@ -428,7 +461,11 @@ Registro Número:
 </div>
 </Animate>
 </Animate>
-
+ <Animate show={this.state.viewVenta}>
+        <ViewVenta token={this.props.userData.update.usuario.token} 
+        usuario={this.props.userData.update.usuario} 
+        datos={this.state.dataventa} Flecharetro={()=>{this.setState({viewVenta:false, dataventa:""})}  }/>
+        </Animate>
 
                 <style >{`
                  .contArtventa{

@@ -31,14 +31,13 @@ class ListVenta extends Component {
         insumo:false,
         selectItem:false,
         catSelect:{
-            tipocat: "Articulo",
-            subCategoria: [],
-            nombreCat: "GENERAL",
-            imagen: [],
-            urlIcono: "/iconscuentas/compra.png",
-            idCat: 21,
-        
-        },
+                    idCat: 0,
+                    imagen: [],
+                    nombreCat: "",
+                    
+                    subCategoria: [],
+                    tipocat: "Articulo",
+                    urlIcono: "",  },
         subCatSelect:"",
         artSelected:"",
         tituloArts:this.props.datos.descripcion[0],
@@ -55,7 +54,11 @@ class ListVenta extends Component {
     }
     channel2 = null;
     componentDidMount(){
-  
+        console.log(this.state)
+  let getGeneralCat = this.props.state.RegContableReducer.Categorias.find(x=> x.idCat == 21)
+  let getComidaCat = this.props.state.RegContableReducer.Categorias.find(x=> x.idCat == 6)
+console.log(getGeneralCat)
+        
 
 const cantidadStr = parseFloat(this.props.datos.cantidad[0]).toFixed(2);
 const cantidad = parseFloat(cantidadStr);
@@ -63,29 +66,13 @@ setTimeout(()=>{
   if (!Number.isInteger(cantidad)) {
   // Es un entero, incluso si era "1.00"
   this.setState({blockinsumo:true, insumo:true,
-     catSelect:{
-                
-                    tipocat: "Gasto",
-                    subCategoria: [],
-                    nombreCat:"Comida",
-                    urlIcono:"/iconscuentas/comida.png",
-                    idCat:6
-                
-                },
+     catSelect:getComidaCat,
 
   })
 
      this.props.sendSwich({...this.state,
          blockinsumo:true, insumo:true,
-     catSelect:{
-                
-                    tipocat: "Gasto",
-                    subCategoria: [],
-                    nombreCat:"Comida",
-                    urlIcono:"/iconscuentas/comida.png",
-                    idCat:6
-                
-                },
+     catSelect:getComidaCat,
              item:this.props.datos
             })  
     
@@ -99,9 +86,9 @@ console.log(this.props.datos)
     let articulos = this.props.state.RegContableReducer.Articulos
 
     let miart = articulos.filter(x=> x.Diid == articuloElegido.codigoPrincipal[0])
+console.log(miart)
+    let newprecio =  this.testPrecioUni()
 
-    let newprecio =  this.testPrecioUni() 
- 
     if(miart.length > 0){
         this.setState({artSelected:miart[0],
                catSelect:miart[0].Categoria,
@@ -126,9 +113,13 @@ console.log(this.props.datos)
             )  
     }else{
         
-        this.setState({precioFinal: newprecio})
+        this.setState({precioFinal: newprecio,
+                      catSelect:getGeneralCat,
+
+        })
        
         this.props.sendSwich({...this.state,
+             catSelect:getGeneralCat,
             precioFinal: newprecio,
             item:this.props.datos})  
     }
@@ -139,56 +130,26 @@ console.log(this.props.datos)
     // Detectar el cambio de props.sendMasterInsumo
     if (prevProps.sendMasterInsumo !== this.props.sendMasterInsumo) {
  if(!this.state.blockinsumo && this.state.artSelected ==""){
-  
+  let getComidaCat = this.props.state.RegContableReducer.Categorias.find(x=> x.idCat == 6)
+  let getGeneralCat = this.props.state.RegContableReducer.Categorias.find(x=> x.idCat == 21)
+
        
             if(this.state.insumo == false){
             this.setState({insumo:!this.state.insumo,
-                catSelect:{
-                
-                    tipocat: "Gasto",
-                    subCategoria: [],
-                    nombreCat:"Comida",
-                    urlIcono:"/iconscuentas/comida.png",
-                    idCat:6
-                
-                },
+                catSelect:getComidaCat,
 
 
             })
             this.props.sendSwich({...this.state,
-                catSelect:{       
-                    tipocat: "Gasto",
-                    subCategoria: [],
-                    nombreCat:"Comida",
-                    urlIcono:"/iconscuentas/comida.png",
-                    idCat:6     
-                },
+                catSelect:getComidaCat,
                 insumo:!this.state.insumo,
                  item:this.props.datos})  
         }else{
             this.setState({insumo:!this.state.insumo,
-                catSelect:{
-                    tipocat: "Articulo",
-                    subCategoria: [],
-                    nombreCat: "GENERAL",
-                    imagen: [],
-                    urlIcono: "/iconscuentas/compra.png",
-                    idCat: 21,
-                
-                },
-
-
+                catSelect:getGeneralCat,
             })
             this.props.sendSwich({...this.state,
-                catSelect:{       
-                    tipocat: "Articulo",
-                    subCategoria: [],
-                    nombreCat: "GENERAL",
-                    imagen: [],
-                    urlIcono: "/iconscuentas/compra.png",
-                    idCat: 21,
-                  
-                },
+                catSelect:getGeneralCat,
                 insumo:!this.state.insumo,
                  item:this.props.datos})
         }
@@ -335,7 +296,10 @@ this.setState({tituloArts:e.target.value})
             },100)
     
       }
-      handleChangeSwitchInsumo=(e)=>{        
+      handleChangeSwitchInsumo=(e)=>{   
+          let getGeneralCat = this.props.state.RegContableReducer.Categorias.find(x=> x.idCat == 21)
+  let getComidaCat = this.props.state.RegContableReducer.Categorias.find(x=> x.idCat == 6)
+     
     if(!this.state.blockinsumo){
         if(this.state.artSelected !=""){
             alert("Error, articulo se asigno a inventario")
@@ -343,52 +307,19 @@ this.setState({tituloArts:e.target.value})
         }else{
             if(this.state.insumo == false){
             this.setState({insumo:!this.state.insumo,
-                catSelect:{
-                
-                    tipocat: "Gasto",
-                    subCategoria: [],
-                    nombreCat:"Comida",
-                    urlIcono:"/iconscuentas/comida.png",
-                    idCat:6
-                
-                },
+                catSelect:getComidaCat,
 
 
             })
             this.props.sendSwich({...this.state,
-                catSelect:{       
-                    tipocat: "Gasto",
-                    subCategoria: [],
-                    nombreCat:"Comida",
-                    urlIcono:"/iconscuentas/comida.png",
-                    idCat:6     
-                },
+                catSelect:getComidaCat,
                 insumo:!this.state.insumo,
                  item:this.props.datos})  
         }else{
             this.setState({insumo:!this.state.insumo,
-                catSelect:{
-                    tipocat: "Articulo",
-                    subCategoria: [],
-                    nombreCat: "GENERAL",
-                    imagen: [],
-                    urlIcono: "/iconscuentas/compra.png",
-                    idCat: 21,
-                
-                },
-
-
-            })
+                catSelect:getGeneralCat,   })
             this.props.sendSwich({...this.state,
-                catSelect:{       
-                    tipocat: "Articulo",
-                    subCategoria: [],
-                    nombreCat: "GENERAL",
-                    imagen: [],
-                    urlIcono: "/iconscuentas/compra.png",
-                    idCat: 21,
-                  
-                },
+                catSelect:getGeneralCat,
                 insumo:!this.state.insumo,
                  item:this.props.datos})
         }
@@ -678,7 +609,7 @@ item})
             }
             
 render(){
-
+console.log(this.state)
  let cantidadErr= ""
  let precioErr= ""
  let precioAltErr= ""
@@ -827,7 +758,7 @@ return (
             }}
         >
 
-            {this.state.catSelect.nombreCat}
+            {this.state.catSelect?this.state.catSelect.nombreCat:""}
             <span style={{fontSize:"10px",marginTop:"2px"}}>  {this.state.subCatSelect!="default"? this.state.subCatSelect:""} </span>
             
          

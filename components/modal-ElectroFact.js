@@ -147,6 +147,7 @@ class Contacto extends Component {
         1.15, 1, 0.15,
         bufferfile,
         0,//descuento 
+        {},//adicionalInfo
         1//ambiente
         )
 

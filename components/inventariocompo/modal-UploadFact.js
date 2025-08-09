@@ -62,6 +62,7 @@ class Contacto extends Component {
                    datos.IvaEC, 
                    bufferfile,
                    datos.valorDescuento,
+                   {}, //adicionalInfo
                    2 // ambiente
                      )
 

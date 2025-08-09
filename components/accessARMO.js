@@ -4,7 +4,6 @@ import ArticuloRenderList from "./inventariocompo/articuloRenderListView"
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { Animate } from "react-animate-mount";
 
-
 import {paginationPipe} from "../reduxstore/pipes/paginationFilter";
 import Pagination from "./Pagination";
 

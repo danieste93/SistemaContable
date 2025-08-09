@@ -9,16 +9,31 @@ const fallbackImages = [
   "/iconspv/a6.png",
   "/iconspv/a7.png",
   "/iconspv/a8.png",
+  "/iconspv/a9.png",
+  "/iconspv/a10.png",
+  "/iconspv/a11.png",
+  "/iconspv/a12.png",
+  "/iconspv/a13.png",
+  "/iconspv/a14.png",
+  "/iconspv/a15.png",
+  "/iconspv/a16.png",
+  "/iconspv/a17.png",
+  "/iconspv/a18.png",
+  "/iconspv/a19.png",
+  "/iconspv/a20.png",
+
 ];
 
-export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta }) {
+export default function ItemCard({updateArtimg ,datos,sendArt, Cuenta , onEdit}) {
   let getCuenta = Cuenta()
   const [expanded, setExpanded] = useState(false);
   const [clicked, setClicked] = useState(false);
   const [flipped, setFlipped] = useState(false);
     const [visible, setVisible] = useState(false);
   const [imageSrc, setImageSrc] = useState("");
+  const [showTooltip, setShowTooltip] = useState(false);
 const cardRef = useRef(null);
+const tooltipTimeout = useRef(null);
 
   useEffect(() => {
     if (datos.Imagen && datos.Imagen[0]) {
@@ -64,6 +79,27 @@ const cardRef = useRef(null);
 
   const isOutOfStock = datos.Existencia === 0;
 
+  const handleTouchStart = (e) => {
+    e.stopPropagation();
+    setShowTooltip(true);
+    // Oculta el tooltip automáticamente después de 2 segundos
+    if (tooltipTimeout.current) clearTimeout(tooltipTimeout.current);
+    tooltipTimeout.current = setTimeout(() => setShowTooltip(false), 2000);
+  };
+
+  const handleTouchEnd = (e) => {
+    e.stopPropagation();
+    // Opcional: puedes ocultar el tooltip aquí si prefieres
+    // setShowTooltip(false);
+  };
+
+  // Limpieza del timeout al desmontar
+  useEffect(() => {
+    return () => {
+      if (tooltipTimeout.current) clearTimeout(tooltipTimeout.current);
+    };
+  }, []);
+
   return (
 <div
 id="cardCont"
@@ -83,19 +119,31 @@ ref={cardRef}
           <div className="arrow" onClick={toggleFlip}>
             ➤
           </div>
+      
           <img src={imageSrc} alt="Producto" className="product-image" />
           <div className="info">
             <div className="left">
-              <span className="title"  onClick={(e) => {
-    e.stopPropagation();
-   
-  }} >
+              <span
+  className="title"
+  onClick={(e) => { e.stopPropagation(); }}
+  onMouseEnter={() => setShowTooltip(true)}
+  onMouseLeave={() => setShowTooltip(false)}
+  onTouchStart={handleTouchStart}
+  onTouchEnd={handleTouchEnd}
+>
                 {expanded || datos.Titulo.length <= 30
                   ? datos.Titulo
-                  : `${datos.Titulo.slice(0, 30)}...`}
+                  : `${datos.Titulo.slice(0, 25)}...`}
               </span>
-             {datos.Titulo.length > 30 && (
-  <div className="tooltip">{datos.Titulo}</div>
+              {datos.Titulo.length > 25 && showTooltip && (
+  <div
+    className="tooltip"
+    onClick={(e) => { e.stopPropagation(); }}
+    onMouseEnter={() => setShowTooltip(true)}
+    onMouseLeave={() => setShowTooltip(false)}
+  >
+    {datos.Titulo}
+  </div>
 )}
             </div>
             <div className="right">
@@ -113,9 +161,15 @@ ref={cardRef}
 
         {/* Lado trasero */}
         <div className="back">
-          <div className="arrow" onClick={toggleFlip}>
+              <div className="edit-icon">
+    <span className="material-icons editP"  onClick={(e) => { e.stopPropagation(); onEdit(datos); }} >
+      edit
+    </span>
+     <div className="arrow" onClick={toggleFlip}>
             ⬅
           </div>
+  </div>
+         
        <div className="firstBackCont ">
         {/* Parte izquierda */}
          <div className="categoria-info">
@@ -255,8 +309,8 @@ margin-top:5px;
   width: 100%;
   
     height: 40px;
-    display: flex
-;
+    display: flex;
+     position: relative;
     justify-content: center;
     align-items: center;
     text-align: center;
@@ -307,9 +361,22 @@ margin-top:5px;
           font-size: 16px;
           cursor: pointer;
         }
+           .editP {
+          position: absolute;
+            top: -5px;
+                padding: 2px;
+    left: 3px;
+      
+          font-size: 16px;
+              border-bottom: 1px solid;
+    border-radius: 10px;
+          cursor: pointer;
+          color: black;
+        }
 
         .product-image {
           width: 75%;
+          max-height: 60%;
           max-width: 90px;
           margin: auto ;
           display: block;
@@ -332,29 +399,36 @@ margin-top:5px;
           cursor: pointer;
           user-select: none;
           position: relative;
+          display: -webkit-box;
+          -webkit-line-clamp: 2; /* Limita a 2 líneas */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  max-width: 200px; /* Ajusta según tu diseño */
         }
 
         .tooltip {
-          position: absolute;
-          top: 25%;
-          left: 0;
-          margin-top: 6px;
-          background: #333;
-          color: #fff;
-          padding: 6px 10px;
-          border-radius: 6px;
-          font-size: 15px;
-          z-index: 20;
-          text-wrap: wrap;
-          user-select: none;
+         position: absolute;
+  top: -175%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 6px;
+  background:#d3f1f4;
+  color: black;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 15px;
+  z-index: 999999; /* Súbelo aún más */
+  text-wrap: wrap;
+  user-select: none;
+  box-shadow: 0 8px 32px rgba(25, 118, 210, 0.18);
+  pointer-events: auto;
+  min-width: 120px;
+  max-width: 220px;
+  text-align: center;
         }
-          .tooltip {
-  display: none;
-}
-
-.title:hover + .tooltip {
-  display: block;
-}
+    
 .right{
     flex-flow: row;
     display: flex;
@@ -385,11 +459,13 @@ margin-top:5px;
           pointer-events: auto;
         }
    .card-container.hoverable {
-  transition: transform 0.25s ease;
+   
+  transition:  0.25s ;
 }
 
 .card-container.hoverable:hover {
-  transform: scale(1.03);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  
   cursor: pointer;
 }
 

@@ -18,6 +18,7 @@ import {getcuentas,addFirstRegs,addTipo } from "../../reduxstore/actions/regcont
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { reorder } from "../reusableComplex/herlperDrag"
 import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
 import ReactToPrint from "react-to-print";
@@ -1197,13 +1198,14 @@ ${parseFloat(ResultCuentas).toFixed(2)}
 <Animate show={this.state.cuentaExpand != item}>
 <div className="contcuentas">
 <Tabs
-         
+         value={0} // siempre válido
           indicatorColor="primary"
           textColor="primary"
           variant="scrollable"
           scrollButtons="auto"
           aria-label="scrollable auto tabs example"
         >
+       <Tab style={{ display: "none" }} />     
 { generadorCuentas(cuentasrender,"cuadros")
  }
 
@@ -1681,13 +1683,14 @@ if(cuentasrenderNoPosesion.length > 0){
     <Animate show={this.state.cuentaExpand != "Posesion"}>
     <div className="contcuentas">
 <Tabs
-         
+         value={0} // siempre válido
           indicatorColor="primary"
           textColor="primary"
           variant="scrollable"
           scrollButtons="auto"
           aria-label="scrollable auto tabs example"
         >
+           <Tab style={{ display: "none" }} />   
 { generadorCuentas(cuentasrenderPosesion,"cuadros")
  }
 
@@ -1727,13 +1730,14 @@ if(this.state.cuentaExpand == "NoPosesion"){
     <Animate show={this.state.cuentaExpand != "NoPosesion"}>
     <div className="contcuentas">
 <Tabs
-         
+         value={0} // siempre válido
           indicatorColor="primary"
           textColor="primary"
           variant="scrollable"
           scrollButtons="auto"
           aria-label="scrollable auto tabs example"
         >
+           <Tab style={{ display: "none" }} />   
 { generadorCuentas(cuentasrenderNoPosesion,"cuadros")
  }
 
@@ -1770,13 +1774,14 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
     <Animate show={this.state.cuentaExpand != "PosesionSinTotal"}>
     <div className="contcuentas">
 <Tabs
-         
+         value={0} // siempre válido
           indicatorColor="primary"
           textColor="primary"
           variant="scrollable"
           scrollButtons="auto"
           aria-label="scrollable auto tabs example"
         >
+           <Tab style={{ display: "none" }} />   
 { generadorCuentas(cuentasrenderPosesionsinTotal,"cuadros")
  }
 

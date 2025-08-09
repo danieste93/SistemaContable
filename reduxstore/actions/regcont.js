@@ -8,7 +8,9 @@
  
   export const FETCH_CUENTAS_BEGIN    = 'FETCH_CUENTAS_BEGIN';
   export const ADD_TIPE   = 'ADD_TIPE';
+
   export const ADD_CLIENT   = 'ADD_CLIENT';
+  export const DELETE_CLIENT = 'DELETE_CLIENT';
 
   export const UPDATE_REG   = 'UPDATE_REG';
   export const UPDATE_REGS   = 'UPDATE_REGS';
@@ -174,6 +176,11 @@ export const addRegsDelete = registros => ({
   type: ADD_REGS_DELETE,
   payload: { registros }
 });
+export const deleteClient = cliente => ({
+  type: DELETE_CLIENT,
+  payload: { cliente }
+});
+
 export const getcuentas = cuentas => ({
   type: FETCH_CUENTAS_SUCCESS,
   payload: { cuentas }

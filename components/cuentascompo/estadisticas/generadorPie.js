@@ -159,6 +159,7 @@ for (let z = 0; z < DetallesPorrender.length; z++) {
     let catId = 0
     if(cat){
     catId = cat._id;
+    let boto = "672584de557c82bcea409ef3";
 
     // Si la categoría aún no existe en el mapa, inicialízala con los campos requeridos
     if (!categoriasMap[catId]) {
@@ -172,6 +173,9 @@ for (let z = 0; z < DetallesPorrender.length; z++) {
             Color:Colores[segundoCont]
         };
         segundoCont ++
+    }
+    if(boto == catId){
+console.log(registro)
     }
 
     // Sumar el importe a la categoría
@@ -203,6 +207,7 @@ for (let z = 0; z < DetallesPorrender.length; z++) {
     
 }
 }
+
 // Calcular el porcentaje de cada categoría respecto al total de ingresos o gastos
 categoriasIngreso.forEach(cat => {
     cat.porcentaje = ingresosTotales > 0 ? (cat.totalImporte / ingresosTotales) * 100 : 0;
@@ -212,7 +217,7 @@ categoriasGasto.forEach(cat => {
     cat.porcentaje = gastosTotales > 0 ? (cat.totalImporte / gastosTotales) * 100 : 0;
 });
 // Mostrar el resultado con las categorías separadas en ingresos y gastos
-  
+  console.log(graficData)
 
 if(this.state.Ingreso){
    datoTouP = categoriasIngreso
@@ -234,6 +239,7 @@ if(this.state.Ingreso){
 let graficData = datoTouP.filter(elem => 
     !this.state.excluidos.some(excluido => excluido._id === elem._id)
 );
+
 superdata = {
     labels: graficData.map(x=>x.nombreCat),
     datasets: [

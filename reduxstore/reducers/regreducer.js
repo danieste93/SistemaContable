@@ -1,4 +1,6 @@
+     
 import {
+  DELETE_CLIENT,
   ADD_FIRST_REGS,
   ADD_FIRST_REGS_DELETE,
   GET_REPETICIONES, 
@@ -65,6 +67,8 @@ import {
   
   export default function productReducer(state = initialState, action) {
     switch(action.type) {
+
+   
       case LOG_OUT:
         return state ="";
       case  CLEAN_DATA:
@@ -384,6 +388,12 @@ import {
                                             
                     return {
                       ...state, Reps   };
+                         case DELETE_CLIENT:
+        let ClientsFiltered = state.Clients.filter(x => x._id !== action.payload.cliente._id)
+        return {
+          ...state,
+          Clients: ClientsFiltered
+        };
 
       case FETCH_REGS_FAILURE:
         // The request failed. It's done. So set loading to "false".

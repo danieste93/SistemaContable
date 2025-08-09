@@ -20,9 +20,9 @@ import FormasdePagoList from "./reusableComplex/formasPagoRenderUX"
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import Sidebar from './puntoventacompo/sidebar';
+import ModalCompartir from './modal-compartir';
 
-
-import {addRegs,getArts,getcuentas,getClients, cleanData, addVenta,addClient,updateClient, addCuenta, updateCuentas, updateArts,updateArt } from "../reduxstore/actions/regcont";
+import {addRegs,getArts,getcuentas,getClients, cleanData, addVenta,addClient,updateClient, addCuenta, updateCuentas, updateArts,updateArt, deleteClient } from "../reduxstore/actions/regcont";
 
 import CircularProgress from '@material-ui/core/CircularProgress';
 import {Animate} from "react-animate-mount"
@@ -38,11 +38,15 @@ import Resultados from "./puntoventacompo/modal-cuentasVend"
 
 import GeneradorFactura  from "./snippets/GeneradorFactura"
 import SecureFirm from './snippets/getSecureFirm';
-
+import EditArt from"./inventariocompo/modal-editArt"
+import EditServ from"./inventariocompo/modal-editServicio"
+import ModalDetallesAdicionales from "./puntoventacompo/modal-detallesadicionales"
 
 class accessPuntoVentaUX extends Component {
      state={
+      adicionalInfo:[],
       ModalDeleteGeneral:false,
+      modalCompartir:false,
       createCount:false,
       errorSecuencial:false,
       NumberSelect:0,
@@ -50,6 +54,9 @@ class accessPuntoVentaUX extends Component {
         cuentasmodal:false,
               createArt:false,
               cuentaAsignada:false,
+                 edicion:false,
+                 edicionServ:false,
+        itemPoreditar:{Grupo:"",Marca:""},
               idCoti:"",     
               Resultados:false,
               html:"",
@@ -76,7 +83,7 @@ class accessPuntoVentaUX extends Component {
                
                 },
                          
-                          Alert:{Estado:false},
+                          Alert:{Estado:false,  Tipo:"",},
                           readOnly:true,
                           perPage: 10,
                           currentPage: 1,
@@ -136,9 +143,21 @@ class accessPuntoVentaUX extends Component {
     this.handleResize(); // Llamada inicial
   }
 
+  handleChangeCompartir = () => {
+   
+    this.setState({compartir:!this.state.compartir})
+
+
+     }
+   
     componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize);
   }
+
+ 
+
+
+
 
 
   handleResize = () => {
@@ -236,6 +255,19 @@ class accessPuntoVentaUX extends Component {
                 Alert: { Estado: false } // Reseteamos la alerta si todo está bien
             }));
         };
+        handleDeleteCliente=(e)=>{
+            if(e.status == "usuario eliminado"){
+                this.props.dispatch(deleteClient(e.Usuario));
+                this.setState({
+                    Alert: {
+                        Estado: true,
+                        Tipo: "info",
+                        Mensaje: "usuario eliminado"
+                    }
+                });
+                this.resetUserData();
+            }
+        }
         handleChangeGeneral=(e)=>{
 
     this.setState({
@@ -255,7 +287,7 @@ class accessPuntoVentaUX extends Component {
       comprobadorAddArt=(e)=>{
            
               let findArt = this.state.ArtVent.find(x => x._id == e._id)
-              let findA = this.props.state.RegContableReducer.Articulos.findIndex(x => x._id == e._id)
+         //     let findArtRedux = this.props.state.RegContableReducer.Articulos.findIndex(x => x._id == e._id)
               if(findArt == undefined){
   if(e.Tipo == "Producto"){
    
@@ -493,12 +525,45 @@ class accessPuntoVentaUX extends Component {
             
   
               }else{
-                  let add = {
+
+               if(e.Tipo == "Producto"){
+              
+                let numeroArticulosIngresados = findArt.CantidadCompra
+
+
+ if((numeroArticulosIngresados + 1) <= e.Existencia){
+ let nuevoarr;
+  const index = this.state.ArtVent.findIndex(x => x._id === e._id);
+ let artAnterior = { ...this.state.ArtVent[index] };
+  artAnterior.CantidadCompra = (artAnterior.CantidadCompra ) + 1;
+  artAnterior.CantidadCacl = (artAnterior.CantidadCacl ) + 1;
+  artAnterior.PrecioCompraTotal = (artAnterior.PrecioCompraTotal ) + e.Precio_Venta;
+  artAnterior.PrecioVendido = (artAnterior.PrecioVendido ) + e.Precio_Venta;
+
+  nuevoarr = [...this.state.ArtVent];
+  nuevoarr[index] = artAnterior;
+
+this.setState({ ArtVent: nuevoarr });
+this.saveToLocalStorage({ ArtVent: nuevoarr });
+
+ }else{
+                    let add = {
                       Estado:true,
-                      Tipo:"info",
-                      Mensaje:"Item ya ingresado"
+                      Tipo:"warning",
+                      Mensaje:`Existencias insuficientes para agregar ${e.Titulo}`
                   }
                   this.setState({Alert: add,loading:false})
+                }
+
+                }else{
+                    let add = {
+                      Estado:true,
+                      Tipo:"info",
+                      Mensaje:"Servicio ya ingresado"
+                  }
+                  this.setState({Alert: add,loading:false})
+                }
+                  
               }
   }
 
@@ -706,7 +771,7 @@ this.setState({impresion:!this.state.impresion})
         }) 
         setTimeout(()=>{ 
             let cleanData = {
-              
+              adicionalInfo:[],
                 userDisplay:false,
            Comprador:{
                   UserSelect:false,
@@ -753,16 +818,19 @@ this.setState({impresion:!this.state.impresion})
           
             let factGenerated = await GeneradorFactura(this.state.idVenta,this.state.idReg,this.state.Fpago,this.state.ArtVent, this.state.Comprador, this.state.secuencialGen, 
 
-                      SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento, 1 //ambiente 
+                      SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento, this.state.adicionalInfo, 1 //ambiente
             )
 
-          
+          console.log("factGenerated",factGenerated)
           
             if(factGenerated.status == "Ok"){
+              let compilado = factGenerated.CompiladoFactdata
+              console.log("compilado",compilado)
+              compilado.Compartir = this.state.compartir
             
                 fetch('/cuentas/generarventa', {
                     method: 'POST', // or 'PUT'
-                    body: JSON.stringify(factGenerated.CompiladoFactdata), // data can be `string` or {object}!
+                    body: JSON.stringify({...compilado}), // data can be `string` or {object}!
                     headers:{
                       'Content-Type': 'application/json',
                       "x-access-token": this.props.state.userReducer.update.usuario.token
@@ -770,7 +838,7 @@ this.setState({impresion:!this.state.impresion})
                   }).then(res => res.json())
                   .catch(error => console.error('Error:', error))
                   .then(response => {
-                   console.log(response)
+                  console.log(response)
                     if(response.message=="error al registrar"){
                         let add = {
                           Estado:true,
@@ -797,12 +865,25 @@ this.setState({impresion:!this.state.impresion})
                          loading:false, 
                        errorSecuencial:false,
                      })
-                
-                  
-                       setTimeout(()=>{ 
-                                       
-                         let cleanData = { 
+                          if(this.state.compartir){
+                                                console.log("Compartir", response)
 
+                                                  const base64 = response.pdfBase64;
+                                                  if (!base64) return;
+                                                  const link = document.createElement('a');
+                                                  link.href = `data:application/pdf;base64,${base64}`;
+                                                  link.download = response.filename;
+                                                  document.body.appendChild(link);
+                                                  link.click();
+                                                  document.body.removeChild(link);
+                                                
+                                                   }
+
+                       setTimeout(()=>{
+
+                         let cleanData = {
+                          compartir:false,
+                            adicionalInfo:[],
                             idReg:response.updatedCounter.ContRegs,
                             idVenta:response.updatedCounter.ContVentas,
                             secuencialGen:response.updatedCounter.ContSecuencial,
@@ -872,6 +953,17 @@ this.setState({impresion:!this.state.impresion})
             
       
            }
+onEditArt=async(art)=>{
+   // Lógica para editar el artículo
+ if(art.Tipo == "Producto"){
+    this.setState({edicion:true,  itemPoreditar:art})
+   }else if(art.Tipo == "Servicio"){
+    this.setState({edicionServ:true,  itemPoreditar:art})
+   }else if(art.Tipo == "Combo"){
+    this.setState({editComb:true,  itemPoreditar:art})
+   }
+   console.log("Editar artículo:", art);  
+ }
 
     comprobadorVenta=async(IvaEC,valSinIva)=>{
         if(this.state.adduser == false){
@@ -935,8 +1027,7 @@ this.setState({impresion:!this.state.impresion})
                                         let bufferfile = ""                    
                                         try {
                                           bufferfile = await SecureFirm(this.props.state.userReducer )
-                                            console.log('Bufferfile obtenido:', bufferfile);
-                                        
+                                         
                                           } catch (error) {
                                             console.error('Error al obtener bufferfile:', error);
                                             alert("Error al firmar")
@@ -945,9 +1036,7 @@ this.setState({impresion:!this.state.impresion})
 
                                             
                                      this.genfact(SuperTotal,(SuperTotal - IvaEC), IvaEC,bufferfile,TotalDescuento )
-                               
-                              
-                                 
+                 
                                     }else{
                                         let add = {
                                             Estado:true,
@@ -1028,6 +1117,7 @@ this.setState({impresion:!this.state.impresion})
                                                             Cedula:this.state.Comprador.cedula,
                                                             Ciudad:this.state.Comprador.ciudad,
                                                             ArticulosVendidos:this.state.ArtVent,
+                                                            Compartir:this.state.compartir,
                                                             FormasPago:this.state.Fpago,
                                                             idVenta:this.state.idVenta,
                                                             idRegistro:this.state.idReg,
@@ -1036,6 +1126,7 @@ this.setState({impresion:!this.state.impresion})
                                                             Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
                                                             Estado:"",
                                                             xmlDoc:"",
+                                                          
                                                         };
                                     fetch("/cuentas/generarventa", {
                                         method: 'POST', // or 'PUT'
@@ -1048,7 +1139,7 @@ this.setState({impresion:!this.state.impresion})
                                       .catch(error => console.error('Error:', error))
                                       .then(response => {
                                           
-
+                                        
                                         if(response.status =="Error"){
                                             let add = {
                                               Estado:true,
@@ -1063,15 +1154,33 @@ this.setState({impresion:!this.state.impresion})
                                                 Tipo:"success",
                                                 Mensaje:"Nota de Venta generada"
                                             }
+
                                             this.setState({Alert: add,})
+                                              if(this.state.compartir){
+                                                console.log("Compartir", response)
+
+                                                  const base64 = response.pdfBase64;
+                                                  if (!base64) return;
+                                                  const link = document.createElement('a');
+                                                  link.href = `data:application/pdf;base64,${base64}`;
+                                                  link.download = response.filename;
+                                                  document.body.appendChild(link);
+                                                  link.click();
+                                                  document.body.removeChild(link);
+                                                
+                                                                                            }
+
+
+
+
                                             this.props.dispatch(addVenta(response.VentaGen));
                                             this.props.dispatch(addRegs(response.arrRegsSend));
                                             this.props.dispatch(updateCuentas(response.Cuentas));
                                             this.props.dispatch(updateArts(response.Articulos));
                                             let cleanData = { 
 
-
-                       
+                                              adicionalInfo:[],
+                                              compartir:false,
                                                 idReg:response.updatedCounter.ContRegs,
                                                 idVenta:response.updatedCounter.ContVentas,
                                                 secuencialGen:response.updatedCounter.ContSecuencial,
@@ -1253,7 +1362,7 @@ this.setState({impresion:!this.state.impresion})
                                 }
                                 let cleanData = {Alert: add,
                                     loading:false,
-                                 
+                                   adicionalInfo:[],
                                     userDisplay:false,
                                   Comprador:{
                   UserSelect:false,
@@ -1387,7 +1496,7 @@ this.setState({impresion:!this.state.impresion})
        }).then(res => res.json())
        .catch(error => console.error('Error:', error))
        .then(response => {
-        console.log(response)
+        
         if(response.status=="error"){
                 let add = {
                   Estado:true,
@@ -1496,7 +1605,7 @@ this.setState({impresion:!this.state.impresion})
            }).then(res => res.json())
            .catch(error => console.error('Error:', error))
            .then(response => {
-          console.log(response)
+          
             if(response.status=="error"){
                 let add = {
                   Estado:true,
@@ -1691,7 +1800,7 @@ calcularPagesToShow = () => {
     return Math.max(1, Math.min(5, totalPages));
 }
     updateArtImg= (articulo )=>{
-      console.log(articulo)
+     
       this.props.dispatch(updateArt(articulo))
     }
     addCero=(n)=>{
@@ -1990,7 +2099,7 @@ let add = {
         this.saveToLocalStorage({Fpago:newstate})
     }
     setUserData=(e)=>{
-      console.log(e)
+    
      let checkbox = e.IDcuenta && e.IDcuenta != ""? true:false
      let data ={
         Comprador:{
@@ -2125,7 +2234,7 @@ setPreciosPago=(e)=>{
     }
   };   
    handleScanError=(e)=>{
-       
+       console.log("en error scan")
   if(e.length > 6){
           if(e != null && e !=undefined && e !=""   ){
           let findArt = this.props.state.RegContableReducer.Articulos.find(x => x.Eqid.toUpperCase().trim() == e.toUpperCase().trim())
@@ -2220,8 +2329,18 @@ setPreciosPago=(e)=>{
   }
       handleScan=(e)=>{
         
-          let findArt = this.props.state.RegContableReducer.Articulos.find(x => x.Eqid.toUpperCase().trim() == e.toUpperCase().trim())
-          if(!this.state.createArt && !this.state.createServ){
+  
+          if(!this.state.createArt && !this.state.createServ &&!this.state.edicion && !this.state.edicionServ){
+   let findArt = this.props.state.RegContableReducer.Articulos.find(
+  x => x.Eqid.toUpperCase().trim() === e.toUpperCase().trim()
+);
+
+if (!findArt) {
+  findArt = this.props.state.RegContableReducer.Articulos.find(
+    x => x.Barcode === e
+  );
+}  
+
           if(findArt == undefined){
               let add = {
                   Estado:true,
@@ -2231,8 +2350,9 @@ setPreciosPago=(e)=>{
               this.setState({Alert: add,loading:false})
           }else{
   
-              let findArtState = this.state.ArtVent.find(x => x.Eqid.toUpperCase().trim() == e.toUpperCase().trim())
+              let findArtState = this.state.ArtVent.find(x => x.Eqid.toUpperCase().trim() == findArt.Eqid.toUpperCase().trim())
   
+            
   
               if(findArtState == undefined){
                   if(findArt.Tipo == "Producto"){
@@ -2292,12 +2412,45 @@ setPreciosPago=(e)=>{
   
                   }
               }else{
-                  let add = {
+                   if(findArt.Tipo == "Producto"){
+              
+                let numeroArticulosIngresados = findArtState.CantidadCompra
+
+
+ if((numeroArticulosIngresados + 1) <= findArt.Existencia){
+ let nuevoarr;
+  const index = this.state.ArtVent.findIndex(x => x._id === findArt._id);
+ let artAnterior = { ...this.state.ArtVent[index] };
+  artAnterior.CantidadCompra = (artAnterior.CantidadCompra ) + 1;
+  artAnterior.CantidadCacl = (artAnterior.CantidadCacl ) + 1;
+  artAnterior.PrecioCompraTotal = (artAnterior.PrecioCompraTotal ) + findArt.Precio_Venta;
+  artAnterior.PrecioVendido = (artAnterior.PrecioVendido ) + findArt.Precio_Venta;
+
+  nuevoarr = [...this.state.ArtVent];
+  nuevoarr[index] = artAnterior;
+
+this.setState({ ArtVent: nuevoarr });
+this.saveToLocalStorage({ ArtVent: nuevoarr });
+
+ }else{
+                    let add = {
                       Estado:true,
-                      Tipo:"info",
-                      Mensaje:"Item ya ingresado"
+                      Tipo:"warning",
+                      Mensaje:`Existencias insuficientes para agregar ${findArtState.Titulo}`
                   }
                   this.setState({Alert: add,loading:false})
+                }
+
+                }else{
+                    let add = {
+                      Estado:true,
+                      Tipo:"info",
+                      Mensaje:"Servicio ya ingresado"
+                  }
+                  this.setState({Alert: add,loading:false})
+                }
+
+                 
               }
           }
   }
@@ -2501,6 +2654,7 @@ if(this.props.state.RegContableReducer.Articulos){
 
             generadorArticulosLista = paginationPipe(renderArts, this.state).map((item, i) => ( <ArtRenderUX
                                                                                     key={item.Eqid}
+                                                                                    onEdit={(item)=>{this.onEditArt(item)}}
                                                                                     datos={item} 
                                                                                     updateArtimg={this.updateArtImg}
                                                                                     Cuenta={ ()=> {let miC = this.props.state.RegContableReducer.Cuentas.filter(x => x.iDcuenta ==item.Bodega_Inv )
@@ -2519,7 +2673,7 @@ if(this.props.state.RegContableReducer.Articulos){
 
     if(this.state.ArtVent.length >0){
         generadorArticulosListaVenta = this.state.ArtVent.map((item, i) => (<ArticuloVentaUX
-                                                                            key={item._id}
+                                                                            key={item._id + '-' + item.CantidadCompra} // <-- clave única y reactiva
                                                                              index={i}
                                                                              datos={item} 
                                                                              Errorlist={this.state.ventasErr}
@@ -2529,7 +2683,7 @@ if(this.props.state.RegContableReducer.Articulos){
                                                                              sendPrecio={this.setPrecios}
                                                                              sendAll={this.SetAll} 
                                                                              deleteitem={(e)=>{
-                                                                              console.log(e)
+                                                                              
                                                                                 let nuevoarr = this.state.ArtVent.filter(x => x.Eqid != e.Eqid)
                                                                                 let nuevosPrecios = this.state.arrPrecios.filter(x => x.Id != item._id) 
                                                                             
@@ -2568,8 +2722,23 @@ if(this.props.state.RegContableReducer.Articulos){
                                                                 }}
                                                                 />))
 
-    console.log(this.state)
- 
+  
+  const setDisableButton= () => {
+
+    if( this.state.doctype == "Cotizacion"){
+      return "enabled"
+    }else{
+     if(SuperTotal > 0 && TotalPago > 0 && SuperTotal === TotalPago ){
+        return "enabled"
+      }else{
+        return "disabled"
+      }
+
+    }
+
+   }
+
+
 return(<div className='mainCompo'>
 <div className='contenedor'>
     
@@ -2613,18 +2782,9 @@ NumberSelect={this.handleNumberSelect} />
                 </div>
 </div>
 <div className='contCar' ref={this.carrito}>
-  <div className="datos">
-  <select
-    className="docRounded"
-    disabled={this.state.disableDoc}
-    value={this.state.doctype}
-    onChange={this.handleDocType}
-  >
-    <option value="Factura" className="option-factura">Factura Electrónica</option>
-    <option value="Nota de venta" className="option-nota">Nota de Venta</option>
-    <option value="Cotizacion" className="option-cotizacion">Cotización</option>
-  </select>
-  <div className='contClient jwFlex'>
+  <div className="contFactOptions">
+ 
+  <div className='contClient'>
     <div style={{width:"28px"}}>
   <Animate show={!this.state.Comprador.UserSelect}>  
     
@@ -2642,6 +2802,21 @@ NumberSelect={this.handleNumberSelect} />
   
   {SuggesterReady} 
 </div>
+ <select
+    className="docRounded"
+    disabled={this.state.disableDoc}
+    value={this.state.doctype}
+    onChange={this.handleDocType}
+  >
+    <option value="Factura" className="option-factura">Factura Electrónica</option>
+    <option value="Nota de venta" className="option-nota">Nota de Venta</option>
+    <option value="Cotizacion" className="option-cotizacion">Cotización</option>
+  </select>
+<button className="btnAdicional" onClick={() => this.setState({ showAdicionalInfo: true })}>
+  <span className="material-icons">add</span>
+  Información
+</button>
+
   </div>
   <div className='vertCont'>
 
@@ -2702,30 +2877,19 @@ NumberSelect={this.handleNumberSelect} />
 
                           </div>
                           </Animate>
-<Animate show={SuperTotal > 0 && SuperTotal === TotalPago}>
-
-<Animate show={this.state.errorSecuencial}>
-       <div className="centrar spaceAround contsecuencial"> 
-               <span > Secuencial</span>
-               <input type="number" name="secuencialGen" className='percentInput' value={this.state.secuencialGen} onChange={this.handleChangeSecuencial }/>
-               </div>
-</Animate>
-                             <div className="contSubOptions">
-
-                                              <div className="impresion">
-                                              <i className="material-icons"style={{fontSize:"30px"}}>
-                                                  print
-                                                  </i>
-                                            
-                                            
-                                              <Checkbox
-                             name="impresion"
-                                  checked={this.state.impresion}
-                                  onChange={this.handleChangePrinter}
-                                  inputProps={{ 'aria-label': 'primary checkbox' }}
-                                />
-                                              </div>
-                                              <Animate show={this.state.doctype =="Cotizacion"}>  <div className="impresion">
+<div style={{display:"flex", justifyContent:"flex-end"}}>
+  <div className="impresion">
+    <i className="material-icons" style={{ fontSize: "30px" }}>
+      download
+    </i>
+    <Checkbox
+      name="compartir"
+      checked={this.state.compartir || false}
+      onChange={this.handleChangeCompartir}
+      inputProps={{ 'aria-label': 'primary checkbox' }}
+    />
+  </div>
+        <Animate show={this.state.doctype =="Cotizacion"}>  <div className="impresion">
                                               <i className="material-icons"style={{fontSize:"30px"}}>
                                                   email
                                                   </i>
@@ -2755,9 +2919,40 @@ NumberSelect={this.handleNumberSelect} />
                                 
                                               </div>
                                               </Animate>
+<Animate show={SuperTotal > 0 && SuperTotal === TotalPago}>
+
+<Animate show={this.state.errorSecuencial}>
+       <div className="centrar spaceAround contsecuencial"> 
+               <span > Secuencial</span>
+               <input type="number" name="secuencialGen" className='percentInput' value={this.state.secuencialGen} onChange={this.handleChangeSecuencial }/>
+               </div>
+</Animate>
+                             <div className="contSubOptions">
+
+
+
+                                              <div className="impresion">
+                                              <i className="material-icons"style={{fontSize:"30px"}}>
+                                                  print
+                                                  </i>
+                                            
+                                            
+                                              <Checkbox
+                             name="impresion"
+                                  checked={this.state.impresion}
+                                  onChange={this.handleChangePrinter}
+                                  inputProps={{ 'aria-label': 'primary checkbox' }}
+                                />
+                                              </div>
+
+
+                                        
  
                                                 </div>
                                               </Animate>
+
+</div>
+
                                          <ReactToPrint 
                                              trigger={() => <React.Fragment/>}
                                              content={() => this.componentRef.current}
@@ -2769,9 +2964,8 @@ NumberSelect={this.handleNumberSelect} />
                                          <div className='centrar'>
                    <Animate show={!this.state.loading}>                       
                           <button
-  className={`confirm-button ${SuperTotal > 0 && TotalPago > 0 && SuperTotal === TotalPago ? 'enabled' : 'disabled'}`}
+  className={`confirm-button ${setDisableButton()}`}
   onClick={() => {
-    if (SuperTotal > 0 && TotalPago > 0 && SuperTotal === TotalPago) {
       
       if(this.state.doctype =="Factura" || this.state.doctype =="Nota de venta"){
         this.comprobadorVenta(IvaEC,valSinIva)
@@ -2780,9 +2974,9 @@ NumberSelect={this.handleNumberSelect} />
       }
 
 
-    }
+    
   }}
-  disabled={!(SuperTotal > 0 && TotalPago > 0 && SuperTotal === TotalPago)}
+
 >
   Continuar
 </button>
@@ -3122,6 +3316,15 @@ done
                         />
 
                     </Animate >
+                     <Animate show={this.state.showAdicionalInfo}>
+                        <ModalDetallesAdicionales
+                          onReload={this.state.adicionalInfo}
+                          onCamposChange={(e)=>{this.setState({adicionalInfo:e})}}
+                         User={this.getDataUser()}
+                           Flecharetro={()=>{this.setState({showAdicionalInfo:false})}}
+                        />
+
+                    </Animate >
                      <Animate show={this.state.addFormaPago}>
                                         <ModalFormapago valorSugerido={SuperTotal}
                                                          sendFormaPago={this.createFormaPago} 
@@ -3343,18 +3546,44 @@ Documento electrónico generado en activos.ec
                                             sendServData={this.setServData}
                                             Flecharetro={()=>{this.setState({modalEditServ:false})}} 
                                             />
-                                        </Animate >   
+                                        </Animate >
+                                         <Animate show={this.state.modalCompartir}> 
+                                            <ModalCompartir 
+                                               data={this.state.pdfBase64}
+                                                 Flecharetro={()=>this.setState({modalCompartir:false})}
+                                          
+                                            />
+                                              </Animate >
                                              <Animate show={this.state.modalDelete}> 
                                                 <ModalDeleteGeneral
-                                                 sendSuccess={(e)=>{console.log(e)}}
+                                                 sendSuccess={(e)=>{this.handleDeleteCliente(e)}}
                                                  sendError={()=>{console.log("deleteerror")}}
                                                 itemTodelete={this.state.Comprador}
-                                                 mensajeDelete={{mensaje:"Estas seguro quieres eliminar esta Cliente", url:"/users/delete" }}
+                                                 mensajeDelete={{mensaje:`Estas seguro/a quieres eliminar a: ${this.state.Comprador.usuario} `, url:"/users/delete" }}
                                                 Flecharetro={()=>this.setState({modalDelete:false})}
                                           
                                                 />
                                                    </Animate>
-
+     <Animate show={this.state.edicion}>
+        <EditArt 
+        data={this.state.itemPoreditar}
+         Flecharetro={()=>{this.setState({edicion:false})}}
+       User={this.getDataUser()} 
+          />
+      </Animate>
+             <Animate show={this.state.edicionServ}>
+              <EditServ
+              data={this.state.itemPoreditar}
+           
+               Flecharetro={()=>{this.setState({edicionServ:false})}}
+           
+               User={this.getDataUser()} 
+       
+               
+               />
+           
+      
+                        </Animate>
       <style jsx>
                 {                              
                  `.userwrap{
@@ -3611,8 +3840,7 @@ width: 100%;
        background: #f5f5f5;
     padding: 7px;
     min-height: 55vh;
-    max-height: 700px;
-    overflow-y:scroll;
+    
         display: flex;
             flex-wrap: wrap;
     align-items: center;
@@ -3673,6 +3901,11 @@ width: 100%;
     .Numeral{
     width: 20px; 
 
+}
+    .contClient{
+        display: flex;
+    align-items: center;
+    margin:10px
 }
     .confirm-button {
   width: 100%;
@@ -3785,13 +4018,15 @@ width: 100%;
 }
 
 
-.datos {
+.contFactOptions {
   width: 100%;
-    display: flex
-;
-    flex-flow: column;
+    display: flex;
+    justify-content: space-around;
     align-items: center;
     width: 100%;
+        flex-wrap: wrap;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
  .articeadd{
                     background: #d2ffd2;
@@ -3816,8 +4051,7 @@ border-radius: 10px;
 border: 1px solid rgba( 255, 255, 255, 0.18 );
   transition: background 0.2s ease;
   cursor: pointer;
-  margin-bottom: 8px;
-    margin-top: 1px;
+
 }
 
 /* Indicador de desplegable minimal */
@@ -3882,6 +4116,26 @@ border: 1px solid rgba( 255, 255, 255, 0.18 );
         width: 60%;  
     
     }
+         .btnAdicional {
+    display: inline-flex;
+    align-items: center;
+ 
+    background-color: white;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 9px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+  }
+
+  .btnAdicional:hover {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
+  }
     @media print {
 
     .titulo2Print{

@@ -45,6 +45,7 @@
     "heroku-ssl-redirect": "^0.1.1",
     "hex2dec": "^1.1.2",
     "html-pdf": "^3.0.1",
+    "html-pdf-chrome": "^0.8.4",
     "https": "^1.0.0",
     "isomorphic-unfetch": "^3.1.0",
     "json2csv": "^6.0.0-alpha.2",

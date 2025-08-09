@@ -311,7 +311,7 @@ const extraerCategoriasConImporte =(ventasUnicas)=> {
     const filteredArray = valoresArray.filter(item1 => 
       !this.state.excluidos.some(item2 => item2._id === item1._id)
     );
-
+console.log(filteredArray)
     sumavalor = filteredArray.reduce((acc, item) => acc + item.totalImporte, 0);
       
     valoresArray.forEach(cat => {

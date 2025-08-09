@@ -795,7 +795,7 @@ cancel
           }
           .contTotal{
             width: 100%;
-            max-width: 900px;
+           
           }
           .contContadoButtons{
             display: flex;

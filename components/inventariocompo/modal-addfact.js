@@ -14,6 +14,7 @@ import AddCero from "../../components/funciones/addcero"
 import HelperFormapagoPredit from '../reusableComplex/helperFormapagoPredit';
 import Prevent from "../cuentascompo/modal-prevent" 
 import CircularProgress from '@material-ui/core/CircularProgress';
+import DoubleScrollbar from "react-double-scrollbar";
 class Contacto extends Component {
    state={
     masterInsumo:false,
@@ -671,7 +672,9 @@ done
 
 
                     <Animate show={this.state.Comprobante != ""}>
+                          
                     <div className="contAgregadorCompras">
+                       <DoubleScrollbar>
       <div className="contTitulosaddFact ">
                   
                         <div className="Articid">
@@ -730,7 +733,7 @@ done
                          
                         </div>
                       
-                       
+            </DoubleScrollbar>             
       </div>
       <div className="contAddCompra">
                         <div className="grupoDatos totalcont">
@@ -765,7 +768,9 @@ add
 </div>
 </Animate>
                     
+     
       </Animate>
+    
 </div>
 </Animate>   
 </div>
@@ -951,7 +956,7 @@ SendAceptar={()=>{   this.setState({xmlData:this.state.preventxmlData, Comproban
                      
    .contTitulosaddFact{
     display:flex;
-   
+   margin-top: 10px;
     font-size: 15px;
     font-weight: bolder;  
   
@@ -1011,7 +1016,7 @@ SendAceptar={()=>{   this.setState({xmlData:this.state.preventxmlData, Comproban
 
             .fecha{
               font-size: 20px;
-    margin: 10px;
+ 
             }      
 
             @media only screen and (min-width: 1440px) {  

@@ -7,7 +7,10 @@ import {store} from "../../pages/_app"
 import addCero from "../../components/funciones/addcero"
 
 
-const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen, SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento, AmbienteSelect) => {
+const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen, SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento,adicionalInfo, AmbienteSelect) => {
+   
+   
+   
     const ceroMaker =(val)=>{
 
         let cantidad = JSON.stringify(val).length
@@ -67,9 +70,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
                     baseImponibleImpuestos += ((artImpuestos[i].PrecioCompraTotal-valdescuento) /  parseFloat(`1.${process.env.IVA_EC }`))
                     valtotal += (artImpuestos[i].PrecioCompraTotal)
                 }
-                console.log(TotalDescuento)
-                console.log(valtotal)
-                console.log(baseImponibleImpuestos)
+          
               
             
             let data = `            <totalImpuesto>\n`+
@@ -85,7 +86,63 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
 
         return dataImpuestos
        
-    }   
+    }  
+ 
+    function genInfoAdicional(campos) {
+  let info = '<infoAdicional>\n';
+
+  if (Array.isArray(campos)) {
+    campos.forEach(({ clave, valor }) => {
+      const claveEscapada = escapeXml(clave);
+      const valorEscapado = escapeXml(valor);
+      info += `  <campoAdicional nombre="${claveEscapada}">${valorEscapado}</campoAdicional>\n`;
+    });
+  }
+
+  info += '</infoAdicional>';
+  return info;
+}
+
+// Función para escapar caracteres XML
+function escapeXml(unsafe) {
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+
+    const generarPagosXML = (pagos) => {
+  const codigosSRI = {
+    "Efectivo": "01",
+    "Transferencia": "20",
+    "Tarjeta-de-Debito": "16",
+    "Tarjeta-de-Credito": "19"
+  };
+
+ 
+
+  const pagosXML = pagos.map(pago => {
+    const tipo = pago.Tipo;
+    const codigo = codigosSRI[tipo] || "00";
+    const monto = pago.Cantidad?.toFixed(2) || "0.00";
+   
+
+    return `
+  <pago>
+    <formaPago>${codigo}</formaPago>
+    <total>${monto}</total>
+    <plazo>0</plazo>
+    <unidadTiempo>dias</unidadTiempo> 
+  </pago>`;
+  }).join("");
+
+  return `<pagos>${pagosXML}
+</pagos>`;
+}
+ 
     const genImpuestos = () => {
   const codigoIVA = 2;
   const codigoPorcentajeIVA = 4;
@@ -152,11 +209,11 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
  const   gendetalles2=()=>{   
 
     let valdescuento = 0
-console.log(TotalDescuento)
+
     if(TotalDescuento > 0 ){
 
         valdescuento = (TotalDescuento / ArtVent.length).toFixed(2)
-        console.log(valdescuento)
+        
     }
 
         let nuevosDetalles = ArtVent.map(item =>{
@@ -267,7 +324,7 @@ console.log(TotalDescuento)
                    let razonSocialComprador ='CONSUMIDOR FINAL'
                    let identificacionComprador ="9999999999999" 
                    let direccionComprador = "xxxxxx"
-                   console.log(Comprador)
+                 
                    if(Comprador.UserSelect){
                        tipoIdentificacionComprador=Comprador.ClientID =="Cedula"?"05":
                                                    Comprador.ClientID == "RUC"?"04":
@@ -394,17 +451,12 @@ console.log(TotalDescuento)
                                 `        <propina>${propina}</propina>\n`+
                                 `        <importeTotal>${importeTotal}</importeTotal>\n`+
                                 `        <moneda>DOLAR</moneda>\n`+
-                                "        <pagos>\n"+
-                                "            <pago>\n"+
-                                "                <formaPago>01</formaPago>\n"+
-                                `                <total>${importeTotal}</total>\n`+
-                                `            </pago>\n`+
-                                `        </pagos>\n`+
+                               generarPagosXML(Fpago)+
                                 `    </infoFactura>\n`+
                                 `    <detalles>\n`+
                             gendetalles()+
                                 `    </detalles>\n`+
-                    
+                               genInfoAdicional(adicionalInfo)+
                                 "</factura>"
                                
                           
@@ -425,7 +477,7 @@ console.log(TotalDescuento)
             let accumText = ""
             let mimapper =  Fpago.map(x=> accumText.concat(x.Detalles))
        
-
+/*
     const url = window.URL.createObjectURL(
         new Blob([docFirmado], { type: "text/plain"}),
       );
@@ -435,11 +487,9 @@ console.log(TotalDescuento)
       `Consultores Asociados 001-001-100.xml`,
     );
     
-     link.click()
+     link.click()*/
      
-   
-             
-    
+
             
        
     let dataexample2 = {
@@ -478,7 +528,7 @@ console.log(TotalDescuento)
              Estado:"AUTORIZADO",
              detalles:mimapper.map((x)=>  x +" ")
          };
-        let generatedFact = factGenerator(dataexample2)
+  //      let generatedFact = factGenerator(dataexample2)
     
      // this.setState({html:generatedFact})
     
@@ -497,9 +547,9 @@ console.log(TotalDescuento)
                         "x-access-token": state.userReducer.update.usuario.token,
                     },
                 });
-        
+        console.log(uploadedSignedXml)
                 const response = await uploadedSignedXml.json();
-                console.log(response)
+               
                 if(response.status =="ok" ){
                     if(response.resdata.estado == "AUTORIZADO"){
                         let numeroAuto = response.resdata.numeroAutorizacion
@@ -542,7 +592,8 @@ console.log(TotalDescuento)
                             fechaEmision,
                             nombreComercial,
                             dirEstablecimiento,
-                         
+                         Fpago,
+                         adicionalInfo,
                             Doctype: "Factura",
                              UserId: Comprador.id,
                              razon:state.userReducer.update.usuario.user.Factura.razon ,
@@ -719,7 +770,7 @@ console.log(TotalDescuento)
 
        
     }catch (error) {
-        
+        console.log(error);
             return { status: "Error", mensaje: `Error : ${error.message}` };
         
     }

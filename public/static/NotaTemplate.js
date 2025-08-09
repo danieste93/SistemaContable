@@ -85,7 +85,7 @@ if(Inf.rimpeval && !Inf.populares){
             <div class="clave">
             Nota de Venta Nº
             </div>
-            <div class="valor">
+            <div class="valorFact">
             <span>{`  ${Inf.idVenta}`}</span> 
             </div>
             </div>  
@@ -93,7 +93,7 @@ if(Inf.rimpeval && !Inf.populares){
             <div class="clave">
             Fecha:
             </div>
-            <div class="valor">
+            <div class="valorFact">
             {Inf.fechaEmision}
             </div>
             </div>          
@@ -101,7 +101,7 @@ if(Inf.rimpeval && !Inf.populares){
             <div class="clave">
            RUC:
             </div>
-            <div class="valor">
+            <div class="valorFact">
            {Inf.ruc}
             </div>
             </div>
@@ -568,6 +568,10 @@ justify-content: space-between;
             flex-wrap: nowrap;
          
                         }
+              .valorFact {
+      color: #555;
+      flex: 1;
+    }
             }</style>
        </head>
        <body>

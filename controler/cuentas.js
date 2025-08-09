@@ -703,6 +703,7 @@ const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.Importe).t
           Tiempo:req.body.Tiempo,
           IdRegistro:req.body.iDReg,
           TiempoEjecucion:0,
+          CatSelect:{},
           CuentaSelec:{idCuenta:req.body.CuentaSelect1.idCuenta,
                       nombreCuenta: req.body.CuentaSelect1.nombreCuenta,
                       valorCambiar: req.body.CuentaSelect1.valorCambiar},
@@ -2564,9 +2565,10 @@ res.status(200).send({cuenta})
           }
           arrCuentas.push(cuentaModi)
            }
-                  
+              console.log(data.allData.adicionalInfo)    
        let dataventa = {
          arrRegs,
+         adicionalInfo:data.allData.adicionalInfo,
          FactAutorizacion:data.numeroAuto,
          FactFechaAutorizacion:data.fechaAuto,
          ClaveAcceso:data.ClaveAcceso,
@@ -2612,8 +2614,8 @@ res.status(200).send({cuenta})
    
    
   let updatedCounter = await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updateCounterVenta,{session, new:true} )
-   res.json({status: "Ok", message: "Venta generada", VentaGen: ventac, Articulos:arrArtsUpdate,Cuentas:arrCuentas,arrRegsSend,updatedCounter});
-   if(req.body.Correo != ""){
+   let  adjuntos = []
+  if(req.body.Correo != "" || req.body.Compartir){
     
    pdf.create(req.body.html, {
    
@@ -2676,7 +2678,7 @@ res.status(200).send({cuenta})
 
 ]
 
-let adjuntos = data.Doctype == "Factura-Electronica"?adjuntosFactura:adjuntosNota
+ adjuntos = data.Doctype == "Factura-Electronica"?adjuntosFactura:adjuntosNota
    
        let textstingdevFactura =
        `<table width="90%" border="1">
@@ -2838,7 +2840,7 @@ let adjuntos = data.Doctype == "Factura-Electronica"?adjuntosFactura:adjuntosNot
        <table width="90%" border="1">
        <tbody>
        <tr>
-       <td align="center">Documento Generado por Contalux S.A 2022</td>
+       <td align="center">Documento Generado por Contalux S.A 2025</td>
        </tr>
        </tbody>
        </table>`
@@ -2867,29 +2869,40 @@ let adjuntos = data.Doctype == "Factura-Electronica"?adjuntosFactura:adjuntosNot
    
        }   
        var mailOptions = {
-         from: 'iglassmailer2020@gmail.com',
+    //     from: 'iglassmailer2020@gmail.com',
          to: req.body.Correo,
          subject: subjectsting,
          html: textstingdev,
          attachments: adjuntos
        }
+let pdfBase64 = ""
+       if(req.body.Compartir){
+pdfBase64 = adjuntos[0].content.toString('base64');
        
-       transporter.sendMail(mailOptions, function (err, res) {
+       }
+       if(req.body.Correo != "" ){
+          transporter.sendMail(mailOptions, function (err, res) {
          if(err){
           if (err) {console.log(err)}
          } else {
              console.log('Email Sent');
          }
        })
-   
+       }
+     await session.commitTransaction();
+       session.endSession();
+ res.json({status: "Ok", message: "Venta generada", VentaGen: ventac, Articulos:arrArtsUpdate,Cuentas:arrCuentas,arrRegsSend,updatedCounter,pdfBase64,     filename: adjuntos[0].filename, // <= Here: made sure file name match
+    });
+ 
+       
      });
    }
-   
-   
-   await session.commitTransaction();
-   session.endSession();
-   
-   
+   else{
+     await session.commitTransaction();
+       session.endSession();
+ res.json({status: "Ok", message: "Venta generada", VentaGen: ventac, Articulos:arrArtsUpdate,Cuentas:arrCuentas,arrRegsSend,updatedCounter,pdfBase64:"",filename:""});
+ 
+   }
    
     
          }

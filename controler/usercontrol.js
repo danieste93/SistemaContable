@@ -1025,7 +1025,7 @@ console.log(req.body)
       let CuentasModelSass = await conn.model('Cuenta', accountSchema);
       let usuario  = req.body.item
    
-      if(req.body.idcuenta == ""){
+      if(req.body.idcuenta == "" || req.body.idcuenta == null ){
         ClienteModelSass.findOneAndDelete({_id:usuario.id},  (err,user)=>{
 
           if(err) res.status(500).send({message:"error al eliminare el usuario"})

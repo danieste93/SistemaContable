@@ -381,7 +381,7 @@ this.setState({ArtAddCalc:deepClone})
 return (data)
        }
     render () {
-
+console.log(this.state)
       let TotalPago = 0
       if(this.state.Fpago.length > 0){
 

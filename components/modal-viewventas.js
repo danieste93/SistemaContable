@@ -6,7 +6,7 @@ import FacturaTemplate from "../public/static/FactTemplate"
 import { teal } from '@material-ui/core/colors';
 
 
-class Contacto extends Component {
+class ViewVentas extends Component {
   state={
 Html:""
   }
@@ -56,6 +56,8 @@ TemplateAsignado = NotaVentaTemplate
         baseImpoConImpuestos,
         baseImpoSinImpuestos,
         totalSinImpuestos,
+        adicionalInfo:[],
+        Fpago:this.props.datos.formasdePago,
        SuperTotal:this.props.datos.PrecioCompraTotal,
         ArticulosVendidos:this.props.datos.articulosVendidos,
         razonSocialComprador:this.props.datos.nombreCliente == ""?"CONSUMIDOR FINAL":this.props.datos.nombreCliente,
@@ -75,8 +77,8 @@ TemplateAsignado = NotaVentaTemplate
         fechaAuto:this.props.datos.FactFechaAutorizacion,
         numeroAuto:this.props.datos.FactAutorizacion,
         obligadoContabilidad:this.props.usuario.user.Factura.ObligadoContabilidad?"Si":"No",
-        idVenta:this.props.datos.iDVenta
-
+        idVenta:this.props.datos.iDVenta,
+        adicionalInfo:this.props.datos.adicionalInfo
 
       })
   
@@ -103,7 +105,7 @@ TemplateAsignado = NotaVentaTemplate
         }).then(res => res.json())
         .catch(error => console.error('Error:', error))
         .then(response => {
-       
+       console.log('Success:', response);
           if(response.status == "Ok"){
 
             let genTitulo = ""
@@ -172,7 +174,7 @@ console.log(this.props)
 {this.props.datos.TipoVenta} - {this.props.datos.iDVenta} 
 
 </div>
-<button className=" btn btn-dark " onClick={this.downloadFact} >
+<button className=" btn btn-dark " style={{margin:"10px"}} onClick={this.downloadFact} >
             <span className="material-icons" >
             download
           </span>
@@ -206,7 +208,7 @@ console.log(this.props)
             .contcontacto{
               border-radius: 30px;
               
-              width: 90%;
+              width: 98%;
               background-color: white;
               display: flex;
               flex-flow: column;
@@ -227,7 +229,7 @@ console.log(this.props)
 
                   display:flex;
                   justify-content: space-around;
-                  width: 80%;
+                  width: 95%;
                   }
                   .tituloventa{
                     display: flex;
@@ -252,6 +254,19 @@ console.log(this.props)
                       padding: 5px;
                      
                      }
+                      @media only screen and (min-width: 768px) { 
+                         .contcontacto{
+              border-radius: 30px;
+              
+              width: 90%;
+              background-color: white;
+              display: flex;
+              flex-flow: column;
+              justify-content: space-around;
+              align-items: center;
+              
+              }
+                      }
                   
            `}</style>
         
@@ -262,4 +277,4 @@ console.log(this.props)
     }
 }
 
-export default Contacto
+export default ViewVentas

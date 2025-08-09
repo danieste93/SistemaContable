@@ -323,17 +323,17 @@ class Contacto extends Component {
             
             }
 
-            updatePrecioCompra=  (data)=>{
+            updatePrecioCompra= async (data)=>{
               this.setState({Precio_Compra:data.ArticuloActual.Precio_Compra})                   
-              this.props.dispatch(updateArt(data.ArticuloActual))
+             await this.props.dispatch(updateArt(data.ArticuloActual))
                
-              if(data.message == "Baja de Precio Compra"){
+              if(data.message === "Baja de Precio Compra"){
               
-                this.props.dispatch(updateCuenta(data.cuentaInvEdit   ))
-                this.props.dispatch(addRegs([data.Registro]))
-                        }else{
-                          this.props.dispatch(addRegs(data.arrRegs))
-                          this.props.dispatch(updateCuentas(data.arrCuentas   ))
+               await this.props.dispatch(updateCuenta(data.cuentaInvEdit   ))
+               await this.props.dispatch(addRegs([data.Registro]))
+                        }else if(data.message === "Subida de Precio Compra"){
+                    await  this.props.dispatch(addRegs(data.arrRegs))
+                    await  this.props.dispatch(updateCuentas(data.arrCuentas   ))
               } 
             
             }

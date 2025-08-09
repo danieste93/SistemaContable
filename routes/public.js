@@ -41,6 +41,8 @@ router.post('/getCorreoConfig',Authentication, AdminControl.getCorreoConfig);
 router.post('/getAllClients',Authentication, AdminControl.getAllClients);
 
 
+router.post('/getVentaID',Authentication, AdminControl.getVentaID);
+
 
 router.get('/masiveApplyTemplate', AdminControl.masiveApplyTemplate);
 router.get('/updatedtcarts', AdminControl.updateDTCarts);

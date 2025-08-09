@@ -52,6 +52,7 @@ const OrderSchema = new Schema({
        },
        formasdePago: {        },
        articulosVendidos:{},
+       adicionalInfo:[],
        PrecioCompraTotal: {
         type: Number,
         trim: true,  

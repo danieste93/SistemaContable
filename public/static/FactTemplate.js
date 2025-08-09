@@ -1,5 +1,4 @@
 import * as ReactDOMServer from 'react-dom/server'
-import Barcode  from 'react-barcode';
 
 
 const genProds = (arts, Inf)=>{
@@ -26,19 +25,13 @@ let mapeador = arts.map((item)=>{
         {precioVentaFinal}
         </div>
         <style> {`
-        .divigual{
-            width: 100px;
-            text-align: center;
-        }
+      
         .divigualTitulo{
-            width: 250px; 
+            width: 180px; 
             text-align: center;
         }
         
-        .divigualData{
-            width: 200px;
-            text-align: center;
-        }
+        
         .ContDetalle{
             display: -webkit-box;
             display: -ms-flexbox;
@@ -64,11 +57,85 @@ justify-content: space-between;
 })
     return mapeador
 }
+const renderPagos = (Fpago) => {
+
+  return (
+    <div className="ContPagos">
+      <table className="tablaPagos">
+        <thead>
+          <tr>
+            <th>Forma de Pago</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Fpago.map((pago, i) => {
+            
+                 let tituloRender = pago.Tipo.replace(/-/g, " ")
+    if(pago.Tipo === "Transferencia"){
+
+        tituloRender  = "Otros con utilización del sistema financiero"
+     }
+      else if(pago.Tipo === "Efectivo"){
+
+        tituloRender  = "Sin utilización del sistema financiero"
+     }
+           return(
+            <tr key={i}>
+              <td>{tituloRender}</td>
+              <td>${pago.Cantidad.toFixed(2)}</td>
+            </tr>
+          )})}
+        </tbody>
+      </table>
+      <style>{`
+        .ContPagos {
+        
+        }
+        .tablaPagos {
+          width: 100%;
+          border-collapse: separate;
+          border-spacing: 0;
+          font-size: 14px;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .tablaPagos th {
+          background-color: #f7f9fc;
+          font-weight: bold;
+          padding: 12px 15px;
+          text-align: left;
+          border-bottom: 2px solid #e0e0e0;
+        }
+        .tablaPagos td {
+          background-color: #ffffff;
+          padding: 12px 15px;
+          border-bottom: 1px solid #f0f0f0;
+        }
+        .tablaPagos tr:last-child td {
+          border-bottom: none;
+        }
+        .tablaPagos tr:hover td {
+          background-color: #f1f6fb;
+        }
+        .tablaPagos td:first-child, .tablaPagos th:first-child {
+          border-top-left-radius: 10px;
+        }
+        .tablaPagos td:last-child, .tablaPagos th:last-child {
+          border-top-right-radius: 10px;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+
 
 export const Bodygen = (data)=>{
    
     let Inf = data.data
- 
+ console.log(Inf)
 let Rimpeval =""
     if(Inf.rimpeval && !Inf.populares){
         Rimpeval = "Contribuyente Régimen RIMPE"
@@ -94,7 +161,7 @@ let Rimpeval =""
             <div class="clave">
             Factura Nº
             </div>
-            <div class="valor">
+            <div class="valorFact">
             <span>{`  ${Inf.estab} - ${Inf.ptoEmi} - ${Inf.secuencial}`}</span> 
             </div>
             </div>  
@@ -102,7 +169,7 @@ let Rimpeval =""
             <div class="clave">
             Fecha:
             </div>
-            <div class="valor">
+            <div class="valorFact">
             {Inf.fechaEmision}
             </div>
             </div>          
@@ -110,21 +177,41 @@ let Rimpeval =""
             <div class="clave">
            RUC:
             </div>
-            <div class="valor">
+            <div class="valorFact">
            {Inf.ruc}
             </div>
             </div>
             </div>
     </div>
     <div class="FinalData contMiddle">
-        <div class="Cont2FactTo">
-            <p class="enfData" >Facturado a:</p>
-            <span class="subenfData">{Inf.razonSocialComprador}</span>
-            <span class="subenfData">{Inf.identificacionComprador}</span>
-            <span class="subenfData">{Inf.correoComprador}</span>
-            <span class="subenfData">{Inf.direccionComprador}</span>
-            <span class="subenfData">{Inf.ciudadComprador}</span>
-        </div>
+  <div class="Cont2FactTo">
+  <p class="enfData">Facturado a:</p>
+  <div class="gridComprador">
+  <div class="rowComprador">
+    <div class="datoItem">
+      <span class="emoji">Razón:</span>
+      <span>{Inf.razonSocialComprador}</span>
+    </div>
+    <div class="datoItem">
+      <span class="emoji">ID:</span>
+      <span>{Inf.identificacionComprador}</span>
+    </div>
+ 
+  </div>
+  <div class="rowComprador">
+       <div class="datoItem">
+      <span class="emoji">Correo:</span>
+      <span>{Inf.correoComprador}</span>
+    </div>
+    <div class="datoItem">
+      <span class="emoji">Dir:</span>
+      <span>{Inf.direccionComprador}{Inf.ciudadComprador != "" && `, ${Inf.ciudadComprador}`}</span>
+    </div>
+   
+  </div>
+</div>
+
+</div>
         <div class="Cont1FactTo">
 
         <p class="enfData" >Valor Total</p> 
@@ -151,7 +238,14 @@ let Rimpeval =""
         </div>
         </div>
     {genProds(Inf.ArticulosVendidos, Inf)}
-    <div class="MainContValues">
+   
+  
+    </div>
+      <div class="contValores">
+        <div class="contFormasdePago">
+{renderPagos(Inf.Fpago)}
+            </div>  
+  <div class="MainContValues">
     <div class="ContDetalle contValues" >
         <div class="divigualData">
          Subtotal {process.env.IVA_EC}%:
@@ -201,9 +295,10 @@ let Rimpeval =""
         </div>
         </div>
         </div>
-    </div>
+     </div>
     <div class="Contfinal">
-<div class="FinalData">
+      <div style={{marginTop:"20px",marginBottom  :"20px"}}>
+    <div class="FinalData">
 <div class="Cont1">
 <p>Dirección Establecimiento:</p>
 <span>{Inf.dirEstablecimiento}</span>
@@ -216,9 +311,16 @@ let Rimpeval =""
 <div class="FinalData">
 <div class="Cont1">
 <p>Detalles:</p>
-<span> {Inf.detalles}</span>
+  {Inf.adicionalInfo.length > 0  && Inf.adicionalInfo.map((item, index) => (
+    <div className="lineaInfo" key={index}>
+      <span className="clave">{item.clave}:</span>
+      <span className="valorFact">{item.valor}</span>
+    </div>
+  ))}
 </div>
 </div>
+      </div>
+
 
 <div className="contExtraData">
 <div className="contDetailbajo">
@@ -278,13 +380,61 @@ let Rimpeval =""
 </div>
 </div>
 <style> {`
-
+.emoji {width:55px;
+font-weight: bold;
+   
+    min-width: 55px;
+}
 .subTitledetail{
     width: 30%;
 } 
-      
-       
-         `}
+    .contFormasdePago{  
+   margin-top: 25px;
+   
+    }
+     .contValores{
+        display:flex;
+        justify-content: space-around;
+       flex-wrap: wrap; 
+   
+    
+    width: 100%;
+     
+            display: -ms-flexbox;
+               -webkit-box-pack: justify;
+              -ms-flex-pack: justify;
+        }
+
+                .infoAdicionalPDF {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-family: 'Arial', sans-serif;
+      background-color: #f9f9f9;
+      max-width: 100%;
+    }
+
+    .lineaInfo {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    .clave {
+      font-weight: bold;
+      width: 120px;
+      min-width: 100px;
+      color: #333;
+      margin-right: 10px;
+    }
+
+    .valorFact {
+      color: #555;
+      flex: 1;
+    }
+       `}
         
      </style>
   
@@ -339,7 +489,7 @@ return `
             font-weight: bolder;
             color: #1f177c;
             margin-bottom: 2px;
-            font-size: 12px
+            font-size: 15px
         }
        
         .contValues{
@@ -355,26 +505,18 @@ return `
         padding-bottom: 5px;
         }
         .divigual{
-            width: 100px; 
+            width: 80px; 
             text-align: center;
         }
         .divigualTitulo{
-            width: 250px; 
+            width: 180px; 
             text-align: center;
         }
         .divigualData{
-            width: 200px;
+            width: 150px;
             text-align: center;
         }
-           .ContDetalle{
-            display: -webkit-box;
-            display: -ms-flexbox;
-            display: flex;
-            width: 100%;
-            -webkit-box-pack: justify;
-                -ms-flex-pack: justify;
-                    justify-content: space-between;
-        }
+         
         .contDetailbajo{
             display: -webkit-box;
 display: -ms-flexbox;
@@ -386,10 +528,16 @@ margin-top: 4px;
 justify-content: space-between;
         }
              .empresaLogo{
-                width:110px;
-          
+                width:100%;
+                height: auto;
                 margin-left: 10px;
                 border-radius: 10px;
+             }.contLogo{
+                 min-width: 150px;
+    display: flex
+;
+    justify-content: flex-start;
+    align-items: center;
              }
              .contClient{
                 display: -webkit-box;
@@ -420,21 +568,22 @@ justify-content: space-between;
                 -ms-flex-wrap: wrap;flex-wrap: wrap;
              }
              .contMiddle{
-                font-size: 12px;
-                margin-top: 5px;
-                padding: 10px;
-                border-radius: 15px;
-                border: 1px solid black;
-                border-bottom: 5px outset;
-                margin-right: 10px;
-                margin-left: 10px;
-                padding-top: 0px;
-                margin-bottom: 5px;
+             font-size: 12px;
+    margin-top: 20px!important;
+    padding: 10px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    /* border: 1px solid black; */
+    border-bottom: 2px outset;
+  margin:auto;
+    padding-top: 10px;
+    margin-bottom: 35px;
+    width: 90%;
              }
 
              .contProducts{
               
-                padding: 3px 10px;
+              
                 display: -webkit-box;
                 display: -ms-flexbox;
                 display: flex;
@@ -444,6 +593,8 @@ justify-content: space-between;
                     -ms-flex-flow: column;
                         flex-flow: column;
                 background: white;
+                margin:auto;
+                    width: 90%;
              }
              .contdetail{
                 display: -webkit-box;
@@ -457,15 +608,17 @@ justify-content: space-between;
          .contHeader{
             display: -webkit-box;
             display: -ms-flexbox;
-            display: flex;
-          -webkit-box-pack: justify;
+               -webkit-box-pack: justify;
               -ms-flex-pack: justify;
-                  justify-content: space-between;
+            display: flex;
+            flex-wrap: wrap;
+              justify-content: space-around;
          }
          .invoice-box {
             max-width: 850px;
+           min-width: 400px;
             margin: auto;
-            padding: 5px;
+        
             border: 1px solid #eee;
             -webkit-box-shadow: 0 0 10px rgba(0, 0, 0, .15);
                     box-shadow: 0 0 10px rgba(0, 0, 0, .15);
@@ -518,12 +671,48 @@ justify-content: space-between;
 
                }
 
-                    .MainContValues{
-                        border: 1px solid black;
-                        border-radius: 15px;
-                        margin-top: 10px;
-                        padding: 5px;
-                    }
+      .MainContValues {
+     
+     
+      margin-top: 20px;
+      
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      background-color: #ffffff;
+      font-size: 15px;
+      padding: 10px;
+    }
+
+    .ContDetalle {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eaeaea;
+    }
+
+    .ContDetalle:last-child {
+      border-bottom: none;
+    }
+
+    .divigualData {
+      flex: 1.5;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .divigual {
+      flex: 1;
+      text-align: right;
+      color: #111;
+    }
+
+    .totalFinal {
+      font-weight: bold;
+      background-color: #f9fafb;
+      border-radius: 8px;
+      padding: 12px 10px;
+      margin-top: 10px;
+    }
                     .contValues{
                     
                         margin-top: 5px;
@@ -551,7 +740,9 @@ justify-content: space-between;
                     .subtituloArtFT{
                         text-transform: uppercase;
                         font-weight: bold;
-                        font-size:15px;
+                            font-size: 20px;
+    margin-bottom: 15px;
+    margin-top: 15px;
                         
 
                     }
@@ -572,7 +763,7 @@ justify-content: space-between;
             flex-flow: column;
             -ms-flex-wrap: nowrap;
             flex-wrap: nowrap;
-         
+         font-size: 15px;
                         }
                         .Cont2FactTo{
                             display: -webkit-box;
@@ -584,8 +775,87 @@ justify-content: space-between;
             flex-flow: column;
             -ms-flex-wrap: nowrap;
             flex-wrap: nowrap;
-           width: 300px;
+    width: 80%;
                         }
+    .gridComprador {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  margin-top: 10px;
+}
+
+.rowComprador {
+
+  display: flex;
+  justify-content: space-between;
+
+   flex-wrap: wrap;
+            display: -ms-flexbox;
+               -webkit-box-pack: justify;
+              -ms-flex-pack: justify;
+}
+
+.datoItem {
+  display: flex;
+  align-items: center;
+word-break: break-word;
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+      min-width: 150px;
+}
+
+.material-icons {
+  font-size: 18px;
+  color: #666;
+}
+
+
+
+              @media print {
+    .contValores{
+   display: -webkit-box;
+  -webkit-box-lines: multiple; /* permite "wrap" */
+  -webkit-box-pack: justify;   /* space-around */
+  width: 100%;
+
+  /* Fallbacks para navegadores viejos */
+  display: -ms-flexbox;
+  -ms-flex-pack: justify;
+
+  display: flex;
+  justify-content: space-around;
+        }
+  .rowComprador {
+  display: -webkit-box;           /* Soporte WebKit antiguo */
+  -webkit-box-pack: justify;      /* justify-content: space-between */
+  -webkit-box-lines: multiple;    /* intenta simular flex-wrap */
+  width: 100%;
+
+  /* Fallback para IE10 */
+  display: -ms-flexbox;
+  -ms-flex-pack: justify;
+
+  /* Modern browsers (por si acaso) */
+  display: flex;
+  justify-content: space-between;
+  /* flex-wrap no soportado en PhantomJS, pero sí en modernos */
+}
+  }
+@media only screen and (min-width: 768px) { 
+
+   .contHeader{
+            display: -webkit-box;
+            display: -ms-flexbox;
+               -webkit-box-pack: justify;
+              -ms-flex-pack: justify;
+            display: flex;
+            flex-wrap: wrap;
+              justify-content: space-between;
+         }
+}
+
             }</style>
        </head>
        <body>

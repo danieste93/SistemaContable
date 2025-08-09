@@ -4663,6 +4663,20 @@ console.log(datafind)
             res.status(200).send({ status: "Ok", message: "Correo enviado", dataconfig });
 
            }
+              async function getVentaID(req,res) {
+
+            let conn = await mongoose.connection.useDb(req.body.User.DBname);
+         let VentaModelSass = await conn.model('Venta', ventasSchema);
+          console.log(req.body)
+
+           let findVenta = await VentaModelSass.find({iDVenta:req.body.datos.id});
+           if (!findVenta) {
+               return res.status(404).send({ status: "error", message: "Venta no encontrada" });
+           }
+
+            res.status(200).send({ status: "Ok", message: "Venta encontrada", findVenta });
+
+           }
 
            async function deleteCorreoConfigurado(req,res) {
         
@@ -4773,7 +4787,7 @@ console.log(datafind)
             let CuentasModelSass = await conn.model('Cuenta', accountSchema);
             let CounterModelSass = await conn.model('Counter', counterSchema);
             let CatModelSass = await conn.model('Categoria', catSchema);
-           
+           console.log(req.body)
             let artData = req.body.datos.allData.ArtData
 
             let actualInvertido = artData.Existencia * artData.Precio_Compra
@@ -4786,8 +4800,15 @@ console.log(datafind)
 
             let Usuario =req.body.datos.allData.User.update.usuario.user
        
+if(req.body.datos.cantidadEsCero){
+              let updateArt = { Precio_Compra: req.body.datos.PrecioCompraNuevo } 
 
-            if(req.body.datos.esMenor){
+let ArticuloActual = await ArticuloModelSass.findByIdAndUpdate(artData._id, updateArt,{session, new:true})
+ await session.commitTransaction();
+res.status(200).send({status:"Ok",message:"Actualizacion Precio",ArticuloActual})
+ session.endSession();
+}
+          else if(req.body.datos.esMenor){
 
             
             
@@ -5175,4 +5196,4 @@ sheet.data.forEach(d => {
 
 
 
-module.exports = {deleteDataYearRegs,findDataYearRegs,findYearRegs, editarPrecioCompra, getDbuserData,getAllClients, deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,updateUser, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };
+module.exports = {getVentaID,deleteDataYearRegs,findDataYearRegs,findYearRegs, editarPrecioCompra, getDbuserData,getAllClients, deleteCorreoConfigurado, getCorreoConfig,correoConfigVerify, getDatabaseSize,deleteNotaCredito,getClientData,downloadPDFbyHTML,sendSearch,deleteIcon,getIcons, addNewIcons,createSystemCats,masiveApplyTemplate,updateDTCarts,updateVersionSistemArts,updateVersionSistemCuentas,updateVersionSistemCats,researchArt,deleteTemplate,accountF4,addDefaultDataInv,inventarioDelete,updateUser, getHtmlArt,editHtmlArt,getTemplates,saveTemplate,getArtByTitle, validateCompraFact,generateFactCompra,uploadMasiveClients,downLoadFact,enviarCoti,tryToHelp,vendData, genOnlyArt, getAllCounts,editSeller,deleteSeller, uploadNewSeller,signatureCloudi,  uploadFirmdata, testingsend, uploadSignedXml,resendAuthFact,uploadFactData,deleteServComb,editCombo,generateCombo,editService, generateService, getUA, deleteArt,dataInv,editArtSalidaInv,editArtCompra, editArt,addArtIndividual, generateCompraMasiva, deleteCompra, deleteVenta, comprasList, ventasList, getArt,getArt_by_id,generateCompra };
