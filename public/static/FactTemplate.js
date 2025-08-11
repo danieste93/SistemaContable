@@ -26,8 +26,12 @@ let mapeador = arts.map((item)=>{
         </div>
         <style> {`
       
-        .divigualTitulo{
-            width: 210px; 
+      .divigualTitulo{
+       
+        width: 280px;
+        }
+               .divigualCantidad{
+            width: 70px; 
             text-align: center;
         }
         
@@ -96,7 +100,7 @@ const renderPagos = (Fpago) => {
           width: 100%;
           border-collapse: separate;
           border-spacing: 0;
-          font-size: 14px;
+        
           border-radius: 10px;
           overflow: hidden;
           box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -460,7 +464,7 @@ return `
             margin-right: 19px;
         }
         .contExtraData{
-            font-size: 10px;
+           
         }
         .Cont1{
             width: 300px;
@@ -490,7 +494,7 @@ return `
             font-weight: bolder;
             color: #1f177c;
             margin-bottom: 2px;
-            font-size: 12px
+            
         }
        
         .contValues{
@@ -499,7 +503,7 @@ return `
             font-weight: bolder
         }
         .ContTitulos{
-            font-size: 12px;
+           
         margin-bottom: 8px;
         font-weight: bold;
         border-bottom: 1px solid #1346ff;
@@ -510,7 +514,11 @@ return `
             text-align: center;
         }
         .divigualTitulo{
-            width: 210px; 
+       
+        width: 280px;
+        }
+              .divigualCantidad{
+            width: 70px; 
             text-align: center;
         }
         .divigualData{
@@ -569,7 +577,7 @@ justify-content: space-between;
                 -ms-flex-wrap: wrap;flex-wrap: wrap;
              }
              .contMiddle{
-             font-size: 12px;
+            
     margin-top: 20px!important;
     padding: 10px;
     border-radius: 15px;
@@ -616,6 +624,7 @@ justify-content: space-between;
               justify-content: space-around;
          }
          .invoice-box {
+         font-size:12px;
             max-width: 850px;
            min-width: 400px;
             margin: auto;
@@ -623,7 +632,7 @@ justify-content: space-between;
             border: 1px solid #eee;
             -webkit-box-shadow: 0 0 10px rgba(0, 0, 0, .15);
                     box-shadow: 0 0 10px rgba(0, 0, 0, .15);
-            font-size: 11px;
+          
             line-height: 20px;
             font-family: 'Helvetica Neue', 'Helvetica';
             color: #555;
@@ -654,7 +663,7 @@ justify-content: space-between;
             .contDataDetail{
                 color: black;
                 width: 300px;
-                font-size: 12px;
+              
                 display: -webkit-box;
                 text-align: center;    display: -ms-flexbox;
                 display: flex;
@@ -680,7 +689,7 @@ justify-content: space-between;
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       background-color: #ffffff;
-      font-size: 12px;
+     
       padding: 5px;
     }
 
@@ -741,7 +750,7 @@ justify-content: space-between;
                     .subtituloArtFT{
                         text-transform: uppercase;
                         font-weight: bold;
-                            font-size: 20px;
+                          
     margin-bottom: 15px;
     margin-top: 15px;
                         
@@ -764,7 +773,7 @@ justify-content: space-between;
             flex-flow: column;
             -ms-flex-wrap: nowrap;
             flex-wrap: nowrap;
-         font-size: 15px;
+        
                         }
                         .Cont2FactTo{
                             display: -webkit-box;
@@ -808,10 +817,7 @@ word-break: break-word;
       max-width: 300px;
 }
 
-.material-icons {
-  font-size: 18px;
-  color: #666;
-}
+
 
 
 
@@ -847,6 +853,10 @@ word-break: break-word;
   }
 @media only screen and (min-width: 768px) { 
 
+  .divigualTitulo{
+       
+        width: 180px;
+        }
    .contHeader{
             display: -webkit-box;
             display: -ms-flexbox;
