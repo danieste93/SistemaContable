@@ -256,9 +256,6 @@ let Rimpeval =""
         </div>
      
         <div class="divigual">
-    
-        </div>
-        <div class="divigual">
       $ {Inf.baseImpoConImpuestos.toFixed(2)}
         </div>
         </div>
@@ -267,9 +264,7 @@ let Rimpeval =""
          Subtotal IVA 0%:
         </div>
      
-        <div class="divigual">
-    
-        </div>
+        
         <div class="divigual">
         $ {Inf.baseImpoSinImpuestos.toFixed(2)}
         </div>
@@ -279,9 +274,7 @@ let Rimpeval =""
         Valor {process.env.IVA_EC}%: 
         </div>
         
-        <div class="divigual">
-    
-        </div>
+       
         <div class="divigual">
       $   {Inf.IvaEC}
         </div>
@@ -291,9 +284,7 @@ let Rimpeval =""
         V.Total: 
         </div>
         
-        <div class="divigual">
-    
-        </div>
+        
         <div class="divigual">
       $  {Inf.SuperTotal.toFixed(2)}
         </div>
@@ -683,7 +674,7 @@ justify-content: space-between;
 
       .MainContValues {
      
-     
+     max-width: 250px;
       margin-top: 20px;
       
       border-radius: 10px;
@@ -822,6 +813,9 @@ word-break: break-word;
 
 
               @media print {
+                       .invoice-box {
+         font-size:10px;
+          }
     .contValores{
    display: -webkit-box;
   -webkit-box-lines: multiple; /* permite "wrap" */
