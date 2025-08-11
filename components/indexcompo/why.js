@@ -11,7 +11,7 @@ const WhyChooseApp = () => {
           <div className="feature">
             
             <div>
-              <h3>Bug free</h3>
+              <h3>Administra tu negocio  </h3>
               <p>As a web crawler expert, I help organizations adjust to the expanding significance of internet promoting.</p>
             </div>
             <div className="icon-circle">
@@ -22,8 +22,8 @@ const WhyChooseApp = () => {
           <div className="feature">
       
             <div>
-              <h3>Well Organized</h3>
-              <p>As a web crawler expert, I help organizations adjust to the expanding significance of internet promoting.</p>
+              <h3>Intuitivo</h3>
+              <p>Diseño claro, visual y sin complicaciones. Registra de manera automatizada tus compras , ventas, clientes y proveedores . Reportes financieros.</p>
             </div>
             <div className="icon-circle">
               <span>🗂️</span>
@@ -33,8 +33,8 @@ const WhyChooseApp = () => {
           <div className="feature" >
         
             <div >
-              <h3>Clean coding</h3>
-              <p>As a web crawler expert, I help organizations adjust to the expanding significance of internet promoting.</p>
+              <h3>Soporte técnico cercano y humano</h3>
+              <p>Siempre contigo: Soporte, asesoría y capacitaciones ilimitadas. Aprende y crece con nosotros.</p>
             </div>
             <div className="icon-circle">
               <span>💻</span>
@@ -43,8 +43,8 @@ const WhyChooseApp = () => {
         </div>
 
         <div className="phone-preview">
-          <h2>Why will you choose our app?</h2>
-          <img src="/static/landing/bm1.webp" alt="App Preview" className="telefonoimg" />
+          <h2> Soluciones que te respaldan</h2>
+          <img src="/static/landing/bm1.png" alt="App Preview" className="telefonoimg" />
            
         </div>
       </div>

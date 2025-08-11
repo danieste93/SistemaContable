@@ -5,27 +5,28 @@ const Caracteristicas = () => {
   const services = [
     {
       id: 1,
-      icon: '💻',
-      title: 'Frontend Development',
-      description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+      icon: '/static/landing/icofirma.png',
+      title: 'Firma electrónica GRATIS',
+      description: 'Ahorra hasta $30 al año, incluida en todos los planes anuales.'
     },
     {
       id: 2,
-      icon: '🛠️',
-      title: 'Backend Development',
-      description: 'Sed do eiusmod tempor incididunt ut labore.'
+      icon: '/static/landing/icono1.png',
+      title: 'Aprendizaje sin límites',
+       description: 'Maneja toda la contabilidad de tu empresa de forma facil sin necesidad de terceros'
     },
     {
       id: 3,
-      icon: '📱',
-      title: 'Mobile Apps',
-      description: 'Ut enim ad minim veniam, quis nostrud exercitation.'
+      icon: '/static/landing/icoplan.png',
+      title: 'Plan GRATUITO completo',
+          description: 'La app de finanzas más completa que te permite una Contabilidad automatizada.'
+ 
     },
     {
       id: 4,
-      icon: '🔍',
-      title: 'SEO Optimization',
-      description: 'Duis aute irure dolor in reprehenderit in voluptate.'
+      icon: '/static/landing/icopersonaliza.png',
+      title: 'Personaliza tu empresa',
+      description: 'Sube tu logo y emite facturas desde tu propio correo.'
     }
   ];
 
@@ -78,21 +79,20 @@ const Caracteristicas = () => {
       <div className="content">
         <div className="logo-container">
           <span className="material-icons">cloud_circle</span>
-          <span>Caracteristicas <span>services</span></span>
+          <span>Caracteristicas de los <span>servicios</span></span>
         </div>
 
         <div className='why'>
           <span style={{fontWeight:"bolder"}}>
-            Why you will choose
+            ¿Porque deberías elegir 
           </span>
-          <br/>our software?
+          <br/>nuestra aplicación?
         </div>
         
         <div>
           <p style={{fontSize:"1rem"}}>
-            As a <strong>SAAS web crawler expert</strong>, I help organizations adjust to
-            <br />
-            the expanding significance of internet promoting
+            Porque mereces <strong>libertad financiera.</strong> Te damos herramientas confiables, sin complicaciones, para que logres todas tus metas.
+        
           </p>
         </div>
         
@@ -103,7 +103,7 @@ const Caracteristicas = () => {
               className={`service-card ${index < visibleItems ? 'visible' : ''}`}
               
             >
-              <div className="service-icon">{service.icon}</div>
+              <img className="service-icon" src={service.icon} alt={service.title} />
               <h3 className="service-title">{service.title}</h3>
               <p className="service-description">{service.description}</p>
             </div>
@@ -205,14 +205,15 @@ display: flex
         }
 
         .service-icon {
-          font-size: 2rem;
-          transition: transform 0.3s ease;
-          background: white;
-          padding: 7px;
-          border-bottom: 1px solid;
-          border-radius: 11px;
-          width: 50px;
-          margin: 11px auto;
+            
+
+    transition: transform 0.3s ease;
+ 
+    padding: 5px;
+  
+    border-radius: 11px;
+    width: 80px;
+   
         }
 
         .service-card:hover .service-icon {
@@ -222,6 +223,7 @@ display: flex
         .service-title {
           font-size: 1.4rem;
           color: #2d3748;
+          margin-top:5px;
           margin-bottom: 15px;
           transition: color 0.3s ease;
         }

@@ -2,21 +2,37 @@ import { useState } from "react";
 
 const faqs = [
   {
-    question: "What should I include in App?",
+    question: "¿Que necesito descargar para usar la app?",
     answer:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit sed eiusmod tempor incididunt ut labore. In order to design a mobile app that is going to be module downloaded."
+"Nada, Activos funciona desde el navegador en tu celular o computadora, sin necesidad de instalar nada."  },
+  {
+    question: "¿Puedo usar la app si no soy experto en finanzas?",
+    answer: 
+"¡Por supuesto! Activos.ec está diseñado para ser sencillo y amigable. Además, aprenderás a organizar tus finanzas paso a paso mientras la usas, también es Ideal llevar la contabilidad para negocios pequeños"  },
+  {
+    question: "¿La app es segura para mi información?",
+    answer: "Sí, tu información está protegida con altos estándares de seguridad y privacidad. La firma electrónica y todos los datos están encriptados"
   },
   {
-    question: "How does the Moodle app work?",
-    answer: "The Moodle app lets you access course content, submit assignments, and interact with others from your mobile device."
+    question: "¿Cómo empiezo a usar activos.ec?",
+    answer: "Solo crea tu cuenta gratis, comienza a registrar tus movimientos y pronto tendrás el control total de tu dinero."
   },
   {
-    question: "Can users choose to install the app?",
-    answer: "Yes, users are given the option to install the app or use the web version directly."
+    question: "¿Puedo emitir facturas electrónicas con activos.ec?",
+    answer: "Sí. Si estás en Ecuador, puedes activar la facturación electrónica desde tu cuenta, emitir comprobantes SRI fácil ( Servicio de rentas internas ) . Es opcional y solo si la necesitas . Solicita tu Firma electrónica gratis con nuestros planes anuales "
+  }
+  ,
+  {
+    question: "¿Cuánto tiempo me toma aprender a usarla?",
+    answer: "Muy poco. En minutos puedes registrar tus primeros movimientos. Además, hay tutoriales rápidos que te ayudan."
   },
   {
-    question: "How do I disable installed apps?",
-    answer: "You can disable installed apps through the system settings or application manager."
+    question: "¿Quiero probar la membresía PRO, que hago?",
+    answer: "Da clic en prueba Pro y te enviará directo para que envies un mensaje a nuestro whatsapp oficial solicitando prueba de 15 días con el correo que te registraste. La activación es inmediata, no tienes que poner tu tarjeta de crédito."
+  },
+  {
+    question: "¿Qué es un POS?",
+    answer: "Punto de venta (POS) Es el sistema donde registras tus ventas rápido y desde cualquier dispositivo, en activos.ec requiere conexión activa para garantizar datos en tiempo real."
   }
 ];
 
@@ -36,8 +52,10 @@ export default function FaqAccordion() {
       <div className="header">
         <span className="material-icons icon">supervised_user_circle</span>
         <div>
-          <h2>Learn about <strong>features</strong> from FAQ!</h2>
-          <p className="subtitle">As a SAAS web crawler expert, I help organizations to the expanding significance of internet promoting.</p>
+          <h2>Preguntas Frecuentes   <strong>(FAQ)</strong></h2>
+          <p className="subtitle">
+Como Software contable para emprendedores, facilitamos la administración de negocios con herramientas completas y fáciles de usar.
+          </p>
         </div>
       </div>
       <div className="accordion">

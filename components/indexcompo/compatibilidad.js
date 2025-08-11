@@ -38,14 +38,13 @@ export default function AppDownloadSection() {
     >
       <div className="content">
         <div className={`image-area ${isVisible ? 'show-image' : ''}`}>
-          <img src="/static/landing/bm3.webp" alt="App Preview" />
+          <img src="/static/landing/bm3.png" alt="App Preview" />
         </div>
         <div className={`text-area ${isVisible ? 'show-text' : ''}`}>
-          <h5>App Download</h5>
-          <h2>This app is available for your smart phone.</h2>
+          <h5>Acceso Universal</h5>
+          <h2>Optimizado para cualquier dispositivo.</h2>
           <p>
-            As a SAAS web crawler expert, I help organizations adjust to the expanding significance of internet marketing.
-          </p>
+Como plataforma SAAS, ofrecemos una solución completa sin necesidad de descargar una app o que ocupe espacio en tu teléfono. Está disponible en móviles, tablets y computadoras con navegadores modernos.          </p>
           <div className="platforms">
             <div className={`platform ${isVisible ? 'show-platform' : ''} platform-apple`}>
               <img src="/static/landing/apple.svg" alt="Apple" />

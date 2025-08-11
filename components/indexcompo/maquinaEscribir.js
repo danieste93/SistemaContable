@@ -34,7 +34,7 @@ const Typewriter = ({ words, typingSpeed = 50, pauseTime = 2000, deletingSpeed =
   }, [text, isDeleting, wordIndex, words, typingSpeed, deletingSpeed, pauseTime]);
 
   return (<div className='contData'>
-    <span className='title'> muy </span>
+    <span className='title'> Dinero </span>
       <span  className="contMaquina">{text}</span>
      
      <style jsx>{`

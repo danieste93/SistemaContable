@@ -5,36 +5,39 @@ import classNames from "classnames";
 
 const plans = {
   monthly: [
-    {
+        {
       title: "Free",
       price: "$0",
-      access: "Limited Access",
+      access: "Acceso Limitado",
       features: [
-        "100 GB Disk Space",
-        "1 Sub domain",
-        "3 Email Accounts"
+        "Gestión de Cuentas",
+        "Estadísticas",
+        "Personalización"
       ]
     },
-    {
-      title: "Popular",
-      price: "$29",
-      access: "Limited Access",
+       {
+      title: "Pro",
+      price: "$5",
+      access: "Acceso Medio",
       features: [
-        "1000 GB Disk Space",
-        "5 Sub domains",
-        "10 Email Accounts",
-        "1 Year License"
+        "5 Productos o Servicios",
+        "Firma electrónica Ecuador P12",
+        "Facturación Electrónica ilimitada",
+        "Gestión clientes, proveedores",
+        "Compras xml automatizado SRI ",
       ]
     },
-    {
-      title: "Entrepreneurs",
-      price: "$49",
-      access: "Unlimited Access",
+     {
+      title: "ORO",
+      price: "$20",
+      access: "Acceso Ilimitado",
       features: [
-        "2000 GB Disk Space",
-        "10 Sub domains",
-        "15 Email Accounts",
-        "Priority Support"
+        "Módulo Inventario Full ",
+        "3 cuentas para Trabajadores",
+        "Punto de venta (POS) ",
+        "Soporte Prioritario",
+       
+
       ]
     }
   ],
@@ -42,33 +45,36 @@ const plans = {
     {
       title: "Free",
       price: "$0",
-      access: "Limited Access",
+      access: "Acceso Limitado",
       features: [
-        "120 GB Disk Space",
-        "2 Sub domains",
-        "5 Email Accounts"
+        "Gestión de Cuentas",
+        "Estadísticas",
+        "Personalización"
       ]
     },
     {
-      title: "Popular",
-      price: "$279",
-      access: "Limited Access",
+      title: "Pro",
+      price: "$45",
+      access: "Acceso Medio",
       features: [
-        "1200 GB Disk Space",
-        "6 Sub domains",
-        "12 Email Accounts",
-        "1 Year License"
+        "5 Productos o Servicios",
+        "Firma electrónica Ecuador P12",
+        "Facturación Electrónica ilimitada",
+        "Gestión clientes, proveedores",
+        "Compras xml automatizado SRI ",
       ]
     },
     {
-      title: "Entrepreneurs",
-      price: "$499",
-      access: "Unlimited Access",
+      title: "ORO",
+      price: "$200",
+      access: "Acceso Ilimitado",
       features: [
-        "3000 GB Disk Space",
-        "15 Sub domains",
-        "20 Email Accounts",
-        "Phone & Mail Support"
+        "Módulo Inventario Full ",
+        "3 cuentas para Trabajadores",
+        "Punto de venta (POS) ",
+        "Soporte Prioritario",
+        "Tu logo y correo personalizado"
+
       ]
     }
   ]
@@ -95,16 +101,16 @@ export default function PricingComponent() {
   return (
     <div className="pricing-wrapper" ref={containerRef}>
       <div className="header">
-        <h2>Get in <strong>Reasonable Price</strong></h2>
-        <p>A Private Limited is the most popular type of partnership Malta...</p>
+        <h2>Obtengo a un <strong>Precio Razonable</strong></h2>
+        <p>Obtén el mejor servicio en base a Calidad / Precio</p>
         <div className="switcher">
-          <span>Monthly</span>
+          <span>Mensual</span>
           <Switch
             checked={isYearly}
             onChange={() => setIsYearly(!isYearly)}
             color="primary"
           />
-          <span>Yearly</span>
+          <span>Anual</span>
         </div>
       </div>
       <div className="pricing-grid">
@@ -121,7 +127,7 @@ export default function PricingComponent() {
                 <li key={i}><CheckIcon style={{ color: "green" }} /> {feat}</li>
               ))}
             </ul>
-            <button>Get Started</button>
+            <button>Empieza</button>
           </div>
         ))}
       </div>

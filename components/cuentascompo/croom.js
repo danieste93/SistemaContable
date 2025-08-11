@@ -1198,7 +1198,7 @@ ${parseFloat(ResultCuentas).toFixed(2)}
 <Animate show={this.state.cuentaExpand != item}>
 <div className="contcuentas">
 <Tabs
-         value={0} // siempre válido
+         value={2} // siempre válido
           indicatorColor="primary"
           textColor="primary"
           variant="scrollable"
@@ -1683,7 +1683,7 @@ if(cuentasrenderNoPosesion.length > 0){
     <Animate show={this.state.cuentaExpand != "Posesion"}>
     <div className="contcuentas">
 <Tabs
-         value={0} // siempre válido
+         value={1} // siempre válido
           indicatorColor="primary"
           textColor="primary"
           variant="scrollable"
@@ -1730,7 +1730,7 @@ if(this.state.cuentaExpand == "NoPosesion"){
     <Animate show={this.state.cuentaExpand != "NoPosesion"}>
     <div className="contcuentas">
 <Tabs
-         value={0} // siempre válido
+         value={2} // siempre válido
           indicatorColor="primary"
           textColor="primary"
           variant="scrollable"
@@ -1774,7 +1774,7 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
     <Animate show={this.state.cuentaExpand != "PosesionSinTotal"}>
     <div className="contcuentas">
 <Tabs
-         value={0} // siempre válido
+         value={3} // siempre válido
           indicatorColor="primary"
           textColor="primary"
           variant="scrollable"

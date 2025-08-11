@@ -6,10 +6,10 @@ export default function FunFactsSection() {
   const sectionRef = useRef(null);
 
   const funFacts = [
-    { value: 20, label: 'Awesome Integrations', color: '#cc00ff' },
-    { value: 200, label: 'Powerful Tools', color: '#ff6600' },
-    { value: 5000, label: 'Happy Users', color: '#00ccff' },
-    { value: 2500, label: 'Projects Delivered', color: '#00ff99' },
+    { value: 90, label: 'Empresas Transformadas', color: '#cc00ff' },
+    { value: 200, label: 'Usuarios Felices', color: '#ff6600' },
+    { value: 50000, label: 'Facturas Emitidas', color: '#00ccff' },
+    { value: 20, label: 'Proyectos Personalizados', color: '#00ff99' },
   ];
 
   useEffect(() => {
@@ -54,15 +54,15 @@ export default function FunFactsSection() {
     <section className="funfacts-section" ref={sectionRef}>
       <div className="content">
         <div className={`image-area ${hasAnimated ? 'animate' : ''}`}>
-          <img src="/static/landing/bm2.webp" alt="Laptop mockup" />
+          <img src="/static/landing/bm2.png" alt="Laptop mockup" />
         </div>
         <div className="text-area">
-          <h5>Fun facts</h5>
+          <h5>Datos verificados</h5>
           <h2>
-            We have some <strong>awesome</strong> funfacts for clients.
+            Integraciones con sistemas externos  <strong>SRI, ERP, CRM</strong> 
           </h2>
           <p>
-            As a SAAS web crawler expert, I help organizations adjust to the expanding significance of internet promoting.
+(Usuarios satisfechos que confían en nosotros para manejar sus negocios de forma inteligente.)
           </p>
           <div className="facts-flex">
             {funFacts.map((fact, index) => (

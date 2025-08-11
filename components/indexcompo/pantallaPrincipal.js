@@ -49,19 +49,21 @@ const PantallaPrincipal = () => {
                     className={`leftSection ${isVisibleLeft ? 'animateUp' : ''}`}
                 >
                     <div style={{ width: "100%" }}>
-                        <h1 className="title">Sistema Contable</h1>
-                        <Typewriter words={['Simplificado', 'Rapido', 'Facil', 'Amigable']} />
+                        <h1 className="title">Cuentas Claras,</h1>
+                        <Typewriter words={[ 'Creciendo', 'Estable', 'Automático']} />
                     </div>
 
                     <p className="subtitle">
-                        Appilo is the best software platform for running an internet business.
+                    Sistema contable simplificado,  completo para controlar gastos, gestión de inventario y ventas.
                     </p>
+                     <p className="subtitle">
+Usa la versión gratuita para ordenar tus finanzas y aprender sin pagar                    </p>
                     <div className="buttonGroup">
-                        <button className="btnPrimary">Start Now</button>
-                        <button className="btnSecondary">Try it for free</button>
+                        <button className="btnPrimary">Empieza</button>
+                        <button className="btnSecondary">Pruébalo gratis</button>
                     </div>
                     <div className="stars">
-                        ⭐⭐⭐⭐⭐ <span>(based on 1,256 task reviews)</span>
+                        ⭐⭐⭐⭐⭐ <span>Calidad al más alto nivel  </span>
                     </div>
                 </div>
 
@@ -69,7 +71,7 @@ const PantallaPrincipal = () => {
                     ref={rightRef} 
                     className={`rightSection ${isVisibleRight ? 'animateRight' : ''}`}
                 >
-                    <img src="/static/landing/bm1.webp" alt="App Preview" className="heroImage" />
+                    <img src="/static/landing/bm1a.png" alt="App Preview" className="heroImage" />
                 </div>
             </div>
 

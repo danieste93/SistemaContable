@@ -37,19 +37,18 @@ export default function NewsletterSubscribe() {
 </div>
 
       <div className="newsletter">
-        <h2>Subscribe to Our Newsletter</h2>
+        <h2>Suscríbete a Nuestro Boletín  </h2>
         <p>
-          A Private Limited is the most popular type of partnership Malta. The limited
-          liability is, in fact, the only type of company allowed by Companies.
+          Recibe novedades y consejos para gestionar mejor tus finanzas y negocios con nuestra aplicación 
         </p>
         <div className="subscribe-box">
           <input
             type="email"
-            placeholder="Enter your email"
+            placeholder="Ingresa tu correo electrónico"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <button onClick={handleSubscribe}>Subscribe Now</button>
+          <button onClick={handleSubscribe}>Suscribirse Ahora</button>
         </div>
       </div>
 
@@ -58,8 +57,8 @@ export default function NewsletterSubscribe() {
           
           <img className="logof" src="/static/logo1.png" alt="logo" />
           <p>
-            Be the first to find out about exclusive deals, the latest Lookbooks trends.
-            We’re on a mission to build a better future where technology.
+            Sé el primero en enterarte de ofertas exclusivas, las últimas tendencias de Lookbooks.
+            Estamos en una misión para construir un futuro mejor donde la tecnología.
           </p>
           <div className="social-icons">
           <img src="/static/landing/icons8-youtube.svg" alt="youtube" />
@@ -68,17 +67,17 @@ export default function NewsletterSubscribe() {
           </div>
         </div>
         <div className="footer-section address-section basedmargin">
-          <h4>Address</h4>
-          <p>Phone: +1 605 722 2032</p>
-          <p>Email: example@mail.com</p>
-          <p>Charlotte, North Carolina, United States</p>
+          <h4>Dirección</h4>
+          <p>Teléfono: 09 6212 4673</p>
+          <p>Correo: activos.ec@gmail.com</p>
+          <p>Av. Eloy Alfaro N47-132 y mortiños. Quito-Ecuador.</p>
         </div>
 
         <div className="footer-section quick-links basedmargin">
-          <h4>Quick Links</h4>
-          <p>Privacy Policy</p>
-          <p>About Us</p>
-          <p>Contact Us</p>
+          <h4> Enlaces</h4>
+          <p>Política de Privacidad</p>
+          <p>Precios</p>
+          <p>Blogs</p>
         </div>
 
         <div className="footer-section twitter-section basedmargin">

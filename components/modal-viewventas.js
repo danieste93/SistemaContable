@@ -171,7 +171,7 @@ console.log(this.props)
            />
   <div className="tituloventa">
     
-{this.props.datos.TipoVenta} - {this.props.datos.iDVenta} 
+Venta - {this.props.datos.iDVenta} 
 
 </div>
 <button className=" btn btn-dark " style={{margin:"10px"}} onClick={this.downloadFact} >
