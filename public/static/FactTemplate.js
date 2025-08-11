@@ -27,7 +27,7 @@ let mapeador = arts.map((item)=>{
         <style> {`
       
         .divigualTitulo{
-            width: 180px; 
+            width: 210px; 
             text-align: center;
         }
         
@@ -390,6 +390,7 @@ font-weight: bold;
 } 
     .contFormasdePago{  
    margin-top: 25px;
+   max-width: 300px;
    
     }
      .contValores{
@@ -489,7 +490,7 @@ return `
             font-weight: bolder;
             color: #1f177c;
             margin-bottom: 2px;
-            font-size: 15px
+            font-size: 12px
         }
        
         .contValues{
@@ -509,7 +510,7 @@ return `
             text-align: center;
         }
         .divigualTitulo{
-            width: 180px; 
+            width: 210px; 
             text-align: center;
         }
         .divigualData{
@@ -536,8 +537,8 @@ justify-content: space-between;
                  min-width: 150px;
     display: flex
 ;
-    justify-content: flex-start;
-    align-items: center;
+    justify-content: flex-end;
+    
              }
              .contClient{
                 display: -webkit-box;
@@ -653,7 +654,7 @@ justify-content: space-between;
             .contDataDetail{
                 color: black;
                 width: 300px;
-                font-size: 15px;
+                font-size: 12px;
                 display: -webkit-box;
                 text-align: center;    display: -ms-flexbox;
                 display: flex;
@@ -679,8 +680,8 @@ justify-content: space-between;
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       background-color: #ffffff;
-      font-size: 15px;
-      padding: 10px;
+      font-size: 12px;
+      padding: 5px;
     }
 
     .ContDetalle {
@@ -800,10 +801,11 @@ justify-content: space-between;
   display: flex;
   align-items: center;
 word-break: break-word;
-  font-size: 14px;
+
   color: #333;
   flex: 1;
       min-width: 150px;
+      max-width: 300px;
 }
 
 .material-icons {
