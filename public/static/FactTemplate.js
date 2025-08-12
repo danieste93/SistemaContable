@@ -389,7 +389,7 @@ font-weight: bold;
         display:flex;
         justify-content: space-around;
        flex-wrap: wrap; 
-   margin:0px 10px;
+align-items: center;
     
     width: 100%;
      
@@ -800,7 +800,7 @@ justify-content: space-between;
   display: flex;
   align-items: center;
 word-break: break-word;
-
+max-width: 300px; 
   color: #333;
   width: 100%;
 

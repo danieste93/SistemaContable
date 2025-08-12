@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-
+import { Animate } from 'react-animate-mount/lib/Animate';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import NotaVentaTemplate from "../public/static/NotaTemplate"
 import FacturaTemplate from "../public/static/FactTemplate"
@@ -8,7 +8,8 @@ import { teal } from '@material-ui/core/colors';
 
 class ViewVentas extends Component {
   state={
-Html:""
+Html:"",
+loading:false
   }
 
     componentDidMount(){
@@ -87,6 +88,7 @@ TemplateAsignado = NotaVentaTemplate
       
       }
       downloadFact=()=>{  
+        this.setState({loading:true})
         console.log("en download")
        
         let datos = {
@@ -134,7 +136,7 @@ TemplateAsignado = NotaVentaTemplate
             Tipo:"success",
             Mensaje:"Operacion exitosa, espere unos segundos"
         }
-        this.setState({Alert: add })
+        this.setState({Alert: add, loading:false })
         }
         })
       
@@ -174,6 +176,8 @@ console.log(this.props)
 Venta - {this.props.datos.iDVenta} 
 
 </div>
+<div style={{display:"flex", alignItems:"center", flexFlow:"column", justifyContent: "center"}}>
+<Animate show={!this.state.loading}>
 <button className=" btn btn-dark " style={{margin:"10px"}} onClick={this.downloadFact} >
             <span className="material-icons" >
             download
@@ -181,6 +185,9 @@ Venta - {this.props.datos.iDVenta}
           <p>Descargar</p>
           </button>
 
+</Animate>
+<Animate show={this.state.loading}><CircularProgress /></Animate>
+</div>
 
 </div> 
 <div className="Scrolled">
