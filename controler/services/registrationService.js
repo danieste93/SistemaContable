@@ -24,12 +24,11 @@ async function registerFullUser(userInput) {
   const UserModelSass = MainConn.model('usuarios', UserSchema);
   const CuentasModelSass = conn.model('Cuenta', accountSchema);
   const CatModelSass = conn.model('Categoria', catSchema);
-  const ComprasModelSass = conn.model('Compras', ComprasShema);
-  const VentaModelSass = conn.model('Venta', ventasSchema);
+
   const CounterModelSass = conn.model('Counter', counterSchema);
   const TiposModelSass = conn.model('tiposmodel', tipoSchemaSass);
   const RegModelSass = conn.model('Reg', regSchema);
-  const ArticuloModelSass = conn.model('Articulo', ArticuloShema);
+
 
   const existingByEmail = await UserModelSass.findOne({ Email: userInput.Correo });
   const existingByUsername = await UserModelSass.findOne({ Usuario: userInput.Usuario });
@@ -60,7 +59,7 @@ async function registerFullUser(userInput) {
           Password: userInput.Contrasena,
           RegistradoPor: userInput.RegistradoPor,
           DBname: newDbName,
-          Membresia: "Free"
+          Membresia: "Gratuita"
         }
       ], opts);
 

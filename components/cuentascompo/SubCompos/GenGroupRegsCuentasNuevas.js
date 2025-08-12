@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import Inggas from './inggasCuentas';
 import { connect } from 'react-redux';
+import { addVenta } from '../../../reduxstore/actions/regcont';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import moment from "moment";
  class GenGroupRegs extends Component {
@@ -149,7 +150,8 @@ import moment from "moment";
                     classNames="fade"
                   >
                     <Inggas
-                      userData={this.props.state.userReducer}
+                     stateData={this.props.state}
+                    addVenta={(e) => this.props.dispatch.addVenta(e)}
                       reg={detail}
                       in={i}
                       cuentaActual={this.props.cuentaSelect}

@@ -885,7 +885,7 @@ margin: 10px 0px;
   align-items: center;
   min-height: 35px;
   margin-bottom: 20px;
-  margin-top: 30px;
+  margin-top: 10px;
 }
    .fechacont{
     font-size: 16px;

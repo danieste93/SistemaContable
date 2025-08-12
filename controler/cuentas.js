@@ -1005,7 +1005,7 @@ if (yaExiste) {
         async function deleteReg (req,res){
          
           let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
-          let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
+         
           let CuentasModelSass = await conn.model('Cuenta', accountSchema);
           let RegModelSass = await conn.model('Reg', regSchema);
           let RegModelSassDelete = await conn.model('RegDelete', regSchemaDelete);
@@ -1023,7 +1023,7 @@ if (yaExiste) {
 
          if(req.body.reg.Accion !="Trans"){
          if(req.body.reg.CatSelect.idCat == 18){
-
+ let ArticuloModelSass = await conn.model('Articulo', ArticuloSchema);
           if(req.body.reg.Descripcion2.articulosVendidos[0].Tipo =="Producto"){
             let valorIncremento = req.body.reg.Descripcion2.articulosVendidos[0].CantidadCompra  
             let update = { $inc: { Existencia: valorIncremento } }

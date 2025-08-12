@@ -62,7 +62,7 @@ console.log(this.props)
 
 let deleteReg = this.props.reg.TiempoDelete != null?true:false
 let dataProvider = this.props.reg
-console.log(this.props)
+
 let matchVenta = null;
 let importeCheck = ""
 let cuenta1Check = ""
@@ -311,13 +311,22 @@ console.log(this.props)
           e.preventDefault()
           // Aquí puedes poner la función que desees para el hipervínculo
           // Por ejemplo: this.handleVentaClick();
-       
-          let data = await fetchData(this.props.userData,
+
+        let findVentaState = this.props.stateData.RegContableReducer.Ventas.find(x => x.iDVenta == matchVenta[1]);
+console.log(this.props.stateData.RegContableReducer.Ventas)
+        if(findVentaState  == undefined){
+          console.log("descargando")
+          let data = await fetchData(this.props.stateData.userReducer,
       "/public/getVentaID", {id: matchVenta[1]});
     console.log(data);
     if(data.status == "Ok"){
         this.setState({viewVenta:true, dataventa:data.findVenta[0]});
     }
+  }else{
+     console.log("encontrado en redux")
+    this.props.addVenta(findVentaState);
+    this.setState({viewVenta:true, dataventa:findVentaState});
+  }
      }  : undefined
   }
 >
@@ -462,8 +471,8 @@ Registro Número:
 </Animate>
 </Animate>
  <Animate show={this.state.viewVenta}>
-        <ViewVenta token={this.props.userData.update.usuario.token} 
-        usuario={this.props.userData.update.usuario} 
+        <ViewVenta token={this.props.stateData.userReducer.update.usuario.token} 
+        usuario={this.props.stateData.userReducer.update.usuario} 
         datos={this.state.dataventa} Flecharetro={()=>{this.setState({viewVenta:false, dataventa:""})}  }/>
         </Animate>
 

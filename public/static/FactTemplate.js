@@ -800,7 +800,7 @@ justify-content: space-between;
   display: flex;
   align-items: center;
 word-break: break-word;
-max-width: 300px; 
+max-width: 250px; 
   color: #333;
   width: 100%;
 
