@@ -26,10 +26,7 @@ let mapeador = arts.map((item)=>{
         </div>
         <style> {`
       
-      .divigualTitulo{
-       
-        width: 280px;
-        }
+      
                .divigualCantidad{
             width: 70px; 
             text-align: center;
@@ -392,7 +389,7 @@ font-weight: bold;
         display:flex;
         justify-content: space-around;
        flex-wrap: wrap; 
-   
+   margin:0px 10px;
     
     width: 100%;
      
@@ -506,7 +503,7 @@ return `
         }
         .divigualTitulo{
        
-        width: 280px;
+        width: 180px;
         }
               .divigualCantidad{
             width: 70px; 
@@ -530,7 +527,8 @@ justify-content: space-between;
              .empresaLogo{
                 width:100%;
                 height: auto;
-                margin-left: 10px;
+                margin-left: 20px;
+                margin-top:10px;
                 border-radius: 10px;
              }.contLogo{
                  min-width: 150px;
@@ -569,7 +567,7 @@ justify-content: space-between;
              }
              .contMiddle{
             
-    margin-top: 20px!important;
+    margin-top: 10px!important;
     padding: 10px;
     border-radius: 15px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -615,7 +613,7 @@ justify-content: space-between;
               justify-content: space-around;
          }
          .invoice-box {
-         font-size:12px;
+         font-size:14px;
             max-width: 850px;
            min-width: 400px;
             margin: auto;
@@ -652,6 +650,7 @@ justify-content: space-between;
                 
             }
             .contDataDetail{
+            font-size: 15px;
                 color: black;
                 width: 300px;
               
@@ -803,19 +802,21 @@ justify-content: space-between;
 word-break: break-word;
 
   color: #333;
-  flex: 1;
-      min-width: 150px;
-      max-width: 300px;
+  width: 100%;
+
 }
 
 
 
-
-
               @media print {
+              
                        .invoice-box {
          font-size:10px;
           }
+         .contDataDetail {
+          font-size:12px;
+          }
+         
     .contValores{
    display: -webkit-box;
   -webkit-box-lines: multiple; /* permite "wrap" */
@@ -847,10 +848,7 @@ word-break: break-word;
   }
 @media only screen and (min-width: 768px) { 
 
-  .divigualTitulo{
-       
-        width: 180px;
-        }
+
    .contHeader{
             display: -webkit-box;
             display: -ms-flexbox;
@@ -860,6 +858,17 @@ word-break: break-word;
             flex-wrap: wrap;
               justify-content: space-between;
          }
+
+  .divigualTitulo{
+       
+        width: 280px;
+        }
+        .datoItem {
+
+  width: 50%;
+
+}
+
 }
 
             }</style>

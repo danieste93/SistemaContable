@@ -56,8 +56,7 @@ const PantallaPrincipal = () => {
                     <p className="subtitle">
                     Sistema contable simplificado,  completo para controlar gastos, gestión de inventario y ventas.
                     </p>
-                     <p className="subtitle">
-Usa la versión gratuita para ordenar tus finanzas y aprender sin pagar                    </p>
+          
                     <div className="buttonGroup">
                         <button className="btnPrimary">Empieza</button>
                         <button className="btnSecondary">Pruébalo gratis</button>

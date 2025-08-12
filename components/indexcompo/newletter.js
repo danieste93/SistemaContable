@@ -67,7 +67,7 @@ export default function NewsletterSubscribe() {
           </div>
         </div>
         <div className="footer-section address-section basedmargin">
-          <h4>Dirección</h4>
+          <h4>Contacto</h4>
           <p>Teléfono: 09 6212 4673</p>
           <p>Correo: activos.ec@gmail.com</p>
           <p>Av. Eloy Alfaro N47-132 y mortiños. Quito-Ecuador.</p>
