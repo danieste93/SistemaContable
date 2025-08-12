@@ -528,6 +528,7 @@ justify-content: space-between;
                 width:100%;
                 height: auto;
                 margin-left: 20px;
+                max-width: 150px;
                 margin-top:10px;
                 border-radius: 10px;
              }.contLogo{

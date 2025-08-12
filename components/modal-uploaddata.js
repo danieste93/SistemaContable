@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import {addRegs, addVentas, addCompras, addRegsDelete} from "../reduxstore/actions/regcont"
+import { Animate } from 'react-animate-mount/lib/Animate';
 
 class InfoClean extends Component {
   state = {
@@ -63,10 +64,15 @@ parsearCamposJSON(array) {
 }
 
   
-  handleFileChange = async (e) => {
-    this.setState({loading:true})
+  handleFileChange = (e) => {
+  if (this.state.loading) return; // evitar doble carga
+
+  this.setState({ loading: true }, async () => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+      this.setState({ loading: false });
+      return;
+    }
 
     const data = await file.arrayBuffer();
     const workbook = XLSX.read(data, { type: 'array' });
@@ -76,67 +82,67 @@ parsearCamposJSON(array) {
         ? XLSX.utils.sheet_to_json(workbook.Sheets[name])
         : [];
 
-const registrosRaw = getSheetData('Registros');
-const registros = this.parsearCamposJSON(registrosRaw);
+    const registrosRaw = getSheetData('Registros');
+    const registros = this.parsearCamposJSON(registrosRaw);
 
-const comprasRaw = getSheetData('Compras');
-const compras = this.parsearCamposJSON(comprasRaw);
+    const comprasRaw = getSheetData('Compras');
+    const compras = this.parsearCamposJSON(comprasRaw);
 
-const ventasRaw = getSheetData('Ventas');
-const ventas = this.parsearCamposJSON(ventasRaw);
+    const ventasRaw = getSheetData('Ventas');
+    const ventas = this.parsearCamposJSON(ventasRaw);
 
-const eliminadosRaw = getSheetData('Eliminados');
-const Eliminados = this.parsearCamposJSON(eliminadosRaw);
+    const eliminadosRaw = getSheetData('Eliminados');
+    const Eliminados = this.parsearCamposJSON(eliminadosRaw);
 
-let misRegs = (this.props.state.RegContableReducer.Regs || []).slice();
-let misCompras = (this.props.state.RegContableReducer.Compras || []).slice();
-let misVentas = (this.props.state.RegContableReducer.Ventas || []).slice();
-let misregsDelete = (this.props.state.RegContableReducer.RegsDelete || []).slice();
+    let misRegs = (this.props.state.RegContableReducer.Regs || []).slice();
+    let misCompras = (this.props.state.RegContableReducer.Compras || []).slice();
+    let misVentas = (this.props.state.RegContableReducer.Ventas || []).slice();
+    let misregsDelete = (this.props.state.RegContableReducer.RegsDelete || []).slice();
 
-const obtenerIds = (arr) =>
-  new Set(
-    arr.map(r => {
-      try {
-        return typeof r._id === 'object' ? r._id.toString() : String(r._id);
-      } catch {
-        return null;
-      }
-    })
-  );
+    const obtenerIds = (arr) =>
+      new Set(
+        arr.map(r => {
+          try {
+            return typeof r._id === 'object' ? r._id.toString() : String(r._id);
+          } catch {
+            return null;
+          }
+        })
+      );
 
-const filtrarNuevos = (nuevos, existentesSet) =>
-  nuevos.filter(r => {
-    const id = typeof r._id === 'object' ? r._id.toString() : String(r._id);
-    return !existentesSet.has(id);
-  });
+    const filtrarNuevos = (nuevos, existentesSet) =>
+      nuevos.filter(r => {
+        const id = typeof r._id === 'object' ? r._id.toString() : String(r._id);
+        return !existentesSet.has(id);
+      });
 
-const finalregs = filtrarNuevos(registros, obtenerIds(misRegs));
-const finalCompras = filtrarNuevos(compras, obtenerIds(misCompras));
-const finalVentas = filtrarNuevos(ventas, obtenerIds(misVentas));
-const finalEliminados = filtrarNuevos(Eliminados, obtenerIds(misregsDelete));
+    const finalregs = filtrarNuevos(registros, obtenerIds(misRegs));
+    const finalCompras = filtrarNuevos(compras, obtenerIds(misCompras));
+    const finalVentas = filtrarNuevos(ventas, obtenerIds(misVentas));
+    const finalEliminados = filtrarNuevos(Eliminados, obtenerIds(misregsDelete));
 
-// Dispatch a Redux o lo que uses
-this.props.dispatch(addRegs(finalregs));
-this.props.dispatch(addCompras(finalCompras));
-this.props.dispatch(addVentas(finalVentas));
-this.props.dispatch(addRegsDelete(finalEliminados));
-              
+    this.props.dispatch(addRegs(finalregs));
+    this.props.dispatch(addCompras(finalCompras));
+    this.props.dispatch(addVentas(finalVentas));
+    this.props.dispatch(addRegsDelete(finalEliminados));
 
-   let add = {
-          Estado:true,
-          Tipo:"success",
-          Mensaje:"Informacion cargada con exito"
-      }
+    const add = {
+      Estado: true,
+      Tipo: "success",
+      Mensaje: "Informacion cargada con exito"
+    };
+
     this.setState({
       Alert: add,
-     loading:false,
-    
+      loading: false,
     });
 
-    setTimeout(()=>{this.Onsalida()},300)
+    setTimeout(() => {
+      this.Onsalida();
+    }, 300);
+  });
+};
 
-  
-  };
 
   Onsalida = () => {
     const main = document.getElementById('mainInfoClean');
@@ -174,12 +180,15 @@ console.log(this.props)
               />
               <div className="tituloventa">Visualizar información antigua</div>
             </div>
-
+           
+<div style={{display:"flex", justifyContent:"center", flexFlow:"column", margin:"20px", alignItems:"center"}}>
+            <Animate show={!loading} >
             <label htmlFor="excel-upload" className="upload-button">
               <span className="material-icons">upload_file</span>
-              {archivoCargado ? 'Archivo Cargado' : 'Subir Excel'}
+              Subir Excel
             </label>
 
+           
             <input
               id="excel-upload"
               type="file"
@@ -188,12 +197,14 @@ console.log(this.props)
               onChange={this.handleFileChange}
               className="hidden-input"
             />
+             </Animate>
+   <Animate show={loading} >
 
-            {loading && (
-              <div className="centrar" style={{ marginTop: '20px' }}>
-                <CircularProgress />
-              </div>
-            )}
+         <CircularProgress />
+   </Animate>
+           
+               </div>
+           
           </div>
         </div>
      <Snackbar open={this.state.Alert.Estado} autoHideDuration={10000} onClose={handleClose}>

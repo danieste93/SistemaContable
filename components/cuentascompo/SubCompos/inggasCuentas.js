@@ -320,11 +320,13 @@ console.log(this.props.stateData.RegContableReducer.Ventas)
       "/public/getVentaID", {id: matchVenta[1]});
     console.log(data);
     if(data.status == "Ok"){
+       this.props.addVenta(data.findVenta[0]);
         this.setState({viewVenta:true, dataventa:data.findVenta[0]});
     }
   }else{
      console.log("encontrado en redux")
-    this.props.addVenta(findVentaState);
+     console.log(findVentaState)
+   
     this.setState({viewVenta:true, dataventa:findVentaState});
   }
      }  : undefined

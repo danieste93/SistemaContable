@@ -151,7 +151,7 @@ import moment from "moment";
                   >
                     <Inggas
                      stateData={this.props.state}
-                    addVenta={(e) => this.props.dispatch.addVenta(e)}
+                    addVenta={(e) => this.props.dispatch(addVenta(e))}
                       reg={detail}
                       in={i}
                       cuentaActual={this.props.cuentaSelect}
