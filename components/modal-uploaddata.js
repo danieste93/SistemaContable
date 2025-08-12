@@ -67,15 +67,16 @@ parsearCamposJSON(array) {
   handleFileChange = (e) => {
   if (this.state.loading) return; // evitar doble carga
 
-  this.setState({ loading: true }, async () => {
+  this.setState({ loading: true })
+  setTimeout( async() => {
     const file = e.target.files[0];
     if (!file) {
       this.setState({ loading: false });
       return;
     }
 
-    const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data, { type: 'array' });
+    const data =  await file.arrayBuffer();
+    const workbook = await XLSX.read(data, { type: 'array' });
 
     const getSheetData = (name) =>
       workbook.SheetNames.includes(name)
@@ -140,7 +141,8 @@ parsearCamposJSON(array) {
     setTimeout(() => {
       this.Onsalida();
     }, 300);
-  });
+
+  }, 500);
 };
 
 

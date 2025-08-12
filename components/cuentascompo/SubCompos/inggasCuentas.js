@@ -311,9 +311,11 @@ console.log(this.props)
           e.preventDefault()
           // Aquí puedes poner la función que desees para el hipervínculo
           // Por ejemplo: this.handleVentaClick();
-
-        let findVentaState = this.props.stateData.RegContableReducer.Ventas.find(x => x.iDVenta == matchVenta[1]);
+          let findVentaState = undefined
+if(this.props.stateData.RegContableReducer.Ventas){
+         findVentaState = this.props.stateData.RegContableReducer.Ventas.find(x => x.iDVenta == matchVenta[1]);
 console.log(this.props.stateData.RegContableReducer.Ventas)
+}
         if(findVentaState  == undefined){
           console.log("descargando")
           let data = await fetchData(this.props.stateData.userReducer,

@@ -818,7 +818,7 @@ this.setState({impresion:!this.state.impresion})
           
             let factGenerated = await GeneradorFactura(this.state.idVenta,this.state.idReg,this.state.Fpago,this.state.ArtVent, this.state.Comprador, this.state.secuencialGen, 
 
-                      SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento, this.state.adicionalInfo, 1 //ambiente
+                      SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento, this.state.adicionalInfo, 2 //ambiente
             )
 
           console.log("factGenerated",factGenerated)
