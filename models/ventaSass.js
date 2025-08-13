@@ -125,6 +125,16 @@ const OrderSchema = new Schema({
             trim: true,  
             required: false,
            }, 
+               Estab: {
+            type: Number,
+            trim: true,  
+            required: false,
+           }, 
+               PtoEmi: {
+            type: Number,
+            trim: true,  
+            required: false,
+           }, 
            ClaveAcceso:{
             type: String,
             trim: true,  

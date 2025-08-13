@@ -12,7 +12,7 @@ import {updateVenta,getVentas} from "../../reduxstore/actions/regcont"
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ViewVenta from "../modal-viewventas"
 
-import ViewNotas from "./modal-genNotas"
+import GenNotas from "./modal-genNotas"
 import ViewNotasCred from "../modal-viewvNotaCred"
 
 import ViewCreds from "../modal-viewCreds"
@@ -896,6 +896,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
         return(<VentaRenderList 
           key={comp._id} 
           datos={comp} 
+          getNotaDeb={(datos)=>{ this.setState({genNotaDeb:true, dataNotaDeb:datos})}} 
           getNota={(datos)=>{ this.setState({viewNota:true, dataNota:datos})}} 
           watchNotaCredito={(datos)=>{ this.setState({viewerNota:true, viewerdataNota:datos})}}
           viewCreds={(datos)=>{ this.setState({viewCreds:true, dataCred:datos})}} 
@@ -1340,7 +1341,7 @@ search
         </Animate>
 
 <Animate show={this.state.viewNota}>
-<ViewNotas datos={this.state.dataNota} Flecharetro={()=>{this.setState({viewNota:false})}} />
+<GenNotas datos={this.state.dataNota} Flecharetro={()=>{this.setState({viewNota:false})}} />
 </Animate>
 <Animate show={this.state.viewerNota}>
 <ViewNotasCred updateNotaCred={(e)=>{console.log(e);

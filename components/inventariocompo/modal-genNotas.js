@@ -262,7 +262,7 @@ let data = await fetchData(this.props.state.userReducer,
        
         let propina ="0.00"
         let importeTotal= SuperTotal.toFixed(2)
-        let ambiente = "2"
+        let ambiente = "1"
 
         let s1 = this.props.state.userReducer.update.usuario.user.Factura.codigoEstab
         let s2 = this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision
@@ -347,7 +347,7 @@ let data = await fetchData(this.props.state.userReducer,
         `        <numDocModificado>${numDocModificado}</numDocModificado>\n` +
         `        <fechaEmisionDocSustento>${fechaEmisionDocSustento}</fechaEmisionDocSustento>\n` +
         `        <totalSinImpuestos>${(baseImpoSinImpuestos + baseImpoConImpuestos).toFixed(2)}</totalSinImpuestos>\n` +
-        `        <valorModificacion>${SuperTotal.toFixed(2)}</valorModificacion>\n` +
+        `        <valorModificacion>${(this.props.datos.PrecioCompraTotal - SuperTotal).toFixed(2)}</valorModificacion>\n` +
         `        <moneda>DOLAR</moneda>\n`+
         "        <totalConImpuestos>\n" +
                  this.genImpuestos()+
@@ -397,7 +397,7 @@ let data = await fetchData(this.props.state.userReducer,
         idUser:this.props.state.userReducer.update.usuario.user._id,
         ambiente:ambiente==1?"Pruebas":"Produccion"  
            }
-       /*    
+       
            let link = document.createElement('a');
            const url = window.URL.createObjectURL(
             new Blob([docFirmado], { type: "text/plain"}),
@@ -409,7 +409,7 @@ let data = await fetchData(this.props.state.userReducer,
         );
         
          link.click()
-*/
+
       
          fetch("/public/uploadSignedXml", {
             method: 'POST', // or 'PUT'
@@ -456,7 +456,7 @@ let data = await fetchData(this.props.state.userReducer,
                     ClaveAcceso:clavefinal, 
                     numeroAuto,
                      fechaAuto,
-                     fechaEmisionDocSustento,
+                     fechaEmisionDocSustento, 
                      numDocModificado,
                      secuencial,
                        SuperTotal,                                           

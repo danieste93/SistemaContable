@@ -100,7 +100,11 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
   }
 
   info += '</infoAdicional>';
-  return info;
+  if (campos.length > 0) {
+    return info;
+  } else {
+    return '';
+  }
 }
 
 // Función para escapar caracteres XML

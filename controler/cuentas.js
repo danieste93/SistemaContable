@@ -2569,10 +2569,13 @@ res.status(200).send({cuenta})
        let dataventa = {
          arrRegs,
          adicionalInfo:data.allData.adicionalInfo,
+
          FactAutorizacion:data.numeroAuto,
          FactFechaAutorizacion:data.fechaAuto,
          ClaveAcceso:data.ClaveAcceso,
          Secuencial:data.secuencial,
+         Estab:data.allData.estab,
+         PtoEmi:data.allData.ptoEmi,
          Doctype:data.Doctype,
          iDVenta: findIdReg[0].ContVentas,
          iDRegistro: findIdReg[0].ContRegs,
