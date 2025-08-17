@@ -149,7 +149,9 @@ const OrderSchema = new Schema({
            arrRegs:[],
            NotaCredito:{
 
-        
+           },
+            NotaDebito:{
+
            },
            Html:{
             type: String,

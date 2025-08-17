@@ -353,15 +353,17 @@ import {
                                             return {
                                               ...state, Reps
                                                                      };
-                     case  UPDATE_VENTA:
-                    
-                      let ventaupdatex = state.Ventas.findIndex(x => x._id == action.payload.ventas._id)                          
-                      Ventas = state.Ventas
-                      Ventas[ventaupdatex] = action.payload.ventas
-                        
-                  return {
-                    ...state, Ventas
-                                           };                                                   
+                   case UPDATE_VENTA: {
+  const { ventas } = action.payload;
+
+  return {
+    ...state,
+    Ventas: state.Ventas.map(v =>
+      v._id === ventas._id ? { ...ventas } : v
+    )
+  };
+}
+                                                
                 case  UPDATE_REP:
                                           
                   let repupdatex = state.Reps.findIndex(x => x._id == action.payload.reps.repe._id)                          

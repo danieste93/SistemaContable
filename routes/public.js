@@ -70,6 +70,8 @@ router.post('/enviarcoti',Authentication, AdminControl.enviarCoti);
 router.post('/generate-only-art',Authentication, AdminControl.genOnlyArt);
 router.post('/getclientData',Authentication, AdminControl.getClientData);
 router.post('/deleteNotaCredito',Authentication, AdminControl.deleteNotaCredito);
+router.post('/deleteNotaDebito',Authentication, AdminControl.deleteNotaDebito);
+
 router.post('/deleteCorreoConfigurado',Authentication, AdminControl.deleteCorreoConfigurado);
 router.get('/testingsend', AdminControl.testingsend);
 router.get('/datainv', AdminControl.dataInv);

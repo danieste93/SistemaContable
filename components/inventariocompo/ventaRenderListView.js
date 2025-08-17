@@ -1,18 +1,29 @@
 
 import {Animate} from "react-animate-mount"
 import Dropdown from 'react-bootstrap/Dropdown';
+
+import CustomDropdown from "./CustomDropdown"
 import React, { useState,useEffect } from 'react';
-const ArtRender = ({ uploadToFact, datos,getNota, watchNotaCredito, deleteVentaList,user,resendProcess,sendView,viewCreds}) => {
+const ArtRender = ({ uploadToFact, datos,getNota,getNotaDeb, watchNotaCredito, watchNotaDebito,deleteVentaList,user,resendProcess,sendView,viewCreds}) => {
+  // Estado para controlar apertura/cierre del Dropdown
+  const [showDropdown, setShowDropdown] = useState(false);
   const [visual, setvisual] = useState(false );
   const [visualUploadFact, setvisualUploadFact] = useState(false );
   const [visualCred, setvisualCred] = useState(false );
   const [backGroundVent, setbackGroundVent] = useState("");
   const [visualProcess, setvisualProcess] = useState(false);
   const [visualNota, setvisualNota] = useState(false);
+  const [visualNotaDeb, setvisualNotaDeb] = useState(false);
   const [watchNota, setwatchNota] = useState(false);
+  const [watchNotaDeb, setwatchNotaDeb] = useState(false);
 
 useEffect(() => {
 console.log(datos)
+setwatchNotaDeb(false);
+setvisualNotaDeb(false);
+setvisualNota(false);
+setwatchNota(false);
+
 if(datos.TipoVenta == "Credito"){
   setvisualCred(true)
   if(datos.FormasCredito.length > 0){
@@ -47,9 +58,19 @@ if(datos.TipoVenta == "Credito"){
   
     setvisualNota(true)
   }
+   if(datos.Doctype == "Factura-Electronica" &&  datos.nombreCliente != "" &&datos.nombreCliente != "Consumidor Final" && (!datos.NotaDebito  || datos.NotaDebito == "")){
+
+    setvisualNotaDeb(true)
+  }
   if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != "" && datos.NotaCredito && datos.NotaCredito.Doctype == "Nota-de-Credito"){
   
     setwatchNota(true)
+  }
+
+  if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != "" && datos.NotaDebito && datos.NotaDebito.Doctype == "Nota-de-Debito"){
+
+    setwatchNotaDeb(true)
+    
   }
   if(datos.Doctype == "Nota de venta" ){
   
@@ -58,7 +79,7 @@ if(datos.TipoVenta == "Credito"){
 
 
 
-});// fin del set effect
+},[datos]);// fin del set effect
 
 
 let ganancia=0
@@ -107,10 +128,12 @@ if(datos){
       }
 
 let tiempo = new Date(datos.tiempo)    
-let mes = addCero(tiempo.getMonth()+1)
-let dia = addCero(tiempo.getDate())
-var date = tiempo.getFullYear()+'-'+mes+'-'+ dia;         
-var hora = addCero(tiempo.getHours())+" : "+   addCero(tiempo.getMinutes())
+const mesesCorto = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+let dia = addCero(tiempo.getDate());
+let mesNombre = mesesCorto[tiempo.getMonth()];
+let year = tiempo.getFullYear();
+let hora = addCero(tiempo.getHours()) + ':' + addCero(tiempo.getMinutes());
+var date = `${dia} ${mesNombre} ${year} · ${hora}`;
     return (   
                  
                 <div className="contVenta" onClick={()=>{
@@ -127,6 +150,10 @@ var hora = addCero(tiempo.getHours())+" : "+   addCero(tiempo.getMinutes())
                       <span style={{fontSize:"12px", border:"1px solid blue", borderRadius:"5px", textAlign:"center" }}>Nota Cred.</span>  
 
                       </Animate>
+                           <Animate show={watchNotaDeb}>
+                      <span style={{fontSize:"12px", border:"1px solid blue", borderRadius:"5px", textAlign:"center" }}>Nota Deb.</span>  
+
+                      </Animate>
                       {datos.iDVenta}  
                       
                       </p></div>
@@ -135,7 +162,7 @@ var hora = addCero(tiempo.getHours())+" : "+   addCero(tiempo.getMinutes())
                     </div>
                     <div className="contdetalleVenta">
                     
-                    <div className="valorD "> <p className="parrafoD doscincuenta">  {date } // {hora }  </p></div>
+                    <div className="valorD "> <p className="parrafoD doscincuenta">  {date}  </p></div>
                     
                  
                     </div>
@@ -208,78 +235,68 @@ var hora = addCero(tiempo.getHours())+" : "+   addCero(tiempo.getMinutes())
                  
                     </div>
                     <div className="contdetalleVenta miscien butondelete">
-                    <Dropdown onClick={(e)=>{ e.stopPropagation(); console.log(datos)}}>
-        
-        <Dropdown.Toggle variant="primary" className="contDropdown" id="dropdownm" style={{marginRight:"15px"}}>
-        <span className="material-icons">
-          
-          </span>
-    </Dropdown.Toggle>
-  
-     <Dropdown.Menu>
-
-     <Animate show={visualNota}>
-<Dropdown.Item>
-                    <button  className="btn btn-warning btnDropDowm " onClick={(e)=>{ e.stopPropagation();getNota(datos)}}><span className="material-icons">
-                    receipt
-</span>
-<p>Nota de Crédito</p>
-</button>
-</Dropdown.Item>
-</Animate>
-
-<Animate show={watchNota}>
-<Dropdown.Item>
-                    <button  className="btn btn-info btnDropDowm " onClick={(e)=>{ e.stopPropagation();watchNotaCredito(datos)}}><span className="material-icons">
-                    receipt
-</span>
-<p> Visualizar Nota de Crédito</p>
-</button>
-</Dropdown.Item>
-</Animate>
-
-<Animate show={visualProcess}>
-<Dropdown.Item>
-                    <button  className="btn btn-warning btnDropDowm " onClick={(e)=>{ e.stopPropagation();resendProcess(datos)}}><span className="material-icons">
-send
-</span>
-<p>Re-enviar</p>
-
-</button>
-  </Dropdown.Item>
-</Animate>
-<Animate show={visualUploadFact}>
-<Dropdown.Item>
-                    <button  className="btn btn-info btnDropDowm " onClick={(e)=>{ e.stopPropagation();uploadToFact(datos)}}><span className="material-icons">
-send
-</span>
-<p>Generar Factura</p>
-
-</button>
-  </Dropdown.Item>
-</Animate>
-<Animate show={visualCred}>
-                    <Dropdown.Item>
-                    <button  className="btn btn-warning btnDropDowm " onClick={(e)=>{ e.stopPropagation();viewCreds(datos)}}><span className="material-icons">payments          
-</span>
-<p>Abonos</p>
-</button>
-</Dropdown.Item>
-</Animate>
-
-
-     <Animate show={visual}>
-                    <Dropdown.Item>
-                    <button  className="btn btn-danger btnDropDowm " onClick={(e)=>{  e.stopPropagation(); deleteVentaList(datos)}}><span className="material-icons">delete
-</span>
-<p>Eliminar</p>
-
-</button>
-</Dropdown.Item>
-</Animate>
- 
-     </Dropdown.Menu>
-     </Dropdown>
+                          
+                            <CustomDropdown
+                            onClick={() => console.log(datos)}
+                items={[
+                  visualNota && {
+                    key: `nota-credito-${datos.iDVenta}`,
+                    label: 'Nota de Crédito',
+                    icon: 'receipt',
+                    className: 'btn btn-warning btnDropDowm',
+                    onClick: (e) => { e.stopPropagation(); getNota(datos); }
+                  },
+                  visualNotaDeb && {
+                    key: `nota-debito-${datos.iDVenta}`,
+                    label: 'Nota de Débito',
+                    icon: 'post_add',
+                    className: 'btn btn-success btnDropDowm',
+                    onClick: (e) => { e.stopPropagation(); getNotaDeb(datos); }
+                  },
+                  watchNota && {
+                    key: `ver-nota-credito-${datos.iDVenta}`,
+                    label: 'Visualizar Nota de Crédito',
+                    icon: 'receipt',
+                    className: 'btn btn-info btnDropDowm',
+                    onClick: (e) => { e.stopPropagation(); watchNotaCredito(datos); }
+                  },
+                  watchNotaDeb && {
+                    key: `ver-nota-debito-${datos.iDVenta}`,
+                    label: 'Visualizar Nota de Débito',
+                    icon: 'post_add',
+                    className: 'btn btn-success btnDropDowm',
+                    onClick: (e) => { e.stopPropagation(); watchNotaDebito(datos); }
+                  },
+                  visualProcess && {
+                    key: `reenviar-${datos.iDVenta}`,
+                    label: 'Re-enviar',
+                    icon: 'send',
+                    className: 'btn btn-warning btnDropDowm',
+                    onClick: (e) => { e.stopPropagation(); resendProcess(datos); }
+                  },
+                  visualUploadFact && {
+                    key: `generar-factura-${datos.iDVenta}`,
+                    label: 'Generar Factura',
+                    icon: 'send',
+                    className: 'btn btn-info btnDropDowm',
+                    onClick: (e) => { e.stopPropagation(); uploadToFact(datos); }
+                  },
+                  visualCred && {
+                    key: `abonos-${datos.iDVenta}`,
+                    label: 'Abonos',
+                    icon: 'payments',
+                    className: 'btn btn-warning btnDropDowm',
+                    onClick: (e) => { e.stopPropagation(); viewCreds(datos); }
+                  },
+                  visual && {
+                    key: `eliminar-${datos.iDVenta}`,
+                    label: 'Eliminar',
+                    icon: 'delete',
+                    className: 'btn btn-danger btnDropDowm',
+                    onClick: (e) => { e.stopPropagation(); deleteVentaList(datos); }
+                  }
+                ].filter(Boolean)}
+              />
       
 </div>
                    

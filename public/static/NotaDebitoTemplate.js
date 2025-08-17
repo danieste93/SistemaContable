@@ -80,8 +80,7 @@ const renderPagos = (Fpago) => {
       else if(pago.Tipo === "Efectivo"){
 
         tituloRender  = "Sin utilización del sistema financiero"
-     }
-       else if(pago.Tipo === "Tarjeta-de-Credito"){
+     }       else if(pago.Tipo === "Tarjeta-de-Credito"){
 
         tituloRender  = "Tarjeta de Crédito"
      }
@@ -92,7 +91,7 @@ const renderPagos = (Fpago) => {
            return(
             <tr key={i}>
               <td>{tituloRender}</td>
-              <td>${pago.Cantidad.toFixed(2)}</td>
+              <td>${pago.Cantidad}</td>
             </tr>
           )})}
         </tbody>
@@ -168,7 +167,7 @@ let Rimpeval =""
          
             <div class="contdetail ContNumeracion">
             <div class="clave">
-            Factura Nº
+            Nota de Débito Nº
             </div>
             <div class="valorFact">
             <span>{`  ${Inf.estab} - ${Inf.ptoEmi} - ${Inf.secuencial}`}</span> 
@@ -194,7 +193,7 @@ let Rimpeval =""
     </div>
     <div class="FinalData contMiddle">
   <div class="Cont2FactTo">
-  <p class="enfData">Facturado a:</p>
+  <p class="enfData">Generado a:</p>
   <div class="gridComprador">
   <div class="rowComprador">
     <div class="datoItem">
@@ -234,25 +233,37 @@ let Rimpeval =""
     <div class="contProducts">
     <div class="ContDetalle ContTitulos">
         <div class="divigualTitulo">
-        Detalles
+        Motivo
         </div>
         <div class="divigual">
-       Cantidad
+       Iva
         </div>
         <div class="divigual">
-      Precio. U
+      Valor
         </div>
-        <div class="divigual">
-      Total
+
+   
+
         </div>
+    {Inf.motivos.map((motivo, index) => (
+        <div className="ContDetalle" key={index}>
+          <div className="divigualTitulo">
+            {motivo.motivo}
+          </div>
+          <div className="divigual">
+            {motivo.iva?"si":"no"}
+          </div>
+          <div className="divigual">
+            {motivo.valor}
+          </div>
         </div>
-    {genProds(Inf.ArticulosVendidos, Inf)}
+      ))}
    
   
     </div>
       <div class="contValores">
         <div class="contFormasdePago">
-{renderPagos(Inf.Fpago)}
+{renderPagos(Inf.FormasPago)}
             </div>  
   <div class="MainContValues">
     <div class="ContDetalle contValues" >
@@ -713,6 +724,7 @@ justify-content: space-between;
       flex: 1;
       text-align: right;
       color: #111;
+          min-width: 100px;
     }
 
     .totalFinal {

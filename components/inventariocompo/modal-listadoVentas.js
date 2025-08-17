@@ -13,7 +13,9 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import ViewVenta from "../modal-viewventas"
 
 import GenNotas from "./modal-genNotas"
+import GenNotasDeb from "./modal-genNotasDeb"
 import ViewNotasCred from "../modal-viewvNotaCred"
+import ViewNotasDeb from "../modal-viewvNotaDeb"
 
 import ViewCreds from "../modal-viewCreds"
 import "./mediaprint.css"
@@ -62,7 +64,9 @@ class Listvent extends Component {
     loadingData:false,
     dataventa:"",
     viewVenta:false,
-    anchorEl:null
+    anchorEl:null,
+    genNotaDeb:false,
+    dataNotaDeb:{}
    }
    componentRef = React.createRef(); 
    periodofin(){
@@ -890,7 +894,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
             this.setState({viewVenta:true, dataventa:datos})}}
           />)
       })
-     
+     console.log(filtrados)
       listviewcomp=filtrados.map((comp, i)=>{
       
         return(<VentaRenderList 
@@ -899,6 +903,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
           getNotaDeb={(datos)=>{ this.setState({genNotaDeb:true, dataNotaDeb:datos})}} 
           getNota={(datos)=>{ this.setState({viewNota:true, dataNota:datos})}} 
           watchNotaCredito={(datos)=>{ this.setState({viewerNota:true, viewerdataNota:datos})}}
+          watchNotaDebito={(datos)=>{ this.setState({viewerNotaDeb:true, viewerdataNota:datos})}}
           viewCreds={(datos)=>{ this.setState({viewCreds:true, dataCred:datos})}} 
           sendView={(datos)=>{ this.setState({viewVenta:true, dataventa:datos})}} 
             
@@ -1343,14 +1348,20 @@ search
 <Animate show={this.state.viewNota}>
 <GenNotas datos={this.state.dataNota} Flecharetro={()=>{this.setState({viewNota:false})}} />
 </Animate>
+<Animate show={this.state.genNotaDeb}>
+<GenNotasDeb datos={this.state.dataNotaDeb} Flecharetro={()=>{this.setState({genNotaDeb:false})}} />
+</Animate>
 <Animate show={this.state.viewerNota}>
 <ViewNotasCred updateNotaCred={(e)=>{console.log(e);
-  
   this.props.dispatch(updateVenta(e.updatedVenta))}} 
- 
-  
   userData={this.props.state.userReducer.update} datos={this.state.viewerdataNota} Flecharetro={()=>{this.setState({viewerNota:false})}} />
 </Animate>
+<Animate show={this.state.viewerNotaDeb}>
+<ViewNotasDeb updateNota={(e)=>{console.log(e);
+  this.props.dispatch(updateVenta(e.updatedVenta))}} 
+  userData={this.props.state.userReducer.update} datos={this.state.viewerdataNota} Flecharetro={()=>{this.setState({viewerNotaDeb:false})}} />
+</Animate>
+
 <Animate show={this.state.ModaluploadFact}>
         <UploadFact dataUpload={this.state.dataUpload} Flecharetro={()=>{this.setState({ModaluploadFact:false, dataUpload:{}});this.props.updateArt()}  }/>
         </Animate>
@@ -1542,7 +1553,7 @@ i{
              }
                
         .maincontacto{
-      z-index: 1299;
+      z-index: 1298;
          width: 98.5vw;
          height: 100vh;
          background-color: rgba(0, 0, 0, 0.7);

@@ -12,8 +12,11 @@ import MuiAlert from '@material-ui/lab/Alert';
 import Forge  from 'node-forge';
 import Checkbox from '@material-ui/core/Checkbox';
 import SecureFirm from '../snippets/getSecureFirm';
-import NotaCredito from "../../public/static/NotaCreditoTemplate"
-import {updateVenta} from "../../reduxstore/actions/regcont"
+import NotaDebito from "../../public/static/NotaDebitoTemplate"
+import {updateVenta, addRegs, updateCuentas} from "../../reduxstore/actions/regcont"
+import HelperFormapago from "../reusableComplex/helperSoloPago"
+import ModalDetallesAdicionales from "../puntoventacompo/modal-detallesadicionales"
+
 
 
 class Contacto extends Component {
@@ -21,16 +24,21 @@ class Contacto extends Component {
 state={
   ArtVent:this.props.datos.articulosVendidos,
   loading:false,
+    adicionalInfo:[],
+    showAdicionalInfo:false,
   descargarNota:false,
   ClientID:"",
   secuencialGen:0,
   secuencialBase:0,
-  Justificacion:"",
+  Fpago: [{Cantidad:0}],
   Alert:{Estado:false},
+  motivos: [
+    { motivo: '', iva: true, valor: "" }
+  ],
 }
     componentDidMount(){
 
-      console.log(this.props)
+    
       console.log(this.state)
       setTimeout(function(){ 
         
@@ -45,6 +53,15 @@ this.getUserData()
       handleChangeCheckbox=()=>{
         this.setState({descargarNota:!this.state.descargarNota})
             }
+            handleDeleteMotivo = (index) => {
+  const motivos = [...this.state.motivos];
+  motivos.splice(index, 1);
+  // Siempre debe haber al menos un motivo
+  if (motivos.length === 0) {
+    motivos.push({ motivo: '', iva: false, valor: '' });
+  }
+  this.setState({ motivos });
+};
           decryptData = (text) => {
                  
                   const bytes = CryptoJS.AES.decrypt(text, process.env.REACT_CLOUDY_SECRET);
@@ -83,46 +100,7 @@ let data = await fetchData(this.props.state.userReducer,
           return n
         }
       }
-       gendetalles=()=>{   
-
-        let nuevosDetalles = this.state.ArtVent.map(item =>{
-            let codigoPorcentajeDeta =item.Iva? 4 : 0 // 0:0%  2:12%  3:14%  4:15% 5:5% 10:13% 
-            let codigoDeta =2 //IVA:2 ICE:3 IRBPNR:5
-
-          let tarifaDetal =item.Iva? parseFloat(process.env.IVA_EC) : 0
-          let baseImponible =  (item.PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`)).toFixed(2)
-            let precioTotalSinImpuesto = item.Iva? baseImponible
-                                        :   item.PrecioCompraTotal.toFixed(2) 
-
-                
-                                   let valor  = item.Iva?  ((item.PrecioCompraTotal) - baseImponible).toFixed(2):0                      
-                                        
-        let precioUnitario =  (precioTotalSinImpuesto / item.CantidadCompra).toFixed(2)
-        let data = `        <detalle>\n`+
-        `            <codigoInterno>${item.Eqid}</codigoInterno>\n`+
-`            <codigoAdicional>${item.Eqid}</codigoAdicional>\n`+
-`            <descripcion>${item.Titulo}</descripcion>\n`+
-`            <cantidad>${item.CantidadCompra.toFixed(2)}</cantidad>\n`+
-`            <precioUnitario>${precioUnitario}</precioUnitario>\n`+
-`            <descuento>0</descuento>\n`+
-`            <precioTotalSinImpuesto>${precioTotalSinImpuesto}</precioTotalSinImpuesto>\n`+
-`            <impuestos>\n`+
-`                <impuesto>\n`+
-`                    <codigo>${codigoDeta}</codigo>\n`+
-`                    <codigoPorcentaje>${codigoPorcentajeDeta}</codigoPorcentaje>\n`+
-`                    <tarifa>${tarifaDetal.toFixed(2)}</tarifa>\n`+
-`                    <baseImponible>${precioTotalSinImpuesto}</baseImponible>\n`+
-`                    <valor>${valor}</valor>\n`+
-`                </impuesto>\n`+
-`            </impuestos>\n`+
-"        </detalle>\n"
-        
-        
-        return data
-        })
      
-               return nuevosDetalles.join("")  
-                   }
 
      getSignature=(url, key, name)=>{
             let sha1_base64=(txt)=> {
@@ -153,44 +131,95 @@ let data = await fetchData(this.props.state.userReducer,
         return added
     }
 
+
+ genMotivos=()=>{ 
+
+return this.state.motivos.map((item, idx) => {
+let baseImponible =  (parseFloat(item.valor) /  parseFloat(`1.${process.env.IVA_EC }`)).toFixed(2)
+
+  return (
+  `            <motivo>\n`+
+            `                <razon>${item.motivo}</razon>\n`+
+            `                <valor>${baseImponible}</valor>\n`+
+            `            </motivo>\n`
+  );
+});
+
+}
+
+ genPagos=()=>{ 
+
+return this.state.Fpago.map((item, idx) => {
+
+  const codigosSRI = {
+    "Efectivo": "01",
+    "Transferencia": "20",
+    "Tarjeta-de-Debito": "16",
+    "Tarjeta-de-Credito": "19"
+  };
+     const tipo = item.Tipo;
+    const codigo = codigosSRI[tipo] || "00";
+
+  return (
+  `            <pago>\n`+
+            `                <formaPago>${codigo}</formaPago>\n`+
+            `                <total>${item.Cantidad}</total>\n`+
+            `            </pago>\n`
+  );
+});
+
+}
+
     genImpuestos=()=>{
-        let codigoPorcentajeDeta = 4 // 0:0%  2:12%  3:14%  4:15% 5:5% 10:13% 
+      let codigoPorcentajeDeta = ({
+    "0": 0,   // IVA 0%
+    "12": 2,  // IVA 12%
+    "14": 3,  // IVA 14%
+    "15": 4,  // IVA 15%
+    "5": 5,   // IVA 5%
+    "13": 10  // IVA 13%
+}[process.env.IVA_EC] ?? null);
         let codigoDeta =2 //IVA:2 ICE:3 IRBPNR:5
-        let artImpuestos  = this.state.ArtVent.filter(x=>x.Iva)
-        let artSinImpuestos = this.state.ArtVent.filter(x=>x.Iva == false)
+        let artImpuestos  = this.state.motivos.filter(x=>x.iva)
+        let artSinImpuestos = this.state.motivos.filter(x=>x.iva == false)
         let dataImpuestos = ""
+      
         if(artSinImpuestos.length > 0){
             let baseImponibleSinImpuestos = 0
             let valtotal = 0
             for(let i=0;i<artSinImpuestos.length;i++){
-                baseImponibleSinImpuestos += artSinImpuestos[i].PrecioCompraTotal
+                baseImponibleSinImpuestos += parseFloat(artSinImpuestos[i].valor)
             }
-            let data = `            <totalImpuesto>\n`+
+            let data = `            <impuesto>\n`+
             `                <codigo>${2}</codigo>\n`+
             `                <codigoPorcentaje>${0}</codigoPorcentaje>\n`+
+             `                <tarifa>${0.00}</tarifa>\n`+
             `                <baseImponible>${baseImponibleSinImpuestos.toFixed(2)}</baseImponible>\n`+
             `                <valor>${0.00}</valor>\n`+
-            `            </totalImpuesto>\n`
+            `            </impuesto>\n`
             dataImpuestos += data
         }
+
+            
         if(artImpuestos.length > 0){
            
          let baseImponibleImpuestos = 0
          let valtotal = 0
                 for(let i=0;i<artImpuestos.length;i++){
-                    baseImponibleImpuestos += (artImpuestos[i].PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`))
-                    valtotal += (artImpuestos[i].PrecioCompraTotal)
+                    baseImponibleImpuestos += (parseFloat(artImpuestos[i].valor) /  parseFloat(`1.${process.env.IVA_EC }`))
+                    valtotal += parseFloat(artImpuestos[i].valor)
                 }
               
-        let valor=valtotal - baseImponibleImpuestos
+        
 
             
-            let data = `            <totalImpuesto>\n`+
+            let data = `            <impuesto>\n`+
             `                <codigo>${codigoDeta}</codigo>\n`+
             `                <codigoPorcentaje>${codigoPorcentajeDeta}</codigoPorcentaje>\n`+
+                        `                <tarifa>${process.env.IVA_EC}</tarifa>\n`+
             `                <baseImponible>${baseImponibleImpuestos.toFixed(2)}</baseImponible>\n`+
-            `                <valor>${valor.toFixed(2)}</valor>\n`+
-            `            </totalImpuesto>\n`
+            `                <valor>${(valtotal - baseImponibleImpuestos ).toFixed(2)}</valor>\n`+
+            `            </impuesto>\n`
          
             dataImpuestos += data
         }
@@ -200,14 +229,14 @@ let data = await fetchData(this.props.state.userReducer,
     }  
 
 
-      genNotaCredito= async(SuperTotal, IvaEC)=>{
+      genNotaDebito= async(SuperTotal, IvaEC)=>{
 
         this.setState({loading:true})
         
         let razon = this.props.state.userReducer.update.usuario.user.Factura.razon 
         let nombreComercial = this.props.state.userReducer.update.usuario.user.Factura.nombreComercial
         let ruc = this.props.state.userReducer.update.usuario.user.Factura.ruc
-        let codDoc = "04" // 04 nota de credito, 01 factura, 
+        let codDoc = "05" // 05 nota de debito, 01 factura, 
         let estab =this.props.state.userReducer.update.usuario.user.Factura.codigoEstab
         let ptoEmi= this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision
      let secuencial= this.ceroMaker(this.state.secuencialGen)
@@ -231,19 +260,19 @@ let data = await fetchData(this.props.state.userReducer,
         let ciudadComprador = this.props.datos.ciudadCliente
         
         
-       
- 
-        let artImpuestos  = this.state.ArtVent.filter(x=>x.Iva)
-        let artSinImpuestos = this.state.ArtVent.filter(x=>x.Iva == false)
-        
+
+
+        let artImpuestos  = this.state.motivos.filter(x=>x.iva)
+        let artSinImpuestos = this.state.motivos.filter(x=>x.iva == false)
+
 
         let baseImpoConImpuestos = 0
         let baseImpoSinImpuestos = 0
-        
+        console.log(artImpuestos)
         if(artImpuestos.length > 0){
             for(let i=0;i<artImpuestos.length;i++){
             
-                baseImpoConImpuestos += (artImpuestos[i].PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`))
+                baseImpoConImpuestos += (parseFloat(artImpuestos[i].valor) /  parseFloat(`1.${process.env.IVA_EC }`))
 
             
             
@@ -253,8 +282,8 @@ let data = await fetchData(this.props.state.userReducer,
       
         if(artSinImpuestos.length > 0){
             for(let i=0;i<artSinImpuestos.length;i++){
-              
-                baseImpoSinImpuestos += artSinImpuestos[i].PrecioCompraTotal
+
+                baseImpoSinImpuestos += parseFloat(artSinImpuestos[i].valor)
             }
         }
 
@@ -284,7 +313,32 @@ let data = await fetchData(this.props.state.userReducer,
         let tipoEmision  = "1"
         let claveAcceso = dia+""+mes+""+tiempo.getFullYear()+""+codDoc+""+ruc+""+ambiente+""+serie+""+secuencial+""+codNum+""+tipoEmision
      
+function genInfoAdicional(campos) {
+  let info = '<infoAdicional>\n';
 
+  if (Array.isArray(campos)) {
+    campos.forEach(({ clave, valor }) => {
+      const claveEscapada = escapeXml(clave);
+      const valorEscapado = escapeXml(valor);
+      info += `  <campoAdicional nombre="${claveEscapada}">${valorEscapado}</campoAdicional>\n`;
+    });
+  }
+
+  info += '</infoAdicional>';
+  if (campos.length > 0) {
+    return info;
+  } else {
+    return '';
+  }
+}
+function escapeXml(unsafe) {
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
         let digVerificador =(claveAcceso)=>{
 
             let suma = 0
@@ -321,7 +375,7 @@ let data = await fetchData(this.props.state.userReducer,
 
         let xmlgenerator = 
  //    `   <?xml version="1.0" encoding="UTF-8"?>\n`+
-        `<notaCredito id="comprobante" version="1.0.0">\n` +
+        `<notaDebito id="comprobante" version="1.0.0">\n` +
         "    <infoTributaria>\n" +
         `        <ambiente>${ambiente}</ambiente>\n`+
         `        <tipoEmision>${tipoEmision}</tipoEmision>\n`+
@@ -334,9 +388,9 @@ let data = await fetchData(this.props.state.userReducer,
         `        <ptoEmi>${ptoEmi}</ptoEmi>\n`+
         `        <secuencial>${secuencial}</secuencial>\n`+
         `        <dirMatriz>${dirMatriz}</dirMatriz>\n`+
-                                          rimpeval +       
+                         rimpeval +       
         `    </infoTributaria>\n`+
-        "    <infoNotaCredito>\n" +
+        "    <infoNotaDebito>\n" +
         `        <fechaEmision>${fechaEmision}</fechaEmision>\n`+
         `        <dirEstablecimiento>${dirEstablecimiento}</dirEstablecimiento>\n`+
         `        <tipoIdentificacionComprador>${tipoIdentificacionComprador}</tipoIdentificacionComprador>\n` +
@@ -347,22 +401,22 @@ let data = await fetchData(this.props.state.userReducer,
         `        <numDocModificado>${numDocModificado}</numDocModificado>\n` +
         `        <fechaEmisionDocSustento>${fechaEmisionDocSustento}</fechaEmisionDocSustento>\n` +
         `        <totalSinImpuestos>${(baseImpoSinImpuestos + baseImpoConImpuestos).toFixed(2)}</totalSinImpuestos>\n` +
-        `        <valorModificacion>${(this.props.datos.PrecioCompraTotal - SuperTotal).toFixed(2)}</valorModificacion>\n` +
-        `        <moneda>DOLAR</moneda>\n`+
-        "        <totalConImpuestos>\n" +
+
+        "        <impuestos>\n" +
                  this.genImpuestos()+
-        "        </totalConImpuestos>\n" +
-        `        <motivo>${this.state.Justificacion}</motivo>\n` +
-        "    </infoNotaCredito>\n" +
-        "    <detalles>\n" +
-                  this.gendetalles()+  
-        "    </detalles>\n" +
-        "    <infoAdicional>\n" +
-        `        <campoAdicional nombre="Dirección">${direccionComprador}</campoAdicional>\n` +
-        `        <campoAdicional nombre="Email">${correoComprador}</campoAdicional>\n` +
-        "     </infoAdicional>\n" +
+        "        </impuestos>\n" +
+        `        <valorTotal>${(SuperTotal).toFixed(2)}</valorTotal>\n` +
+             "        <pagos>\n" +
+   this.genPagos()+
+        "        </pagos>\n" +
+        "    </infoNotaDebito>\n" +
+       "    <motivos>\n" +
+        this.genMotivos()+
+        "    </motivos>\n" +
+         genInfoAdicional(this.state.adicionalInfo)+
+
     
-"</notaCredito>"
+"</notaDebito>"
 
 
  if(this.props.state.userReducer.update.usuario.user.Factura.validateFact && this.props.state.userReducer.update.usuario.user.Firmdata.valiteFirma){                
@@ -451,7 +505,8 @@ let data = await fetchData(this.props.state.userReducer,
                 }
 
                 let PDFdata = {
-                    vendedorCont,
+                  Tiempo:new Date().getTime(),
+                   Vendedor: vendedorCont,
                     IDVenta:this.props.datos._id,
                     ClaveAcceso:clavefinal, 
                     numeroAuto,
@@ -460,14 +515,15 @@ let data = await fetchData(this.props.state.userReducer,
                      numDocModificado,
                      secuencial,
                        SuperTotal,                                           
-                       populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
                        baseImpoSinImpuestos,
                        baseImpoConImpuestos,
                        IvaEC:IvaEC.toFixed(2),
                        fechaEmision,
                        nombreComercial,
                        dirEstablecimiento,
-                       Doctype: "Nota-de-Credito",
+                         FormasPago:this.state.Fpago,
+                         adicionalInfo:this.state.adicionalInfo,
+                       Doctype: "Nota-de-Debito",
                       //  UserId: this.state.id,
                         razon ,
                         ruc,
@@ -475,26 +531,29 @@ let data = await fetchData(this.props.state.userReducer,
                         ptoEmi,
                         secuencial,
                         obligadoContabilidad,
-                        rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?"CONTRIBUYENTE RÉGIMEN RIMPE":"",
-                        razonSocialComprador,
+
+  rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?true:false,
+                                populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
+                         
+
+                       razonSocialComprador,
                         identificacionComprador,
                         direccionComprador,
                         correoComprador,
                         ciudadComprador,
-                        ArticulosVendidos:this.state.ArtVent,
+                 motivos:this.state.motivos,
                         LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
                          Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
                          Estado:"AUTORIZADO",
-                         Justificacion:this.state.Justificacion,
-                     };
-        
+                      };
+         
 
                   if(this.state.descargarNota){
 
                     fetch("/public/downloadPDFbyHTML", {
                         method: 'POST', // or 'PUT'
                         body: JSON.stringify({
-                            Html:NotaCredito(PDFdata)
+                            Html:NotaDebito(PDFdata)
 
                         }), // data can be `string` or {object}!
                         headers:{
@@ -511,7 +570,7 @@ let data = await fetchData(this.props.state.userReducer,
                           link.href = url;
                           link.setAttribute(
                             'download',
-                            `Nota-de-Crédito ${secuencial}`,
+                            `Nota-de-Débito ${secuencial}`,
                           );
                           link.click()
                           
@@ -524,11 +583,11 @@ let data = await fetchData(this.props.state.userReducer,
 
                   }
 
-                  fetch('/cuentas/agregarNotaCredito', {
+                  fetch('/cuentas/agregarNotaDebito', {
                     method: 'POST', // or 'PUT'
                     body: JSON.stringify({
                         newdocFirmado,
-                        Html:NotaCredito(PDFdata),
+                        Html:NotaDebito(PDFdata),
                         PDFdata,
                         docFirmado,
                         Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
@@ -545,11 +604,13 @@ let data = await fetchData(this.props.state.userReducer,
                     if(response.status== "Ok"){
 
                       this.props.dispatch(updateVenta(response.updateVenta));
+                       this.props.dispatch(addRegs(response.arrRegsSend));
+                       this.props.dispatch(updateCuentas(response.arrCuentas));
                       this.Onsalida()
                       let add = {
                         Estado:true,
                         Tipo:"success",
-                        Mensaje:"Nota de Crédito generada exitosamente"
+                        Mensaje:"Nota de Débito generada exitosamente"
                     }
                     this.setState({Alert: add,  loading:false, })
 
@@ -615,213 +676,26 @@ let data = await fetchData(this.props.state.userReducer,
 
             }
             } 
-      SetAll=(e)=>{
-   
-        let cantidad = parseFloat(e.cant)
-   
-        if(e.item.Tipo == "Producto" )
-        {
-
-           
-            let itemfind =  this.state.ArtVent.filter(x=>x.Eqid === e.item.Eqid)  
-            let indexset = this.state.ArtVent.indexOf(itemfind[0])
-               
-        let deepClone = JSON.parse(JSON.stringify(this.state.ArtVent));
-        deepClone[indexset].CantidadCacl =  parseFloat(e.cant)
-        deepClone[indexset].CantidadCompra =  parseFloat(e.CantidadGramos)
-        deepClone[indexset].Unidad = e.unidad
-        deepClone[indexset].PrecioCompraTotal = parseFloat(e.value)
-        deepClone[indexset].PrecioVendido=  parseFloat(e.value) / parseFloat(e.cant)
-            let valorcompar = 0
-            if(this.state.ArtVent.length > 0){
-                let findCombos = this.state.ArtVent.filter(x=>x.Tipo == "Combo")
-            
-                   if(findCombos){
-                       findCombos.forEach(x=>{
-                           let valCompra = x.CantidadCompra
-                            x.Producs.forEach(i=>{
-                             
-                                if (i._id == e.item._id){
-                                    if(i.Medida == "Unidad"){
-      
-                                        valorcompar  += (i.Cantidad*valCompra)
-                                    }else if(i.Medida == "Peso"){
-                                        if(i.Unidad == "Gramos"){
-                                            valorcompar  += ((i.Cantidad* 1)*valCompra)
-                                        }else if(i.Unidad == "Libras"){
-                                            valorcompar  += ((i.Cantidad* 453.592)*valCompra)
-                                        }else if(i.Unidad == "Kilos"){
-                                            valorcompar  += ((i.Cantidad* 1000)*valCompra)
-                                        }
-                                    }
-                                 
-                                }
-                            })
-                         })
-                   } 
-               }
-           
-          
-          
-      
-          
-
-         
-          this.setState({ArtVent:deepClone})
-   
-          
-
-
-      }else if(e.item.Tipo == "Servicio"){
-        let itemfind =  this.state.ArtVent.filter(x=>x.Eqid === e.item.Eqid)  
-        let indexset = this.state.ArtVent.indexOf(itemfind[0])
-           
-    let deepClone = JSON.parse(JSON.stringify(this.state.ArtVent));
-    deepClone[indexset].CantidadCacl =  parseFloat(e.cant)
-    deepClone[indexset].PrecioCompraTotal = parseFloat(e.value)
-    deepClone[indexset].PrecioVendido=  parseFloat(e.value) / parseFloat(e.cant)
-    deepClone[indexset].CantidadCompra = parseFloat(e.cant)
-    this.setState({ArtVent:deepClone})
-  
-      }else if(e.item.Tipo == "Combo"){
-        let itemfind =  this.state.ArtVent.filter(x=>x.Eqid === e.item.Eqid)  
-        let indexset = this.state.ArtVent.indexOf(itemfind[0])
-        let deepClone = JSON.parse(JSON.stringify(this.state.ArtVent));
-        deepClone[indexset].CantidadCacl =  parseFloat(e.cant)
-        deepClone[indexset].CantidadCompra = parseFloat(e.cant)
-        let productosExedidos =[]
-        let nuevoserrores = []
-        let valorProducto = 0
-        let valorCombos = 0
-        for(let i=0;i<e.item.Producs.length;i++){
-            if(this.state.ArtVent.length > 0){ 
-               
-                let findCombos = this.state.ArtVent.filter(x=>x.Tipo == "Combo" && x._id !=e.item._id )
-                let productoagregado = this.state.ArtVent.filter(x=> x._id == e.item.Producs[i]._id)
     
-          if(productoagregado.length > 0){
-           
-          if(productoagregado[0].Medida == "Unidad"){
-            valorProducto = productoagregado[0].CantidadCompra
-          }else if(productoagregado[0].Medida == "Peso"){
-            if(productoagregado[0].Unidad == "Gramos"){
-                valorProducto = parseFloat(productoagregado[0].CantidadCompra * 1)
-            }else if(productoagregado[0].Unidad == "Libras"){
-                valorProducto = parseFloat(productoagregado[0].CantidadCompra * 453.592)
-            }else if(productoagregado[0].Unidad == "Kilos"){
-                valorProducto = parseFloat(productoagregado[0].CantidadCompra * 1000)
-           
-          }
-        }
+
   
-   }
-           
-           if(findCombos.length > 0){
-            
-            findCombos.forEach(x=>{
-                let valCompra = x.CantidadCompra
-                 x.Producs.forEach(i=>{
-                  
-                     if (i._id == e.item._id){
-                         if(i.Medida == "Unidad"){
-
-                            valorCombos  += (i.Cantidad*valCompra)
-                         }else if(i.Medida == "Peso"){
-                             if(i.Unidad == "Gramos"){
-                                valorCombos  += ((i.Cantidad* 1)*valCompra)
-                             }else if(i.Unidad == "Libras"){
-                                valorCombos  += ((i.Cantidad* 453.592)*valCompra)
-                             }else if(i.Unidad == "Kilos"){
-                                valorCombos  += ((i.Cantidad* 1000)*valCompra)
-                             }
-                         }
-                      
-                     }
-                 })
-              })
-           }
-     
-            }
-            let itemfind =  this.props.state.RegContableReducer.Articulos.filter(x=>x._id === e.item.Producs[i]._id)  
-    
-            let cantidadreq = 0
-            if(e.item.Producs[i].Medida == "Unidad"){
-                cantidadreq = e.item.Producs[i].Cantidad * parseFloat(e.cant)
-            }else if(e.item.Producs[i].Medida == "Peso"){
-               if(e.item.Producs[i].Unidad  =="Kilos"){
-                cantidadreq =  (parseFloat(e.cant)*1000)
-                  }else if(e.item.Producs[i].Unidad =="Libras"){
-                    cantidadreq = (parseFloat(e.cant)*453.592)
-                  }else if(e.item.Producs[i].Unidad =="Gramos"){
-                    cantidadreq =  (parseFloat(e.cant))
-                  }
-            }
-       
-   
-     let cantTotal=cantidadreq + parseFloat(valorCombos) +parseFloat(valorProducto)
-     
-       if(itemfind[0].Existencia >=  cantTotal){
-        if(nuevoserrores.length >0){
-        let idfind = nuevoserrores.findIndex(x=>  x.idProd == e.item.Producs[i]._id && x.idCombo == e.item._id   )
-        nuevoserrores.filter( x => x.idProd != e.item.Producs[i]._id)
-    }
-
-       }else{
-        let dataCombo = {idCombo:e.item._id,
-            idProd:e.item.Producs[i]._id,
-            Producto: e.item.Producs[i]}
-
-         nuevoserrores.push(dataCombo)
-         
-      
-       }
-       
-        }
-      
-    if(nuevoserrores.length > 0){
-        let nombreComb = nuevoserrores.map(name =>(`${name.Producto.Titulo}, `))
-        let message = `Los productos "${nombreComb}" son insuficientes para vender el combo` 
-        let add = {
-            Estado:true,
-            Tipo:"error",
-            Mensaje:message
-        }
-        setTimeout(()=>{  
-            this.setState({Alert: add,loading:false,outStock:true})},100)
-      
-    }
-    let stock = false
-    if(nuevoserrores.length > 0){
-        stock = true
-    }else{
-        stock = false
-    }
-       
-        this.setState({ArtVent:deepClone,
-            ventasErrCombo:nuevoserrores,
-            outStock:stock})
-            this.saveToLocalStorage({ArtVent:deepClone})
-      }
-    }
-
-    setPrecios=(e)=>{
-           
-      if(parseFloat(e.Valor) >= 0){
-      let indexset =  this.state.ArtVent.findIndex(x=>x._id === e.Id)  
-      let deepClone = JSON.parse(JSON.stringify(this.state.ArtVent));
-      deepClone[indexset].PrecioCompraTotal = parseFloat(e.Valor)
-      deepClone[indexset].PrecioVendido=  parseFloat(e.Valor) / parseFloat(e.CantidadArts)
-      this.setState({ArtVent:deepClone})
-    }else{
-      let add = {
-        Estado:true,
-        Tipo:"error",
-        Mensaje:"El valor no puede ser menor o igual a 0"
-    }
-    this.setState({Alert: add })
-    }
-
+  handleIvaSwitch = (index) => {
+  const motivos = [...this.state.motivos];
+  motivos[index].iva = !motivos[index].iva;
+  this.setState({ motivos });
+};
+handleAddMotivo = () => {
+  if (this.state.motivos.length < 6) { // máximo 6 motivos, puedes cambiar el límite
+    this.setState({
+      motivos: [...this.state.motivos, { motivo: '', iva: false, valor: '' }]
+    });
   }
+};
+handleMotivoChange = (index, field, value) => {
+  const motivos = [...this.state.motivos];
+  motivos[index][field] = value;
+  this.setState({ motivos });
+};
    
       Onsalida=()=>{
         document.getElementById('mainxx').classList.remove("entradaaddc")
@@ -852,44 +726,54 @@ const Alert=(props)=> {
   }
 
 
-      if(this.state.ArtVent.length > 0){
-   
-        artsconIVA = this.state.ArtVent.filter(x=>x.Iva == true)
-         artssinIVA  = this.state.ArtVent.filter(x=>x.Iva == false)
-         
+      if(this.state.motivos.length > 0){
+
+        artsconIVA = this.state.motivos.filter(x=>x.iva == true)
+         artssinIVA  = this.state.motivos.filter(x=>x.iva == false)
+
          if(artsconIVA.length > 0){
              artsconIVA.forEach(x=>{
-                 valConIva += x.PrecioCompraTotal
+                 valConIva += parseFloat(x.valor)
              })
          } 
          if(artssinIVA.length > 0){
           
              artssinIVA.forEach(x=>{
               
-                 valSinIva += x.PrecioCompraTotal
+                 valSinIva += parseFloat(x.valor)
              })
          } 
         
         }
         SuperTotal  = valSinIva +  valConIva
         IvaEC = valConIva - (valConIva /  parseFloat(`1.${process.env.IVA_EC }`))
-    let  generadorArticulosListaVenta = this.state.ArtVent.map((item, i) => (<ArticuloNota
-        key={item._id}
-         index={i}
-         datos={item} 
-         sendTipoPrecio={this.setTipoPrecio}
-         sendPrecio={this.setPrecios}
-         sendAll={this.SetAll} 
-         deleteitem={(e)=>{
-            let nuevoarr = this.state.ArtVent.filter(x => x.Eqid != e.Eqid)
-           // let nuevosPrecios = this.state.arrPrecios.filter(x => x.Id != item._id) 
+
+let TotalPago = 0
+
+        if(this.state.Fpago.length > 0){
+
+    for(let i = 0; i<this.state.Fpago.length;i++){
+    
+         TotalPago += parseFloat(this.state.Fpago[i].Cantidad)
+    }
+    
+}
+
+
+  const setDisableButton= () => {
+
+     if(SuperTotal > 0 && TotalPago > 0 && SuperTotal === TotalPago ){
+        return "enabled"
+      }else{
+        return "disabled"
+      }
+
+    
+
+   }
+
+
         
-            this.setState({ArtVent:nuevoarr,  })
-           
-        }}
-   
-      
-        />))
         return ( 
 
          <div >
@@ -902,7 +786,7 @@ const Alert=(props)=> {
            />
   <div className="tituloventa">
     
-Generar Nota de Crédito 
+Generar Nota de Débito
 
 </div>
 
@@ -1067,22 +951,27 @@ phone
   
 </ValidatorForm>
 <div className="contventa">
+ <button
+        className="btnAddMotivo"
+        type="button"
+        onClick={this.handleAddMotivo}
+        disabled={this.state.motivos.length >= 6}
+        title="Agregar otro motivo"
+      >
+        <span className="material-icons">add</span>
+      </button>
 <div className=" contTitulos ">
                 <div className="Numeral">
                 #
                         </div>
                         <div className="titulo2Artic ">
-                            Nombre
+                            Motivo
                         </div>
                         <div className="ArticResPrecio ">
-                            Cant
-                        </div>
-                        <div className="ArticResPrecio">
-                            Tipo
-                        </div>
-                        <div className="ArticRes">
                             IVA
                         </div>
+                      
+                       
                         <div className="ArticRes">
                             Val
                         </div>
@@ -1092,31 +981,80 @@ phone
                         </div>   
                         
                         
-                        {generadorArticulosListaVenta}                    
+                        {this.state.motivos.map((item, idx) => (
+  <div key={idx} className="filaMotivo">
+    <div className="Numeral">{idx + 1}</div>
+    <div className="titulo2Artic">
+      <input
+        className="inputMotivoElegante"
+        type="text"
+        placeholder="Motivo"
+        value={item.motivo}
+        onChange={e => this.handleMotivoChange(idx, 'motivo', e.target.value)}
+      />
+    </div>
+    <div className="ArticResPrecio">
+      <label className="switch">
+        <input
+          type="checkbox"
+          checked={item.iva}
+          onChange={() => this.handleIvaSwitch(idx)}
+        />
+        <span className="slider"></span>
+      </label>
+    </div>
+    <div className="ArticRes">
+      <input
+        className="inputValorElegante"
+        type="number"
+        min="0"
+        step="0.01"
+        placeholder="Valor"
+        value={item.valor}
+        onChange={e => this.handleMotivoChange(idx, 'valor', e.target.value)}
+      />
+    </div>
+    <div className="ArticRes">
+      <button
+        className="btnDeleteMotivo"
+        type="button"
+    onClick={() => this.handleDeleteMotivo(idx)}
+        disabled={this.state.motivos.length >= 6}
+        title="Agregar otro motivo"
+      >
+        <span className="material-icons">delete</span>
+      </button>
+    </div>
+  </div>
+))}                    
    </div>
    <div className={`contTotal `}>
     <p className="totalp">Total:</p>
-           <p className="totalp">${SuperTotal.toFixed(2)}</p>
-       
+           <p className="totalp">${isNaN(SuperTotal) ? 0 : SuperTotal.toFixed(2)}</p>
+
          </div>
+
+ 
+<HelperFormapago
+valorSugerido={parseFloat(SuperTotal).toFixed(2)}
+
+onChange={(e)=>{this.setState(e)}}
+
+/>
+
+<button className="btnAdicional" onClick={(e) => { e.stopPropagation();
+  e.preventDefault();
+  this.setState({ showAdicionalInfo: true }) }}>
+  <span className="material-icons">add</span>
+  Información
+</button>
+
          <ValidatorForm
    
-   onSubmit={()=>this.genNotaCredito(SuperTotal, IvaEC)}
+   onSubmit={()=>this.genNotaDebito(SuperTotal, IvaEC)}
    onError={errors => console.log(errors)}
 >
-    <div className="ContJustificacion">
-                    <TextValidator
-      label="Justificacion"
-       onChange={this.handleChangeGeneral}
-       name="Justificacion"
-       type="text"
-    value={this.state.Justificacion}
-      
-       validators={['requerido']}
-       errorMessages={['Campo requerido'] }
-      
-   />
-                    </div>
+   
                     
               <div className="contDual">
                         <div className="textoPrint">
@@ -1138,7 +1076,9 @@ phone
                </div>
               
          <div className="contBotonPago">
-               <button className={` btn btn-success botonedit2  `} type='submit'>
+               <button 
+               disabled={setDisableButton() === "disabled"}
+               className={` btn btn-success botonedit2 ${setDisableButton()} `} type='submit'>
 <p>Generar</p>
 <i className="material-icons">
  assignment
@@ -1157,6 +1097,18 @@ phone
 </div>
         </div>
 
+               <Animate show={this.state.showAdicionalInfo}>
+                                <ModalDetallesAdicionales
+                                  onReload={this.state.adicionalInfo}
+                                  onCamposChange={(e)=>{
+                                
+                                    this.setState({adicionalInfo:e})}}
+                               
+                                   Flecharetro={()=>{this.setState({showAdicionalInfo:false})}}
+                                />
+        
+                            </Animate >      
+
                    <Snackbar open={this.state.Alert.Estado} autoHideDuration={10000} onClose={handleClose}>
             <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
                 <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>
@@ -1165,7 +1117,7 @@ phone
           </Snackbar>
         <style jsx >{`
            .maincontacto{
-            z-index: 1298;
+            z-index: 1299;
             width: 100vw;
             height: 100vh;
             background-color: rgba(0, 0, 0, 0.7);
@@ -1270,6 +1222,26 @@ phone
     padding: 7px;
     text-align:center
 }
+             .btnAdicional {
+    display: inline-flex;
+    align-items: center;
+ width: 150px;
+    background-color: white;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 9px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+  }
+
+  .btnAdicional:hover {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
+  }
 
   .percentInput{
                     width: 30%;
@@ -1332,6 +1304,119 @@ phone
     border-radius: 10px;
     justify-content: center;}
                   
+                   .inputMotivoElegante {
+  width: 90%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #1976d2;
+  font-size: 16px;
+  background: #f5faff;
+  transition: border 0.2s;
+}
+.inputMotivoElegante:focus {
+  border: 2px solid #1976d2;
+  outline: none;
+}
+.inputValorElegante {
+  width: 80px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #1976d2;
+  font-size: 16px;
+  background: #f5faff;
+  transition: border 0.2s;
+}
+.inputValorElegante:focus {
+  border: 2px solid #1976d2;
+  outline: none;
+}
+.btnAddMotivo {
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+  .btnDeleteMotivo {
+  background: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.btnAddMotivo:disabled {
+  background: #b0bec5;
+  cursor: not-allowed;
+}
+.filaMotivo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 22px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+.switch input:checked + .slider {
+  background-color: #1976d2;
+}
+.switch input:checked + .slider:before {
+  transform: translateX(16px);
+}
+  .confirm-button.enabled {
+  background-color: #10b981; /* Verde vibrante */
+  color: white;
+}
+
+.confirm-button.enabled:hover {
+  background-color: #059669;
+  transform: scale(1.02);
+}
+
+.confirm-button.disabled {
+  background-color: #d1fae5; /* Verde opaco */
+  color: #6b7280;
+  cursor: not-allowed;
+}
            `}</style>
         
 

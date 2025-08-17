@@ -31,12 +31,12 @@ class Contacto extends Component {
     this.setState({ campos: camposCargados });
 
     setTimeout(() => {
-      document.getElementById('mainxx').classList.add('entradaaddc');
+      document.getElementById('mainDetallesadicionales').classList.add('entradaaddc');
     }, 500);
   }
 
   Onsalida = () => {
-    document.getElementById('mainxx').classList.remove('entradaaddc');
+    document.getElementById('mainDetallesadicionales').classList.remove('entradaaddc');
     setTimeout(() => {
       this.props.Flecharetro();
     }, 500);
@@ -63,7 +63,7 @@ class Contacto extends Component {
 
     return (
       <div>
-        <div className="maincontacto" id="mainxx">
+        <div className="maincontacto" id="mainDetallesadicionales">
           <div className="contcontactov2">
             <div className="headercontact">
               <img
@@ -115,7 +115,7 @@ class Contacto extends Component {
 
         <style jsx>{`
           .maincontacto {
-            z-index: 1299;
+            z-index: 1300;
             width: 98.5vw;
             height: 100vh;
             background-color: rgba(0, 0, 0, 0.7);

@@ -301,7 +301,7 @@ class HelperFormapago extends Component {
         this.props.onChange({addFact:!this.state.addFact})
       }  
 render(){
-  console.log(this.state)
+  
     let TotalPago = 0
     if(this.state.Fpago.length > 0){
         
@@ -316,7 +316,7 @@ render(){
     let activeadd= this.state.adduser? "articeadd":""
      
     let editadd= this.state.userEditMode? "editadd":""
-    console.log(this.state) 
+    
     
     const handleClose = (event, reason) => {
         let AleEstado = this.state.Alert

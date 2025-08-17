@@ -59,6 +59,9 @@ router.post('/getmontregs', Authentication, cuentasController.getMontRegs);
 router.post('/gettipos', Authentication, cuentasController.getTipos);
 router.get('/getdataaaa', cuentasController.profesorAdd);
 router.post('/agregarNotaCredito',Authentication, cuentasController.agregarNotaCredito);
+
+router.post('/agregarNotaDebito',Authentication, cuentasController.agregarNotaDebito);
+
 router.post('/generarfact', cuentasController.generarFact);
 
 router.post('/uploadfact',Authentication, cuentasController.uploadFact);
