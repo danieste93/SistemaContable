@@ -8,7 +8,7 @@ import {connect} from 'react-redux';
 import VentaRenderList from "./ventaRenderListView"
 import VentaR from "./ventaRender"
 import ModalDeleteVentas from './modal-delete-ventas';
-import {updateVenta,getVentas} from "../../reduxstore/actions/regcont"
+import {updateVenta,getVentas,addRegsDelete, updateCuentas, deleteReg} from "../../reduxstore/actions/regcont"
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ViewVenta from "../modal-viewventas"
 
@@ -27,6 +27,7 @@ import UploadFact from "./modal-UploadFact"
 
 class Listvent extends Component {
   state={
+    expandTitulos:false,
     chartModal:false,
     viewerNota:false,
     searcherIn:"",
@@ -898,6 +899,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
       listviewcomp=filtrados.map((comp, i)=>{
       
         return(<VentaRenderList 
+          Titulos={this.state.expandTitulos}
           key={comp._id} 
           datos={comp} 
           getNotaDeb={(datos)=>{ this.setState({genNotaDeb:true, dataNotaDeb:datos})}} 
@@ -1192,9 +1194,18 @@ search
       </div>
       </Animate>
       <Animate show={this.state.listmode}>
+     <button
+  className={`arrow-toggle${this.state.expandTitulos ? ' expanded' : ''}`}
+  onClick={() => this.setState({ expandTitulos: !this.state.expandTitulos })}
+  aria-label="Expandir/Colapsar campos"
+  style={{ marginRight: '10px' }}
+>
+  <span className="arrow-icon">▶</span>
+</button>   
         <DoubleScrollbar>
+        <div className={`ContenedorTablaVentas${this.state.expandTitulos ? ' expand' : ''}`}>
         <div className="contTitulosArt">
-                        
+                        <Animate show={this.state.expandTitulos}>
                         <div className="eqIdart">
                         <div className="textPrint">     ID     </div>
                         <div className="contFlechaFiltro">
@@ -1210,6 +1221,7 @@ search
            </Animate>
                         </div>
                         </div>
+                        </Animate>
                         <div className="tituloArtic">
                         <div className="textPrint">      Fecha  </div>
                         <div className="contFlechaFiltro">
@@ -1228,6 +1240,8 @@ search
                         <div className="textPrint">     Artículos </div>
                         
                         </div>
+
+                        <Animate show={this.state.expandTitulos}>
                         <div className="existenciaArtic">
                         <div className="textPrint">     Documento </div>
                         <div className="contFlechaFiltro">
@@ -1242,6 +1256,8 @@ search
               </Animate>
               </div>
                         </div>
+                        </Animate>
+        <Animate show={this.state.expandTitulos}>
                         <div className="existenciaArtic">
                         <div className="textPrint">     Estado </div>
                         <div className="contFlechaFiltro">
@@ -1255,7 +1271,8 @@ search
               <i className="material-icons"  onClick={this.estadoFilter}>  arrow_drop_down</i>
               </Animate>
               </div>
-                        </div>
+                        </div></Animate>
+                         <Animate show={this.state.expandTitulos}>
                         <div className="existenciaArtic ">
                         <div className="textPrint">         Vendedor  </div>
                         <div className="contFlechaFiltro">
@@ -1270,6 +1287,8 @@ search
               </Animate>
               </div>
                         </div>
+                        </Animate>
+                        
                         <div className="existenciaArtic ">
                         <div className="textPrint">         Cliente  </div>
                         <div className="contFlechaFiltro">
@@ -1284,6 +1303,8 @@ search
               </Animate>
               </div>
                         </div>
+                           
+                             <Animate show={this.state.expandTitulos}>
                         <div className="existenciaArtic  ">
                         <div className="textPrint">    Tipo     </div>
                         <div className="contFlechaFiltro">
@@ -1297,11 +1318,13 @@ search
               <i className="material-icons"  onClick={this.TipoFilter}>  arrow_drop_down</i>
               </Animate>
               </div>
-                        </div>
+                        </div></Animate>
+                          <Animate show={this.state.expandTitulos}>
                         <div className="existenciaArtic  ">
                         <div className="textPrint">        Cuenta   </div>
                      
                         </div>
+                          </Animate>
                         <div className="existenciaArtic  ">
                         <div className="textPrint">    Ganancia     </div>
                      
@@ -1323,10 +1346,11 @@ search
                             Acc
                         </div>
                     </div>
-                    <div style={{marginBottom:"100px"}}>
+                    <div className={`ContenedorTablaVentas${this.state.expandTitulos ? ' expand' : ''}`}  style={{marginBottom:"100px"}}>
                     {listviewcomp}
                     </div> 
-                          </DoubleScrollbar>
+                          </div>
+                           </DoubleScrollbar>
                   </Animate>
                    </div>
 
@@ -1358,7 +1382,19 @@ search
 </Animate>
 <Animate show={this.state.viewerNotaDeb}>
 <ViewNotasDeb updateNota={(e)=>{console.log(e);
-  this.props.dispatch(updateVenta(e.updatedVenta))}} 
+  this.props.dispatch(updateVenta(e.Venta))
+     
+              e.arrRegs.forEach(x => {
+                
+                this.props.dispatch(deleteReg(x))
+              });
+
+                this.props.dispatch(updateCuentas(e.arrCuentas))
+
+                  this.props.dispatch(addRegsDelete(e.arrRegsDell))
+
+}
+} 
   userData={this.props.state.userReducer.update} datos={this.state.viewerdataNota} Flecharetro={()=>{this.setState({viewerNotaDeb:false})}} />
 </Animate>
 
@@ -1383,7 +1419,6 @@ search
               align-items: center;
               width: 80%;
               
-
             }
             .dineroresum2{
               margin: 5px 0px;
@@ -1485,6 +1520,18 @@ i{
   transition: 1s;
   max-height: 40px;
 }
+  .ContenedorTablaVentas {
+  
+    padding-bottom: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+   flex-flow: column;
+  }
+  .ContenedorTablaVentas.expand {
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
              .listvent{
               overflow: scroll;
               overflow-x: hidden;
@@ -1501,9 +1548,7 @@ i{
     align-items: center;
              }
            .imgventa{
-            margin-top: 30px;
-    height: 100px;
-    width: 100px;
+     margin-left:10px;
    }
  
            .cDc2{
@@ -1599,7 +1644,33 @@ i{
          padding: 5px;
        }
     
-      
+      .arrow-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 8px;
+  padding: 4px 8px;
+  border-radius: 50%;
+  transition: background 0.2s;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.arrow-toggle:hover {
+  background: #e3e8ff;
+}
+.arrow-icon {
+  display: inline-block;
+  font-size: 1.5em;
+  color: #1a237e;
+  transition: transform 0.3s cubic-bezier(.68,-0.55,.27,1.55);
+  transform: rotate(0deg);
+}
+.arrow-toggle.expanded .arrow-icon {
+  transform: rotate(90deg) scale(1.2);
+  color: #3949ab;
+}
           .react-autosuggest__container{
             position: relative;
           border-radius: 6px;
@@ -1734,6 +1805,10 @@ i{
             margin-top: 40px;
     height: 150px;
     width: 150px;
+
+   }
+     .ContenedorTablaVentas{
+    align-items: center;
    }
           }
           

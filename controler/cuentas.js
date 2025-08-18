@@ -3741,6 +3741,7 @@ let update={NotaCredito: req.body.PDFdata}
     try{
 
       let data = req.body.PDFdata
+      
        let arrRegs = []
         let arrRegsSend = []
             let arrCuentas = []
@@ -3807,9 +3808,11 @@ let updatedata = {...req.body.PDFdata, arrRegs}
 
 let update={NotaDebito: updatedata}
 
-      let updateVenta = await VentaModelSass.findByIdAndUpdate(req.body.PDFdata.IDVenta, update, {session, new:true})
+      let updateVenta = await VentaModelSass.findByIdAndUpdate(req.body.PDFdata._id, update, {session, new:true})
 
-      let updatecounter = { $inc: { ContSecuencial: 1 } }
+      let updatecounter = { $inc: { ContSecuencial: 1} 
+    , ContRegs:counterRegs + findIdReg[0].ContRegs + 1, 
+    }
       await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session} )
 
       pdf.create(req.body.Html, {

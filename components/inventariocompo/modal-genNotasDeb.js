@@ -40,6 +40,7 @@ state={
 
     
       console.log(this.state)
+      console.log(this.props)
       setTimeout(function(){ 
         
         document.getElementById('mainxx').classList.add("entradaaddc")
@@ -505,9 +506,10 @@ function escapeXml(unsafe) {
                 }
 
                 let PDFdata = {
+                  _id: this.props.datos._id,
                   Tiempo:new Date().getTime(),
                    Vendedor: vendedorCont,
-                    IDVenta:this.props.datos._id,
+                    IDVenta:this.props.datos.iDVenta,
                     ClaveAcceso:clavefinal, 
                     numeroAuto,
                      fechaAuto,

@@ -1205,7 +1205,7 @@ ${parseFloat(ResultCuentas).toFixed(2)}
           scrollButtons="auto"
           aria-label="scrollable auto tabs example"
         >
-       <Tab style={{ display: "none" }} />     
+       
 { generadorCuentas(cuentasrender,"cuadros")
  }
 
@@ -1690,7 +1690,7 @@ if(cuentasrenderNoPosesion.length > 0){
           scrollButtons="auto"
           aria-label="scrollable auto tabs example"
         >
-           <Tab style={{ display: "none" }} />   
+          
 { generadorCuentas(cuentasrenderPosesion,"cuadros")
  }
 
@@ -1737,7 +1737,7 @@ if(this.state.cuentaExpand == "NoPosesion"){
           scrollButtons="auto"
           aria-label="scrollable auto tabs example"
         >
-           <Tab style={{ display: "none" }} />   
+           
 { generadorCuentas(cuentasrenderNoPosesion,"cuadros")
  }
 
@@ -1781,7 +1781,7 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
           scrollButtons="auto"
           aria-label="scrollable auto tabs example"
         >
-           <Tab style={{ display: "none" }} />   
+           
 { generadorCuentas(cuentasrenderPosesionsinTotal,"cuadros")
  }
 

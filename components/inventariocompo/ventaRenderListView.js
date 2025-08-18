@@ -4,7 +4,7 @@ import Dropdown from 'react-bootstrap/Dropdown';
 
 import CustomDropdown from "./CustomDropdown"
 import React, { useState,useEffect } from 'react';
-const ArtRender = ({ uploadToFact, datos,getNota,getNotaDeb, watchNotaCredito, watchNotaDebito,deleteVentaList,user,resendProcess,sendView,viewCreds}) => {
+const ArtRender = ({ Titulos,uploadToFact, datos,getNota,getNotaDeb, watchNotaCredito, watchNotaDebito,deleteVentaList,user,resendProcess,sendView,viewCreds}) => {
   // Estado para controlar apertura/cierre del Dropdown
   const [showDropdown, setShowDropdown] = useState(false);
   const [visual, setvisual] = useState(false );
@@ -127,13 +127,35 @@ if(datos){
         }
       }
 
-let tiempo = new Date(datos.tiempo)    
+let tiempo = new Date(datos.tiempo);
 const mesesCorto = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 let dia = addCero(tiempo.getDate());
 let mesNombre = mesesCorto[tiempo.getMonth()];
 let year = tiempo.getFullYear();
 let hora = addCero(tiempo.getHours()) + ':' + addCero(tiempo.getMinutes());
-var date = `${dia} ${mesNombre} ${year} · ${hora}`;
+// Nuevo estilo minimalista y moderno para fecha y hora
+var date = (
+  <span style={{
+    display: 'inline-flex',
+    alignItems: 'center',
+    background: '#8bb1e93b',
+    borderRadius: '8px',
+    padding: '4px 8px',
+    fontSize: '15px',
+    color: '#222',
+    boxShadow: '0 1px 4px #e3e8ff',
+    justifyContent: 'space-around'
+  }}>
+    <div style={{width:"45%"}}>
+    <span style={{ color:'#1976d2'}}>📅</span>
+    <span style={{fontWeight:'500', color:'#1976d2'}}>{dia} {mesNombre}</span>
+</div>
+  <div>
+    <span style={{ color:'#43a047'}}>🕒</span>
+    <span style={{fontWeight:'500', color:'#43a047'}}>{hora}</span>
+    </div>
+  </span>
+);
     return (   
                  
                 <div className="contVenta" onClick={()=>{
@@ -141,27 +163,30 @@ var date = `${dia} ${mesNombre} ${year} · ${hora}`;
                 }}>
 <div className="firstcont">
 <div className={`maincontdetalleVentas ${backGroundVent}  `} >
-         
+
+         <Animate show={Titulos}>
          <div className="contdetalleVenta">
                     
                     <div className="valorD "> <p className="parrafoD eqIdart"> 
 
-                      <Animate show={watchNota}>
-                      <span style={{fontSize:"12px", border:"1px solid blue", borderRadius:"5px", textAlign:"center" }}>Nota Cred.</span>  
-
-                      </Animate>
-                           <Animate show={watchNotaDeb}>
-                      <span style={{fontSize:"12px", border:"1px solid blue", borderRadius:"5px", textAlign:"center" }}>Nota Deb.</span>  
-
-                      </Animate>
+                 
                       {datos.iDVenta}  
                       
                       </p></div>
                     
                  
                     </div>
-                    <div className="contdetalleVenta">
-                    
+</Animate>
+
+                    <div className="contdetalleVenta" style={{display:"flex", flexFlow:"column"}}>
+                         <Animate show={watchNota}>
+                      <span style={{fontSize:"12px", border:"1px solid blue", borderRadius:"5px", textAlign:"center", width:"80px" }}>N.Crédito</span>  
+
+                      </Animate>
+                           <Animate show={watchNotaDeb}>
+                      <span style={{fontSize:"12px", border:"1px solid blue", borderRadius:"5px", textAlign:"center", width:"80px" }}>N.Débito</span>  
+
+                      </Animate>
                     <div className="valorD "> <p className="parrafoD doscincuenta">  {date}  </p></div>
                     
                  
@@ -178,48 +203,57 @@ var date = `${dia} ${mesNombre} ${year} · ${hora}`;
                     
                  
                     </div>
+
+<Animate show={Titulos}>
                     <div className="contdetalleVenta">
                     
                     <div className="valorD "> <p className="parrafoD miscien"> {datos.Doctype}  </p></div>
                     
                  
                     </div>
+
+ </Animate>
+ <Animate show={Titulos}>
                     <div className="contdetalleVenta">
                     
                     <div className="valorD "> <p className="parrafoD miscien"> {datos.Estado}  </p></div>
                     
                  
                     </div>
+                    </Animate>
+                     <Animate show={Titulos}>
                     <div className="contdetalleVenta">
                     
                     <div className="valorD "> <p className="parrafoD miscien"> {datos.Vendedor.Nombre}  </p></div>
                     
                  
-                    </div>
+                    </div></Animate>
+              
                     <div className="contdetalleVenta">
                     
                     <div className="valorD "> <p className="parrafoD miscien"> {datos.nombreCliente}  </p></div>
                     
                  
                     </div>
+                    
+  <Animate show={Titulos}>
                     <div className="contdetalleVenta">
                     
                     <div className="valorD "> <p className="parrafoD miscien"> {datos.TipoVenta}  </p></div>
                     
                  
                     </div>
+</Animate>
+                 <Animate show={Titulos}>
                     <div className="contdetalleVenta">
                     
                       {testTipe()}
                  
                     </div>
+                   </Animate>
                     <div className="contdetalleVenta">
                 
                     <div className="valorD miscien">
-
-
-
-
 
                     <Animate show={visual}>
                        <p className="parrafoD ">$ {ganancia.toFixed(2)}  </p>

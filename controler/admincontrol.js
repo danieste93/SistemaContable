@@ -4572,6 +4572,10 @@ tiempoFin= datePeriodFin.getTime();
 
             let conn = await mongoose.connection.useDb(req.body.User.DBname);
             let VentaModelSass = await conn.model('Venta', ventasSchema);
+             let RegModelSass = await conn.model('Reg', regSchema);
+  let CuentasModelSass = await conn.model('Cuenta', accountSchema);
+let RegModelSassDelete = await conn.model('RegDelete', regSchemaDelete);
+
             let ventac = await VentaModelSass.findByIdAndUpdate(req.body.item._id,{NotaCredito:""}, {new:true})
             if(ventac == null){
               throw new Error("Venta no encontrado")
@@ -4587,15 +4591,72 @@ tiempoFin= datePeriodFin.getTime();
 
             let conn = await mongoose.connection.useDb(req.body.User.DBname);
             let VentaModelSass = await conn.model('Venta', ventasSchema);
+             let RegModelSass = await conn.model('Reg', regSchema);
+            let CuentasModelSass = await conn.model('Cuenta', accountSchema);
+             let RegModelSassDelete = await conn.model('RegDelete', regSchemaDelete);
+let arrCuentas = []
+let arrRegs = []
+let arrRegsDell = []
+const session = await mongoose.startSession();   
+  session.startTransaction();
+            try{
+
+if(req.body.item.NotaDebito.arrRegs.length == 0 || req.body.item.NotaDebito.arrRegs == undefined ){
+  throw new Error("sin arrRegs q eliminar")
+  }
+    for(let y=0;y<req.body.item.NotaDebito.arrRegs.length;y++){
+      let regdata =   await RegModelSass.findByIdAndRemove(req.body.item.NotaDebito.arrRegs[y], { session })
+
+      if (!regdata) {
+        throw new Error(`Registro con ID ${req.body.item.NotaDebito.arrRegs[y]} no encontrado para eliminar.`);
+      }
+      let newDeleteReg={
+        ...regdata.toObject(),
+        Estado:false,
+        TiempoDelete: new Date().getTime(),
+        UsuarioDelete:req.body.UsuarioDelete
+      }
+
+      let newRegDelete = await RegModelSassDelete.create([newDeleteReg],{session})
+      
+    
+      arrRegs.push(regdata)
+      arrRegsDell.push(newRegDelete[0])
+     
+      
+   
+      if(regdata.Accion == "Ingreso"){
+        const fixedImport= new mongoose.Types.Decimal128(JSON.stringify(parseFloat(regdata.Importe)))
+        let updateInv = { $inc: { DineroActual:fixedImport *-1 } }
+        let cuentaUpdate=  await CuentasModelSass.findByIdAndUpdate(regdata.CuentaSelec.idCuenta,updateInv,{session, new:true})
+        arrCuentas.push(cuentaUpdate)
+        if(cuentaUpdate == null){
+          throw new Error("Cuenta no encontrada")
+        }
+    
+      }
+   
+  
+
+    }
+              
+
             let ventac = await VentaModelSass.findByIdAndUpdate(req.body.item._id,{NotaDebito:""}, {new:true})
             if(ventac == null){
               throw new Error("Venta no encontrado")
             }
-            
-            res.status(200).send({ status: "Ok", message: "findClient", updatedVenta:ventac  });
-
-              
+            await session.commitTransaction();
+            res.status(200).send({ status: "Ok", message: "findClient", Venta: ventac, arrRegs, arrCuentas, arrRegsDell  });
+ session.endSession();
             }
+            catch(e){
+    await session.abortTransaction();
+    session.endSession();
+    console.log(e, "errr")
+    return res.json({status: "Error", message: "error al registrar", error:e.message });
+  }
+          
+          }
 
             async function getDatabaseSize(req,res) {
             

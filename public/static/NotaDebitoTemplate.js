@@ -167,7 +167,7 @@ let Rimpeval =""
          
             <div class="contdetail ContNumeracion">
             <div class="clave">
-            Nota de Débito Nº
+            Nota Débito Nº:
             </div>
             <div class="valorFact">
             <span>{`  ${Inf.estab} - ${Inf.ptoEmi} - ${Inf.secuencial}`}</span> 
@@ -703,12 +703,15 @@ justify-content: space-between;
       padding: 5px;
     }
 
-    .ContDetalle {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid #eaeaea;
-    }
+     .ContDetalle{
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            width: 100%;
+            -webkit-box-pack: justify;
+                -ms-flex-pack: justify;
+                    justify-content: space-between;
+        }
 
     .ContDetalle:last-child {
       border-bottom: none;
