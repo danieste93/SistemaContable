@@ -2766,7 +2766,7 @@ const  Authdata =()=>{
     console.log(auth)
       if(err)  res.status(500).send({status: "error", message: "AuthSucess",auth});
     
-  
+      if(auth.RespuestaAutorizacionComprobante.autorizaciones ){
       let resdata = auth.RespuestaAutorizacionComprobante.autorizaciones.autorizacion
     
       if(resdata.estado){
@@ -2787,13 +2787,13 @@ const  Authdata =()=>{
         }
       }
         
-        else{
+  
+       
+}      else{
 
 
           res.status(500).send({status: "error", message: "AuthSucess",resdata});
         }
-       
-
 
        
       
