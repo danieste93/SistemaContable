@@ -14,6 +14,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import SecureFirm from '../snippets/getSecureFirm';
 import NotaCredito from "../../public/static/NotaCreditoTemplate"
 import {updateVenta} from "../../reduxstore/actions/regcont"
+import cuenta from '../../models/cuenta';
 
 
 class Contacto extends Component {
@@ -27,6 +28,8 @@ state={
   secuencialBase:0,
   Justificacion:"",
   Alert:{Estado:false},
+  cuentaCliente:"",
+  block:false,
 }
     componentDidMount(){
 
@@ -70,9 +73,15 @@ let data = await fetchData(this.props.state.userReducer,
     "/public/getClientData",
     this.props.datos.idCliente)
 
+    console.log(data)
+
+    let testBlock = data.CuentaCliente == "" || data.CuentaCliente == null || data.CuentaCliente == undefined ? false:true
+
     this.setState({ClientID:data.Client.TipoID,
               secuencialGen:data.Counters,
               secuencialBase:data.Counters,
+              cuentaCliente:data.CuentaCliente,
+              block:testBlock
 
     })
        }
@@ -451,6 +460,7 @@ let data = await fetchData(this.props.state.userReducer,
                 }
 
                 let PDFdata = {
+                    CuentaCliente:this.state.cuentaCliente,
                     vendedorCont,
                     IDVenta:this.props.datos._id,
                     ClaveAcceso:clavefinal, 
@@ -841,6 +851,7 @@ let valConIva = 0
 let SuperTotal = 0
 let IvaEC = 0
 
+
 const handleClose = (event, reason) => {
     let AleEstado = this.state.Alert
     AleEstado.Estado = false
@@ -958,7 +969,6 @@ mail
    
    
    </div>
-
    <div className="customInput">
         <div className="jwminilogo">
     <span className="material-icons">
@@ -980,8 +990,7 @@ mail
    />
    
    
-   </div>
-  
+   </div> 
    <div className="customInput">
         <div className="jwminilogo">
     <span className="material-icons">
@@ -1016,9 +1025,6 @@ mail
          </select>
    
    </div>
-
-      
-
    <div className="customInput">
         <div className="jwminilogo">
     <span className="material-icons">
@@ -1040,8 +1046,6 @@ phone
    
    
    </div>
- 
-  
    <div className="customInput">
         <div className="jwminilogo">
     <span className="material-icons">
@@ -1062,6 +1066,26 @@ phone
    
    
    </div>
+   <div className="customInput buttonCuenta">
+   <div className="">
+    Cuenta Cliente
+   </div>
+   <button
+      className={`cuentaClienteButton ${
+          this.state.cuentaCliente !== "" ? "selected" : "add"
+      }`}
+      onClick={() => {
+          if (this.state.cuentaCliente === "") {
+              console.log("Agregar cuenta");
+          } else {
+              console.log("Cuenta seleccionada");
+          }
+      }}
+  >
+      {this.state.cuentaCliente !== "" ? "Ya seleccionada" : "Agregar"}
+  </button>
+            </div>
+
 
    </div>
   
@@ -1331,6 +1355,49 @@ phone
     width: 200px;
     border-radius: 10px;
     justify-content: center;}
+   .cuentaClienteContainer {
+        display: flex;
+        justify-content: center;
+        margin: 20px 0;
+    }
+
+    .cuentaClienteButton {
+        padding: 8px 20px;
+        font-size: 18px;
+        font-weight: bold;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .cuentaClienteButton.add {
+        background-color: #ff6b6b; /* Red color */
+        color: white;
+    }
+
+    .cuentaClienteButton.selected {
+        background-color: #4caf50; /* Green color */
+        color: white;
+    }
+
+    .cuentaClienteButton:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .cuentaClienteButton:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+        .buttonCuenta{
+        margin: 10px;
+    box-shadow: 0px 3px 5px black;
+    padding: 10px;
+    border-radius: 14px;
+        }
+
                   
            `}</style>
         

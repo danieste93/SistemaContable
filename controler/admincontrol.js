@@ -4555,15 +4555,23 @@ tiempoFin= datePeriodFin.getTime();
               let conn = await mongoose.connection.useDb(req.body.User.DBname);
               let ClienteModelSass = await conn.model('Cliente', clientSchema);
               let CounterModelSass = await conn.model('Counter', counterSchema);
+              let CuentasModelSass = await conn.model('Cuenta', accountSchema);
+
               let contadoresHabiles = await CounterModelSass.find({iDgeneral:9999999})
               let findClient ="Cedula"
               if(req.body.datos != ""){
                 findClient = await ClienteModelSass.findById(req.body.datos)
               }
-        
+              let CuentaCliente = ""
+              if(findClient.IDcuenta)
+                {
+              
+                  CuentaCliente = await CuentasModelSass.findById(findClient.IDcuenta)}
+
+            console.log(findClient)
           
 
-              res.status(200).send({ status: "Ok", message: "findClient",Client:findClient, Counters:contadoresHabiles[0].ContSecuencial  });
+              res.status(200).send({ status: "Ok", message: "findClient",Client:findClient, Counters:contadoresHabiles[0].ContSecuencial, CuentaCliente  });
               
             }
             const deleteNotaCredito = async (req,res)=>{
