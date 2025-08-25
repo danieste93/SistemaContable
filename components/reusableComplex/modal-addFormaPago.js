@@ -228,7 +228,7 @@ cancel
           })
              
                } }  
-               FiltroP={"CuentasNoPosesion"}
+            
                Flecharetro3={
                 ()=>{
                     this.setState({cuentasmodal:false, CuentaSelect:"" })
