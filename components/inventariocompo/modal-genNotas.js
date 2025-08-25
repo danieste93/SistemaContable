@@ -14,8 +14,8 @@ import Checkbox from '@material-ui/core/Checkbox';
 import SecureFirm from '../snippets/getSecureFirm';
 import NotaCredito from "../../public/static/NotaCreditoTemplate"
 import {updateVenta} from "../../reduxstore/actions/regcont"
-import cuenta from '../../models/cuenta';
 
+import Cuentas from "../cuentascompo/modalcuentas"
 
 class Contacto extends Component {
    
@@ -460,9 +460,12 @@ let data = await fetchData(this.props.state.userReducer,
                 }
 
                 let PDFdata = {
+                    ValorModificacion:(this.props.datos.PrecioCompraTotal - SuperTotal).toFixed(2),
                     CuentaCliente:this.state.cuentaCliente,
                     vendedorCont,
-                    IDVenta:this.props.datos._id,
+                    Tiempo:new Date().getTime(),
+                    _id:this.props.datos._id,
+                     IDVenta:this.props.datos.iDVenta,
                     ClaveAcceso:clavefinal, 
                     numeroAuto,
                      fechaAuto,
@@ -555,7 +558,9 @@ let data = await fetchData(this.props.state.userReducer,
                     if(response.status== "Ok"){
 
                       this.props.dispatch(updateVenta(response.updateVenta));
-                      this.Onsalida()
+                       this.props.dispatch(addRegs(response.arrRegsSend));
+                        this.props.dispatch(updateCuentas(response.arrCuentas));
+                        this.Onsalida()
                       let add = {
                         Estado:true,
                         Tipo:"success",
@@ -1187,6 +1192,23 @@ phone
             
             </Alert>
           </Snackbar>
+                <Animate show={this.state.cuentasmodal}>
+                 < Cuentas 
+              
+                 cuentacaller={""}
+                 cuentaEnviada={this.state.cuentaEnviada }
+                 sendCuentaSelect={(cuenta)=>{
+              this.setState({cuentaEnviada:cuenta,cuentaSelect:cuenta, CuentaRender:cuenta.NombreC,cuentasmodal:false,})
+                 } }  
+                 
+                 
+                 Flecharetro3={
+                  ()=>{
+               this.setState({cuentasmodal:false})
+                  } } 
+               
+                />
+                  </Animate >
         <style jsx >{`
            .maincontacto{
             z-index: 1298;
