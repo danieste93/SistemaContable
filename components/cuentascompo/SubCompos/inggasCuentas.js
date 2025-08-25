@@ -12,6 +12,7 @@ export default class inggas extends Component {
         filtersUsersDelete:false,
         viewVenta:false,
         dataventa:"",
+        detectDoc:"",
         
     }
     channel1 = null;
@@ -64,6 +65,10 @@ let deleteReg = this.props.reg.TiempoDelete != null?true:false
 let dataProvider = this.props.reg
 
 let matchVenta = null;
+let matchNotaDebito = null;
+let matchNotaCredito = null;
+
+
 let importeCheck = ""
 let cuenta1Check = ""
 let cuenta2Check = ""
@@ -74,11 +79,25 @@ let descripCheck = ""
 let notaCheck = ""
 let userCheck = ""
 let upcont=''
-if(dataProvider.Accion == "Ingreso"){
-if ( dataProvider.CatSelect.idCat == 5) {
-  matchVenta = dataProvider.Nota && dataProvider.Nota.match(/Venta N°(\d+)/);
+let matchSelect = null;
+
+if (dataProvider.Accion == "Ingreso") {
+    if (dataProvider.CatSelect.idCat == 5) {
+        // Match "Venta N°"
+        matchVenta = dataProvider.Nota && dataProvider.Nota.match(/^(?!.*Nota de (?:Débito|Crédito) de la ).*Venta N°(\d+)/);
+        // Match "Nota de Débito de la Venta N°"
+        matchNotaDebito = dataProvider.Nota && dataProvider.Nota.match(/Nota de Débito de la Venta N°(\d+)/);
+  
+        // Match "Nota de Crédito de la Venta N°"
+        matchNotaCredito = dataProvider.Nota && dataProvider.Nota.match(/Nota de Crédito de la Venta N°(\d+)/);
+   }
 }
-}
+console.log(matchVenta)
+
+matchSelect = matchVenta || matchNotaDebito || matchNotaCredito
+
+
+
 if(this.state.version != "Act"){
   dataProvider= this.props.reg.Versiones[this.state.version]
   importeCheck= this.props.reg.Importe == this.props.reg.Versiones[this.state.version].Importe?"":"enfatizado"
@@ -300,37 +319,48 @@ console.log(this.props)
 <p
   className={`  ${notaCheck} `}
   style={
-    matchVenta
+    matchSelect
       ? { color: "#1976d2", textDecoration: "underline", cursor: "pointer" }
       : {}
   }
   onClick={
-    matchVenta
+    matchSelect
       ? async (e) => {
+        console.log(matchSelect)
           e.stopPropagation();
           e.preventDefault()
           // Aquí puedes poner la función que desees para el hipervínculo
           // Por ejemplo: this.handleVentaClick();
           let findVentaState = undefined
-if(this.props.stateData.RegContableReducer.Ventas){
-         findVentaState = this.props.stateData.RegContableReducer.Ventas.find(x => x.iDVenta == matchVenta[1]);
-console.log(this.props.stateData.RegContableReducer.Ventas)
+if (this.props.stateData.RegContableReducer.Ventas) {
+ 
+    findVentaState = this.props.stateData.RegContableReducer.Ventas.find(x => {
+       
+        return x.iDVenta == matchSelect[1];
+    });
 }
-        if(findVentaState  == undefined){
-          console.log("descargando")
-          let data = await fetchData(this.props.stateData.userReducer,
-      "/public/getVentaID", {id: matchVenta[1]});
+
+let detectDoc = matchNotaDebito? "Nota de Débito":
+matchNotaCredito? "Nota de Crédito": 
+matchVenta? "Venta":""
+        if(findVentaState == undefined) {
+    console.log("descargando");
+    let data = await fetchData(this.props.stateData.userReducer, "/public/getVentaID", { id: matchSelect[1] });
     console.log(data);
-    if(data.status == "Ok"){
-       this.props.addVenta(data.findVenta[0]);
-        this.setState({viewVenta:true, dataventa:data.findVenta[0]});
+    if (data.status == "Ok") {
+        this.props.addVenta(data.findVenta[0]);
+        this.setState(
+            { viewVenta: true, dataventa: data.findVenta[0], detectDoc }, // Actualiza el estado
+           
+        );
     }
-  }else{
-     console.log("encontrado en redux")
-     console.log(findVentaState)
+} else {
+    // Encontrado en Redux
+    this.setState(
+        { viewVenta: true, dataventa: findVentaState, detectDoc }, // Actualiza el estado
    
-    this.setState({viewVenta:true, dataventa:findVentaState});
-  }
+    );
+}
      }  : undefined
   }
 >
@@ -477,6 +507,7 @@ Registro Número:
  <Animate show={this.state.viewVenta}>
         <ViewVenta token={this.props.stateData.userReducer.update.usuario.token} 
         usuario={this.props.stateData.userReducer.update.usuario} 
+        detectDoc={this.state.detectDoc}
         datos={this.state.dataventa} Flecharetro={()=>{this.setState({viewVenta:false, dataventa:""})}  }/>
         </Animate>
 
