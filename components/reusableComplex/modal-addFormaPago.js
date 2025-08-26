@@ -220,15 +220,14 @@ cancel
                cuentacaller={"" }
                cuentaEnviada={"" }
                sendCuentaSelect={(cuenta)=>{
-           console.log(cuenta)
-
+ 
            this.setState({cuentasmodal:false, 
             CuentaSelect:cuenta,
             formaPagoAdd:cuenta.FormaPago
           })
              
                } }  
-               FiltroP={"CuentasNoPosesion"}
+            
                Flecharetro3={
                 ()=>{
                     this.setState({cuentasmodal:false, CuentaSelect:"" })

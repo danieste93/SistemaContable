@@ -124,14 +124,14 @@ channel1 = null;
 let cuentasGenerales = this.props.regC.Cuentas
 console.log(cuentasGenerales)
 let cuentasporFiltar = cuentasGenerales
-/*if(this.props.FiltroP){
+if(this.props.FiltroP){
   if(this.props.FiltroP == "CuentasNoPosesion"){
     cuentasporFiltar = cuentasGenerales.filter(x=>!x.CheckedP )
   }
 
 
 }
-*/
+
 
 let cuentasSinInv = cuentasporFiltar.filter(x=>x.Tipo != "Inventario" 
   

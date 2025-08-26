@@ -1359,7 +1359,12 @@ search
         <ModalDeleteVentas DeleteReg={this.state.VentaSelected} Flecharetro={()=>{this.setState({deleteVenta:false, VentaSelected:{}})}  }/>
         </Animate>
         <Animate show={this.state.viewVenta}>
-        <ViewVenta token={this.props.state.userReducer.update.usuario.token} usuario={this.props.state.userReducer.update.usuario}datos={this.state.dataventa} Flecharetro={()=>{this.setState({viewVenta:false, dataventa:""})}  }/>
+        <ViewVenta 
+        token={this.props.state.userReducer.update.usuario.token}
+         usuario={this.props.state.userReducer.update.usuario}
+         datos={this.state.dataventa}
+          detectDoc={"Venta"}
+          Flecharetro={()=>{this.setState({viewVenta:false, dataventa:""})}  }/>
         </Animate>
         <Animate show={this.state.viewCreds}>
         <ViewCreds datos={this.state.dataCred} Flecharetro={()=>{this.setState({viewCreds:false, dataCred:""})}  }/>
@@ -1381,7 +1386,7 @@ search
   userData={this.props.state.userReducer.update} datos={this.state.viewerdataNota} Flecharetro={()=>{this.setState({viewerNota:false})}} />
 </Animate>
 <Animate show={this.state.viewerNotaDeb}>
-<ViewNotasDeb updateNota={(e)=>{console.log(e);
+<ViewNotasDeb updateNotaCred={(e)=>{console.log(e);
   this.props.dispatch(updateVenta(e.Venta))
      
               e.arrRegs.forEach(x => {

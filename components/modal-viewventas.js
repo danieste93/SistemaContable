@@ -3,13 +3,17 @@ import { Animate } from 'react-animate-mount/lib/Animate';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import NotaVentaTemplate from "../public/static/NotaTemplate"
 import FacturaTemplate from "../public/static/FactTemplate"
+import NotaDebitoTemplate from "../public/static/NotaDebitoTemplate"
+import NotaCreditoTemplate from "../public/static/NotaCreditoTemplate"
 import { teal } from '@material-ui/core/colors';
 
 
 class ViewVentas extends Component {
   state={
 Html:"",
-loading:false
+loading:false,
+TituloDoc:`${this.props.detectDoc} - ${this.props.datos.iDVenta}`,
+detectDoc:""
   }
 
     componentDidMount(){
@@ -22,13 +26,21 @@ loading:false
 console.log(this.props)
       let TemplateAsignado 
 
+
+if(this.props.detectDoc == "Venta"){
+  
+
       if(this.props.datos.Doctype == "Nota de venta"){
 TemplateAsignado = NotaVentaTemplate
 
       }else{
         TemplateAsignado = FacturaTemplate
       }
+ 
+}else if(this.props.detectDoc == "Nota de Débito"){
+  TemplateAsignado = NotaDebitoTemplate
 
+}
       let artImpuestos  = this.props.datos.articulosVendidos.filter(x=>x.Iva)
       let artSinImpuestos = this.props.datos.articulosVendidos.filter(x=>x.Iva == false)
       let totalSinImpuestos = 0
@@ -53,7 +65,10 @@ TemplateAsignado = NotaVentaTemplate
       let dia = this.addCero(tiempo.getDate())
       var date = dia+ "/"+ mes+"/"+tiempo.getFullYear()
 
-      let viewHTML = TemplateAsignado({...this.props.datos,
+      let viewHTML
+      if(this.props.detectDoc == "Venta"){
+
+       viewHTML = TemplateAsignado({...this.props.datos,
         baseImpoConImpuestos,
         baseImpoSinImpuestos,
         totalSinImpuestos,
@@ -82,11 +97,94 @@ TemplateAsignado = NotaVentaTemplate
         adicionalInfo:this.props.datos.adicionalInfo
 
       })
-  
-      this.setState({Html:viewHTML})
+
+     }if(this.props.detectDoc == "Nota de Débito"){
+        viewHTML = TemplateAsignado({...this.props.datos.NotaDebito })
+   }
+      this.setState({Html:viewHTML, detectDoc: this.props.detectDoc})
       
       
       }
+      viewVenta=()=>{
+        let artImpuestos  = this.props.datos.articulosVendidos.filter(x=>x.Iva)
+        let artSinImpuestos = this.props.datos.articulosVendidos.filter(x=>x.Iva == false)
+        let totalSinImpuestos = 0
+        let baseImpoConImpuestos = 0
+        let baseImpoSinImpuestos = 0
+        if(artImpuestos.length > 0){
+            for(let i=0;i<artImpuestos.length;i++){
+               
+                baseImpoConImpuestos += (artImpuestos[i].PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`))
+            }
+            
+        }
+        if(artSinImpuestos.length > 0){
+            for(let i=0;i<artSinImpuestos.length;i++){
+                totalSinImpuestos += artSinImpuestos[i].PrecioCompraTotal
+                baseImpoSinImpuestos += artSinImpuestos[i].PrecioCompraTotal
+            }
+        }
+  
+        let tiempo = new Date(this.props.datos.tiempo) 
+        let mes = this.addCero(tiempo.getMonth()+1)
+        let dia = this.addCero(tiempo.getDate())
+        var date = dia+ "/"+ mes+"/"+tiempo.getFullYear()
+  
+        let TemplateAsignado 
+   
+              if(this.props.datos.Doctype == "Nota de venta"){
+        TemplateAsignado = NotaVentaTemplate
+        
+              }else{
+                TemplateAsignado = FacturaTemplate
+              }
+          let    viewHTML = TemplateAsignado({...this.props.datos,
+                baseImpoConImpuestos,
+                baseImpoSinImpuestos,
+                totalSinImpuestos,
+                adicionalInfo:[],
+                Fpago:this.props.datos.formasdePago,
+               SuperTotal:this.props.datos.PrecioCompraTotal,
+                ArticulosVendidos:this.props.datos.articulosVendidos,
+                razonSocialComprador:this.props.datos.nombreCliente == ""?"CONSUMIDOR FINAL":this.props.datos.nombreCliente,
+                identificacionComprador:this.props.datos.cedulaCliente==""?"9999999999999":this.props.datos.cedulaCliente,
+                correoComprador:this.props.datos.correoCliente,
+                direccionComprador:this.props.datos.direccionCliente,
+                ciudadComprador:this.props.datos.ciudadCliente,
+                LogoEmp:this.props.usuario.user.Factura.logoEmp,
+                rimpeval:this.props.usuario.user.Factura.rimpe,
+                populares:JSON.parse(this.props.usuario.user.Factura.populares),
+                estab:this.props.usuario.user.Factura.codigoEstab,
+                ptoEmi:this.props.usuario.user.Factura.codigoPuntoEmision,
+                secuencial:this.props.datos.Secuencial,
+                fechaEmision:date,
+                ruc:this.props.usuario.user.Factura.ruc,
+                dirEstablecimiento:this.props.usuario.user.Factura.dirEstab,
+                fechaAuto:this.props.datos.FactFechaAutorizacion,
+                numeroAuto:this.props.datos.FactAutorizacion,
+                obligadoContabilidad:this.props.usuario.user.Factura.ObligadoContabilidad?"Si":"No",
+                idVenta:this.props.datos.iDVenta,
+                adicionalInfo:this.props.datos.adicionalInfo
+        
+              })
+        
+        
+              this.setState({Html:viewHTML,
+
+TituloDoc:`${"Venta"} - ${this.props.datos.iDVenta}`,
+detectDoc: "Venta"
+              })
+
+
+       }
+        viewND=()=>{
+         
+            let    viewHTML = NotaDebitoTemplate({...this.props.datos.NotaDebito })
+            this.setState({Html:viewHTML,
+              TituloDoc:`${"Nota de Débito"} - ${this.props.datos.iDVenta}`,
+detectDoc: "Nota de Débito"
+            })
+         }
       downloadFact=()=>{  
         this.setState({loading:true})
         console.log("en download")
@@ -111,15 +209,17 @@ TemplateAsignado = NotaVentaTemplate
           if(response.status == "Ok"){
 
             let genTitulo = ""
+            if(this.state.detectDoc == "Venta"){
             if(this.props.datos.Doctype == "Factura-Electronica"){
 
               genTitulo = `Factura Nº ${this.props.datos.Secuencial} ${this.props.usuario.user.Factura.nombreComercial}`
             }else{
-  genTitulo = `Nota de Venta Nº ${this.props.datos.iDVenta} ${this.props.usuario.user.Factura.nombreComercial} `
+              genTitulo = `Nota de Venta Nº ${this.props.datos.iDVenta} ${this.props.usuario.user.Factura.nombreComercial} `
 
             }
-         
-
+            }else if(this.state.detectDoc == "Nota de Débito"){
+              genTitulo = `Nota de Débito Nº ${this.props.datos.NotaDebito.secuencial} ${this.props.usuario.user.Factura.nombreComercial} `
+            }
             const url = window.URL.createObjectURL(
               new Blob([Buffer.from(response.buffer)], { type: "application/pdf"}),
             );
@@ -173,9 +273,30 @@ console.log(this.props)
            />
   <div className="tituloventa">
     
-Venta - {this.props.datos.iDVenta} 
+{this.state.TituloDoc} 
 
 </div>
+<div style={{display:"flex", alignItems:"center", flexFlow:"column", justifyContent: "center"}}>
+<Animate show={this.state.detectDoc == "Nota de Débito" || this.props.state == "Nota de Crédito"}>
+<button className=" btn btn-green " style={{margin:"10px"}} onClick={this.viewVenta} >
+            <span className="material-icons" >
+            cached
+          </span>
+          <p>Venta</p>
+          </button>
+
+</Animate>
+<Animate show={this.state.detectDoc == "Venta" && this.props.datos.NotaDebito}>
+<button className=" btn btn-green " style={{margin:"10px"}} onClick={this.viewND} >
+            <span className="material-icons" >
+            cached
+          </span> 
+          <p>N. Débito</p>
+          </button>
+
+</Animate>
+</div>
+
 <div style={{display:"flex", alignItems:"center", flexFlow:"column", justifyContent: "center"}}>
 <Animate show={!this.state.loading}>
 <button className=" btn btn-dark " style={{margin:"10px"}} onClick={this.downloadFact} >
@@ -245,6 +366,7 @@ Venta - {this.props.datos.iDVenta}
                     font-weight: bolder;
                     text-align: center;
                     justify-content: center;
+                    width: 200px;
                     }
                     .tituloventa p{
                     margin-top:5px;

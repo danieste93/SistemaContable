@@ -453,6 +453,7 @@ function escapeXml(unsafe) {
         ambiente:ambiente==1?"Pruebas":"Produccion"  
            }
        
+           /*
            let link = document.createElement('a');
            const url = window.URL.createObjectURL(
             new Blob([docFirmado], { type: "text/plain"}),
@@ -463,7 +464,7 @@ function escapeXml(unsafe) {
           `Consultores Asociados 001-001-100.xml`,
         );
         
-         link.click()
+         link.click()*/
 
       
          fetch("/public/uploadSignedXml", {

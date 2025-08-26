@@ -13,13 +13,15 @@ import Forge  from 'node-forge';
 import Checkbox from '@material-ui/core/Checkbox';
 import SecureFirm from '../snippets/getSecureFirm';
 import NotaCredito from "../../public/static/NotaCreditoTemplate"
-import {updateVenta} from "../../reduxstore/actions/regcont"
 
+import { addRegs, updateVenta, updateCuentas } from '../../reduxstore/actions/regcont';
 import Cuentas from "../cuentascompo/modalcuentas"
+import { ThreeSixtySharp } from '@material-ui/icons';
 
 class Contacto extends Component {
    
 state={
+    cuentasmodal:false,
   ArtVent:this.props.datos.articulosVendidos,
   loading:false,
   descargarNota:false,
@@ -29,7 +31,7 @@ state={
   Justificacion:"",
   Alert:{Estado:false},
   cuentaCliente:"",
-  block:false,
+  
 }
     componentDidMount(){
 
@@ -37,7 +39,7 @@ state={
       console.log(this.state)
       setTimeout(function(){ 
         
-        document.getElementById('mainxx').classList.add("entradaaddc")
+        document.getElementById('mainGenNotasCred').classList.add("entradaaddc")
 
        }, 500);
 
@@ -75,13 +77,11 @@ let data = await fetchData(this.props.state.userReducer,
 
     console.log(data)
 
-    let testBlock = data.CuentaCliente == "" || data.CuentaCliente == null || data.CuentaCliente == undefined ? false:true
-
     this.setState({ClientID:data.Client.TipoID,
               secuencialGen:data.Counters,
               secuencialBase:data.Counters,
               cuentaCliente:data.CuentaCliente,
-              block:testBlock
+              
 
     })
        }
@@ -209,7 +209,7 @@ let data = await fetchData(this.props.state.userReducer,
     }  
 
 
-      genNotaCredito= async(SuperTotal, IvaEC)=>{
+      genNotaCredito= async(SuperTotal, IvaEC, valorModificacion)=>{
 
         this.setState({loading:true})
         
@@ -356,7 +356,7 @@ let data = await fetchData(this.props.state.userReducer,
         `        <numDocModificado>${numDocModificado}</numDocModificado>\n` +
         `        <fechaEmisionDocSustento>${fechaEmisionDocSustento}</fechaEmisionDocSustento>\n` +
         `        <totalSinImpuestos>${(baseImpoSinImpuestos + baseImpoConImpuestos).toFixed(2)}</totalSinImpuestos>\n` +
-        `        <valorModificacion>${(this.props.datos.PrecioCompraTotal - SuperTotal).toFixed(2)}</valorModificacion>\n` +
+        `        <valorModificacion>${valorModificacion}</valorModificacion>\n` +
         `        <moneda>DOLAR</moneda>\n`+
         "        <totalConImpuestos>\n" +
                  this.genImpuestos()+
@@ -406,7 +406,7 @@ let data = await fetchData(this.props.state.userReducer,
         idUser:this.props.state.userReducer.update.usuario.user._id,
         ambiente:ambiente==1?"Pruebas":"Produccion"  
            }
-       
+       /*
            let link = document.createElement('a');
            const url = window.URL.createObjectURL(
             new Blob([docFirmado], { type: "text/plain"}),
@@ -417,7 +417,7 @@ let data = await fetchData(this.props.state.userReducer,
           `Consultores Asociados 001-001-100.xml`,
         );
         
-         link.click()
+         link.click()*/
 
       
          fetch("/public/uploadSignedXml", {
@@ -460,9 +460,9 @@ let data = await fetchData(this.props.state.userReducer,
                 }
 
                 let PDFdata = {
-                    ValorModificacion:(this.props.datos.PrecioCompraTotal - SuperTotal).toFixed(2),
+                    ValorModificacion:valorModificacion,
                     CuentaCliente:this.state.cuentaCliente,
-                    vendedorCont,
+                     Vendedor: vendedorCont,
                     Tiempo:new Date().getTime(),
                     _id:this.props.datos._id,
                      IDVenta:this.props.datos.iDVenta,
@@ -472,7 +472,8 @@ let data = await fetchData(this.props.state.userReducer,
                      fechaEmisionDocSustento, 
                      numDocModificado,
                      secuencial,
-                       SuperTotal,                                           
+                       SuperTotal,
+                       valorModificacion,                                           
                        populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
                        baseImpoSinImpuestos,
                        baseImpoConImpuestos,
@@ -839,7 +840,7 @@ let data = await fetchData(this.props.state.userReducer,
   }
    
       Onsalida=()=>{
-        document.getElementById('mainxx').classList.remove("entradaaddc")
+        document.getElementById('mainGenNotasCred').classList.remove("entradaaddc")
         setTimeout(()=>{ 
           this.props.Flecharetro()
         }, 500);
@@ -849,6 +850,8 @@ let data = await fetchData(this.props.state.userReducer,
 
     render () {
         console.log(this.state)
+
+
 let artsconIVA = 0
 let artssinIVA = 0
 let valSinIva = 0
@@ -905,13 +908,17 @@ const Alert=(props)=> {
         }}
    
       
+
         />))
+
+let valorModificacion = (this.props.datos.PrecioCompraTotal - SuperTotal).toFixed(2)
+
         return ( 
 
          <div >
 
-<div className="maincontacto" id="mainxx" >
-<div className="contcontacto"  >
+<div className="maincontactoGenN" id="mainGenNotasCred" >
+<div className="contcontactoGenN"  >
 <div className="headercontact">
     <img src="/static/flecharetro.png" alt="" className="flecharetro" 
     onClick={  this.Onsalida       }
@@ -1080,14 +1087,13 @@ phone
           this.state.cuentaCliente !== "" ? "selected" : "add"
       }`}
       onClick={() => {
-          if (this.state.cuentaCliente === "") {
-              console.log("Agregar cuenta");
-          } else {
-              console.log("Cuenta seleccionada");
-          }
+         
+                this.setState({ cuentasmodal: true });
+         
+          
       }}
   >
-      {this.state.cuentaCliente !== "" ? "Ya seleccionada" : "Agregar"}
+      {this.state.cuentaCliente !== "" ? this.state.cuentaCliente.NombreC : "Agregar"}
   </button>
             </div>
 
@@ -1128,9 +1134,14 @@ phone
            <p className="totalp">${SuperTotal.toFixed(2)}</p>
        
          </div>
+         <div className={`contTotal `}>
+    <p className="totalp">Valor Modificación:</p>
+           <p className="totalp">${valorModificacion}</p>
+       
+         </div>
          <ValidatorForm
-   
-   onSubmit={()=>this.genNotaCredito(SuperTotal, IvaEC)}
+
+   onSubmit={()=>this.genNotaCredito(SuperTotal, IvaEC, valorModificacion)}
    onError={errors => console.log(errors)}
 >
     <div className="ContJustificacion">
@@ -1167,7 +1178,10 @@ phone
                </div>
               
          <div className="contBotonPago">
-               <button className={` btn btn-success botonedit2  `} type='submit'>
+               <button className={` btn btn-success botonedit2  `}
+                type='submit'
+                disabled={valorModificacion <= 0 || this.state.cuentaCliente == ""}
+                >
 <p>Generar</p>
 <i className="material-icons">
  assignment
@@ -1186,31 +1200,37 @@ phone
 </div>
         </div>
 
+
+ {  this.state.cuentasmodal&&  < Cuentas 
+         FiltroP ={"CuentasNoPosesion" }
+               cuentacaller={"" }
+               cuentaEnviada={"" }
+               sendCuentaSelect={(cuenta)=>{
+           
+           this.setState({cuentasmodal:false, 
+            cuentaCliente:cuenta,
+            
+          })
+             
+               } }  
+            
+               Flecharetro3={
+                ()=>{
+                    this.setState({cuentasmodal:false, cuentaCliente:"" })
+                  }
+                        } 
+                      
+                       />}
+
+
                    <Snackbar open={this.state.Alert.Estado} autoHideDuration={10000} onClose={handleClose}>
             <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
                 <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>
             
             </Alert>
           </Snackbar>
-                <Animate show={this.state.cuentasmodal}>
-                 < Cuentas 
-              
-                 cuentacaller={""}
-                 cuentaEnviada={this.state.cuentaEnviada }
-                 sendCuentaSelect={(cuenta)=>{
-              this.setState({cuentaEnviada:cuenta,cuentaSelect:cuenta, CuentaRender:cuenta.NombreC,cuentasmodal:false,})
-                 } }  
-                 
-                 
-                 Flecharetro3={
-                  ()=>{
-               this.setState({cuentasmodal:false})
-                  } } 
-               
-                />
-                  </Animate >
         <style jsx >{`
-           .maincontacto{
+           .maincontactoGenN{
             z-index: 1298;
             width: 100vw;
             height: 100vh;
@@ -1225,7 +1245,7 @@ phone
             
             }
 
-            .contcontacto{
+            .contcontactoGenN{
               border-radius: 30px;
               
               width: 90%;
@@ -1418,6 +1438,9 @@ phone
     box-shadow: 0px 3px 5px black;
     padding: 10px;
     border-radius: 14px;
+        display: flex
+;
+    justify-content: space-around;
         }
 
                   

@@ -3545,8 +3545,8 @@ let nuevosFC = getVenta.FormasCredito.concat(arrpagos)
                   
                      },
          
-           Nota:"Nota de Crédito de la Venta N°"+ data.IDVenta+" / "+ data.FormasPago[i].Tipo,
-           Descripcion:data.FormasPago[i].Detalles, 
+           Nota:"Nota de Crédito de la Venta N°"+ data.IDVenta,
+           Descripcion:"", 
            Estado:false,
            urlImg:[],
            Valrep:"",
@@ -3772,7 +3772,7 @@ let update={NotaCredito: newdata}
 
       await session.commitTransaction();    
       session.endSession();                 
-      return res.send({status: "Ok", message: "nota Credito Agregada", updateVenta, arrRegsSend, Cuentas:arrCuentas});
+      return res.send({status: "Ok", message: "nota Credito Agregada", updateVenta, arrRegsSend, arrCuentas});
       
 
      }
