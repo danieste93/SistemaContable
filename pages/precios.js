@@ -2,6 +2,22 @@
 import React, { useEffect, useState } from "react";
 import WhatsappButton from "../components/WhatsappButton";
 import Head from "next/head";
+import Pagos from "./pagos";
+
+const plansData = {
+  anual: [
+    { name: 'PRO', price: 45, id: 'pro-anual' },
+    { name: 'Plata', price: 115, id: 'plata-anual' },
+    { name: 'ORO', price: 200, id: 'oro-anual' },
+    { name: 'DIOS', price: 500, id: 'dios-anual' },
+  ],
+  mensual: [
+    { name: 'PRO', price: 4.50, id: 'pro-mensual' },
+    { name: 'Plata', price: 11.50, id: 'plata-mensual' },
+    { name: 'ORO', price: 22.50, id: 'oro-mensual' },
+    { name: 'DIOS', price: 50, id: 'dios-mensual' },
+  ]
+};
 
 export default function Precios() {
   // 2) Estado de tema y toggles
@@ -29,6 +45,8 @@ export default function Precios() {
   }, []);
   const [isDark, setIsDark] = useState(false);
   const [showDarkToggle, setShowDarkToggle] = useState(true);
+  const [showPagos, setShowPagos] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
   // Efecto: leer tema guardado y aplicarlo
   useEffect(() => {
@@ -58,6 +76,20 @@ export default function Precios() {
       document.body.classList.remove('dark-theme');
     }
   };
+
+  // Handler para mostrar el modal de pagos
+  const handleCarritoClick = (planName, duration, price) => {
+    setSelectedPlan({ name: planName, duration, price });
+    setShowPagos(true);
+  };
+
+  const handlePlanConfirmed = (plan, user) => {
+    console.log("Plan Confirmado:", plan);
+    console.log("Usuario:", user);
+    setShowPagos(false);
+    // TODO: Proceed to actual payment gateway (e.g., PayPal, Stripe)
+    alert(`Procediendo al pago para el plan ${plan.name} (${plan.duration}) por $${plan.price}`);
+  }
 
   // 3) Secciones y acordeón (visual)
   const secciones = [
@@ -109,19 +141,19 @@ export default function Precios() {
                     <td className="libre centrado"><span className="precio">$0</span></td>
                     <td className="profesional centrado">
                       <span className="precio">$45</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('PRO', 'Anual', 45)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="plata centrado">
                       <span className="precio">$115</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('Plata', 'Anual', 115)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="premiun centrado">
                       <span className="precio">$200</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('ORO', 'Anual', 200)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="personalizado centrado">
                       <span className="precio">$500</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('DIOS', 'Anual', 500)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                   </tr>
                   <tr>
@@ -129,19 +161,19 @@ export default function Precios() {
                     <td className="libre centrado"><span className="precio">$0</span></td>
                     <td className="profesional centrado">
                       <span className="precio">$4.50</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('PRO', 'Mensual', 4.50)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="plata centrado">
                       <span className="precio">$11.50</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('Plata', 'Mensual', 11.50)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="premiun centrado">
                       <span className="precio">$22.50</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('ORO', 'Mensual', 22.50)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="personalizado centrado">
                       <span className="precio">Mes</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('DIOS', 'Mensual', 50)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                   </tr>
                 </tbody>
@@ -334,7 +366,14 @@ export default function Precios() {
             </div>
           </div>
         </div>
-  </main>
+        {/* Modal de pagos minimalista */}
+        {showPagos && <Pagos
+            initialPlan={selectedPlan}
+            plansData={plansData}
+            onPlanConfirmed={handlePlanConfirmed}
+            onClose={() => setShowPagos(false)}
+        />}
+      </main>
 
       {/* Botón flotante de WhatsApp */}
       <WhatsappButton phone="+593962124673" message="Hola, quiero más información sobre las membresías de Activos.ec" title="Contáctanos por WhatsApp" />

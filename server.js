@@ -36,6 +36,14 @@ nextApp.prepare().then(() => {
 
   app.use(sslRedirect());
 
+    // --- INICIO: Ruta para servir endpoints API de Next.js (formato backup) ---
+    // Esta línea permite que las rutas /api/* sean manejadas por Next.js antes de cualquier middleware
+    app.all('/api/*', (req, res) => {
+      const parsedUrl = url.parse(req.url, true);
+      return nextHandler(req, res, parsedUrl);
+    });
+    // --- FIN: Ruta para servir endpoints API de Next.js ---
+
   app.set('secretKey', 'CerdadInfinita'); // Clave Secreta para nuestro JWT
   app.use(bodyParser.json({limit: '10mb', extended: true}))
   app.use(bodyParser.urlencoded({limit: '10mb', extended: true}))
@@ -55,6 +63,14 @@ nextApp.prepare().then(() => {
     maxAge: dev ? '0' : '365d'
   }));
 //morgar looger
+
+  // --- INICIO: Ruta para servir endpoints API de Next.js ---
+  // Esta línea permite que las rutas /api/* sean manejadas por Next.js
+  // Si no quieres que Next.js maneje las APIs, puedes comentar o eliminar esta línea
+  app.all('/api/*', (req, res) => {
+    return nextHandler(req, res);
+  });
+  // --- FIN: Ruta para servir endpoints API de Next.js ---
 
     // Example server-side routing
     app.get('/a', (req, res) => {
