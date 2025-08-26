@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import WhatsappButton from "../components/WhatsappButton";
 import Head from "next/head";
-import Pagos from "./pagos";
+import Pagos from "../components/sistemapagos/pagos";
 
 const plansData = {
   anual: [

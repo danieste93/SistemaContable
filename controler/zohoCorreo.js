@@ -2,18 +2,20 @@ const nodemailer = require('nodemailer');
 
 // 1. Configuración del Transporter para Zoho (usando variables de entorno)
 const transporter = nodemailer.createTransport({
-  host: process.env.ZOHO_HOST,
-  port: process.env.ZOHO_PORT,
+  host: process.env.ZOHO_SMTP_HOST,
+  port: process.env.ZOHO_SMTP_PORT,
   secure: true, // true para puerto 465
   auth: {
-    user: process.env.ZOHO_USER,
-    pass: process.env.ZOHO_PASS,
+    user: process.env.ZOHO_SMTP_USER,
+    pass: process.env.ZOHO_SMTP_PASS,
   },
 });
 
 // 2. Función para enviar correo de bienvenida con tu diseño
-async function enviarCorreoBienvenida({ email, nombre }) {
-  
+async function CorreoBienvenida(req, res) {
+    console.log(req.body);
+
+  const { email, nombre } = req.body;
   const emailHtmlTemplate = `
   <!DOCTYPE html>
   <html lang="es">
@@ -35,7 +37,7 @@ async function enviarCorreoBienvenida({ email, nombre }) {
           </tr>
           <tr>
             <td style="padding: 30px 20px; color: #111827; font-size: 16px; line-height: 1.6;">
-              <h2 style="font-size: 20px; margin-bottom: 10px;">¡Hola, [Nombre]!</h2>
+              <h2 style="font-size: 20px; margin-bottom: 10px;">¡Hola, ${nombre}!</h2>
               <p>Gracias por registrarte en <strong>Activos</strong>. Estamos emocionados de tenerte con nosotros. Tu cuenta ya está activa y puedes comenzar a explorar todas nuestras funciones.</p>
               <p>Únete a nuestra comunidad y sigue nuestros canales para aprender más sobre finanzas personales y cómo aprovechar al máximo la app:</p>
               <table border="0" cellpadding="0" cellspacing="0" width="100%">
@@ -91,11 +93,13 @@ async function enviarCorreoBienvenida({ email, nombre }) {
   </html>
   `;
 
+
+
   // Reemplazar el placeholder con el nombre real
   const emailHtml = emailHtmlTemplate.replace('[Nombre]', nombre);
 
   const mailOptions = {
-    from: `"Activos.ec" <${process.env.ZOHO_USER}>`,
+    from: process.env.ZOHO_SMTP_USER,
     to: email,
     subject: `¡Bienvenido a Activos.ec, ${nombre}! `,
     html: emailHtml,
@@ -111,4 +115,4 @@ async function enviarCorreoBienvenida({ email, nombre }) {
   }
 }
 
-module.exports = { enviarCorreoBienvenida };
+module.exports = { CorreoBienvenida };

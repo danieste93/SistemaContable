@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import { updateUser, logOut } from '../reduxstore/actions/myact';
-import { cleanData } from '../reduxstore/actions/regcont';
+import { updateUser, logOut } from '../../reduxstore/actions/myact';
+import { cleanData } from '../../reduxstore/actions/regcont';
 import postal from 'postal';
-import LoginGoogle from '../components/loginGoogle';
+import LoginGoogle from '../loginGoogle';
 import { useGoogleOneTapLogin } from '@react-oauth/google';
 
 function decodeJwt(token) {
@@ -120,7 +120,7 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
       const res = await fetch("/users/authenticate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Correo: email, Contrasena: password })
+        body: JSON.stringify({ Correo: email.toLowerCase(), Contrasena: password })
       });
       const data = await res.json();
       handleBackendLogin(data);
@@ -138,13 +138,40 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/registro-usuario", {
+      const res = await fetch("/users/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usuario: regUsuario, correo: email, password: regPassword, telefono: regTelefono })
+        body: JSON.stringify({ 
+          Usuario:regUsuario.trim().replace(" ", "-"),
+               TelefonoContacto:regTelefono,
+               Correo:email,
+               Contrasena:regPassword,
+               Imagen:"",
+               RegistradoPor:"usuario",
+               Confirmacion:false,
+  
+        })
       });
       const data = await res.json();
+      console.log("Registro Response:", data);
       if (data.status === "Ok") {
+
+        console.log("Usuario registrado y listo para login automático.");
+      //  setRegisterSuccess(true);
+        // Enviar correo de bienvenida
+        try {
+ console.log("yendo a enviar");
+          await fetch("/correo/send-welcome", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: email,
+              nombre: regUsuario.trim().replace(" ", "-"),
+            })
+          });
+        } catch (err) {
+          console.error("Error enviando correo de bienvenida:", err);
+        }
         // Auto-login after registration by calling handleLogin with fromRegister=true
         const loginEvent = { preventDefault: () => {} }; // Mock event object
         handleLogin(loginEvent, true);

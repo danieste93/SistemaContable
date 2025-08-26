@@ -1,209 +1,378 @@
-// Firma Electrónica - Página principal
-import React, { Component } from "react";
-import WhatsappButton from "../components/WhatsappButton";
+// pages/firma-electronica.js
+// Firma Electrónica - Página principal (versión corregida y funcional)
+
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import Head from "next/head";
 import dynamic from "next/dynamic";
+import WhatsappButton from "../components/WhatsappButton";
 
 // Importa el formulario de firma electrónica de forma dinámica
 const FormularioPage = dynamic(() => import("./firmas/formulario"), { ssr: false });
 
-// Componente principal de la página de firma electrónica
-export default class FirmaElectronica extends Component {
-  constructor(props) {
-    super(props);
-    // Estado principal
-    this.state = {
-      isDark: false, // Modo nocturno
-      modalOpen: false, // Modal de envío
-      iframeSrc: "", // Fuente del iframe
-      showIframe: false, // Mostrar iframe
-      selectedDuracion: "", // Duración seleccionada
-    };
-    // Referencia para el iframe
-    this.iframeRef = React.createRef();
-  }
+export default function FirmaElectronica() {
+  const [isDark, setIsDark] = useState(false); // Modo nocturno
+  const [modalOpen, setModalOpen] = useState(false); // Modal de envío
+  const [iframeSrc, setIframeSrc] = useState(""); // Fuente del iframe
+  const [showIframe, setShowIframe] = useState(false); // Mostrar iframe
+  const [selectedDuracion, setSelectedDuracion] = useState(""); // Duración seleccionada
 
-  // Al montar, lee el modo nocturno desde localStorage
-  componentDidMount() {
-    const isDark = localStorage.getItem("theme") === "dark";
-    this.setState({ isDark });
-  }
+  const iframeRef = useRef(null);
+
+  // Al montar, lee el modo nocturno desde localStorage (solo en cliente)
+  useEffect(() => {
+    try {
+      const stored = typeof window !== "undefined" ? window.localStorage.getItem("theme") : null;
+      setIsDark(stored === "dark");
+    } catch (_) {
+      // no-op si localStorage no está disponible
+    }
+  }, []);
+
+  // Agrega/remueve clase del body cuando el modal está abierto
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (modalOpen) {
+      document.body.classList.add("modal-abierto");
+    } else {
+      document.body.classList.remove("modal-abierto");
+    }
+    return () => {
+      document.body.classList.remove("modal-abierto");
+    };
+  }, [modalOpen]);
 
   // Alterna el modo nocturno y guarda en localStorage
-  handleThemeToggle = () => {
-    this.setState(
-      prev => ({ isDark: !prev.isDark }),
-      () => {
-        localStorage.setItem("theme", this.state.isDark ? "dark" : "light");
+  const handleThemeToggle = useCallback(() => {
+    setIsDark(prev => {
+      const next = !prev;
+      try {
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("theme", next ? "dark" : "light");
+        }
+      } catch (_) {
+        // ignorar
       }
-    );
-  };
+      return next;
+    });
+  }, []);
 
   // Abre el modal para enviar documentos
-  abrirModalApp = (duracion = "") => {
-    this.setState({
-      modalOpen: true,
-      iframeSrc: "public/index.html",
-      showIframe: true,
-      selectedDuracion: duracion,
-    });
-    document.body.classList.add("modal-abierto");
-  };
+  const abrirModalApp = useCallback((duracion = "") => {
+    setModalOpen(true);
+    setIframeSrc("/public/index.html"); // ajusta la ruta si fuera necesario
+    setShowIframe(true);
+    setSelectedDuracion(String(duracion || ""));
+  }, []);
 
   // Cierra el modal de envío
-  cerrarModalApp = () => {
-    this.setState({ modalOpen: false, showIframe: false, iframeSrc: "" });
-    document.body.classList.remove("modal-abierto");
-  };
+  const cerrarModalApp = useCallback(() => {
+    setModalOpen(false);
+    setShowIframe(false);
+    setIframeSrc("");
+  }, []);
 
   // Cuando el iframe carga, selecciona la duración automáticamente
-  handleIframeLoad = () => {
-    const { selectedDuracion } = this.state;
-    if (this.iframeRef.current && selectedDuracion) {
+  const handleIframeLoad = useCallback(() => {
+    const dur = selectedDuracion;
+    if (iframeRef.current && dur) {
       try {
-        const doc = this.iframeRef.current.contentWindow.document;
+        const doc = iframeRef.current.contentWindow?.document;
+        if (!doc) return;
         const select = doc.getElementById("duracionAnual");
         if (select) {
-          select.value = selectedDuracion;
+          select.value = dur;
           const event = doc.createEvent("HTMLEvents");
           event.initEvent("change", true, false);
           select.dispatchEvent(event);
         }
-      } catch (err) {}
+      } catch (_) {
+        // El acceso al contenido del iframe puede estar bloqueado por CORS
+      }
     }
-  };
+  }, [selectedDuracion]);
 
   // Maneja el clic en el botón de compra para abrir el modal
-  handleBtnCompra = (e, duracion) => {
+  const handleBtnCompra = useCallback((e, duracion) => {
     if (!(e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1)) {
       e.preventDefault();
-      this.abrirModalApp(duracion);
+      abrirModalApp(duracion);
     }
-  };
+  }, [abrirModalApp]);
 
-  // Render principal de la página
-  render() {
-    const { isDark, modalOpen, iframeSrc, showIframe } = this.state;
-    return (
-      <div>
-        {/* Head: fuentes y estilos globales */}
-        <Head>
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-        </Head>
+  return (
+    <div>
+      {/* Head: fuentes y estilos globales */}
+      <Head>
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </Head>
 
-        {/* Botón de modo nocturno */}
-        <button className="dark-toggle" id="darkModeToggle" title="Cambiar modo claro/oscuro" onClick={this.handleThemeToggle}>
-          <i className={isDark ? "fas fa-moon" : "fas fa-sun"}></i>
-        </button>
+      {/* Botón de modo nocturno */}
+      <button
+        className="dark-toggle"
+        id="darkModeToggle"
+        title="Cambiar modo claro/oscuro"
+        onClick={handleThemeToggle}
+        aria-label="Cambiar modo claro/oscuro"
+      >
+        <i className={isDark ? "fas fa-moon" : "fas fa-sun"} />
+      </button>
 
-        {/* Contenido principal */}
-        <div className={`container${isDark ? ' dark' : ''}`}> 
-          {/* Encabezado y tabla de precios */}
-          <h1>
-            <img src="https://i.ibb.co/bgPZ03R7/Chat-GPT-Image-19-jul-2025-09-07-33-p-m-removebg-preview.png" alt="Icono Firma Ecuador" style={{width:60,height:60,objectFit:"contain",display:"inline-block",marginRight:8,verticalAlign:"middle",borderRadius:16,border:"2.5px solid #a5b4fc",boxShadow:"0 0 0 6px #7c3aed33,0 2px 12px #6366f144",backdropFilter:"blur(1.5px)",background:"transparent"}} loading="lazy" />
-            <span style={{display:"inline-block",verticalAlign:"middle",lineHeight:1.1,letterSpacing:"1.2px",fontSize:"2.1rem",fontWeight:800,color:"#fff",textShadow:"0 4px 24px #312e81cc,0 1px 0 #fff"}}>Firma Electrónica Ecuador</span>
-          </h1>
-          <table>
-            <thead>
-              <tr>
-                <th>Tipo firma / Años</th>
-                <th>1</th>
-                <th>2</th>
-                <th>3</th>
-                <th>4</th>
-                <th>5</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Firma p12</td>
-                {[1,2,3,4,5].map((dur) => (
-                  <td key={dur}><div className="precio-celda"><span className="precio-numero">{["$20","$29","$38","$47","$55"][dur-1]}</span><a className="btn-circular btn-compra" data-duracion={dur} data-tipo="p12" href={`https://wa.me/+593962124673?text=Quiero%20comprar%20una%20firma%20electr%C3%B3nica%20archivo%20p12%20por%20${dur}%20a%C3%B1o${dur>1?"s":""}`} onClick={e=>this.handleBtnCompra(e, String(dur))}><i className="fas fa-shopping-cart cart-icon"></i></a></div></td>
-                ))}
-              </tr>
-              <tr>
-                <td>Firma token</td>
-                {[1,2,3,4,5].map((dur) => (
-                  <td key={dur}><div className="precio-celda"><span className="precio-numero">{["$30","$40","$50","$60","$70"][dur-1]}</span><a className="btn-circular" href={`https://wa.me/+593962124673?text=Quiero%20comprar%20una%20firma%20electr%C3%B3nica%20token%20por%20${dur}%20a%C3%B1o${dur>1?"s":""}`}><i className="fas fa-shopping-cart cart-icon"></i></a></div></td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-          <a href="/precios" className="free-button">Obtenla gratis</a>
-          <div className="description">
-            <h2 className="titulo-seccion" style={{textAlign:"center"}}>Requisitos:</h2>
-            <ul style={{textAlign:"left",listStylePosition:"outside",paddingLeft:20}}>
-              <li><i className="fas fa-user-circle"></i> Foto con cédula (sin lentes)</li>
-              <li><i className="fas fa-id-card"></i> Cédula (frente y dorso)</li>
-              <li><i className="fas fa-file-pdf"></i> RUC en PDF</li>
-              <li><i className="fas fa-envelope"></i> Correo electrónico</li>
-              <li><i className="fas fa-phone"></i> Teléfono celular</li>
-            </ul>
-            <h2 className="titulo-seccion" style={{textAlign:"center"}}>Pasos a seguir:</h2>
-            <div className="pasos-flex">
-              <div className="paso-circulo" style={{justifyContent:"flex-start"}}>
-                <div className="paso-circulo-inner">
-                  <span className="paso-numero">1</span>
-                  <i className="fas fa-folder-open"></i>
-                  <span>Juntar documentos + recibo<br/>(o realizar pago)</span>
-                </div>
-              </div>
-              <div className="paso-circulo" style={{justifyContent:"center"}}>
-                <div className="paso-circulo-inner" style={{gap: '10px', padding: '0 12px'}}>
-                  <span className="paso-numero">2</span>
-                  <button 
-                    className="whatsapp-button paso-boton" 
-                    type="button"
-                    style={{marginBottom: '4px', marginTop: '0', width: '100%', fontSize: '0.92em', padding: '7px 0'}}
-                    onClick={()=>this.abrirModalApp()}
-                  >
-                    ENVIAR DOCUMENTOS
-                  </button>
-                  <span style={{fontSize: '0.92em', lineHeight: '1.22', wordBreak: 'break-word'}}>Subir información<br/>(haz clic en el botón)</span>
-                </div>
-              </div>
-              <div className="paso-circulo" style={{justifyContent:"flex-end"}}>
-                <div className="paso-circulo-inner">
-                  <span className="paso-numero">3</span>
-                  <i className="fas fa-link"></i>
-                  <span>Recibir enlace por correo<br/>para contraseña y descargar p12</span>
-                </div>
+      {/* Contenido principal */}
+      <div className={`container${isDark ? " dark" : ""}`}>
+        {/* Encabezado y tabla de precios */}
+        <h1>
+          <img
+            src="https://i.ibb.co/bgPZ03R7/Chat-GPT-Image-19-jul-2025-09-07-33-p-m-removebg-preview.png"
+            alt="Icono Firma Ecuador"
+            style={{
+              width: 60,
+              height: 60,
+              objectFit: "contain",
+              display: "inline-block",
+              marginRight: 8,
+              verticalAlign: "middle",
+              borderRadius: 16,
+              border: "2.5px solid #a5b4fc",
+              boxShadow: "0 0 0 6px #7c3aed33,0 2px 12px #6366f144",
+              backdropFilter: "blur(1.5px)",
+              background: "transparent",
+            }}
+            loading="lazy"
+          />
+          <span
+            style={{
+              display: "inline-block",
+              verticalAlign: "middle",
+              lineHeight: 1.1,
+              letterSpacing: "1.2px",
+              fontSize: "2.1rem",
+              fontWeight: 800,
+              color: "#fff",
+              textShadow: "0 4px 24px #312e81cc,0 1px 0 #fff",
+            }}
+          >
+            Firma Electrónica Ecuador
+          </span>
+        </h1>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo firma / Años</th>
+              <th>1</th>
+              <th>2</th>
+              <th>3</th>
+              <th>4</th>
+              <th>5</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Firma p12</td>
+              {[1, 2, 3, 4, 5].map((dur) => (
+                <td key={`p12-${dur}`}>
+                  <div className="precio-celda">
+                    <span className="precio-numero">
+                      {["$20", "$29", "$38", "$47", "$55"][dur - 1]}
+                    </span>
+                    <a
+                      className="btn-circular btn-compra"
+                      data-duracion={dur}
+                      data-tipo="p12"
+                      href={`https://wa.me/+593962124673?text=Quiero%20comprar%20una%20firma%20electr%C3%B3nica%20archivo%20p12%20por%20${dur}%20a%C3%B1o${dur > 1 ? "s" : ""}`}
+                      onClick={(e) => handleBtnCompra(e, String(dur))}
+                    >
+                      <i className="fas fa-shopping-cart cart-icon" />
+                    </a>
+                  </div>
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td>Firma token</td>
+              {[1, 2, 3, 4, 5].map((dur) => (
+                <td key={`token-${dur}`}>
+                  <div className="precio-celda">
+                    <span className="precio-numero">
+                      {["$30", "$40", "$50", "$60", "$70"][dur - 1]}
+                    </span>
+                    <a
+                      className="btn-circular"
+                      href={`https://wa.me/+593962124673?text=Quiero%20comprar%20una%20firma%20electr%C3%B3nica%20token%20por%20${dur}%20a%C3%B1o${dur > 1 ? "s" : ""}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <i className="fas fa-shopping-cart cart-icon" />
+                    </a>
+                  </div>
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+
+        <a href="/precios" className="free-button">
+          Obtenla gratis
+        </a>
+
+        <div className="description">
+          <h2 className="titulo-seccion" style={{ textAlign: "center" }}>
+            Requisitos:
+          </h2>
+          <ul style={{ textAlign: "left", listStylePosition: "outside", paddingLeft: 20 }}>
+            <li>
+              <i className="fas fa-user-circle" /> Foto con cédula (sin lentes)
+            </li>
+            <li>
+              <i className="fas fa-id-card" /> Cédula (frente y dorso)
+            </li>
+            <li>
+              <i className="fas fa-file-pdf" /> RUC en PDF
+            </li>
+            <li>
+              <i className="fas fa-envelope" /> Correo electrónico
+            </li>
+            <li>
+              <i className="fas fa-phone" /> Teléfono celular
+            </li>
+          </ul>
+
+          <h2 className="titulo-seccion" style={{ textAlign: "center" }}>
+            Pasos a seguir:
+          </h2>
+
+          <div className="pasos-flex">
+            <div className="paso-circulo" style={{ justifyContent: "flex-start" }}>
+              <div className="paso-circulo-inner">
+                <span className="paso-numero">1</span>
+                <i className="fas fa-folder-open" />
+                <span>
+                  Juntar documentos + recibo
+                  <br />(o realizar pago)
+                </span>
               </div>
             </div>
-            <p style={{marginTop:16,fontSize:14}}>Nota: Si la información requerida es correcta, la firma electrónica estaría lista en 30 minutos.</p>
-          </div>
-          {/* Formulario de envío de firma electrónica */}
-          <div style={{marginTop: 40, marginBottom: 40}}>
-            <FormularioPage />
-          </div>
-          <div className="precaution">
-            <h2><i className="fas fa-exclamation-triangle"></i> Precauciones importantes</h2>
-            <ul>
-              <li><strong>Cerciórese de escribir correctamente su dirección de correo electrónico.</strong> Una vez enviada la firma electrónica, no se podrá recuperar si hay errores en el correo proporcionado.</li>
-              <li><strong>Guarde el archivo p12 en un lugar seguro.</strong> No hay forma de recuperarlo si se pierde.</li>
-              <li><strong>Al recibir el enlace del correo para crear una nueva contraseña,</strong> úselo desde una computadora o laptop para evitar problemas técnicos.</li>
-            </ul>
-          </div>
 
-          {/* Modal simple para iframe si lo deseas usar*/}
-          {modalOpen && (
-            <div className="modal-auth-overlay" onClick={this.cerrarModalApp}>
-              <div className="modal-auth-pro" onClick={e => e.stopPropagation()}>
-                <button className="modal-auth-close btncerrarCustom" onClick={this.cerrarModalApp} aria-label="Cerrar">✕</button>
-                {showIframe && (
-                  <iframe ref={this.iframeRef} src={iframeSrc} onLoad={this.handleIframeLoad} style={{width:'100%', height: '70vh', border: '1px solid #e5e7eb', borderRadius: 12}} />
-                )}
+            <div className="paso-circulo" style={{ justifyContent: "center" }}>
+              <div className="paso-circulo-inner" style={{ gap: "10px", padding: "0 12px" }}>
+                <span className="paso-numero">2</span>
+                <button
+                  className="whatsapp-button paso-boton"
+                  type="button"
+                  style={{ marginBottom: "4px", marginTop: "0", width: "100%", fontSize: "0.92em", padding: "7px 0" }}
+                  onClick={() => abrirModalApp()}
+                >
+                  ENVIAR DOCUMENTOS
+                </button>
+                <span style={{ fontSize: "0.92em", lineHeight: "1.22", wordBreak: "break-word" }}>
+                  Subir información
+                  <br />
+                  (haz clic en el botón)
+                </span>
               </div>
             </div>
-          )}
+
+            <div className="paso-circulo" style={{ justifyContent: "flex-end" }}>
+              <div className="paso-circulo-inner">
+                <span className="paso-numero">3</span>
+                <i className="fas fa-link" />
+                <span>
+                  Recibir enlace por correo
+                  <br />
+                  para contraseña y descargar p12
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <p style={{ marginTop: 16, fontSize: 14 }}>
+            Nota: Si la información requerida es correcta, la firma electrónica estaría lista en 30 minutos.
+          </p>
         </div>
-        {/* Botón flotante global para comenzar */}
-        <button className={`boton-flotante-comenzar${isDark ? ' dark' : ''}`} type="button">
-          <i className="fas fa-play" style={{marginRight:8}}></i> COMENZAR
-        </button>
-        {/* Estilos de la página */}
-        <style jsx>{`
+
+        {/* Formulario de envío de firma electrónica */}
+        <div style={{ marginTop: 40, marginBottom: 40 }}>
+          <FormularioPage />
+        </div>
+
+        <div className="precaution">
+          <h2>
+            <i className="fas fa-exclamation-triangle" /> Precauciones importantes
+          </h2>
+          <ul>
+            <li>
+              <strong>Cerciórese de escribir correctamente su dirección de correo electrónico.</strong> Una vez enviada la firma electrónica, no se podrá recuperar si hay errores en el correo proporcionado.
+            </li>
+            <li>
+              <strong>Guarde el archivo p12 en un lugar seguro.</strong> No hay forma de recuperarlo si se pierde.
+            </li>
+            <li>
+              <strong>Al recibir el enlace del correo para crear una nueva contraseña,</strong> úselo desde una computadora o laptop para evitar problemas técnicos.
+            </li>
+          </ul>
+        </div>
+
+        {/* Modal simple para iframe */}
+        {modalOpen && (
+          <div className="modal-auth-overlay" onClick={cerrarModalApp} role="dialog" aria-modal="true">
+            <div className="modal-auth-pro" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-auth-close btncerrarCustom" onClick={cerrarModalApp} aria-label="Cerrar">
+                ✕
+              </button>
+              {showIframe && (
+                <iframe
+                  ref={iframeRef}
+                  src={iframeSrc}
+                  onLoad={handleIframeLoad}
+                  style={{ width: "100%", height: "70vh", border: "1px solid #e5e7eb", borderRadius: 12 }}
+                />
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Botón flotante global para comenzar */}
+      <button className={`boton-flotante-comenzar${isDark ? " dark" : ""}`} type="button">
+        <i className="fas fa-play" style={{ marginRight: 8 }} /> COMENZAR
+      </button>
+
+      {/* Estilos de la página */}
+      <style jsx>{`
+          .modal-auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 16px;
+          }
+          .modal-auth-pro {
+            width: min(960px, 96vw);
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 10px 40px rgba(0,0,0,.2);
+            position: relative;
+            padding: 16px;
+          }
+          .modal-auth-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+          }
           .boton-flotante-comenzar {
             position: fixed;
             left: 50%;
@@ -262,9 +431,7 @@ export default class FirmaElectronica extends Component {
             color: #fff;
             border-right: 1.5px solid #6366f1;
           }
-          .container.dark tr:hover {
-            background: rgba(60,60,120,0.18);
-          }
+          .container.dark tr:hover { background: rgba(60,60,120,0.18); }
           .container.dark .description {
             background: rgba(30,30,40,0.85);
             border-color: #6366f1;
@@ -272,65 +439,80 @@ export default class FirmaElectronica extends Component {
             box-shadow: 0 2px 12px #6366f122;
             backdrop-filter: blur(2px);
           }
-          .container.dark .btn-circular {
-            background: linear-gradient(90deg, #6366f1 60%, #312e81 100%);
-            color: #fff;
-            box-shadow: 0 2px 8px #6366f144;
-          }
-          .container.dark .btn-circular:hover {
-            background: linear-gradient(90deg, #312e81 60%, #6366f1 100%);
-          }
-          .container.dark .whatsapp-button {
-            background: linear-gradient(90deg, #6366f1 60%, #38bdf8 100%);
-            color: #fff;
-            box-shadow: 0 2px 8px #6366f144;
-          }
+          .container.dark .btn-circular { background: linear-gradient(90deg, #6366f1 60%, #312e81 100%); color: #fff; box-shadow: 0 2px 8px #6366f144; }
+          .container.dark .btn-circular:hover { background: linear-gradient(90deg, #312e81 60%, #6366f1 100%); }
+          .container.dark .whatsapp-button { background: linear-gradient(90deg, #6366f1 60%, #38bdf8 100%); color: #fff; box-shadow: 0 2px 8px #6366f144; }
           .container.dark .paso-numero {
             background: linear-gradient(120deg, #312e81 60%, #6366f1 100%);
             color: #fff;
             border-color: #6366f1;
             box-shadow: 0 4px 18px #6366f133, 0 1px 0 #fff1;
           }
-          .container.dark .precaution {
-            background: rgba(30,30,40,0.85);
-            border-color: #6366f1;
-            color: #e5e7eb;
-            box-shadow: 0 2px 12px #6366f122;
-            backdrop-filter: blur(2px);
-          }
-          .container.dark .precaution h2 {
-            color: #e5e7eb;
-          }
-          .container.dark .dark-toggle {
-            background: linear-gradient(90deg, #6366f1 60%, #312e81 100%);
-            color: #fff;
-            box-shadow: 0 2px 8px #6366f144;
-          }
-          .container.dark .dark-toggle:hover {
-            background: linear-gradient(90deg, #312e81 60%, #6366f1 100%);
-          }
-          .container.dark .free-button {
-            background: linear-gradient(90deg, #6366f1 60%, #312e81 100%);
-            color: #fff;
-            box-shadow: 0 2px 8px #6366f144;
-          }
-          .container.dark .free-button:hover {
-            background: linear-gradient(90deg, #312e81 60%, #6366f1 100%);
-          }
+          .container.dark .precaution { background: rgba(30,30,40,0.85); border-color: #6366f1; color: #e5e7eb; box-shadow: 0 2px 12px #6366f122; backdrop-filter: blur(2px); }
+          .container.dark .precaution h2 { color: #e5e7eb; }
+          .container.dark .dark-toggle { background: linear-gradient(90deg, #6366f1 60%, #312e81 100%); color: #fff; box-shadow: 0 2px 8px #6366f144; }
+          .container.dark .dark-toggle:hover { background: linear-gradient(90deg, #312e81 60%, #6366f1 100%); }
+          .container.dark .free-button { background: linear-gradient(90deg, #6366f1 60%, #312e81 100%); color: #fff; box-shadow: 0 2px 8px #6366f144; }
+          .container.dark .free-button:hover { background: linear-gradient(90deg, #312e81 60%, #6366f1 100%); }
           .container.dark .boton-flotante-comenzar {
             background: linear-gradient(90deg, #6366f1 0%, #312e81 100%);
             color: #fff;
             box-shadow: 0 8px 32px rgba(60,60,120,0.28);
             border: 1.5px solid #6366f1;
           }
-          .container.dark .boton-flotante-comenzar:hover {
-            background: linear-gradient(90deg, #312e81 0%, #6366f1 100%);
+          .container.dark .boton-flotante-comenzar:hover { background: linear-gradient(90deg, #312e81 0%, #6366f1 100%); }
+          h1 {
+            text-align: center;
+            font-size: 2.7rem;
+            font-weight: 800;
+            margin-bottom: 38px;
+            margin-top: 36px;
+            letter-spacing: 1.2px;
+            line-height: 1.13;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            color: #fff;
+            background: linear-gradient(100deg, #7c3aed 0%, #6366f1 60%, #38bdf8 100%);
+            border-radius: 32px;
+            padding: 36px 44px 28px 44px;
+            border: 2.5px solid #a5b4fc;
+            box-shadow: 0 8px 36px 0 #7c3aed44, 0 2px 0 #fff, 0 1px 0 #c7d2fe;
+            text-shadow: 0 4px 24px #312e81cc, 0 1px 0 #fff;
+            filter: none;
+            transition: all 0.2s;
+            width: 100%;
+            max-width: 720px;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 5px solid #6366f1;
+            backdrop-filter: blur(3px);
           }
-          h1 { text-align: center; font-size: 2.7rem; font-weight: 800; margin-bottom: 38px; margin-top: 36px; letter-spacing: 1.2px; line-height: 1.13; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; color: #fff; background: linear-gradient(100deg, #7c3aed 0%, #6366f1 60%, #38bdf8 100%); border-radius: 32px; padding: 36px 44px 28px 44px; border: 2.5px solid #a5b4fc; box-shadow: 0 8px 36px 0 #7c3aed44, 0 2px 0 #fff, 0 1px 0 #c7d2fe; text-shadow: 0 4px 24px #312e81cc, 0 1px 0 #fff; filter: none; transition: all 0.2s; width: 100%; max-width: 720px; margin-left: auto; margin-right: auto; display: flex; align-items: center; justify-content: center; gap: 14px; position: relative; overflow: hidden; border-bottom: 5px solid #6366f1; backdrop-filter: blur(3px); }
-          table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 14px; background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 14px;
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+          }
           .precio-celda { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
-          .precio-numero { font-size: 1.7em; font-weight: 800; color: #7c3aed; margin-bottom: 2px; letter-spacing: 0.5px; line-height: 1.1; font-family: 'Inter', sans-serif; text-shadow: 0 2px 12px #e0e7ff40, 0 1px 0 #fff; background: linear-gradient(120deg, #ede9fe 60%, #c7d2fe 100%); border-radius: 16px; border: 2px solid #a5b4fc; box-shadow: 0 2px 12px #a5b4fc22; padding: 8px 22px 6px 22px; display: inline-block; margin-top: 2px; }
-          @media (max-width: 700px) { .precio-numero { display: block; width: 100%; min-width: 0; max-width: 100%; font-size: 1.25em; padding: 10px 0 8px 0; margin-left: auto; margin-right: auto; border-radius: 14px; box-sizing: border-box; } .precio-celda { gap: 4px; } }
+          .precio-numero {
+            font-size: 1.7em; font-weight: 800; color: #7c3aed; margin-bottom: 2px; letter-spacing: 0.5px; line-height: 1.1; font-family: 'Inter', sans-serif;
+            text-shadow: 0 2px 12px #e0e7ff40, 0 1px 0 #fff; background: linear-gradient(120deg, #ede9fe 60%, #c7d2fe 100%);
+            border-radius: 16px; border: 2px solid #a5b4fc; box-shadow: 0 2px 12px #a5b4fc22; padding: 8px 22px 6px 22px; display: inline-block; margin-top: 2px;
+          }
+          @media (max-width: 700px) {
+            .precio-numero { display: block; width: 100%; min-width: 0; max-width: 100%; font-size: 1.25em; padding: 10px 0 8px 0; margin-left: auto; margin-right: auto; border-radius: 14px; box-sizing: border-box; }
+            .precio-celda { gap: 4px; }
+          }
           .precio-celda .btn-circular { margin-top: 2px; }
           th, td { border: 1px solid #e5e7eb; padding: 12px 8px; text-align: center; }
           th { background-color: #8b5cf6; color: white; position: sticky; top: 0; }
@@ -343,60 +525,16 @@ export default class FirmaElectronica extends Component {
           .step { display: flex; align-items: center; margin-bottom: 12px; }
           .step i { font-size: 20px; color: #3b82f6; margin-right: 10px; }
           .whatsapp-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #25d366;
-            color: #fff;
-            padding: 6px 14px;
-            border-radius: 999px;
-            text-decoration: none;
-            font-weight: 600;
-            text-align: center;
-            margin: 0 auto 8px auto;
-            font-size: 0.85em;
-            max-width: 110px;
-            min-width: 80px;
-            box-shadow: 0 2px 8px #25d36633, 0 1px 0 #fff;
-            border: none;
-            background: linear-gradient(90deg, #25d366 60%, #38bdf8 100%);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            letter-spacing: 0.5px;
-            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-            transition: background 0.2s, box-shadow 0.2s;
+            display: flex; align-items: center; justify-content: center; background-color: #25d366; color: #fff; padding: 6px 14px; border-radius: 999px; text-decoration: none; font-weight: 600; text-align: center; margin: 0 auto 8px auto; font-size: 0.85em; max-width: 110px; min-width: 80px; box-shadow: 0 2px 8px #25d36633, 0 1px 0 #fff; border: none; background: linear-gradient(90deg, #25d366 60%, #38bdf8 100%); color: #fff; gap: 6px; letter-spacing: 0.5px; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; transition: background 0.2s, box-shadow 0.2s;
           }
           .whatsapp-button:hover { background-color: #1da851; }
           @media (max-width: 600px) {
             .whatsapp-button.paso-boton {
-              width: 140px;
-              min-width: 110px;
-              max-width: 140px;
-              font-size: 0.95em;
-              padding: 7px 10px;
-              margin-bottom: 8px;
-              margin-top: 0;
-              border-radius: 18px;
-              box-shadow: none;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #fff;
-              border: none;
-              transition: background 0.2s;
+              width: 140px; min-width: 110px; max-width: 140px; font-size: 0.95em; padding: 7px 10px; margin-bottom: 8px; margin-top: 0; border-radius: 18px; box-shadow: none; display: flex; align-items: center; justify-content: center; color: #fff; border: none; transition: background 0.2s;
             }
           }
-          .whatsapp-button:hover {
-            background-color: #1da851;
-            transform: scale(1.08);
-            box-shadow: 0 0 18px #25d36688, 0 2px 8px #38bdf888;
-          }
-          .whatsapp-button {
-            transition: background 0.2s, box-shadow 0.3s, transform 0.3s;
-          }
+          .whatsapp-button:hover { background-color: #1da851; transform: scale(1.08); box-shadow: 0 0 18px #25d36688, 0 2px 8px #38bdf888; }
+          .whatsapp-button { transition: background 0.2s, box-shadow 0.3s, transform 0.3s; }
           li i { margin-right: 6px; }
           .precaution { background-color: #fefce8; border: 1px solid #f59e0b; padding: 20px; border-radius: 12px; margin-top: 40px; margin-bottom: 120px; color: #92400e; }
           .precaution h2 { display: flex; align-items: center; gap: 10px; font-size: 18px; margin-bottom: 12px; color: #92400e; }
@@ -412,24 +550,8 @@ export default class FirmaElectronica extends Component {
           .boton-flotante { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 2147483647 !important; box-shadow: 0 6px 24px rgba(60,60,120,0.18); max-width: 420px; width: 94vw; margin: 0; font-size: 18px; padding: 18px 24px; border-radius: 32px; transition: background 0.2s, box-shadow 0.2s; display: block !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto; }
           .boton-flotante:hover { background-color: #1da851 !important; box-shadow: 0 10px 32px rgba(60,60,120,0.22); }
           @media (max-width: 700px) { .boton-flotante { font-size: 16px; padding: 14px 10px; max-width: 99vw; width: 99vw; left: 50%; bottom: 10px; } }
-          .pasos-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            gap: 18px;
-            margin: 32px 0 18px 0;
-            width: 100%;
-            flex-wrap: wrap;
-          }
-          .paso-circulo {
-            display: flex;
-            flex: 1 1 0;
-            min-width: 120px;
-            max-width: 220px;
-            align-items: flex-end;
-            justify-content: center;
-            margin: 0 8px;
-          }
+          .pasos-flex { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; margin: 32px 0 18px 0; width: 100%; flex-wrap: wrap; }
+          .paso-circulo { display: flex; flex: 1 1 0; min-width: 120px; max-width: 220px; align-items: flex-end; justify-content: center; margin: 0 8px; }
           .paso-circulo-inner {
             background: linear-gradient(135deg, #f3f4f6 40%, #ede9fe 80%, #c7d2fe 100%);
             border-radius: 50%;
@@ -454,73 +576,25 @@ export default class FirmaElectronica extends Component {
             color: #312e81;
             transition: box-shadow 0.3s, border 0.2s, transform 0.3s;
           }
-          .paso-circulo-inner:hover {
-            transform: scale(1.07);
-            box-shadow: 0 0 32px 0 #7c3aed66, 0 8px 32px #a5b4fc66, 0 1px 0 #fff;
-            border-color: #6366f1;
-          }
+          .paso-circulo-inner:hover { transform: scale(1.07); box-shadow: 0 0 32px 0 #7c3aed66, 0 8px 32px #a5b4fc66, 0 1px 0 #fff; border-color: #6366f1; }
           .paso-numero {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.1em;
-            font-weight: 800;
-            color: #fff;
-            background: linear-gradient(120deg, #7c3aed 60%, #6366f1 100%);
-            border-radius: 50%;
-            border: 3px solid #a5b4fc;
-            box-shadow: 0 4px 18px #a5b4fc33, 0 1px 0 #fff;
-            padding: 8px 18px 6px 18px;
-            margin-bottom: 6px;
-            margin-top: -18px;
-            position: relative;
-            top: 0;
-            z-index: 2;
-            text-shadow: 0 2px 12px #312e81cc, 0 1px 0 #fff;
-            letter-spacing: 1px;
-            min-height: 48px;
+            display: flex; align-items: center; justify-content: center; font-size: 2.1em; font-weight: 800; color: #fff; background: linear-gradient(120deg, #7c3aed 60%, #6366f1 100%);
+            border-radius: 50%; border: 3px solid #a5b4fc; box-shadow: 0 4px 18px #a5b4fc33, 0 1px 0 #fff; padding: 8px 18px 6px 18px; margin-bottom: 6px; margin-top: -18px; position: relative; top: 0; z-index: 2; text-shadow: 0 2px 12px #312e81cc, 0 1px 0 #fff; letter-spacing: 1px; min-height: 48px;
           }
           @media (max-width: 700px) {
-            .pasos-flex {
-              flex-direction: row;
-              justify-content: center;
-              align-items: center;
-              gap: 18px;
-              width: 100%;
-            }
-            .paso-circulo {
-              min-width: 99vw;
-              max-width: 99vw;
-              margin: 0 0 18px 0;
-            }
-            .paso-circulo-inner {
-              width: 88vw;
-              height: 88vw;
-              max-width: 340px;
-              max-height: 340px;
-              min-width: 180px;
-              min-height: 180px;
-              border-radius: 50%;
-              overflow: hidden;
-              padding: 18px 10px 18px 10px;
-              font-size: 0.92em;
-              gap: 20px;
-              box-sizing: border-box;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-            }
-            .paso-numero {
-              font-size: 1.6em;
-              padding: 10px 18px 8px 18px;
-              margin-top: -24px;
-              top: -12px;
-            }
+            .pasos-flex { flex-direction: row; justify-content: center; align-items: center; gap: 18px; width: 100%; }
+            .paso-circulo { min-width: 99vw; max-width: 99vw; margin: 0 0 18px 0; }
+            .paso-circulo-inner { width: 88vw; height: 88vw; max-width: 340px; max-height: 340px; min-width: 180px; min-height: 180px; border-radius: 50%; overflow: hidden; padding: 18px 10px 18px 10px; font-size: 0.92em; gap: 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+            .paso-numero { font-size: 1.6em; padding: 10px 18px 8px 18px; margin-top: -24px; top: -12px; }
           }
-        `}</style>
-        <WhatsappButton phone="+593962124673" message="Hola, quiero más información sobre la firma electrónica de Activos.ec" title="Contáctanos por WhatsApp" />
-      </div>
-    );
-  }
+        `}
+      </style>
+
+      <WhatsappButton
+        phone="+593962124673"
+        message="Hola, quiero más información sobre la firma electrónica de Activos.ec"
+        title="Contáctanos por WhatsApp"
+      />
+    </div>
+  );
 }
