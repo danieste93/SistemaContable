@@ -94,10 +94,10 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/users/authenticate", {
+      const res = await fetch("/api/validar-usuario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Correo: email, Contrasena: password })
+        body: JSON.stringify({ correo: email })
       });
       const data = await res.json();
       if (data.existe) {
