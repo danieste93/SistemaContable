@@ -110,8 +110,8 @@ export default function Precios() {
       <main>
         <div className="container" style={{ marginTop: 80 }}>
           {/* 4.1) Encabezado y botón tema */}
-          <h1>Elige tu Membresía - Activos.ec</h1>
-          <h2>Descubre todas las funciones disponibles en cada plan</h2>
+          <h1 className="titulo-minimalista">Elige tu Membresía</h1>
+          <h2 className="subtitulo-precios">Descubre todas las funciones disponibles en cada plan</h2>
 
           {showDarkToggle && (
             <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', margin: '0 0 12px 0' }}>
@@ -122,7 +122,7 @@ export default function Precios() {
           )}
 
           {/* 4.2) Tabla superior de precios (Anual/Mensual) */}
-          <div className="tabla-scroll tabla-sticky" id="stickyPrecios">
+          <div className="tabla-scroll tabla-sticky" id="stickyPrecios" style={{margin: '32px auto', padding: '0 16px', maxWidth: '900px'}}>
             <div style={{ minWidth: '600px' }}>
               <table id="tablaPrecios">
                 <thead>
@@ -191,7 +191,7 @@ export default function Precios() {
           </div>
 
           {/* 4.5) Tabla principal de características por sección */}
-          <div className="tabla-scroll main-content" id="mainContent">
+          <div className="tabla-scroll main-content" id="mainContent" style={{margin: '32px auto', padding: '0 16px', maxWidth: '900px'}}>
             <div style={{ minWidth: '600px' }}>
               <table id="tablaPrincipal">
                 <thead>
@@ -386,6 +386,99 @@ export default function Precios() {
         <span className="texto-firma">Todos los planes anuales, incluyen <b>firma electrónica</b>!</span>
       </div>
       <style jsx>{`
+            .subtitulo-precios {
+              font-size: 1.18em;
+              font-weight: 600;
+              color: #6366f1;
+              margin: 0 auto 32px auto;
+              text-align: center;
+              letter-spacing: 1.2px;
+              font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+              text-shadow: 0 2px 12px #6366f144, 0 1px 0 #fff;
+              transition: all 0.2s;
+              max-width: 98vw;
+              padding: 0;
+            }
+            .dark-theme .subtitulo-precios {
+              color: #a5b4fc;
+              text-shadow: 0 2px 12px #6366f188, 0 1px 0 #23232a;
+            }
+            @media (max-width: 600px) {
+              .dark-toggle {
+                top: 54px !important;
+                right: 10px !important;
+                z-index: 99999;
+              }
+              .titulo-minimalista {
+                font-size: 1.25em;
+                padding: 12px 10px 10px 10px;
+                max-width: 98vw;
+                border-radius: 12px;
+              }
+              .titulo-minimalista::after {
+                height: 6px;
+                opacity: 0.28;
+              }
+            }
+            @media (max-width: 600px) {
+              .titulo-minimalista {
+                font-size: 1.25em;
+                padding: 12px 10px 10px 10px;
+                max-width: 98vw;
+                border-radius: 12px;
+              }
+              .titulo-minimalista::after {
+                height: 6px;
+                opacity: 0.28;
+              }
+            }
+            .titulo-minimalista {
+              font-size: 2.1em;
+              font-weight: 700;
+              color: #232323;
+              background: #fff;
+              border-radius: 18px;
+              padding: 18px 28px 14px 28px;
+              border: 1.5px solid #e5e7eb;
+              box-shadow: 0 2px 12px 0 #00000014;
+              text-align: center;
+              margin: 36px auto 28px auto;
+              letter-spacing: 0.8px;
+              line-height: 1.13;
+              font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+              width: 100%;
+              max-width: 480px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              overflow: hidden;
+              border-bottom: 2px solid #e5e7eb;
+            }
+            .titulo-minimalista::after {
+              content: "";
+              position: absolute;
+              left: 0; right: 0; bottom: 0;
+              height: 8px;
+              background: linear-gradient(90deg, #8b5cf6, #38bdf8, #8b5cf6);
+              opacity: 0.18;
+              z-index: 1;
+              animation: gradmove 3.5s linear infinite;
+            }
+            @keyframes gradmove {
+              0% { background-position: 0% 50%; }
+              100% { background-position: 100% 50%; }
+            }
+            .dark-theme .titulo-minimalista {
+              color: #e5e7eb;
+              background: #18181b;
+              border-color: #23232a;
+              box-shadow: 0 2px 12px 0 #00000066;
+            }
+            .dark-theme .titulo-minimalista::after {
+              background: linear-gradient(90deg, #6366f1, #38bdf8, #6366f1);
+              opacity: 0.32;
+            }
         .firma-flotante {
           position: fixed;
           left: 28px;
@@ -495,7 +588,14 @@ export default function Precios() {
 
         /* Responsive móvil */
         @media screen and (max-width: 600px) {
-          .tabla-scroll { width: 100vw; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .tabla-scroll {
+            width: 100vw;
+            box-sizing: border-box;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-left: 12px;
+            padding-right: 12px;
+          }
           .tabla-scroll > div { min-width: 700px; }
           table { width: 700px !important; min-width: 700px !important; max-width: none !important; font-size: 12px; table-layout: fixed; }
           th, td { padding: 8px 6px; min-width: 80px; text-align: center; }
