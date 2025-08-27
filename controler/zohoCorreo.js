@@ -13,8 +13,7 @@ const transporter = nodemailer.createTransport({
 
 // 2. Función para enviar correo de bienvenida con tu diseño
 async function CorreoBienvenida(req, res) {
-    console.log(req.body);
-
+  console.log(req.body);
   const { email, nombre } = req.body;
   const emailHtmlTemplate = `
   <!DOCTYPE html>
@@ -108,10 +107,10 @@ async function CorreoBienvenida(req, res) {
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log('Correo de bienvenida enviado:', info.messageId);
-    return { success: true, messageId: info.messageId };
+    return res.status(200).json({ success: true, messageId: info.messageId });
   } catch (error) {
     console.error('Error al enviar correo de bienvenida:', error);
-    throw new Error('No se pudo enviar el correo de bienvenida.');
+    return res.status(500).json({ success: false, error: error.message || 'No se pudo enviar el correo de bienvenida.' });
   }
 }
 

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import { updateUser, logOut } from '../../reduxstore/actions/myact';
-import { cleanData } from '../../reduxstore/actions/regcont';
+import { updateUser, logOut } from '../reduxstore/actions/myact';
+import { cleanData } from '../reduxstore/actions/regcont';
 import postal from 'postal';
-import LoginGoogle from '../loginGoogle';
+import LoginGoogle from '../components/loginGoogle';
 import { useGoogleOneTapLogin } from '@react-oauth/google';
 
 function decodeJwt(token) {
@@ -20,6 +20,7 @@ function decodeJwt(token) {
 }
 
 export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose }) {
+
   const [step, setStep] = useState("email");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
@@ -36,6 +37,8 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
   const [registerError, setRegisterError] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [registerSuccess, setRegisterSuccess] = useState(false);
+  const [debugInfo, setDebugInfo] = useState("");
 
   useEffect(() => {
     if (loggedInUser && loggedInUser.Email) {
@@ -47,7 +50,8 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
   }, [loggedInUser]);
 
   const handleBackendLogin = async (loginData) => {
-  console.log("Backend Response:", loginData);
+  // Mostrar respuesta del backend en pantalla para debug
+  setDebugInfo(JSON.stringify(loginData, null, 2));
   setLoading(false);
   if (loginData.status === "Ok") {
     const { user, decodificado, token } = loginData.data;
@@ -59,12 +63,12 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
     dispatch(logOut());
     dispatch(updateUser({ usuario: usuarioPayload }));
     postal.channel().publish('setTokenTimer', { message: decodificado });
-    // Forzar paso a selección de plan tras login automático
-    setTimeout(() => setStep("planSelection"), 100);
+    setStep("planSelection");
   } else {
     const errorMessage = loginData.message || "Error al iniciar sesión.";
     setLoginError(errorMessage);
     setEmailError(errorMessage);
+    setDebugInfo(prev => prev + "\n[LOGIN ERROR] " + errorMessage);
   }
   }
 
@@ -113,17 +117,15 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
     }
   }
 
-  const handleLogin = async (e, customEmail, customPassword) => {
-    if (e && e.preventDefault) e.preventDefault();
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setLoginError("");
     setLoading(true);
-    const loginEmail = customEmail || email;
-    const loginPassword = customPassword || password;
     try {
       const res = await fetch("/users/authenticate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Correo: loginEmail.toLowerCase(), Contrasena: loginPassword })
+        body: JSON.stringify({ Correo: email, Contrasena: password })
       });
       const data = await res.json();
       handleBackendLogin(data);
@@ -141,84 +143,81 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
     }
     setLoading(true);
     try {
-      const res = await fetch("/users/register", {
+      const res = await fetch("/api/registro-usuario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          Usuario:regUsuario.trim().replace(" ", "-"),
-               TelefonoContacto:regTelefono,
-               Correo:email,
-               Contrasena:regPassword,
-               Imagen:"",
-               RegistradoPor:"usuario",
-               Confirmacion:false,
-  
-        })
+        body: JSON.stringify({ usuario: regUsuario, correo: email, password: regPassword, telefono: regTelefono })
       });
       const data = await res.json();
-      console.log("Registro Response:", data);
-      if (data.status === "Ok") {
-
-        console.log("Usuario registrado y listo para login automático.");
-      //  setRegisterSuccess(true);
-        // Enviar correo de bienvenida
-        try {
- console.log("yendo a enviar");
-          await fetch("/correo/send-welcome", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: email,
-              nombre: regUsuario.trim().replace(" ", "-"),
-            })
-          });
-        } catch (err) {
-          console.error("Error enviando correo de bienvenida:", err);
-        }
-        // Auto-login after registration by calling handleLogin with fromRegister=true
-  // Login automático usando los datos recién registrados
-  handleLogin(null, email, regPassword);
+      setDebugInfo("[REGISTRO] " + JSON.stringify(data, null, 2));
+      if (data.status === "Ok" && data.data && data.data.user && data.data.decodificado) {
+        setRegisterSuccess(true);
+        // Auto-login after registration (NO espera el correo)
+        const loginEvent = { preventDefault: () => {} }; // Mock event object
+        setDebugInfo(prev => prev + "\n[LOGIN] email: " + email + ", password: " + regPassword);
+        setPassword(regPassword); // Asegura que la contraseña usada sea la registrada
+        handleLogin(loginEvent, true);
+        // Enviar correo de bienvenida en segundo plano, ignora cualquier error
+        fetch("/api/email/send-welcome", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email,
+            nombre: regUsuario
+          })
+        }).catch(() => {});
       } else {
         setRegisterError(data.message || "Error al registrar usuario.");
+        setDebugInfo(prev => prev + "\n[REGISTRO ERROR] " + (data.message || "Error al registrar usuario."));
         setLoading(false);
       }
     } catch (err) {
       setRegisterError("Error de conexión. Intenta de nuevo.");
+      setDebugInfo(prev => prev + "\n[REGISTRO ERROR] " + err.message);
       setLoading(false);
     }
   }
 
   const renderStep = () => {
+    // Mostrar debugInfo en pantalla para ver detalles
+    const debugBlock = debugInfo ? (
+      <pre style={{textAlign:'left',background:'#f9f9f9',color:'#333',fontSize:'0.85em',padding:'10px',borderRadius:'8px',marginBottom:'12px',maxHeight:'200px',overflow:'auto'}}>
+        {debugInfo}
+      </pre>
+    ) : null;
+
     switch (step) {
       case "planSelection":
-        return (
-            <>
-                <h2>Elige tu Plan</h2>
-                <p className="pagos-subtitle">Selecciona la duración y el plan que mejor se adapte a ti.</p>
-                <div className="duration-toggle">
-                    <button className={duration === 'mensual' ? 'active' : ''} onClick={() => setDuration('mensual')}>Mensual</button>
-                    <button className={duration === 'anual' ? 'active' : ''} onClick={() => setDuration('anual')}>Anual</button>
-                </div>
-                <div className="plan-cards">
-                    {plansData && plansData[duration] && plansData[duration].map(plan => (
-                        <div 
-                            key={plan.id}
-                            className={`plan-card ${selectedPlan.name === plan.name && selectedPlan.duration.toLowerCase() === duration ? 'selected' : ''}`}
-                            onClick={() => setSelectedPlan({ name: plan.name, duration: duration.charAt(0).toUpperCase() + duration.slice(1), price: plan.price })}
-                        >
-                            <div className="plan-name">{plan.name}</div>
-                            <div className="plan-price">${plan.price}<span className="plan-duration">/{duration === 'anual' ? 'año' : 'mes'}</span></div>
-                        </div>
-                    ))}
-                </div>
-                <button type="button" className="pagos-btn confirm-btn" onClick={() => onPlanConfirmed(selectedPlan, loggedInUser)}>
-                    {`Continuar con ${selectedPlan.name} - $${selectedPlan.price}`}
-                </button>
-            </>
-        );
+    return (
+      <>
+        {debugBlock}
+        <h2>Elige tu Plan</h2>
+        <p className="pagos-subtitle">Selecciona la duración y el plan que mejor se adapte a ti.</p>
+        <div className="duration-toggle">
+          <button className={duration === 'mensual' ? 'active' : ''} onClick={() => setDuration('mensual')}>Mensual</button>
+          <button className={duration === 'anual' ? 'active' : ''} onClick={() => setDuration('anual')}>Anual</button>
+        </div>
+        <div className="plan-cards">
+          {plansData && plansData[duration] && plansData[duration].map(plan => (
+            <div 
+              key={plan.id}
+              className={`plan-card ${selectedPlan.name === plan.name && selectedPlan.duration.toLowerCase() === duration ? 'selected' : ''}`}
+              onClick={() => setSelectedPlan({ name: plan.name, duration: duration.charAt(0).toUpperCase() + duration.slice(1), price: plan.price })}
+            >
+              <div className="plan-name">{plan.name}</div>
+              <div className="plan-price">${plan.price}<span className="plan-duration">/{duration === 'anual' ? 'año' : 'mes'}</span></div>
+            </div>
+          ))}
+        </div>
+        <button type="button" className="pagos-btn confirm-btn" onClick={() => onPlanConfirmed(selectedPlan, loggedInUser)}>
+          {`Continuar con ${selectedPlan.name} - $${selectedPlan.price}`}
+        </button>
+      </>
+    );
       case "email":
         return (
           <>
+            {debugBlock}
             <h2>Ingresa tu correo</h2>
             <form onSubmit={handleEmailSubmit}>
               <input type="email" className="pagos-input" placeholder="Correo electrónico" value={email} onChange={e => setEmail(e.target.value)} disabled={loading} autoFocus required autoComplete="email" name="email"/>
@@ -230,20 +229,22 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
           </>
         );
       case "password":
-        return (
-            <>
-                <h2>Iniciar Sesión</h2>
-                <form onSubmit={handleLogin}>
-                    <input type="email" className="pagos-input" value={email} disabled name="email" autoComplete="email"/>
-                    <input type="password" className="pagos-input" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} disabled={loading} autoFocus required autoComplete="current-password" name="password"/>
-                    {loginError && <div className="pagos-error">{loginError}</div>}
-                    <button type="submit" className="pagos-btn" disabled={loading}>{loading ? "Iniciando sesión..." : "Iniciar Sesión"}</button>
-                </form>
-            </>
-        );
+    return (
+      <>
+        {debugBlock}
+        <h2>Iniciar Sesión</h2>
+        <form onSubmit={handleLogin}>
+          <input type="email" className="pagos-input" value={email} disabled name="email" autoComplete="email"/>
+          <input type="password" className="pagos-input" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} disabled={loading} autoFocus required autoComplete="current-password" name="password"/>
+          {loginError && <div className="pagos-error">{loginError}</div>}
+          <button type="submit" className="pagos-btn" disabled={loading}>{loading ? "Iniciando sesión..." : "Iniciar Sesión"}</button>
+        </form>
+      </>
+    );
       case "register":
         return (
             <>
+            {debugBlock}
             <h2>Registro de Usuario</h2>
             <form onSubmit={handleRegister}>
                 <input type="email" className="pagos-input" value={email} disabled name="email" autoComplete="email"/>
