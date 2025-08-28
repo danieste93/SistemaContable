@@ -8,6 +8,20 @@ const saltRounds = 10;
 const Schema = mongoose.Schema;
 // Creamos el objeto del esquema con sus correspondientes campos
 const UserSchema = new Schema({
+ DatosFacturacion: {
+   Nombres: { type: String, default: "" },
+   CedulaoRuc: { type: String, default: "" },
+   Correo: { type: String, default: "" },
+   Telefono: { type: String, default: "" },
+   Direccion: { type: String, default: "" }
+ },
+ Fechas: {
+   Creacion: { type: Date, default: Date.now },
+   InicioMem: { type: Date, default: null },
+   ExpiraMem: { type: Date, default: null },
+   InicioFirma: { type: Date, default: null },
+   ExpiraFirma: { type: Date, default: null }
+ },
  Usuario: {
   type: String,
   trim: true,  

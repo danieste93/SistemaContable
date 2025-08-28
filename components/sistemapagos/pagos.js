@@ -21,6 +21,14 @@ function decodeJwt(token) {
 
 export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose }) {
   const [step, setStep] = useState("email");
+  const [facturacion, setFacturacion] = useState({
+    Nombres: "",
+    CedulaoRuc: "",
+    Correo: "",
+    Telefono: "",
+    Direccion: ""
+  });
+  const [facturacionError, setFacturacionError] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const loggedInUser = useSelector(state => state.userReducer.update?.usuario?.user);
@@ -192,29 +200,79 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
     switch (step) {
       case "planSelection":
         return (
-            <>
-                <h2>Elige tu Plan</h2>
-                <p className="pagos-subtitle">Selecciona la duración y el plan que mejor se adapte a ti.</p>
-                <div className="duration-toggle">
-                    <button className={duration === 'mensual' ? 'active' : ''} onClick={() => setDuration('mensual')}>Mensual</button>
-                    <button className={duration === 'anual' ? 'active' : ''} onClick={() => setDuration('anual')}>Anual</button>
+          <>
+            <h2>Elige tu Plan</h2>
+            <p className="pagos-subtitle">Selecciona la duración y el plan que mejor se adapte a ti.</p>
+            <div className="duration-toggle">
+              <button className={duration === 'mensual' ? 'active' : ''} onClick={() => setDuration('mensual')}>Mensual</button>
+              <button className={duration === 'anual' ? 'active' : ''} onClick={() => setDuration('anual')}>Anual</button>
+            </div>
+            <div className="plan-cards">
+              {plansData && plansData[duration] && plansData[duration].map(plan => (
+                <div 
+                  key={plan.id}
+                  className={`plan-card ${selectedPlan.name === plan.name && selectedPlan.duration.toLowerCase() === duration ? 'selected' : ''}`}
+                  onClick={() => setSelectedPlan({ name: plan.name, duration: duration.charAt(0).toUpperCase() + duration.slice(1), price: plan.price })}
+                >
+                  <div className="plan-name">{plan.name}</div>
+                  <div className="plan-price">${plan.price}<span className="plan-duration">/{duration === 'anual' ? 'año' : 'mes'}</span></div>
                 </div>
-                <div className="plan-cards">
-                    {plansData && plansData[duration] && plansData[duration].map(plan => (
-                        <div 
-                            key={plan.id}
-                            className={`plan-card ${selectedPlan.name === plan.name && selectedPlan.duration.toLowerCase() === duration ? 'selected' : ''}`}
-                            onClick={() => setSelectedPlan({ name: plan.name, duration: duration.charAt(0).toUpperCase() + duration.slice(1), price: plan.price })}
-                        >
-                            <div className="plan-name">{plan.name}</div>
-                            <div className="plan-price">${plan.price}<span className="plan-duration">/{duration === 'anual' ? 'año' : 'mes'}</span></div>
-                        </div>
-                    ))}
-                </div>
-                <button type="button" className="pagos-btn confirm-btn" onClick={() => onPlanConfirmed(selectedPlan, loggedInUser)}>
-                    {`Continuar con ${selectedPlan.name} - $${selectedPlan.price}`}
-                </button>
-            </>
+              ))}
+            </div>
+            <button type="button" className="pagos-btn confirm-btn" onClick={() => setStep("facturacion")}> 
+              {`Continuar con ${selectedPlan.name} - $${selectedPlan.price}`}
+            </button>
+          </>
+        );
+      case "facturacion":
+        return (
+          <>
+            <h2>Datos para Facturación</h2>
+            <form onSubmit={async e => {
+              e.preventDefault();
+              if (!facturacion.Nombres || !facturacion.CedulaoRuc || !facturacion.Correo || !facturacion.Direccion) {
+                setFacturacionError("Completa todos los campos obligatorios.");
+                return;
+              }
+              setFacturacionError("");
+              setLoading(true);
+              try {
+                const res = await fetch("/api/actualizar-facturacion", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    email: loggedInUser?.Email || email,
+                    Nombres: facturacion.Nombres,
+                    CedulaoRuc: facturacion.CedulaoRuc,
+                    Correo: facturacion.Correo,
+                    Telefono: facturacion.Telefono,
+                    Direccion: facturacion.Direccion
+                  })
+                });
+                const data = await res.json();
+                if (data.status === "ok") {
+                  // Confirmar el pago solo después de guardar los datos de facturación
+                  if (typeof onPlanConfirmed === "function") {
+                    onPlanConfirmed(selectedPlan, loggedInUser);
+                  }
+                } else {
+                  setFacturacionError(data.message || "Error al guardar datos de facturación.");
+                }
+              } catch (err) {
+                setFacturacionError("Error de conexión. Intenta de nuevo.");
+              } finally {
+                setLoading(false);
+              }
+            }}>
+              <input type="text" className="pagos-input" placeholder="Nombres" value={facturacion.Nombres} onChange={e => setFacturacion(f => ({ ...f, Nombres: e.target.value }))} required />
+              <input type="text" className="pagos-input" placeholder="Cédula o RUC" value={facturacion.CedulaoRuc} onChange={e => setFacturacion(f => ({ ...f, CedulaoRuc: e.target.value }))} required />
+              <input type="email" className="pagos-input" placeholder="Correo para Factura" value={facturacion.Correo} onChange={e => setFacturacion(f => ({ ...f, Correo: e.target.value }))} required />
+              <input type="tel" className="pagos-input" placeholder="Teléfono" value={facturacion.Telefono} onChange={e => setFacturacion(f => ({ ...f, Telefono: e.target.value }))} />
+              <input type="text" className="pagos-input" placeholder="Dirección" value={facturacion.Direccion} onChange={e => setFacturacion(f => ({ ...f, Direccion: e.target.value }))} required />
+              {facturacionError && <div className="pagos-error">{facturacionError}</div>}
+              <button type="submit" className="pagos-btn confirm-btn" disabled={loading}>{loading ? "Guardando..." : "Guardar y Continuar"}</button>
+            </form>
+          </>
         );
       case "email":
         return (

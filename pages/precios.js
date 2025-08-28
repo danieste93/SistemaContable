@@ -84,11 +84,13 @@ export default function Precios() {
   };
 
   const handlePlanConfirmed = (plan, user) => {
-    console.log("Plan Confirmado:", plan);
-    console.log("Usuario:", user);
-    setShowPagos(false);
-    // TODO: Proceed to actual payment gateway (e.g., PayPal, Stripe)
-    alert(`Procediendo al pago para el plan ${plan.name} (${plan.duration}) por $${plan.price}`);
+    // Confirmar el pago solo después de la facturación
+    // Aquí podrías mostrar un modal de pago, redirigir, etc.
+    // Por ahora solo mostramos el mensaje y cerramos el modal
+    setTimeout(() => {
+      setShowPagos(false);
+      alert(`Procediendo al pago para el plan ${plan.name} (${plan.duration}) por $${plan.price}`);
+    }, 300); // Pequeño delay para asegurar que el flujo de facturación termine
   }
 
   // 3) Secciones y acordeón (visual)
