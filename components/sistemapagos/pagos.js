@@ -485,11 +485,6 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                       const result = await res.json();
                       if (result.status === "ok") {
                         setShowSuccess(true);
-                        dispatch(logOut());
-                        dispatch(cleanData());
-                        localStorage.removeItem("state");
-                        localStorage.removeItem("jwt_token");
-                        // Elimino redirección automática y flag
                       } else {
                         alert(result.error || "Error al activar membresía");
                       }
@@ -509,7 +504,7 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                 <div style={{background:'#fff',borderRadius:20,padding:'40px 32px',maxWidth:380,textAlign:'center',boxShadow:'0 8px 32px rgba(30,41,59,0.25)',animation:'fadeInScale 0.5s'}}>
                   <h2 style={{color:'#10b981',marginBottom:16,fontSize:'2rem'}}>¡Membresía activada!</h2>
                   <p style={{fontSize:18,marginBottom:22,color:'#334155'}}>Tu membresía ha sido activada correctamente.<br/>Inicia sesión para disfrutar los beneficios.</p>
-                  <button className="pagos-btn" style={{marginTop:18}} onClick={()=>{window.location.href="/ingreso"; if(onClose) onClose();}}>Continuar</button>
+                  <button className="pagos-btn" style={{marginTop:18}} onClick={()=>{window.location.href="/ingreso"; setShowSuccess(false);}}>Aceptar</button>
                 </div>
                 <style>{`
                   @keyframes fadeInScale {
