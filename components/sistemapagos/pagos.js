@@ -299,11 +299,15 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
         });
         const data = await res.json();
         if (data.status === "ok") {
-          alert("Comprobante subido correctamente");
-          // Actualizar Redux con el usuario actualizado
-          if (data.user) {
-            dispatch(updateUser({ usuario: { user: data.user } }));
-          }
+          alert("¡Comprobante subido correctamente! Tu membresía ha sido activada. Inicia sesión nuevamente para disfrutar los beneficios.");
+          // Limpiar datos y simular inicio de sesión
+          dispatch(logOut());
+          dispatch(cleanData());
+          localStorage.removeItem("state");
+          localStorage.removeItem("jwt_token");
+          setTimeout(() => {
+            window.location.href = "/ingreso";
+          }, 1200);
         } else {
           setComprobanteError(data.error || "Error al subir comprobante");
         }

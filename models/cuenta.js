@@ -55,4 +55,4 @@ const UserSchema = new Schema({
                       
 });
 
-module.exports = mongoose.model('Cuenta', UserSchema);
+module.exports = (mongoose.models && mongoose.models.Cuenta) || mongoose.model('Cuenta', UserSchema);
