@@ -1,3 +1,24 @@
+// Importar el template desde el archivo dedicado
+const { getActivacionMembresiaHtml } = require('../pages/api/email/activacion-membresia');
+
+// Enviar correo de activación de membresía usando el template externo
+async function CorreoActivacionMembresia({ email, nombre, membresia, tiempo }) {
+  const html = getActivacionMembresiaHtml({ nombre, membresia, tiempo });
+  const mailOptions = {
+    from: process.env.ZOHO_SMTP_USER,
+    to: email,
+    subject: `¡Tu membresía ${membresia} ha sido activada en Activos.ec!`,
+    html,
+  };
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Correo de activación de membresía enviado:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('Error al enviar correo de activación de membresía:', error);
+    return { success: false, error: error.message || 'No se pudo enviar el correo de activación.' };
+  }
+}
 const nodemailer = require('nodemailer');
 
 // 1. Configuración del Transporter para Zoho (usando variables de entorno)
@@ -114,4 +135,4 @@ async function CorreoBienvenida(req, res) {
   }
 }
 
-module.exports = { CorreoBienvenida };
+module.exports = { CorreoBienvenida, CorreoActivacionMembresia };

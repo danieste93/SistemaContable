@@ -10,6 +10,7 @@ async function subirComprobanteMeM(req, res) {
     if (err) return res.status(400).json({ error: 'Error al procesar archivo' });
     const plan = fields.plan ? fields.plan[0] : "";
     const email = fields.email[0];
+    const { CorreoActivacionMembresia } = require('./zohoCorreo');
     const filePath = files.comprobante[0].path;
     const duration = fields.duration ? fields.duration[0] : "";
     const banco = fields.banco ? fields.banco[0] : "";
@@ -39,6 +40,17 @@ async function subirComprobanteMeM(req, res) {
       user.SiSPagos.TipoVentaMeM = "Transferencia";
       user.SiSPagos.ComprobanteMeM = result.secure_url;
       await user.save();
+        // Enviar correo de activación de membresía
+        try {
+          await CorreoActivacionMembresia({
+            email: user.Email,
+            nombre: user.DatosFacturacion?.Nombres || user.Usuario || "Usuario",
+            membresia: user.Membresia,
+            tiempo: duration === "anual" ? "1 año" : "1 mes"
+          });
+        } catch (mailErr) {
+          console.error("Error enviando correo de activación de membresía:", mailErr);
+        }
   console.log('[DEPURAR] Membresia después:', user.Membresia);
       return res.status(200).json({ status: 'ok', url: result.secure_url, user });
     } catch (err) {
