@@ -70,6 +70,16 @@ async function registerFullUser(userInput) {
             ExpiraMem: null,
             InicioFirma: null,
             ExpiraFirma: null
+          },
+          SiSPagos: {
+            TipoVentaMeM: "",
+            BancoMEM: "",
+            ComprobanteMeM: "",
+            FirmaCortesia: "",
+            FechaCompraFirma: null,
+            TipoVentaFirma: "",
+            ComprobanteFirma: "",
+            BancoFirma: ""
           }
         }
       ], opts);
