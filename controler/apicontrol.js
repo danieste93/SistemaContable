@@ -8,16 +8,38 @@ async function subirComprobanteMeM(req, res) {
   const form = new multiparty.Form();
   form.parse(req, async function(err, fields, files) {
     if (err) return res.status(400).json({ error: 'Error al procesar archivo' });
+    const plan = fields.plan ? fields.plan[0] : "";
     const email = fields.email[0];
     const filePath = files.comprobante[0].path;
+    const duration = fields.duration ? fields.duration[0] : "";
+    const banco = fields.banco ? fields.banco[0] : "";
     try {
       const result = await cloudinary.uploader.upload(filePath, { resource_type: 'auto' });
       let MainConn = await mongoose.connection.useDb("datashop");
       let UserModelSass = await MainConn.model('usuarios', UserSchema);
       const user = await UserModelSass.findOne({ Email: email });
       if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  console.log('[DEPURAR] Valor recibido de plan:', plan);
+  console.log('[DEPURAR] Membresia antes:', user.Membresia);
+      // Actualizar membresía según el plan seleccionado
+      if (plan === "PRO") user.Membresia = "Pro";
+      else if (plan === "PLATA") user.Membresia = "Plata";
+      else if (plan === "ORO") user.Membresia = "Premium";
+      // Actualizar campos de membresía
+      const now = new Date();
+      user.Fechas.InicioMem = now;
+      if (duration === "anual") {
+        user.Fechas.ExpiraMem = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
+        user.SiSPagos.FirmaCortesia = "1";
+      } else {
+        user.Fechas.ExpiraMem = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
+        user.SiSPagos.FirmaCortesia = "";
+      }
+      user.SiSPagos.BancoMEM = banco;
+      user.SiSPagos.TipoVentaMeM = "Transferencia";
       user.SiSPagos.ComprobanteMeM = result.secure_url;
       await user.save();
+  console.log('[DEPURAR] Membresia después:', user.Membresia);
       return res.status(200).json({ status: 'ok', url: result.secure_url, user });
     } catch (err) {
       return res.status(500).json({ error: err.message });

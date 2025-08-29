@@ -287,9 +287,12 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
       setComprobanteError("");
       setUploading(true);
       try {
-        const formData = new FormData();
-        formData.append("email", loggedInUser?.Email || email);
-        formData.append("comprobante", comprobante);
+  const formData = new FormData();
+  formData.append("email", loggedInUser?.Email || email);
+  formData.append("comprobante", comprobante);
+  formData.append("duration", duration);
+  formData.append("banco", selectedBanco?.nombre || "");
+  formData.append("plan", selectedPlan?.name || "");
         const res = await fetch("/api/subir-comprobante-mem", {
           method: "POST",
           body: formData
