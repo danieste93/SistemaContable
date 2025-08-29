@@ -351,11 +351,13 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
               setFacturacionError("");
               setLoading(true);
               try {
-                const res = await fetch("/api/actualizar-facturacion", {
+                const emailToSend = loggedInUser?.Email || email;
+                console.log("[DEBUG] Email enviado a actualizar-facturacion:", emailToSend);
+                const res = await fetch("http://localhost:3000/api/actualizar-facturacion", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
-                    email: loggedInUser?.Email || email,
+                    email: emailToSend,
                     Nombres: facturacion.Nombres,
                     CedulaoRuc: facturacion.CedulaoRuc,
                     Correo: facturacion.Correo,

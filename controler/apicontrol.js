@@ -95,26 +95,34 @@ async function actualizarFacturacion(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
   const { email, Nombres, CedulaoRuc, Correo, Telefono, Direccion } = req.body;
-  if (!email || !Nombres || !CedulaoRuc || !Correo || !Direccion) {
-    return res.status(400).json({ error: 'Faltan datos obligatorios' });
+  console.log('[DEPURAR] Email recibido para actualizar:', email);
+  if (!email) {
+    return res.status(400).json({ error: 'Falta el email identificador' });
+  }
+  // Construir el objeto de actualización solo con los campos enviados
+  let updateFields = {};
+  if (Nombres !== undefined) updateFields['DatosFacturacion.Nombres'] = Nombres;
+  if (CedulaoRuc !== undefined) updateFields['DatosFacturacion.CedulaoRuc'] = CedulaoRuc;
+  if (Correo !== undefined) updateFields['DatosFacturacion.Correo'] = Correo;
+  if (Telefono !== undefined) updateFields['DatosFacturacion.Telefono'] = Telefono;
+  if (Direccion !== undefined) updateFields['DatosFacturacion.Direccion'] = Direccion;
+  if (Object.keys(updateFields).length === 0) {
+    return res.status(400).json({ error: 'No se enviaron campos para actualizar' });
   }
   try {
     let MainConn = await mongoose.connection.useDb("datashop");
     let UserModelSass = await MainConn.model('usuarios', UserSchema);
+    // Mostrar usuarios encontrados con ese email antes de actualizar
+    const usuariosCoinciden = await UserModelSass.find({ Email: email });
+    console.log('[DEPURAR] Usuarios encontrados con ese Email:', usuariosCoinciden);
     const result = await UserModelSass.updateOne(
       { Email: email },
-      { $set: {
-        'DatosFacturacion.Nombres': Nombres,
-        'DatosFacturacion.CedulaoRuc': CedulaoRuc,
-        'DatosFacturacion.Correo': Correo,
-        'DatosFacturacion.Telefono': Telefono,
-        'DatosFacturacion.Direccion': Direccion
-      }}
+      { $set: updateFields }
     );
-    if (result.modifiedCount > 0) {
-      // Obtener el usuario actualizado
-      const updatedUser = await UserModelSass.findOne({ Email: email });
-      return res.status(200).json({ status: 'ok', updated: true, user: updatedUser });
+    // Obtener el usuario actualizado
+    const updatedUser = await UserModelSass.findOne({ Email: email });
+    if (updatedUser) {
+      return res.status(200).json({ status: 'ok', updated: result.modifiedCount > 0, user: updatedUser });
     } else {
       return res.status(404).json({ status: 'error', updated: false, message: 'Usuario no encontrado' });
     }
