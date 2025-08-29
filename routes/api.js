@@ -8,5 +8,6 @@ router.get('/pruebaFuncion', apiController.pruebaFuncion);
 router.post('/validar-correo', apiController.validarCorreo);
 router.post('/validar-usuario', apiController.validarUsuario);
 router.post('/actualizar-facturacion', apiController.actualizarFacturacion);
+router.post('/subir-comprobante-mem', apiController.subirComprobanteMeM);
 
 module.exports = router;

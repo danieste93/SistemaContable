@@ -286,13 +286,29 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
       }
       setComprobanteError("");
       setUploading(true);
-      // Aquí iría la lógica para subir a Cloudinary y guardar en backend
-      // ...
-      setTimeout(() => {
+      try {
+        const formData = new FormData();
+        formData.append("email", loggedInUser?.Email || email);
+        formData.append("comprobante", comprobante);
+        const res = await fetch("/api/subir-comprobante-mem", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        if (data.status === "ok") {
+          alert("Comprobante subido correctamente");
+          // Actualizar Redux con el usuario actualizado
+          if (data.user) {
+            dispatch(updateUser({ usuario: { user: data.user } }));
+          }
+        } else {
+          setComprobanteError(data.error || "Error al subir comprobante");
+        }
+      } catch (err) {
+        setComprobanteError("Error de conexión. Intenta de nuevo.");
+      } finally {
         setUploading(false);
-        alert("Comprobante subido correctamente (simulado)");
-        // Aquí podrías avanzar al siguiente paso o cerrar el modal
-      }, 1500);
+      }
     };
 
     switch (step) {

@@ -1,3 +1,29 @@
+const cloudinary = require('cloudinary').v2;
+const multiparty = require('multiparty');
+
+async function subirComprobanteMeM(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método no permitido' });
+  }
+  const form = new multiparty.Form();
+  form.parse(req, async function(err, fields, files) {
+    if (err) return res.status(400).json({ error: 'Error al procesar archivo' });
+    const email = fields.email[0];
+    const filePath = files.comprobante[0].path;
+    try {
+      const result = await cloudinary.uploader.upload(filePath, { resource_type: 'auto' });
+      let MainConn = await mongoose.connection.useDb("datashop");
+      let UserModelSass = await MainConn.model('usuarios', UserSchema);
+      const user = await UserModelSass.findOne({ Email: email });
+      if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+      user.SiSPagos.ComprobanteMeM = result.secure_url;
+      await user.save();
+      return res.status(200).json({ status: 'ok', url: result.secure_url, user });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+}
 
 
 const UserSchema = require('../models/usersSass');
@@ -97,4 +123,4 @@ async function actualizarFacturacion(req, res) {
   }
 }
 
-module.exports = {pruebaFuncion, validarCorreo, validarUsuario, actualizarFacturacion}
+module.exports = {pruebaFuncion, validarCorreo, validarUsuario, actualizarFacturacion, subirComprobanteMeM}
