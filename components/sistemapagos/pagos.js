@@ -28,6 +28,18 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
     Telefono: "",
     Direccion: ""
   });
+
+  useEffect(() => {
+    if (step === "facturacion") {
+      setFacturacion({
+        Nombres: loggedInUser?.DatosFacturacion?.Nombres || "",
+        CedulaoRuc: loggedInUser?.DatosFacturacion?.CedulaoRuc || loggedInUser?.Factura?.ruc || "",
+        Correo: loggedInUser?.DatosFacturacion?.Correo || loggedInUser?.Email || "",
+        Telefono: loggedInUser?.DatosFacturacion?.Telefono || loggedInUser?.TelefonoContacto || loggedInUser?.Telefono || "",
+        Direccion: loggedInUser?.DatosFacturacion?.Direccion || ""
+      });
+    }
+  }, [loggedInUser, step]);
   const [facturacionError, setFacturacionError] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
@@ -47,10 +59,13 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
 
   useEffect(() => {
     if (loggedInUser && loggedInUser.Email) {
-        setEmail(loggedInUser.Email);
+      setEmail(loggedInUser.Email);
+      // Solo ir a planSelection si no hay plan seleccionado y no estamos en facturacion/transferencia
+      if (step === "email" || step === "password" || step === "register") {
         setStep("planSelection");
+      }
     } else {
-        setStep("email");
+      setStep("email");
     }
   }, [loggedInUser]);
 
@@ -197,6 +212,89 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
   }
 
   const renderStep = () => {
+    const bancos = [
+      {
+        nombre: "Banco Pichincha",
+        cuenta: "2201495697",
+        titular: "Johnny Merizalde",
+        ci: "1723048946",
+        correo: "soporte@activos.ec"
+      },
+      {
+        nombre: "Banco Pacífico",
+        cuenta: "1055056202",
+        titular: "Daniel Flor",
+        ci: "1726365727001",
+        telefono: "0962124673",
+        correo: "soporte@activos.ec"
+      },
+      {
+        nombre: "Banco Produbanco",
+        cuenta: "12007130657",
+        titular: "Daniel Flor",
+        ci: "1726365727001",
+        telefono: "0962124673",
+        correo: "soporte@activos.ec"
+      },
+      {
+        nombre: "Banco Internacional",
+        cuenta: "808047021",
+        titular: "Daniel Flor",
+        ci: "1726365727001",
+        telefono: "0962124673",
+        correo: "soporte@activos.ec"
+      },
+      {
+        nombre: "Banco del Austro",
+        cuenta: "9102175",
+        titular: "Daniel Flor",
+        ci: "1726365727001",
+        telefono: "0962124673",
+        correo: "soporte@activos.ec"
+      },
+      {
+        nombre: "Banco Bolivariano",
+        cuenta: "5001640407",
+        titular: "Daniel Flor",
+        ci: "1726365727001",
+        telefono: "0962124673",
+        correo: "soporte@activos.ec"
+      },
+      {
+        nombre: "Banco Guayaquil",
+        cuenta: "21527046",
+        titular: "Daniel Flor",
+        ci: "1726365727001",
+        telefono: "0962124673",
+        correo: "soporte@activos.ec"
+      }
+    ];
+
+    const [selectedBanco, setSelectedBanco] = useState(null);
+    const [comprobante, setComprobante] = useState(null);
+    const [comprobanteError, setComprobanteError] = useState("");
+    const [uploading, setUploading] = useState(false);
+
+    const handleComprobanteUpload = async () => {
+      if (!selectedBanco) {
+        setComprobanteError("Selecciona un banco primero.");
+        return;
+      }
+      if (!comprobante) {
+        setComprobanteError("Sube el comprobante de transferencia.");
+        return;
+      }
+      setComprobanteError("");
+      setUploading(true);
+      // Aquí iría la lógica para subir a Cloudinary y guardar en backend
+      // ...
+      setTimeout(() => {
+        setUploading(false);
+        alert("Comprobante subido correctamente (simulado)");
+        // Aquí podrías avanzar al siguiente paso o cerrar el modal
+      }, 1500);
+    };
+
     switch (step) {
       case "planSelection":
         return (
@@ -251,10 +349,11 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                 });
                 const data = await res.json();
                 if (data.status === "ok") {
-                  // Confirmar el pago solo después de guardar los datos de facturación
-                  if (typeof onPlanConfirmed === "function") {
-                    onPlanConfirmed(selectedPlan, loggedInUser);
+                  // Actualizar Redux con el usuario actualizado de la respuesta
+                  if (data.user) {
+                    dispatch(updateUser({ usuario: { user: data.user } }));
                   }
+                  setStep("transferencia");
                 } else {
                   setFacturacionError(data.message || "Error al guardar datos de facturación.");
                 }
@@ -272,6 +371,55 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
               {facturacionError && <div className="pagos-error">{facturacionError}</div>}
               <button type="submit" className="pagos-btn confirm-btn" disabled={loading}>{loading ? "Guardando..." : "Guardar y Continuar"}</button>
             </form>
+          </>
+        );
+      case "transferencia":
+        return (
+          <>
+            <h2>Formas de Pago</h2>
+            <div className="formas-pago-toggle">
+              <button className={step === "transferencia" ? "active" : ""} style={{marginRight:8}} disabled>Transferencia</button>
+              <button className={step === "paypal" ? "active" : ""} onClick={()=>setStep("paypal")}>Paypal</button>
+            </div>
+            <div className="transferencia-section">
+              <h3>Selecciona el banco</h3>
+              <div className="bancos-list-minimal">
+                {bancos.map((banco, idx) => (
+                  <div key={idx} className={`banco-min-card ${selectedBanco?.nombre === banco.nombre ? "selected" : ""}`} onClick={() => setSelectedBanco(banco)}>
+                    <span>{banco.nombre}</span>
+                  </div>
+                ))}
+              </div>
+              {selectedBanco && (
+                <div className="banco-info-pro">
+                  <h4>{selectedBanco.nombre}</h4>
+                  <div><strong>Cuenta de ahorros:</strong> {selectedBanco.cuenta}</div>
+                  <div><strong>Titular:</strong> {selectedBanco.titular}</div>
+                  <div><strong>CI:</strong> {selectedBanco.ci}</div>
+                  {selectedBanco.telefono && <div><strong>Teléfono:</strong> {selectedBanco.telefono}</div>}
+                  <div><strong>Correo:</strong> {selectedBanco.correo}</div>
+                  <div className="comprobante-upload">
+                    <input type="file" accept="image/*,application/pdf" onChange={e => setComprobante(e.target.files[0])} />
+                    {comprobanteError && <div className="pagos-error">{comprobanteError}</div>}
+                    <button className="pagos-btn confirm-btn" onClick={handleComprobanteUpload} disabled={uploading || !comprobante}>{uploading ? "Subiendo..." : "Subir Comprobante"}</button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <style jsx>{`
+              .formas-pago-toggle { display: flex; justify-content: center; margin-bottom: 24px; }
+              .formas-pago-toggle button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 600; color: #6366f1; background: #f3f4f6; cursor: pointer; margin: 0 4px; transition: background 0.2s; }
+              .formas-pago-toggle button.active { background: linear-gradient(90deg, #8b5cf6 0%, #6366f1 100%); color: #fff; }
+              .transferencia-section { margin-top: 12px; }
+              .bancos-list-minimal { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+              .banco-min-card { background: #f7fafc; border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; font-weight: 600; color: #6366f1; border: 2px solid #e2e8f0; transition: border 0.2s, box-shadow 0.2s; }
+              .banco-min-card.selected { border: 2px solid #6366f1; background: #e0e7ff; box-shadow: 0 2px 8px rgba(99,102,241,0.08); }
+              .banco-info-pro { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(99,102,241,0.08); padding: 18px; margin-bottom: 12px; text-align: left; }
+              .banco-info-pro h4 { color: #6366f1; margin-bottom: 8px; font-size: 1.1rem; }
+              .comprobante-upload { margin-top: 16px; }
+              .comprobante-upload input[type="file"] { margin-bottom: 10px; }
+              .comprobante-upload button { width: 100%; }
+            `}</style>
           </>
         );
       case "email":

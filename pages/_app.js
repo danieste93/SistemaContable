@@ -113,8 +113,8 @@ setTimets=(tiempoRes)=>{
    
       if(actualStateadd.userReducer != "" ){
     
-      let deco = actualStateadd.userReducer.update.usuario.decodificado
-      let tiempoRes = deco.exp  - tiempoAct
+  let deco = actualStateadd.userReducer.update.usuario.decodificado
+  let tiempoRes = (deco && deco.exp) ? (deco.exp - tiempoAct) : 0;
 
         if (tiempoRes > 35){
         

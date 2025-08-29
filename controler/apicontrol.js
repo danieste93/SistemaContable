@@ -86,7 +86,9 @@ async function actualizarFacturacion(req, res) {
       }}
     );
     if (result.modifiedCount > 0) {
-      return res.status(200).json({ status: 'ok', updated: true });
+      // Obtener el usuario actualizado
+      const updatedUser = await UserModelSass.findOne({ Email: email });
+      return res.status(200).json({ status: 'ok', updated: true, user: updatedUser });
     } else {
       return res.status(404).json({ status: 'error', updated: false, message: 'Usuario no encontrado' });
     }
