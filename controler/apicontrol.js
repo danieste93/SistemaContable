@@ -1,3 +1,50 @@
+async function activarMembresiaPaypal(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método no permitido' });
+  }
+  const { email, plan, duration, paypalOrderId, payer } = req.body;
+  if (!email || !plan || !duration || !paypalOrderId) {
+    return res.status(400).json({ error: 'Faltan datos requeridos' });
+  }
+  try {
+    let MainConn = await require('mongoose').connection.useDb("datashop");
+    let UserModelSass = await MainConn.model('usuarios', require('../models/usersSass'));
+    const user = await UserModelSass.findOne({ Email: email });
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    // Actualizar campos igual que transferencia pero para PayPal
+    const now = new Date();
+  user.Membresia = plan === "ORO" ? "Premium" : plan;
+    user.Fechas.InicioMem = now;
+    if (duration === "anual") {
+      user.Fechas.ExpiraMem = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
+      user.SiSPagos.FirmaCortesia = "1";
+    } else {
+      user.Fechas.ExpiraMem = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
+      user.SiSPagos.FirmaCortesia = "";
+    }
+    user.SiSPagos.BancoMEM = "";
+    user.SiSPagos.TipoVentaMeM = "Paypal";
+    user.SiSPagos.ComprobanteMeM = paypalOrderId;
+    await user.save();
+    // Enviar correo de activación
+    try {
+      const { CorreoActivacionMembresia } = require('./zohoCorreo');
+      await CorreoActivacionMembresia({
+        email,
+        nombre: user.DatosFacturacion?.Nombres || user.Usuario || "Usuario",
+        membresia: plan,
+        tiempo: duration === "anual" ? "1 año" : "1 mes"
+      });
+    } catch (mailErr) {
+      console.error("Error enviando correo de activación de membresía:", mailErr);
+    }
+    return res.status(200).json({ status: 'ok' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error al activar membresía', details: err.message });
+  }
+}
 const cloudinary = require('cloudinary').v2;
 const multiparty = require('multiparty');
 
@@ -165,4 +212,4 @@ async function actualizarFacturacion(req, res) {
   }
 }
 
-module.exports = {pruebaFuncion, validarCorreo, validarUsuario, actualizarFacturacion, subirComprobanteMeM}
+module.exports = {pruebaFuncion, validarCorreo, validarUsuario, actualizarFacturacion, subirComprobanteMeM, activarMembresiaPaypal}

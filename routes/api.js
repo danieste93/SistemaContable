@@ -9,5 +9,6 @@ router.post('/validar-correo', apiController.validarCorreo);
 router.post('/validar-usuario', apiController.validarUsuario);
 router.post('/actualizar-facturacion', apiController.actualizarFacturacion);
 router.post('/subir-comprobante-mem', apiController.subirComprobanteMeM);
+router.post('/activar-membresia-paypal', apiController.activarMembresiaPaypal);
 
 module.exports = router;

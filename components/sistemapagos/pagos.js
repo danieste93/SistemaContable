@@ -5,6 +5,7 @@ import { cleanData } from '../../reduxstore/actions/regcont';
 import postal from 'postal';
 import LoginGoogle from '../loginGoogle';
 import { useGoogleOneTapLogin } from '@react-oauth/google';
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 function decodeJwt(token) {
     try {
@@ -20,6 +21,7 @@ function decodeJwt(token) {
 }
 
 export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose }) {
+  const [showSuccess, setShowSuccess] = useState(false);
   const [step, setStep] = useState("email");
   const [facturacion, setFacturacion] = useState({
     Nombres: "",
@@ -447,6 +449,78 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
             `}</style>
           </>
         );
+      case "paypal":
+        return (
+          <>
+            <h2>Pagar con Paypal</h2>
+            <div style={{marginBottom:24}}>
+              <PayPalScriptProvider options={{ "client-id": "AbsN1lxgxK9UDzodAY0RwHG-N2dZIBTdWJiy7m2dJJjVtDrw4aguKvSp9G8MmEARVhu4jaquxAhesqeU", currency: "USD" }}>
+                <PayPalButtons
+                  style={{ layout: "vertical" }}
+                  createOrder={(data, actions) => {
+                    return actions.order.create({
+                      purchase_units: [{
+                        amount: {
+                          value: selectedPlan?.price?.toString() || "0"
+                        },
+                        description: `Membresía ${selectedPlan?.name} (${duration}) Activos.ec`
+                      }]
+                    });
+                  }}
+                  onApprove={async (data, actions) => {
+                    const details = await actions.order.capture();
+                    // Activar membresía en backend
+                    try {
+                      const res = await fetch("/api/activar-membresia-paypal", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          email: loggedInUser?.Email || email,
+                          plan: selectedPlan?.name,
+                          duration,
+                          paypalOrderId: details.id,
+                          payer: details.payer
+                        })
+                      });
+                      const result = await res.json();
+                      if (result.status === "ok") {
+                        setShowSuccess(true);
+                        dispatch(logOut());
+                        dispatch(cleanData());
+                        localStorage.removeItem("state");
+                        localStorage.removeItem("jwt_token");
+                        // Elimino redirección automática y flag
+                      } else {
+                        alert(result.error || "Error al activar membresía");
+                      }
+                    } catch (err) {
+                      alert("Error de conexión. Intenta de nuevo.");
+                    }
+                  }}
+                  onError={(err) => {
+                    alert("Error en el pago con Paypal: " + err);
+                  }}
+                />
+              </PayPalScriptProvider>
+            </div>
+            <button className="pagos-btn" onClick={()=>setStep("planSelection")}>Volver</button>
+            {showSuccess && (
+              <div className="paypal-success-modal" style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(30,41,59,0.85)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'background 0.3s'}}>
+                <div style={{background:'#fff',borderRadius:20,padding:'40px 32px',maxWidth:380,textAlign:'center',boxShadow:'0 8px 32px rgba(30,41,59,0.25)',animation:'fadeInScale 0.5s'}}>
+                  <h2 style={{color:'#10b981',marginBottom:16,fontSize:'2rem'}}>¡Membresía activada!</h2>
+                  <p style={{fontSize:18,marginBottom:22,color:'#334155'}}>Tu membresía ha sido activada correctamente.<br/>Inicia sesión para disfrutar los beneficios.</p>
+                  <button className="pagos-btn" style={{marginTop:18}} onClick={()=>{window.location.href="/ingreso"; if(onClose) onClose();}}>Continuar</button>
+                </div>
+                <style>{`
+                  @keyframes fadeInScale {
+                    from { opacity: 0; transform: scale(0.85); }
+                    to { opacity: 1; transform: scale(1); }
+                  }
+                `}</style>
+              </div>
+            )}
+          </>
+        );
       case "email":
         return (
           <>
@@ -516,7 +590,7 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
         .plan-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .plan-card { padding: 20px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; text-align: center; }
         .plan-card:hover { transform: translateY(-4px); border-color: #c3dafe; }
-        .plan-card.selected { border-color: #6366f1; background-color: #f0f0ff; transform: translateY(-4px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1); }
+        .plan-card.selected { border-color: #6366f1; background-color: #f0f0ff; transform: translateY(-4px); box-shadow: 0 4px 12px rgba(99, 102,241, 0.1); }
         .plan-name { font-size: 1.1rem; font-weight: 700; color: #2d3748; margin-bottom: 8px; }
         .plan-price { font-size: 1.5rem; font-weight: 800; color: #1a202c; }
         .plan-duration { font-size: 0.9rem; font-weight: 500; color: #718096; }

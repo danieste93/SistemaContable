@@ -38,6 +38,7 @@ class Mainpage extends Component {
     condiciones:false,
     resetpass:false,
     loading:false,
+    showMembresiaSuccess: false
  }
  channel1 = null;
  channel2 = null;
@@ -722,6 +723,21 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
     
     </Alert>
   </Snackbar>
+            {this.state.showMembresiaSuccess && (
+        <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(30,41,59,0.85)',zIndex:999999,display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)'}}>
+          <div style={{background:'#fff',borderRadius:20,padding:'40px 32px',maxWidth:380,textAlign:'center',boxShadow:'0 8px 32px rgba(30,41,59,0.25)',animation:'fadeInScale 0.5s'}}>
+            <h2 style={{color:'#10b981',marginBottom:16,fontSize:'2rem'}}>¡Membresía activada!</h2>
+            <p style={{fontSize:18,marginBottom:22,color:'#334155'}}>Tu membresía ha sido activada correctamente.<br/>Inicia sesión para disfrutar los beneficios.</p>
+            <div style={{fontSize:15,color:'#6366f1',marginBottom:18}}>¡Bienvenido!</div>
+          </div>
+          <style>{`
+            @keyframes fadeInScale {
+              from { opacity: 0; transform: scale(0.85); }
+              to { opacity: 1; transform: scale(1); }
+            }
+          `}</style>
+        </div>
+      )}
             <style jsx> {`
            
             form{

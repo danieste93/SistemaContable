@@ -21,6 +21,7 @@
     "@material-ui/lab": "^4.0.0-alpha.57",
     "@material-ui/pickers": "^3.3.10",
     "@mui/material": "^5.10.13",
+    "@paypal/react-paypal-js": "^8.8.3",
     "@react-oauth/google": "^0.12.2",
     "@xmldom/xmldom": "^0.8.2",
     "@zeit/next-css": "^1.0.1",
