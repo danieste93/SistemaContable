@@ -22,18 +22,18 @@ export function getActivacionMembresiaHtml({ nombre, membresia, tiempo }) {
         <tr>
           <td style="padding: 30px 20px; color: #111827; font-size: 16px; line-height: 1.6;">
             <h2 style="font-size: 20px; margin-bottom: 10px;">¡Hola, <strong>${nombre}</strong>!</h2>
-            <p>Nos alegra darte la bienvenida a <strong>Activos</strong>. Tu <strong>membresía ${membresia}</strong> ha sido activada exitosamente por un período de <strong>${tiempo}</strong>.</p>
-            <p>A partir de este momento, puedes acceder a todas las funciones exclusivas que te ayudarán a organizar, controlar y optimizar tus finanzas personales.</p>
+            <p>Es un placer darte la bienvenida como miembro <strong>Activo</strong>. Tu <strong>membresía ${membresia}</strong> ha sido activada exitosamente por un período de <strong>${tiempo}</strong>.</p>
+            <p>A partir de este momento, puedes acceder a todas las funciones exclusivas que te ayudarán a organizar, controlar y optimizar tu emprendimiento.</p>
             <p>Recuerda que, como miembro, tendrás acceso a:</p>
             <ul style="padding-left: 20px; margin-top: 10px; margin-bottom: 20px;">
-              <li>Modulo inventario.</li>
-              <li>Punto de venta.</li>
-              <li>Multi Usuarios.</li>
-              <li>Reportes, análisis y funciones financieras automatizadas.</li>
-              <li>Soporte directo y acompañamiento en tu emprendimiento.</li>
+              <li>Modulo inventario</li>
+              <li>Punto de venta</li>
+              <li>Multi Usuarios</li>
+              <li>Reportes, análisis y funciones financieras automatizadas</li>
+              <li>Soporte directo y acompañamiento en tu emprendimiento</li>
             </ul>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://activos.ec/login" target="_blank" style="display: inline-block; background-color: #1e3a8a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Acceder a mi cuenta</a>
+              <a href="https://activos.ec/ingreso" target="_blank" style="display: inline-block; background-color: #1e3a8a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Acceder a mi cuenta</a>
             </div>
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
             <div style="margin: 30px 0; padding: 20px; background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; color: #0c4a6e; font-size: 15px; line-height: 1.6;">

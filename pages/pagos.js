@@ -227,42 +227,20 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
           <>
             {debugBlock}
             <h2>Datos para Facturación</h2>
-            <form onSubmit={async e => {
+            <form onSubmit={e => {
               e.preventDefault();
+              // Validación simple
               if (!facturacion.Nombres || !facturacion.CedulaoRuc || !facturacion.Correo || !facturacion.Direccion) {
                 setFacturacionError("Completa todos los campos obligatorios.");
                 return;
               }
               setFacturacionError("");
-              setLoading(true);
-              try {
-                const res = await fetch("/api/actualizar-facturacion", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    email: loggedInUser?.Email || email,
-                    Nombres: facturacion.Nombres,
-                    CedulaoRuc: facturacion.CedulaoRuc,
-                    Correo: facturacion.Correo,
-                    Telefono: facturacion.Telefono,
-                    Direccion: facturacion.Direccion
-                  })
-                });
-                const data = await res.json();
-                if (data.status === "ok") {
-                  setDebugInfo(prev => prev + "\n[FACTURACION GUARDADA] " + JSON.stringify(facturacion, null, 2));
-                  // Confirmar el pago solo después de guardar los datos de facturación
-                  if (typeof onPlanConfirmed === "function") {
-                    onPlanConfirmed(selectedPlan, loggedInUser);
-                  }
-                } else {
-                  setFacturacionError(data.message || "Error al guardar datos de facturación.");
-                }
-              } catch (err) {
-                setFacturacionError("Error de conexión. Intenta de nuevo.");
-              } finally {
-                setLoading(false);
-              }
+              // Aquí puedes enviar los datos al backend o continuar el flujo
+              // Por ahora solo mostramos los datos en debug
+              setDebugInfo(prev => prev + "\n[FACTURACION] " + JSON.stringify(facturacion, null, 2));
+              // Aquí podrías llamar a una función para guardar en el backend
+              // Ejemplo: await fetch('/api/actualizar-facturacion', ...)
+              // Luego continuar al siguiente paso de pago
             }}>
               <input type="text" className="pagos-input" placeholder="Nombres" value={facturacion.Nombres} onChange={e => setFacturacion(f => ({ ...f, Nombres: e.target.value }))} required />
               <input type="text" className="pagos-input" placeholder="Cédula o RUC" value={facturacion.CedulaoRuc} onChange={e => setFacturacion(f => ({ ...f, CedulaoRuc: e.target.value }))} required />
@@ -270,7 +248,7 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
               <input type="tel" className="pagos-input" placeholder="Teléfono" value={facturacion.Telefono} onChange={e => setFacturacion(f => ({ ...f, Telefono: e.target.value }))} />
               <input type="text" className="pagos-input" placeholder="Dirección" value={facturacion.Direccion} onChange={e => setFacturacion(f => ({ ...f, Direccion: e.target.value }))} required />
               {facturacionError && <div className="pagos-error">{facturacionError}</div>}
-              <button type="submit" className="pagos-btn confirm-btn" disabled={loading}>{loading ? "Guardando..." : "Guardar y Continuar"}</button>
+              <button type="submit" className="pagos-btn confirm-btn">Guardar y Continuar</button>
             </form>
           </>
         );

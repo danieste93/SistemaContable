@@ -58,6 +58,20 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
   const [registerError, setRegisterError] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  // Estado para tipo de pago PayPal
+  const [paypalType, setPaypalType] = useState("single");
+  // Estado para mostrar opciones dentro de Paypal
+  const [paypalStep, setPaypalStep] = useState("");
+
+  // Mapeo de plan_id por membresía y duración
+  const planIds = {
+    "PRO año": "P-32L003119H586330UNCZERZQ",
+    "PLATA año": "P-3YW90125FL705312YNCZERPA",
+    "ORO año": "P-1YD87776CK155842ENCZEQ4Y",
+    "PRO mes": "P-5HA862042A659263LNCZEQHI",
+    "PLATA mes": "P-75359657YV9885601NCZEP7Y",
+    "ORO mes": "P-6YK00835TW873845BNCZEPYQ"
+  };
 
   useEffect(() => {
     if (loggedInUser && loggedInUser.Email) {
@@ -453,67 +467,136 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
         return (
           <>
             <h2>Pagar con Paypal</h2>
-            <div style={{marginBottom:24}}>
-              <PayPalScriptProvider options={{ "client-id": "AbsN1lxgxK9UDzodAY0RwHG-N2dZIBTdWJiy7m2dJJjVtDrw4aguKvSp9G8MmEARVhu4jaquxAhesqeU", currency: "USD" }}>
-                <PayPalButtons
-                  style={{ layout: "vertical" }}
-                  createOrder={(data, actions) => {
-                    return actions.order.create({
-                      purchase_units: [{
-                        amount: {
-                          value: selectedPlan?.price?.toString() || "0"
-                        },
-                        description: `Membresía ${selectedPlan?.name} (${duration}) Activos.ec`
-                      }]
-                    });
-                  }}
-                  onApprove={async (data, actions) => {
-                    const details = await actions.order.capture();
-                    // Activar membresía en backend
-                    try {
-                      const res = await fetch("/api/activar-membresia-paypal", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          email: loggedInUser?.Email || email,
-                          plan: selectedPlan?.name,
-                          duration,
-                          paypalOrderId: details.id,
-                          payer: details.payer
-                        })
-                      });
-                      const result = await res.json();
-                      if (result.status === "ok") {
-                        setShowSuccess(true);
-                      } else {
-                        alert(result.error || "Error al activar membresía");
-                      }
-                    } catch (err) {
-                      alert("Error de conexión. Intenta de nuevo.");
-                    }
-                  }}
-                  onError={(err) => {
-                    alert("Error en el pago con Paypal: " + err);
-                  }}
-                />
-              </PayPalScriptProvider>
-            </div>
-            <button className="pagos-btn" onClick={()=>setStep("planSelection")}>Volver</button>
-            {showSuccess && (
-              <div className="paypal-success-modal" style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(30,41,59,0.85)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'background 0.3s'}}>
-                <div style={{background:'#fff',borderRadius:20,padding:'40px 32px',maxWidth:380,textAlign:'center',boxShadow:'0 8px 32px rgba(30,41,59,0.25)',animation:'fadeInScale 0.5s'}}>
-                  <h2 style={{color:'#10b981',marginBottom:16,fontSize:'2rem'}}>¡Membresía activada!</h2>
-                  <p style={{fontSize:18,marginBottom:22,color:'#334155'}}>Tu membresía ha sido activada correctamente.<br/>Inicia sesión para disfrutar los beneficios.</p>
-                  <button className="pagos-btn" style={{marginTop:18}} onClick={()=>{window.location.href="/ingreso"; setShowSuccess(false);}}>Aceptar</button>
-                </div>
-                <style>{`
-                  @keyframes fadeInScale {
-                    from { opacity: 0; transform: scale(0.85); }
-                    to { opacity: 1; transform: scale(1); }
-                  }
-                `}</style>
+            {!paypalStep && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+                <button className="pagos-btn" style={{ marginRight: 8 }} onClick={() => setPaypalStep("single")}>Pago único</button>
+                <button className="pagos-btn" onClick={() => setPaypalStep("auto")}>Suscripción</button>
               </div>
             )}
+            {(paypalStep === "single" || paypalStep === "auto") && (
+              <div style={{marginBottom:24}}>
+                <PayPalScriptProvider options={{ "client-id": "AbsN1lxgxK9UDzodAY0RwHG-N2dZIBTdWJiy7m2dJJjVtDrw4aguKvSp9G8MmEARVhu4jaquxAhesqeU", currency: "USD", vault: true }}>
+                  {paypalStep === "single" && (
+                    <PayPalButtons
+                      style={{ layout: "vertical" }}
+                      createOrder={(data, actions) => {
+                        return actions.order.create({
+                          purchase_units: [{
+                            amount: {
+                              value: selectedPlan?.price?.toString() || "0"
+                            },
+                            description: `Membresía ${selectedPlan?.name} (${duration}) Activos.ec`
+                          }]
+                        });
+                      }}
+                      onApprove={async (data, actions) => {
+                        const details = await actions.order.capture();
+                        // Activar membresía en backend
+                        try {
+                          const res = await fetch("/api/activar-membresia-paypal", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              email: loggedInUser?.Email || email,
+                              plan: selectedPlan?.name,
+                              duration,
+                              paypalOrderId: details.id,
+                              payer: details.payer
+                            })
+                          });
+                          const result = await res.json();
+                          if (result.status === "ok") {
+                            alert("¡Membresía activada! Tu membresía ha sido activada correctamente. Inicia sesión para disfrutar los beneficios.");
+                            window.location.href = "/ingreso";
+                          } else {
+                            alert(result.error || "Error al activar membresía");
+                          }
+                        } catch (err) {
+                          alert("Error de conexión. Intenta de nuevo.");
+                        }
+                      }}
+                      onError={(err) => {
+                        alert("Error en el pago con Paypal: " + err);
+                      }}
+                    />
+                  )}
+                  {paypalStep === "auto" && (
+                    <>
+                      <div style={{marginBottom:8, color:'#6366f1', fontWeight:'bold'}}>
+                        Plan seleccionado: <span style={{color:'#222'}}>{selectedPlan?.name} {duration}</span><br/>
+                        {(() => {
+                          // Normalizar nombre y duración para el mapeo
+                          // Normalizar duración: 'anual' -> 'año'
+                          let normDuration = duration?.trim().toLowerCase();
+                          if (normDuration === 'anual') normDuration = 'año';
+                          if (normDuration === 'mensual') normDuration = 'mes';
+                          const planKey = `${selectedPlan?.name?.trim().toUpperCase()} ${normDuration}`;
+                          return (
+                            <>
+                              plan_id: <span style={{color:'#e53e3e'}}>{planIds[planKey] || 'NO ENCONTRADO'}</span>
+                              <br/>
+                              <span style={{fontSize:'0.9em',color:'#888'}}>Clave usada: {planKey}</span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                      <PayPalButtons
+                        style={{ shape: 'pill', color: 'black', layout: 'vertical', label: 'subscribe' }}
+                        createSubscription={(data, actions) => {
+                          // Selecciona el plan_id según el plan y duración elegidos
+                          // Normalizar nombre y duración para el mapeo
+                          // Normalizar duración: 'anual' -> 'año'
+                          let normDuration = duration?.trim().toLowerCase();
+                          if (normDuration === 'anual') normDuration = 'año';
+                          if (normDuration === 'mensual') normDuration = 'mes';
+                          const key = `${selectedPlan?.name?.trim().toUpperCase()} ${normDuration}`;
+                          console.log('PayPal plan_id:', planIds[key], 'Plan:', key);
+                          if (!planIds[key]) {
+                            alert(`No existe plan_id para la membresía: ${key}`);
+                            return;
+                          }
+                          return actions.subscription.create({
+                            plan_id: planIds[key]
+                          });
+                        }}
+                        onApprove={async (data, actions) => {
+                          alert(data.subscriptionID);
+                          // Simula el mismo flujo que pago único
+                          try {
+                            const res = await fetch("/api/activar-membresia-paypal", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                email: loggedInUser?.Email || email,
+                                plan: selectedPlan?.name,
+                                duration,
+                                paypalOrderId: data.subscriptionID,
+                                payer: null,
+                                tipo: "suscripcion"
+                              })
+                            });
+                            const result = await res.json();
+                            if (result.status === "ok") {
+                              alert("¡Membresía activada! Tu membresía ha sido activada correctamente. Inicia sesión para disfrutar los beneficios.");
+                              window.location.href = "/ingreso";
+                            } else {
+                              alert(result.error || "Error al activar membresía");
+                            }
+                          } catch (err) {
+                            alert("Error de conexión. Intenta de nuevo.");
+                          }
+                        }}
+                        onError={(err) => {
+                          alert("Error en el pago con Paypal: " + err);
+                        }}
+                      />
+                    </>
+                  )}
+                </PayPalScriptProvider>
+                <button className="pagos-btn" style={{marginTop:16}} onClick={()=>setPaypalStep("")}>Volver</button>
+              </div>
+            )}
+            <button className="pagos-btn" onClick={()=>setStep("planSelection")}>Volver</button>
           </>
         );
       case "email":
