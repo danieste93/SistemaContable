@@ -337,34 +337,70 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
     switch (step) {
       case "planSelection":
         return (
-          <>
-            <h2>Elige tu Plan</h2>
-            <p className="pagos-subtitle">Selecciona la duración y el plan que mejor se adapte a ti.</p>
-            <div className="duration-toggle">
-              <button className={duration === 'mensual' ? 'active' : ''} onClick={() => setDuration('mensual')}>Mensual</button>
-              <button className={duration === 'anual' ? 'active' : ''} onClick={() => setDuration('anual')}>Anual</button>
+          <div style={{maxWidth:400,margin:'0 auto',background:'#fff',borderRadius:20,padding:'32px 16px',boxSizing:'border-box',boxShadow:'0 4px 24px rgba(44,62,80,0.10)'}}>
+            <h2 style={{fontSize:'1.6rem',fontWeight:700,marginBottom:8,color:'#1976d2'}}>Elige tu Plan</h2>
+            <p className="pagos-subtitle" style={{fontSize:'1rem',color:'#718096',marginBottom:24}}>Selecciona la duración y el plan que mejor se adapte a ti.</p>
+            <div style={{display:'flex',justifyContent:'center',alignItems:'center',marginBottom:32}}>
+              <span style={{fontWeight:600,color:duration==='mensual'?'#1976d2':'#888',marginRight:12}}>Mensual</span>
+              <label style={{position:'relative',display:'inline-block',width:56,height:28,cursor:'pointer'}}>
+                <input type="checkbox" checked={duration==='anual'} onChange={()=>setDuration(duration==='mensual'?'anual':'mensual')} style={{opacity:0,width:0,height:0}} />
+                <span style={{position:'absolute',top:0,left:0,right:0,bottom:0,background:duration==='mensual'?'#e3f2fd':'#1976d2',borderRadius:14,transition:'background 0.3s'}}></span>
+                <span style={{position:'absolute',top:3,left:duration==='mensual'?4:28,width:22,height:22,background:'#fff',borderRadius:'50%',boxShadow:'0 2px 8px rgba(25,118,210,0.10)',transition:'left 0.3s'}}></span>
+              </label>
+              <span style={{fontWeight:600,color:duration==='anual'?'#1976d2':'#888',marginLeft:12}}>Anual</span>
             </div>
-            <div className="plan-cards">
-              {plansData && plansData[duration] && plansData[duration].map(plan => (
-                <div 
-                  key={plan.id}
-                  className={`plan-card ${selectedPlan.name === plan.name && selectedPlan.duration.toLowerCase() === duration ? 'selected' : ''}`}
-                  onClick={() => setSelectedPlan({ name: plan.name, duration: duration.charAt(0).toUpperCase() + duration.slice(1), price: plan.price })}
-                >
-                  <div className="plan-name">{plan.name}</div>
-                  <div className="plan-price">${plan.price}<span className="plan-duration">/{duration === 'anual' ? 'año' : 'mes'}</span></div>
-                </div>
-              ))}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginBottom:24,justifyContent:'center'}}>
+              {plansData && plansData[duration] && plansData[duration]
+                .filter(plan => plan.name?.toUpperCase() !== 'DIOS')
+                .map(plan => (
+                  <div 
+                    key={plan.id}
+                    className={`plan-card ${selectedPlan.name === plan.name && selectedPlan.duration.toLowerCase() === duration ? 'selected' : ''}`}
+                    onClick={() => setSelectedPlan({ name: plan.name, duration: duration.charAt(0).toUpperCase() + duration.slice(1), price: plan.price })}
+                    style={{
+                      padding:'24px 12px',
+                      border:'2px solid',
+                      borderColor: plan.name?.toUpperCase() === 'ORO' ? '#FFD700' : (selectedPlan.name === plan.name && selectedPlan.duration.toLowerCase() === duration ? '#1976d2' : '#e2e8f0'),
+                      borderRadius:16,
+                      cursor:'pointer',
+                      background: selectedPlan.name === plan.name && selectedPlan.duration.toLowerCase() === duration
+                        ? 'linear-gradient(90deg,#e3f2fd 0%,#bbdefb 100%)'
+                        : (plan.name?.toUpperCase() === 'ORO' ? 'linear-gradient(90deg,#fffbe6 0%,#fffde4 100%)':'#f7fafd'),
+                      boxShadow: selectedPlan.name === plan.name && selectedPlan.duration.toLowerCase() === duration
+                        ? '0 4px 16px rgba(25,118,210,0.10)'
+                        : (plan.name?.toUpperCase() === 'ORO' ? '0 4px 16px rgba(255,215,0,0.10)' : 'none'),
+                      transition:'all 0.3s',
+                      textAlign:'center',
+                      fontWeight:600,
+                      position:'relative',
+                      outline:selectedPlan.name === plan.name && selectedPlan.duration.toLowerCase() === duration ? '2px solid #1976d2' : 'none',
+                      margin: undefined,
+                      gridColumn: undefined,
+                      maxWidth: undefined
+                    }}
+                  >
+                    {plan.name?.toUpperCase() === 'ORO' && (
+                      <div style={{position:'absolute',top:8,left:8,background:'#FFD700',color:'#fff',fontWeight:700,fontSize:12,padding:'2px 10px',borderRadius:8,boxShadow:'0 2px 8px rgba(255,215,0,0.10)'}}>Recomendado</div>
+                    )}
+                    <div style={{fontSize:'1.1rem',fontWeight:700,color:'#2d3748',marginBottom:8}}>{plan.name}</div>
+                    <div style={{fontSize:'1.5rem',fontWeight:800,color:'#1976d2'}}>${plan.price}<span style={{fontSize:'0.9em',fontWeight:500,color:'#718096'}}>/{duration==='anual'?'año':'mes'}</span></div>
+                    {selectedPlan.name === plan.name && selectedPlan.duration.toLowerCase() === duration && (
+                      <div style={{position:'absolute',top:8,right:8}}>
+                        <svg width="24" height="24" fill="#1976d2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#e3f2fd"/><path d="M9.5 13.5l2 2 4-4" stroke="#1976d2" strokeWidth="2" fill="none"/></svg>
+                      </div>
+                    )}
+                  </div>
+                ))}
             </div>
-            <button type="button" className="pagos-btn confirm-btn" onClick={() => setStep("facturacion")}> 
+            <button type="button" className="pagos-btn confirm-btn" style={{width:'100%',padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',color:'#fff',border:'none',borderRadius:12,marginTop:12,boxShadow:'0 4px 16px rgba(25,118,210,0.12)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}} onClick={() => setStep("facturacion")}> 
               {`Continuar con ${selectedPlan.name} - $${selectedPlan.price}`}
             </button>
-          </>
+          </div>
         );
       case "facturacion":
         return (
-          <>
-            <h2>Datos para Facturación</h2>
+          <div style={{maxWidth:400,width:'100%',margin:'0 auto',background:'#fff',borderRadius:20,padding:'32px 16px',boxSizing:'border-box',boxShadow:'0 4px 24px rgba(44,62,80,0.10)'}}>
+            <h2 style={{fontSize:'1.6rem',fontWeight:700,marginBottom:8,color:'#1976d2'}}>Datos para Facturación</h2>
             <form onSubmit={async e => {
               e.preventDefault();
               if (!facturacion.Nombres || !facturacion.CedulaoRuc || !facturacion.Correo || !facturacion.Direccion) {
@@ -375,7 +411,6 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
               setLoading(true);
               try {
                 const emailToSend = loggedInUser?.Email || email;
-                console.log("[DEBUG] Email enviado a actualizar-facturacion:", emailToSend);
                 const res = await fetch("http://localhost:3000/api/actualizar-facturacion", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -390,7 +425,6 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                 });
                 const data = await res.json();
                 if (data.status === "ok") {
-                  // Actualizar Redux con el usuario actualizado de la respuesta
                   if (data.user) {
                     dispatch(updateUser({ usuario: { user: data.user } }));
                   }
@@ -404,15 +438,15 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                 setLoading(false);
               }
             }}>
-              <input type="text" className="pagos-input" placeholder="Nombres" value={facturacion.Nombres} onChange={e => setFacturacion(f => ({ ...f, Nombres: e.target.value }))} required />
-              <input type="text" className="pagos-input" placeholder="Cédula o RUC" value={facturacion.CedulaoRuc} onChange={e => setFacturacion(f => ({ ...f, CedulaoRuc: e.target.value }))} required />
-              <input type="email" className="pagos-input" placeholder="Correo para Factura" value={facturacion.Correo} onChange={e => setFacturacion(f => ({ ...f, Correo: e.target.value }))} required />
-              <input type="tel" className="pagos-input" placeholder="Teléfono" value={facturacion.Telefono} onChange={e => setFacturacion(f => ({ ...f, Telefono: e.target.value }))} />
-              <input type="text" className="pagos-input" placeholder="Dirección" value={facturacion.Direccion} onChange={e => setFacturacion(f => ({ ...f, Direccion: e.target.value }))} required />
-              {facturacionError && <div className="pagos-error">{facturacionError}</div>}
-              <button type="submit" className="pagos-btn confirm-btn" disabled={loading}>{loading ? "Guardando..." : "Guardar y Continuar"}</button>
+              <input type="text" className="pagos-input" placeholder="Nombres" value={facturacion.Nombres} onChange={e => setFacturacion(f => ({ ...f, Nombres: e.target.value }))} required style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
+              <input type="text" className="pagos-input" placeholder="Cédula o RUC" value={facturacion.CedulaoRuc} onChange={e => setFacturacion(f => ({ ...f, CedulaoRuc: e.target.value }))} required style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
+              <input type="email" className="pagos-input" placeholder="Correo para Factura" value={facturacion.Correo} onChange={e => setFacturacion(f => ({ ...f, Correo: e.target.value }))} required style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
+              <input type="tel" className="pagos-input" placeholder="Teléfono" value={facturacion.Telefono} onChange={e => setFacturacion(f => ({ ...f, Telefono: e.target.value }))} style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
+              <input type="text" className="pagos-input" placeholder="Dirección" value={facturacion.Direccion} onChange={e => setFacturacion(f => ({ ...f, Direccion: e.target.value }))} required style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
+              {facturacionError && <div className="pagos-error" style={{color:'#e53e3e',marginBottom:8}}>{facturacionError}</div>}
+              <button type="submit" className="pagos-btn confirm-btn" style={{width:'100%',padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',color:'#fff',border:'none',borderRadius:12,marginTop:12,boxShadow:'0 4px 16px rgba(25,118,210,0.12)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}} disabled={loading}>{loading ? "Guardando..." : "Guardar y Continuar"}</button>
             </form>
-          </>
+          </div>
         );
       case "transferencia":
         return (
@@ -601,42 +635,206 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
         );
       case "email":
         return (
-          <>
-            <h2>Ingresa tu correo</h2>
-            <form onSubmit={handleEmailSubmit}>
-              <input type="email" className="pagos-input" placeholder="Correo electrónico" value={email} onChange={e => setEmail(e.target.value)} disabled={loading} autoFocus required autoComplete="email" name="email"/>
-              {emailError && <div className="pagos-error">{emailError}</div>}
-              <button type="submit" className="pagos-btn" disabled={loading}>{loading ? "Validando..." : "Continuar"}</button>
+          <div className="pagos-login-container" style={{maxWidth:400,width:'100%',margin:'32px auto',background:'#fff',borderRadius:16,padding:'32px 16px',boxSizing:'border-box',boxShadow:'0 4px 24px rgba(44,62,80,0.10)'}}>
+            <div style={{textAlign:'center',marginBottom:24}}>
+              <img src="https://activos.ec/static/logo1.png" alt="Logo Activos" style={{width:64,height:64,borderRadius:'50%',boxShadow:'0 2px 8px rgba(25,118,210,0.10)'}} />
+              <h2 style={{marginTop:12,fontWeight:700,color:'#1976d2',letterSpacing:1}}>Inicia sesión</h2>
+            </div>
+            <form onSubmit={handleEmailSubmit} className="pagos-form" style={{width:'100%'}}>
+              <div style={{marginBottom:16,position:'relative',width:'100%'}}>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="Correo electrónico"
+                  required
+                  className="pagos-input"
+                  style={{
+                    width:'100%',
+                    maxWidth:'100%',
+                    boxSizing:'border-box',
+                    padding:'14px 44px 14px 18px',
+                    borderRadius:12,
+                    border:'2px solid #e3f2fd',
+                    fontSize:18,
+                    background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',
+                    boxShadow:'0 4px 16px rgba(25,118,210,0.10)',
+                    outline:'none',
+                    color:'#222',
+                    letterSpacing:1,
+                    fontWeight:600,
+                    marginTop:0,
+                    marginBottom:0,
+                    textAlign:'left',
+                    transition:'border-color 0.3s, box-shadow 0.3s'
+                  }}
+                  disabled={loading}
+                  autoFocus
+                  autoComplete="email"
+                  name="email"
+                  onFocus={e => e.target.style.borderColor = '#1976d2'}
+                  onBlur={e => e.target.style.borderColor = '#e3f2fd'}
+                />
+              </div>
+              {emailError && <div className="pagos-error" style={{color:'#e53e3e',marginBottom:8}}>{emailError}</div>}
+              <button type="submit" className="pagos-btn confirm-btn" style={{
+                width:'100%',
+                padding:'14px 0',
+                fontSize:18,
+                fontWeight:700,
+                background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',
+                color:'#fff',
+                border:'none',
+                borderRadius:12,
+                marginTop:12,
+                boxShadow:'0 4px 16px rgba(25,118,210,0.12)',
+                letterSpacing:1,
+                transition:'background 0.2s, box-shadow 0.2s',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1
+              }} disabled={loading}>{loading ? "Validando..." : "Continuar"}</button>
             </form>
-            <div className="social-login-divider"><span>O</span></div>
-            <LoginGoogle onClick={() => setLoading(true)} onResult={handleGoogleLogin} getError={(err) => { setLoading(false); setEmailError(err.message || 'Error de Google'); }}/>
-          </>
+            <div style={{marginTop:24,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+              <div className="social-login-divider" style={{margin:'20px 0',color:'#bfc9d9',width:'100%',textAlign:'center'}}><span>O</span></div>
+              <div style={{display:'flex',justifyContent:'center',width:'100%'}}>
+                <LoginGoogle onClick={() => setLoading(true)} onResult={handleGoogleLogin} getError={(err) => { setLoading(false); setEmailError(err.message || 'Error de Google'); }}/>
+              </div>
+              <div style={{marginTop:12,fontSize:14,color:'#888',textAlign:'center'}}>O inicia sesión con Google</div>
+            </div>
+          </div>
         );
       case "password":
         return (
-            <>
-                <h2>Iniciar Sesión</h2>
-                <form onSubmit={handleLogin}>
-                    <input type="email" className="pagos-input" value={email} disabled name="email" autoComplete="email"/>
-                    <input type="password" className="pagos-input" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} disabled={loading} autoFocus required autoComplete="current-password" name="password"/>
-                    {loginError && <div className="pagos-error">{loginError}</div>}
-                    <button type="submit" className="pagos-btn" disabled={loading}>{loading ? "Iniciando sesión..." : "Iniciar Sesión"}</button>
-                </form>
-            </>
+          <div className="pagos-login-container" style={{maxWidth:400,margin:'0 auto',background:'#fff',borderRadius:16,padding:32,boxShadow:'0 4px 24px rgba(44,62,80,0.10)'}}>
+            <div style={{textAlign:'center',marginBottom:24}}>
+              <img src="https://activos.ec/static/logo1.png" alt="Logo Activos" style={{width:64,height:64,borderRadius:'50%',boxShadow:'0 2px 8px rgba(25,118,210,0.10)'}} />
+              <h2 style={{marginTop:12,fontWeight:700,color:'#1976d2',letterSpacing:1}}>Iniciar Sesión</h2>
+            </div>
+            <form onSubmit={handleLogin} className="pagos-form">
+              <div style={{marginBottom:16,position:'relative',width:'100%'}}>
+                <input
+                  type="email"
+                  className="pagos-input"
+                  value={email}
+                  disabled
+                  name="email"
+                  autoComplete="email"
+                  style={{
+                    width:'100%',
+                    minWidth:'100%',
+                    maxWidth:'100%',
+                    boxSizing:'border-box',
+                    padding:'14px 0',
+                    borderRadius:12,
+                    border:'2px solid #e3f2fd',
+                    fontSize:18,
+                    background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',
+                    boxShadow:'0 4px 16px rgba(25,118,210,0.10)',
+                    outline:'none',
+                    color:'#222',
+                    letterSpacing:1,
+                    fontWeight:600,
+                    marginTop:0,
+                    marginBottom:0,
+                    textAlign:'left',
+                    transition:'border-color 0.3s, box-shadow 0.3s'
+                  }}
+                />
+              </div>
+              <div style={{marginBottom:16,position:'relative',width:'100%'}}>
+                <input
+                  type="password"
+                  className="pagos-input"
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  disabled={loading}
+                  autoFocus
+                  required
+                  autoComplete="current-password"
+                  name="password"
+                  style={{
+                    width:'100%',
+                    minWidth:'100%',
+                    maxWidth:'100%',
+                    boxSizing:'border-box',
+                    padding:'14px 0',
+                    borderRadius:12,
+                    border:'2px solid #e3f2fd',
+                    fontSize:18,
+                    background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',
+                    boxShadow:'0 4px 16px rgba(25,118,210,0.10)',
+                    outline:'none',
+                    color:'#222',
+                    letterSpacing:1,
+                    fontWeight:600,
+                    marginTop:0,
+                    marginBottom:0,
+                    textAlign:'left',
+                    transition:'border-color 0.3s, box-shadow 0.3s'
+                  }}
+                />
+              </div>
+              {loginError && <div className="pagos-error" style={{color:'#e53e3e',marginBottom:8}}>{loginError}</div>}
+              <button type="submit" className="pagos-btn confirm-btn" style={{
+                width:'100%',
+                padding:'14px 0',
+                fontSize:18,
+                fontWeight:700,
+                background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',
+                color:'#fff',
+                border:'none',
+                borderRadius:12,
+                marginTop:12,
+                boxShadow:'0 4px 16px rgba(25,118,210,0.12)',
+                letterSpacing:1,
+                transition:'background 0.2s, box-shadow 0.2s',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1
+              }} disabled={loading}>{loading ? "Iniciando sesión..." : "Iniciar Sesión"}</button>
+            </form>
+          </div>
         );
       case "register":
         return (
-            <>
-            <h2>Registro de Usuario</h2>
+          <div style={{maxWidth:400,margin:'0 auto',background:'#fff',borderRadius:20,padding:'32px 16px',boxSizing:'border-box',boxShadow:'0 4px 24px rgba(44,62,80,0.10)'}}>
+            <div style={{textAlign:'center',marginBottom:24}}>
+              <img src="https://activos.ec/static/logo1.png" alt="Logo Activos" style={{width:64,height:64,borderRadius:'50%',boxShadow:'0 2px 8px rgba(25,118,210,0.10)'}} />
+              <h2 style={{marginTop:12,fontWeight:700,color:'#1976d2',letterSpacing:1}}>Registro de Usuario</h2>
+            </div>
             <form onSubmit={handleRegister}>
-                <input type="email" className="pagos-input" value={email} disabled name="email" autoComplete="email"/>
-                {registerStep === 0 && <input type="text" className="pagos-input" placeholder="Nombre de usuario" value={regUsuario} onChange={e => setRegUsuario(e.target.value)} disabled={loading} autoFocus required name="username" />}
-                {registerStep === 1 && <input type="tel" className="pagos-input" placeholder="Teléfono" value={regTelefono} onChange={e => setRegTelefono(e.target.value)} disabled={loading} autoFocus required name="phone" />}
-                {registerStep === 2 && <input type="password" className="pagos-input" placeholder="Contraseña (mín. 6 caracteres)" value={regPassword} onChange={e => setRegPassword(e.target.value)} disabled={loading} autoFocus required name="password" />}
-                {registerError && <div className="pagos-error">{registerError}</div>}
-                <button type="submit" className="pagos-btn" disabled={loading}>{loading ? "Registrando..." : (registerStep < 2 ? "Siguiente" : "Registrar")}</button>
+              <input type="email" className="pagos-input" value={email} disabled name="email" autoComplete="email" style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
+              {registerStep === 0 && <input type="text" className="pagos-input" placeholder="Nombre de usuario" value={regUsuario} onChange={e => setRegUsuario(e.target.value)} disabled={loading} autoFocus required name="username" style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />}
+              {registerStep === 1 && <input type="tel" className="pagos-input" placeholder="Teléfono" value={regTelefono} onChange={e => setRegTelefono(e.target.value)} disabled={loading} autoFocus required name="phone" style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />}
+              {registerStep === 2 && <input type="password" className="pagos-input" placeholder="Contraseña (mín. 6 caracteres)" value={regPassword} onChange={e => setRegPassword(e.target.value)} disabled={loading} autoFocus required name="password" style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />}
+              {registerError && <div className="pagos-error" style={{color:'#e53e3e',marginBottom:8}}>{registerError}</div>}
+              <div style={{display:'flex',gap:12,marginTop:12}}>
+                {registerStep > 0 && (
+                  <button
+                    type="button"
+                    className="pagos-btn"
+                    style={{
+                      width:'100%',
+                      padding:'14px 0',
+                      fontSize:18,
+                      fontWeight:700,
+                      background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',
+                      color:'#1976d2',
+                      border:'none',
+                      borderRadius:12,
+                      boxShadow:'0 4px 16px rgba(25,118,210,0.08)',
+                      letterSpacing:1,
+                      transition:'background 0.2s, box-shadow 0.2s',
+                      cursor:'pointer'
+                    }}
+                    disabled={loading}
+                    onClick={() => setRegisterStep(registerStep - 1)}
+                  >Atrás</button>
+                )}
+                <button type="submit" className="pagos-btn" style={{width:'100%',padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',color:'#fff',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.12)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}} disabled={loading}>{loading ? "Registrando..." : (registerStep < 2 ? "Siguiente" : "Registrar")}</button>
+              </div>
             </form>
-          </>
+          </div>
         );
       default:
         return null;

@@ -15,7 +15,7 @@ async function activarMembresiaPaypal(req, res) {
     }
     // Actualizar campos igual que transferencia pero para PayPal
     const now = new Date();
-  user.Membresia = plan === "ORO" ? "Premium" : plan;
+    user.Membresia = plan === "ORO" ? "Premium" : plan;
     user.Fechas.InicioMem = now;
     if (duration === "anual") {
       user.Fechas.ExpiraMem = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
@@ -25,7 +25,8 @@ async function activarMembresiaPaypal(req, res) {
       user.SiSPagos.FirmaCortesia = "";
     }
     user.SiSPagos.BancoMEM = "";
-    user.SiSPagos.TipoVentaMeM = "Paypal";
+    // Diferenciar tipo de venta según campo 'tipo' recibido
+    user.SiSPagos.TipoVentaMeM = req.body.tipo === "suscripcion" ? "SuscripcionPaypal" : "Paypal";
     user.SiSPagos.ComprobanteMeM = paypalOrderId;
     await user.save();
     // Enviar correo de activación
