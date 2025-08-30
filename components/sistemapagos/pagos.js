@@ -351,8 +351,8 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginBottom:24,justifyContent:'center'}}>
               {plansData && plansData[duration] && plansData[duration]
-                .filter(plan => plan.name?.toUpperCase() !== 'DIOS')
-                .map(plan => (
+  .filter(plan => plan.name?.toUpperCase() !== 'A MEDIDA')
+  .map(plan => (
                   <div 
                     key={plan.id}
                     className={`plan-card ${selectedPlan.name === plan.name && selectedPlan.duration.toLowerCase() === duration ? 'selected' : ''}`}
