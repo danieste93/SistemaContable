@@ -9,13 +9,13 @@ const plansData = {
     { name: 'PRO', price: 45, id: 'pro-anual' },
     { name: 'Plata', price: 115, id: 'plata-anual' },
     { name: 'ORO', price: 200, id: 'oro-anual' },
-    { name: 'DIOS', price: 500, id: 'dios-anual' },
+    { name: 'A MEDIDA', price: 500, id: 'amedida-anual' },
   ],
   mensual: [
     { name: 'PRO', price: 4.50, id: 'pro-mensual' },
     { name: 'Plata', price: 11.50, id: 'plata-mensual' },
     { name: 'ORO', price: 22.50, id: 'oro-mensual' },
-    { name: 'DIOS', price: 50, id: 'dios-mensual' },
+    { name: 'A MEDIDA', price: 50, id: 'amedida-mensual' },
   ]
 };
 
@@ -101,6 +101,10 @@ export default function Precios() {
   const handleToggleSeccion = (id) => setAbiertas(prev => ({ ...prev, [id]: !prev[id] }));
   const handleToggleAll = (open) => setAbiertas(Object.fromEntries(secciones.map(s => [s, open])));
 
+  function handleCotizarClick(plan) {
+    window.open('https://api.whatsapp.com/send/?phone=%2B593962124673&text=Hola%2C+quiero+m%C3%A1s+informaci%C3%B3n+sobre+las+membres%C3%ADas+de+Activos.ec&type=phone_number&app_absent=0', '_blank');
+  }
+
   return (
     <>
       <Head>
@@ -134,7 +138,7 @@ export default function Precios() {
                     <th className="profesional">PRO</th>
                     <th className="plata">Plata</th>
                     <th className="premiun">ORO</th>
-                    <th className="personalizado">DIOS</th>
+                    <th className="personalizado">A MEDIDA</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -154,8 +158,40 @@ export default function Precios() {
                       <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('ORO', 'Anual', 200)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="personalizado centrado">
-                      <span className="precio">$500</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('DIOS', 'Anual', 500)}}><i className="fas fa-shopping-cart"></i></a>
+                      <a
+                        className="btn-cotizar"
+                        href="#"
+                        onClick={(e) => {e.preventDefault(); handleCotizarClick('A MEDIDA')}}
+                        style={{
+                          display: 'inline-block',
+                          padding: '6px 12px',
+                          fontSize: '0.95em',
+                          fontWeight: 700,
+                          background: 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 8,
+                          boxShadow: '0 2px 8px rgba(25,118,210,0.10)',
+                          letterSpacing: 1,
+                          transition: 'background 0.2s, box-shadow 0.2s',
+                          cursor: 'pointer',
+                          marginTop: 4,
+                          marginBottom: 2,
+                          textShadow: '0 1px 4px rgba(25,118,210,0.10)',
+                          textDecoration: 'none',
+                          outline: 'none',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          minWidth: '70px',
+                          maxWidth: '100px',
+                          textAlign: 'center'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'linear-gradient(90deg, #1565c0 0%, #42a5f5 100%)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)'}
+                      >
+                        <i className="fas fa-comments" style={{marginRight:5, fontSize:'0.9em'}}></i>
+                        Cotizar
+                      </a>
                     </td>
                   </tr>
                   <tr>
@@ -174,8 +210,40 @@ export default function Precios() {
                       <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('ORO', 'Mensual', 22.50)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="personalizado centrado">
-                      <span className="precio">Mes</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('DIOS', 'Mensual', 50)}}><i className="fas fa-shopping-cart"></i></a>
+                      <a
+                        className="btn-cotizar"
+                        href="#"
+                        onClick={(e) => {e.preventDefault(); handleCotizarClick('A MEDIDA')}}
+                        style={{
+                          display: 'inline-block',
+                          padding: '6px 12px',
+                          fontSize: '0.95em',
+                          fontWeight: 700,
+                          background: 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 8,
+                          boxShadow: '0 2px 8px rgba(25,118,210,0.10)',
+                          letterSpacing: 1,
+                          transition: 'background 0.2s, box-shadow 0.2s',
+                          cursor: 'pointer',
+                          marginTop: 4,
+                          marginBottom: 2,
+                          textShadow: '0 1px 4px rgba(25,118,210,0.10)',
+                          textDecoration: 'none',
+                          outline: 'none',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          minWidth: '70px',
+                          maxWidth: '100px',
+                          textAlign: 'center'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'linear-gradient(90deg, #1565c0 0%, #42a5f5 100%)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)'}
+                      >
+                        <i className="fas fa-comments" style={{marginRight:5, fontSize:'0.9em'}}></i>
+                        Cotizar
+                      </a>
                     </td>
                   </tr>
                 </tbody>
@@ -203,7 +271,7 @@ export default function Precios() {
                     <th className="profesional">PRO</th>
                     <th className="plata">Plata</th>
                     <th className="premiun">ORO</th>
-                    <th className="personalizado">DIOS</th>
+                    <th className="personalizado">A MEDIDA</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -293,7 +361,13 @@ export default function Precios() {
                   {abiertas['sri'] && (<>
                     <tr><td className="detalle">Archivo p12 1 año</td><td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="profesional centrado"><span style={{color:'green', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✔</span></td><td className="plata centrado"><span style={{color:'green', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✔</span></td><td className="premiun centrado"><span style={{color:'green', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✔</span></td><td className="personalizado centrado"><span style={{color:'green', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✔</span></td></tr>
                     <tr><td className="detalle">Archivo p12 1-6 meses</td><td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="profesional centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="plata centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="premiun centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="personalizado centrado"><span style={{color:'green', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✔</span></td></tr>
-                    <tr><td className="detalle">Facturación electrónica</td><td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="profesional centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="plata centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="premiun centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="personalizado centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td></tr>
+                    <tr><td className="detalle">Facturación electrónica</td>
+                      <td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td>
+                      <td className="profesional centrado"><span style={{color:'#1976d2', fontWeight:'bold', fontSize:'1.1em', display:'inline-block'}}>$20.000</span></td>
+                      <td className="plata centrado"><span style={{color:'#1976d2', fontWeight:'bold', fontSize:'1.1em', display:'inline-block'}}>$20.000</span></td>
+                      <td className="premiun centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td>
+                      <td className="personalizado centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td>
+                    </tr>
                     <tr><td className="detalle">Nota de crédito</td><td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="profesional centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="plata centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="premiun centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="personalizado centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td></tr>
                     <tr><td className="detalle">Guías de remisión</td><td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="profesional centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="plata centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="premiun centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="personalizado centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td></tr>
                     <tr><td className="detalle">Notas de débito</td><td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="profesional centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="plata centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="premiun centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="personalizado centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td></tr>
@@ -504,7 +578,7 @@ export default function Precios() {
           background: rgba(255,255,255,0.12);
           border-radius: 50%;
           padding: 6px;
-          box-shadow: 0 2px 8px rgba(37,211,102,0.10);
+          box-shadow: 0 2px 8px rgba(25,118,210,0.10);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -585,7 +659,7 @@ export default function Precios() {
         .free-button:hover { background-color: #ff33cc; }
 
         /* Botón flotante de tema */
-        .dark-toggle { position: fixed; top: 100px; right: 20px; z-index: 9999; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3); border: 2px solid rgba(255, 255, 255, 0.2); }
+        .dark-toggle { position: fixed; top: 100px; right: 20px; z-index: 9999; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(139,92,246,0.3); border: 2px solid rgba(255, 255, 255, 0.2); }
         .dark-toggle:hover { background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%); transform: scale(1.1); box-shadow: 0 6px 24px rgba(139, 92, 246, 0.5); }
 
         /* Responsive móvil */
