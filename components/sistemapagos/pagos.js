@@ -313,30 +313,33 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
         setComprobanteError("Sube el comprobante de transferencia.");
         return;
       }
+      // Validación de tipo y tamaño de archivo
+      const allowedTypes = ["application/pdf", "image/png", "image/jpeg"]; // PDF, PNG, JPEG
+      if (!allowedTypes.includes(comprobante.type)) {
+        setComprobanteError("Solo se permiten archivos PDF, PNG o JPEG.");
+        return;
+      }
+      if (comprobante.size > 3 * 1024 * 1024) {
+        setComprobanteError("El archivo debe pesar máximo 3MB.");
+        return;
+      }
       setComprobanteError("");
       setUploading(true);
       try {
-  const formData = new FormData();
-  formData.append("email", loggedInUser?.Email || email);
-  formData.append("comprobante", comprobante);
-  formData.append("duration", duration);
-  formData.append("banco", selectedBanco?.nombre || "");
-  formData.append("plan", (selectedPlan?.name || "").toUpperCase());
+        const formData = new FormData();
+        formData.append("email", loggedInUser?.Email || email);
+        formData.append("comprobante", comprobante);
+        formData.append("duration", duration);
+        formData.append("banco", selectedBanco?.nombre || "");
+        formData.append("plan", (selectedPlan?.name || "").toUpperCase());
         const res = await fetch("/api/subir-comprobante-mem", {
           method: "POST",
           body: formData
         });
         const data = await res.json();
         if (data.status === "ok") {
-          alert("¡Comprobante subido correctamente! Tu membresía ha sido activada. Inicia sesión nuevamente para disfrutar los beneficios.");
-          // Limpiar datos y simular inicio de sesión
-          dispatch(logOut());
-          dispatch(cleanData());
-          localStorage.removeItem("state");
-          localStorage.removeItem("jwt_token");
-          setTimeout(() => {
-            window.location.href = "/ingreso";
-          }, 1200);
+          setStep("paypalSuccess");
+          // El usuario decide cuándo continuar, no se limpia ni redirige automáticamente
         } else {
           setComprobanteError(data.error || "Error al subir comprobante");
         }
@@ -356,7 +359,7 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
         } else if (loggedInUser && loggedInUser.ExpiraMem) {
           expira = loggedInUser.ExpiraMem;
         }
-        if (loggedInUser && loggedInUser.Membresia && ["PRO", "Premium", "Plata"].includes(loggedInUser.Membresia)) {
+        if (loggedInUser && loggedInUser.Membresia && ["PRO", "PREMIUM", "PLATA"].includes(loggedInUser.Membresia.toUpperCase())) {
           const expiraDate = expira ? new Date(expira) : null;
           const hoy = new Date();
           if (expiraDate && expiraDate > hoy) {
@@ -1110,7 +1113,7 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
       </div>
       <style jsx>{`
         .pagos-modal-bg { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(5px); }
-        .pagos-modal { background: #fff; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); padding: 40px; max-width: 420px; width: 100%; text-align: center; animation: slide-up 0.4s ease-out; }
+        .pagos-modal { background: #fff; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0.1); padding: 40px; max-width: 420px; width: 100%; text-align: center; animation: slide-up 0.4s ease-out; }
         @keyframes slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .pagos-modal h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; color: #1a202c; }
         .pagos-subtitle { font-size: 1rem; color: #718096; margin-bottom: 24px; }
