@@ -479,7 +479,23 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                 required
                 style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}}
               />
-              <input type="tel" className="pagos-input" placeholder="Teléfono" value={facturacion.Telefono} onChange={e => setFacturacion(f => ({ ...f, Telefono: e.target.value }))} style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
+              <input
+                type="tel"
+                className="pagos-input"
+                placeholder="Teléfono"
+                value={facturacion.Telefono}
+                onChange={e => {
+                  let val = e.target.value.replace(/[^0-9+]/g, ""); // Solo números y +
+                  // Solo un + al inicio
+                  val = val.replace(/(?!^)[+]/g, "");
+                  if (val.length > 15) val = val.slice(0, 15); // Máximo 15 dígitos
+                  setFacturacion(f => ({ ...f, Telefono: val }));
+                }}
+                required
+                minLength={7}
+                maxLength={15}
+                style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}}
+              />
               <input type="text" className="pagos-input" placeholder="Dirección" value={facturacion.Direccion} onChange={e => setFacturacion(f => ({ ...f, Direccion: e.target.value }))} required style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
               {facturacionError && <div className="pagos-error" style={{color:'#e53e3e',marginBottom:8}}>{facturacionError}</div>}
               <div style={{display:'flex',gap:12,marginTop:12}}>
