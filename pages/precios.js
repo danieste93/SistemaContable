@@ -1,5 +1,6 @@
 // 1) Imports
 import React, { useEffect, useState } from "react";
+import useUserRedux from '../components/useUserRedux';
 import WhatsappButton from "../components/WhatsappButton";
 import Head from "next/head";
 import Pagos from "../components/sistemapagos/pagos";
@@ -20,6 +21,7 @@ const plansData = {
 };
 
 export default function Precios() {
+  const user = useUserRedux();
   // 2) Estado de tema y toggles
   // Sincronizar scroll horizontal de ambas tablas en móvil
   useEffect(() => {
@@ -78,7 +80,40 @@ export default function Precios() {
   };
 
   // Handler para mostrar el modal de pagos
+  const [showMembresiaModal, setShowMembresiaModal] = useState(false);
+  const [membresiaMsg, setMembresiaMsg] = useState("");
+
   const handleCarritoClick = (planName, duration, price) => {
+    // Depuración: mostrar el objeto user
+    console.log('USER:', user);
+    // Validación de membresía activa para usuarios logeados
+    let expira;
+    if (user && user.Fechas && user.Fechas.ExpiraMem) {
+      expira = user.Fechas.ExpiraMem;
+    } else if (user && user.ExpiraMem) {
+      expira = user.ExpiraMem;
+    }
+    if (user && user.Membresia && ["PRO", "Premium", "Plata"].includes(user.Membresia)) {
+      const expiraDate = expira ? new Date(expira) : null;
+      const hoy = new Date();
+      console.log('Membresia:', user.Membresia, 'ExpiraMem:', expira, 'expiraDate:', expiraDate, 'Hoy:', hoy);
+      if (expiraDate && expiraDate > hoy) {
+        setMembresiaMsg(
+          <div style={{textAlign:'center',padding:'32px 18px',maxWidth:400,margin:'0 auto'}}>
+            <img src="https://contaluxestaging-b86e9da05a14.herokuapp.com/static/logo1.png" alt="Logo Contaluxe" style={{width:80,marginBottom:18,borderRadius:12,boxShadow:'0 2px 8px #6366f144'}} />
+            <h2 style={{color:'#6366f1',fontWeight:700,fontSize:'1.3em',marginBottom:12}}>¡Ya tienes una membresía activa!</h2>
+            <p style={{fontSize:'1.08em',color:'#232323',marginBottom:10}}>
+              Tu membresía <b style={{color:'#6366f1'}}>{user.Membresia}</b> está activa y caduca el <b style={{color:'#6366f1'}}>{expiraDate.toLocaleDateString()}</b>.<br/>
+              Si deseas hacer un <b>upgrade</b> de tu membresía, comunícate con <a href="https://api.whatsapp.com/send/?phone=%2B593962124673&text=Hola%2C+quiero+consultar+por+upgrade+de+membresía&type=phone_number&app_absent=0" target="_blank" style={{color:'#6366f1',textDecoration:'underline'}}>soporte</a>.
+            </p>
+            <button onClick={()=>setShowMembresiaModal(false)} style={{background:'#6366f1',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontWeight:600,marginTop:18,cursor:'pointer',boxShadow:'0 2px 8px #6366f144'}}>Cerrar</button>
+          </div>
+        );
+        setShowMembresiaModal(true);
+        return;
+      }
+    }
+    // Si no tiene membresía activa, puede avanzar
     setSelectedPlan({ name: planName, duration, price });
     setShowPagos(true);
   };
@@ -114,6 +149,14 @@ export default function Precios() {
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
       </Head>
       <main>
+        {/* Modal membresía activa */}
+        {showMembresiaModal && (
+          <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.18)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <div style={{background:'#fff',borderRadius:18,boxShadow:'0 2px 18px #6366f188',padding:'0 0 24px 0',maxWidth:420,width:'90vw'}}>
+              {membresiaMsg}
+            </div>
+          </div>
+        )}
         <div className="container" style={{ marginTop: 80 }}>
           {/* 4.1) Encabezado y botón tema */}
           <h1 className="titulo-minimalista">Elige tu Membresía</h1>

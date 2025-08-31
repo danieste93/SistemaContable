@@ -349,6 +349,30 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
 
     switch (step) {
       case "planSelection":
+        // Bloqueo para usuarios con membresía activa
+        let expira;
+        if (loggedInUser && loggedInUser.Fechas && loggedInUser.Fechas.ExpiraMem) {
+          expira = loggedInUser.Fechas.ExpiraMem;
+        } else if (loggedInUser && loggedInUser.ExpiraMem) {
+          expira = loggedInUser.ExpiraMem;
+        }
+        if (loggedInUser && loggedInUser.Membresia && ["PRO", "Premium", "Plata"].includes(loggedInUser.Membresia)) {
+          const expiraDate = expira ? new Date(expira) : null;
+          const hoy = new Date();
+          if (expiraDate && expiraDate > hoy) {
+            return (
+              <div style={{textAlign:'center',padding:'32px 18px',maxWidth:400,margin:'0 auto',background:'#fff',borderRadius:20,boxShadow:'0 4px 24px rgba(44,62,80,0.10)'}}>
+                <img src="https://contaluxestaging-b86e9da05a14.herokuapp.com/static/logo1.png" alt="Logo Contaluxe" style={{width:80,marginBottom:18,borderRadius:12,boxShadow:'0 2px 8px #6366f144'}} />
+                <h2 style={{color:'#6366f1',fontWeight:700,fontSize:'1.3em',marginBottom:12}}>¡Ya tienes una membresía activa!</h2>
+                <p style={{fontSize:'1.08em',color:'#232323',marginBottom:10}}>
+                  Tu membresía <b style={{color:'#6366f1'}}>{loggedInUser.Membresia}</b> está activa y caduca el <b style={{color:'#6366f1'}}>{expiraDate.toLocaleDateString()}</b>.<br/>
+                  Si deseas hacer un <b>upgrade</b> de tu membresía, comunícate con <a href="https://api.whatsapp.com/send/?phone=%2B593962124673&text=Hola%2C+quiero+consultar+por+upgrade+de+membresía&type=phone_number&app_absent=0" target="_blank" style={{color:'#6366f1',textDecoration:'underline'}}>soporte</a>.
+                </p>
+                <button onClick={onClose} style={{background:'#6366f1',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontWeight:600,marginTop:18,cursor:'pointer',boxShadow:'0 2px 8px #6366f144'}}>Cerrar</button>
+              </div>
+            );
+          }
+        }
         return (
           <div style={{maxWidth:400,margin:'0 auto',background:'#fff',borderRadius:20,padding:'32px 16px',boxSizing:'border-box',boxShadow:'0 4px 24px rgba(44,62,80,0.10)'}}>
             <h2 style={{fontSize:'1.6rem',fontWeight:700,marginBottom:8,color:'#1976d2'}}>Elige tu Plan</h2>
