@@ -20,7 +20,34 @@ state={
   iniciales:[],
   newIndex:[],
   identicalData:[],
-  inidata:[],
+  inidata:[
+    1.03,
+    4.26,
+    1.71,
+    1,
+    1.8,
+    7.19,
+    1.5,
+    1.36,
+    1.41,
+    2.09,
+    1,
+    2.59,
+    1.77,
+    1.41,
+    2.12,
+    1.65,
+    4.68,
+    6.35,
+    3.539,
+    2.53,
+    1.24,
+    1.86,
+    1.12,
+    1.48,
+    2.86,
+    32.17
+],
   superdata:{
     labels:[],
     datasets: [
@@ -259,16 +286,21 @@ MA= (data, windowSize) => {
 
 
     componentDidMount(){
-  /*
-      let indicesIniciales =this.setterData(this.state.inidata)
+      /*
+      let igualarray = this.state.inidata
+ 
+      // let sliceIndex= igualarray.slice(-(this.state.indicesOperativos))
+      
+     let indicesTranformados =this.TranformIndex(igualarray, 0,"blue")
+      let indicesIniciales =this.setterData(igualarray, indicesTranformados)
 
 
       this.setState({
                       
                      superdata:indicesIniciales   
       
-      })
-*/
+      })*/
+
 
    const socket = io("http://localhost:5000");
  
@@ -295,7 +327,6 @@ let newArrRSI2 = this.setterRSI(rsiData2)
 
 this.setState({
 
-           
                 inidata:igualarray,
               
                superdata:indicesIniciales,
@@ -410,21 +441,30 @@ this.setState({
   
       return rsiArray;
   }
-    detectPeaks=(data, threshold = 1 )=> {
-      let peaks = [];
+  detectPeaks = (data, threshold = 1, Proximity = 15) => {
+    let peaks = [];
 
-      for (let i = 1; i < data.length - 1; i++) {
-          // Detectar resistencias (máximos) con diferencia de 1
-          if ((data[i] - data[i - 1] >= threshold) && (data[i] - data[i + 1] >= threshold)) {
-              peaks.push({ type: 'resistencia', index: i, value: data[i] });
-          }
-          // Detectar soportes (mínimos) con diferencia de 1
-          else if ((data[i - 1] - data[i] >= threshold) && (data[i + 1] - data[i] >= threshold)) {
-              peaks.push({ type: 'soporte', index: i, value: data[i] });
-          }
-      }
-      return peaks;
-  }
+    for (let i = 1; i < data.length - 1; i++) {
+        // Detectar resistencias (máximos)
+        if ((data[i] - data[i - 1] >= threshold) && (data[i] - data[i + 1] >= threshold)) {
+            // Verificar si el pico no está a más de 10 turnos del final
+            if (data.length - i <= Proximity) {
+                console.log(`Resistencia detectada en índice ${i} con valor ${data[i]}`);
+                peaks.push({ type: 'resistencia', index: i, value: data[i] });
+            }
+        }
+        // Detectar soportes (mínimos)
+        else if ((data[i - 1] - data[i] >= threshold) && (data[i + 1] - data[i] >= threshold)) {
+            // Verificar si el pico no está a más de 10 turnos del final
+            if (data.length - i <= Proximity) {
+                console.log(`Soporte detectado en índice ${i} con valor ${data[i]}`);
+                peaks.push({ type: 'soporte', index: i, value: data[i] });
+            }
+        }
+    }
+
+    return peaks;
+};
   detectSupportResistance= (peaks)=> {
     let peakCounts = {};
 
@@ -496,6 +536,7 @@ getLineStyle=(value, levels)=> {
   return { color: 'rgba(75, 192, 192, 1)', width: 2 }; // Color y grosor por defecto
 }
     render() {
+   
       const yellowLinePlugin = {
         id: 'yellowLinePlugin',
         afterEvent: (chart, args) => {
@@ -590,9 +631,9 @@ getLineStyle=(value, levels)=> {
    
       const peaks = this.detectPeaks(this.state.superdata.datasets[0].data);
    
-      
+      console.log("peaks", peaks)
       const levels = this.detectSupportResistance(peaks);
-   
+   console.log("levels", levels)
       let ColorLinea =""
       let ultimoElemento =  this.state.superdata.datasets[0].data[this.state.superdata.datasets[0].data.length - 1];
       let peniultimoElemento =  this.state.superdata.datasets[0].data[this.state.superdata.datasets[0].data.length - 2];
