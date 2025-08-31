@@ -576,7 +576,27 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                         <div className="comprobante-upload" style={{marginTop:16}}>
                           <input type="file" accept="image/*,application/pdf" onChange={e => setComprobante(e.target.files[0])} style={{marginBottom:10,width:'100%',padding:'10px',borderRadius:10,border:'2px solid #e3f2fd',background:'#f7fafd',fontWeight:600}} />
                           {comprobanteError && <div className="pagos-error" style={{color:'#e53e3e',marginBottom:8}}>{comprobanteError}</div>}
-                          <button className="pagos-btn confirm-btn" onClick={handleComprobanteUpload} disabled={uploading || !comprobante} style={{width:'100%',padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',color:'#fff',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.12)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}}>{uploading ? "Subiendo..." : "Subir Comprobante"}</button>
+                          <button
+  className="pagos-btn confirm-btn"
+  onClick={handleComprobanteUpload}
+  disabled={uploading || !comprobante}
+  style={{
+    width: '100%',
+    padding: '14px 0',
+    fontSize: 18,
+    fontWeight: 700,
+    background: 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 12,
+    boxShadow: '0 4px 16px rgba(25,118,210,0.12)',
+    letterSpacing: 1,
+    transition: 'background 0.2s, box-shadow 0.2s',
+    cursor: 'pointer'
+  }}
+>
+  {uploading ? "Subiendo..." : "Subir Comprobante"}
+</button>
                         </div>
                       </div>
                       <div style={{marginTop:32}}>
@@ -650,8 +670,7 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                           });
                           const result = await res.json();
                           if (result.status === "ok") {
-                            alert("¡Membresía activada! Tu membresía ha sido activada correctamente. Inicia sesión para disfrutar los beneficios.");
-                            window.location.href = "/ingreso";
+                            setStep("paypalSuccess");
                           } else {
                             alert(result.error || "Error al activar membresía");
                           }
@@ -706,7 +725,7 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                           });
                         }}
                         onApprove={async (data, actions) => {
-                          alert(data.subscriptionID);
+                          // alert(data.subscriptionID); // <-- Eliminar esta línea para no mostrar el mensaje del local host
                           // Simula el mismo flujo que pago único
                           try {
                             const res = await fetch("/api/activar-membresia-paypal", {
@@ -723,8 +742,7 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                             });
                             const result = await res.json();
                             if (result.status === "ok") {
-                              alert("¡Membresía activada! Tu membresía ha sido activada correctamente. Inicia sesión para disfrutar los beneficios.");
-                              window.location.href = "/ingreso";
+                              setStep("paypalSuccess");
                             } else {
                               alert(result.error || "Error al activar membresía");
                             }
@@ -1036,6 +1054,25 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                 <button type="submit" className="pagos-btn" style={{width:'100%',padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',color:'#fff',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.12)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}} disabled={loading}>{loading ? "Registrando..." : (registerStep < 2 ? "Siguiente" : "Registrar")}</button>
               </div>
             </form>
+          </div>
+        );
+      case "paypalSuccess":
+        return (
+          <div style={{maxWidth:400,margin:'0 auto',background:'#fff',borderRadius:20,padding:'32px 16px',boxSizing:'border-box',boxShadow:'0 4px 24px rgba(44,62,80,0.10)'}}>
+            <h2 style={{fontSize:'1.6rem',fontWeight:700,marginBottom:8,color:'#1976d2'}}>¡Membresía Activada!</h2>
+            <p style={{fontSize:'1rem',color:'#718096',marginBottom:24,textAlign:'center'}}>Tu membresía ha sido activada correctamente. Inicia sesión para disfrutar de todos los beneficios.</p>
+            <button className="pagos-btn" onClick={() => {
+              dispatch(logOut());
+              dispatch(cleanData());
+              localStorage.removeItem("state");
+              localStorage.removeItem("jwt_token");
+              window.location.href = "/ingreso";
+            }} style={{width:'100%',padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',color:'#fff',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.12)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}}>
+              Ir a Iniciar Sesión
+            </button>
+            <div style={{marginTop:16,fontSize:14,color:'#888',textAlign:'center'}}>
+              ¿Tienes dudas? Contacta a soporte: <a href="mailto:soporte@activos.ec" style={{color:'#1976d2',textDecoration:'underline'}}>soporte@activos.ec</a>
+            </div>
           </div>
         );
       default:
