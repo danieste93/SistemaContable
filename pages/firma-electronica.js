@@ -402,7 +402,10 @@ export default function FirmaElectronica() {
           }
           * { box-sizing: border-box; }
           body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background-color: #ffffff; color: #111827; transition: background-color 0.3s ease, color 0.3s ease; }
-          .container { max-width: 100%; padding: 30px 20px 140px 20px; margin: auto; }
+          .container { max-width: 100%; padding: 30px 40px 140px 40px; margin: auto; }
+          @media (max-width: 700px) {
+            .container { padding: 18px 12px 90px 12px; }
+          }
           .container.dark {
             background: linear-gradient(120deg, #18181b 60%, #23232a 100%);
             color: #e5e7eb;
@@ -449,7 +452,6 @@ export default function FirmaElectronica() {
             box-shadow: 0 4px 18px #6366f133, 0 1px 0 #fff1;
           }
           .container.dark .precaution { background: rgba(30,30,40,0.85); border-color: #6366f1; color: #e5e7eb; box-shadow: 0 2px 12px #6366f122; backdrop-filter: blur(2px); }
-          .container.dark .precaution h2 { color: #e5e7eb; }
           .container.dark .dark-toggle { background: linear-gradient(90deg, #6366f1 60%, #312e81 100%); color: #fff; box-shadow: 0 2px 8px #6366f144; }
           .container.dark .dark-toggle:hover { background: linear-gradient(90deg, #312e81 60%, #6366f1 100%); }
           .container.dark .free-button { background: linear-gradient(90deg, #6366f1 60%, #312e81 100%); color: #fff; box-shadow: 0 2px 8px #6366f144; }

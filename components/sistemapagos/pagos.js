@@ -438,13 +438,54 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                 setLoading(false);
               }
             }}>
-              <input type="text" className="pagos-input" placeholder="Nombres" value={facturacion.Nombres} onChange={e => setFacturacion(f => ({ ...f, Nombres: e.target.value }))} required style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
-              <input type="text" className="pagos-input" placeholder="Cédula o RUC" value={facturacion.CedulaoRuc} onChange={e => setFacturacion(f => ({ ...f, CedulaoRuc: e.target.value }))} required style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
-              <input type="email" className="pagos-input" placeholder="Correo para Factura" value={facturacion.Correo} onChange={e => setFacturacion(f => ({ ...f, Correo: e.target.value }))} required style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
+              <input
+                type="text"
+                className="pagos-input"
+                placeholder="Nombres"
+                value={facturacion.Nombres}
+                onChange={e => {
+                  let val = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+                  // Capitaliza la primera letra de cada palabra
+                  val = val.replace(/\b(\w)/g, c => c.toUpperCase());
+                  setFacturacion(f => ({ ...f, Nombres: val }));
+                }}
+                required
+                style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}}
+              />
+              <input
+                type="text"
+                className="pagos-input"
+                placeholder="Cédula o RUC"
+                value={facturacion.CedulaoRuc}
+                onChange={e => {
+                  let val = e.target.value.replace(/[^0-9]/g, ""); // Solo números
+                  if (val.length > 13) val = val.slice(0, 13); // Máximo 13 dígitos
+                  setFacturacion(f => ({ ...f, CedulaoRuc: val }));
+                }}
+                required
+                minLength={10}
+                maxLength={13}
+                style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}}
+              />
+              <input
+                type="email"
+                className="pagos-input"
+                placeholder="Correo para Factura"
+                value={facturacion.Correo}
+                onChange={e => {
+                  let val = e.target.value.replace(/\s/g, ""); // Elimina espacios
+                  setFacturacion(f => ({ ...f, Correo: val }));
+                }}
+                required
+                style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}}
+              />
               <input type="tel" className="pagos-input" placeholder="Teléfono" value={facturacion.Telefono} onChange={e => setFacturacion(f => ({ ...f, Telefono: e.target.value }))} style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
               <input type="text" className="pagos-input" placeholder="Dirección" value={facturacion.Direccion} onChange={e => setFacturacion(f => ({ ...f, Direccion: e.target.value }))} required style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
               {facturacionError && <div className="pagos-error" style={{color:'#e53e3e',marginBottom:8}}>{facturacionError}</div>}
-              <button type="submit" className="pagos-btn confirm-btn" style={{width:'100%',padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',color:'#fff',border:'none',borderRadius:12,marginTop:12,boxShadow:'0 4px 16px rgba(25,118,210,0.12)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}} disabled={loading}>{loading ? "Guardando..." : "Guardar y Continuar"}</button>
+              <div style={{display:'flex',gap:12,marginTop:12}}>
+                <button className="pagos-btn" type="button" style={{flex:1,padding:'13px 0',fontSize:16,fontWeight:600,background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',color:'#1976d2',border:'none',borderRadius:12,boxShadow:'0 2px 8px rgba(25,118,210,0.08)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}} onClick={()=>setStep('planSelection')}>← Atrás</button>
+                <button type="submit" className="pagos-btn confirm-btn" style={{flex:2,padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',color:'#fff',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.12)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}} disabled={loading}>{loading ? "Guardando..." : "Guardar y Continuar"}</button>
+              </div>
             </form>
           </div>
         );
@@ -470,38 +511,53 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
             )}
             <h2 style={{fontSize:'1.6rem',fontWeight:700,marginBottom:8,color:'#1976d2'}}>Formas de Pago</h2>
             <div className="formas-pago-toggle" style={{display:'flex',justifyContent:'center',marginBottom:24,gap:8}}>
-              <button className={step === "transferencia" ? "active" : ""} style={{flex:1,padding:'14px 0',border:'none',borderRadius:12,fontWeight:700,fontSize:16,color:step === "transferencia" ? '#fff' : '#1976d2',background:step === "transferencia" ? 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)' : '#e3f2fd',boxShadow:step === "transferencia" ? '0 4px 16px rgba(25,118,210,0.12)' : 'none',cursor:'pointer',transition:'background 0.2s, box-shadow 0.2s'}} disabled>Transferencia</button>
+              <button className={step === "transferencia" ? "active" : ""} style={{flex:1,padding:'14px 0',border:'none',borderRadius:12,fontWeight:700,fontSize:16,color:step === "transferencia" ? '#fff' : '#1976d2',background:step === "transferencia" ? 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)' : '#e3f2fd',boxShadow:step === "transferencia" ? '0 4px 16px rgba(25,118,210,0.12)' : 'none',cursor:'pointer',transition:'background 0.2s, box-shadow 0.2s'}} onClick={()=>setStep("transferencia")}>Transferencia</button>
               <button className={step === "paypal" ? "active" : ""} style={{flex:1,padding:'14px 0',border:'none',borderRadius:12,fontWeight:700,fontSize:16,color:step === "paypal" ? '#fff' : '#1976d2',background:step === "paypal" ? 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)' : '#e3f2fd',boxShadow:step === "paypal" ? '0 4px 16px rgba(25,118,210,0.12)' : 'none',cursor:'pointer',transition:'background 0.2s, box-shadow 0.2s'}} onClick={()=>setStep("paypal")}>Paypal</button>
             </div>
-            <div className="transferencia-section" style={{marginTop:12}}>
-              <h3 style={{fontSize:'1.1rem',fontWeight:600,color:'#1976d2',marginBottom:12}}>Selecciona el banco</h3>
-              {!selectedBanco ? (
-                <div className="bancos-list-minimal" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:18}}>
-                  {bancos.map((banco, idx) => (
-                    <div key={idx} className={`banco-min-card`} onClick={() => setSelectedBanco(banco)} style={{background:'#f7fafc',borderRadius:12,padding:16,textAlign:'center',cursor:'pointer',fontWeight:700,color:'#6366f1',border:'2px solid #e2e8f0',transition:'border 0.2s, box-shadow 0.2s'}}>
-                      <span>{banco.nombre}</span>
-                    </div>
-                  ))}
+            {step === "transferencia" && (
+              <div style={{display:'flex',flexDirection:'column',gap:0}}>
+                <div className="transferencia-section" style={{marginTop:12}}>
+                  {/* Solo muestra el mensaje si no hay banco seleccionado */}
+                  {!selectedBanco && (
+                    <h3 style={{fontSize:'1.1rem',fontWeight:600,color:'#1976d2',marginBottom:12}}>Selecciona el banco</h3>
+                  )}
+                  {!selectedBanco ? (
+                    <>
+                      <div className="bancos-list-minimal" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:18}}>
+                        {bancos.map((banco, idx) => (
+                          <div key={idx} className={`banco-min-card`} onClick={() => setSelectedBanco(banco)} style={{background:'#f7fafc',borderRadius:12,padding:16,textAlign:'center',cursor:'pointer',fontWeight:700,color:'#6366f1',border:'2px solid #e2e8f0',transition:'border 0.2s, box-shadow 0.2s'}}>
+                            <span>{banco.nombre}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{marginTop:32}}>
+                        <button className="pagos-btn" style={{width:'100%',padding:'13px 0',fontSize:16,fontWeight:600,background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',color:'#1976d2',border:'none',borderRadius:12,boxShadow:'0 2px 8px rgba(25,118,210,0.08)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer',marginBottom:0}} onClick={()=>setStep("facturacion")}>← Atrás</button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <button className="pagos-btn" style={{marginBottom:16,padding:'10px 0',width:'100%',fontSize:16,fontWeight:600,background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',color:'#1976d2',border:'none',borderRadius:10,boxShadow:'0 2px 8px rgba(25,118,210,0.08)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}} onClick={()=>setSelectedBanco(null)}>← Seleccionar otro banco</button>
+                      <div className="banco-info-pro" style={{background:'#fff',borderRadius:16,boxShadow:'0 2px 8px rgba(25,118,210,0.08)',padding:18,marginBottom:12,textAlign:'left',border:'2px solid #e3f2fd'}}>
+                        <h4 style={{color:'#1976d2',marginBottom:8,fontSize:'1.1rem',fontWeight:700}}>{selectedBanco?.nombre || ''}</h4>
+                        <div style={{marginBottom:4}}><strong>Cuenta de ahorros:</strong> {selectedBanco?.cuenta || ''}</div>
+                        <div style={{marginBottom:4}}><strong>Titular:</strong> {selectedBanco?.titular || ''}</div>
+                        <div style={{marginBottom:4}}><strong>CI:</strong> {selectedBanco?.ci || ''}</div>
+                        {selectedBanco?.telefono && <div style={{marginBottom:4}}><strong>Teléfono:</strong> {selectedBanco.telefono}</div>}
+                        <div style={{marginBottom:4}}><strong>Correo:</strong> {selectedBanco?.correo || ''}</div>
+                        <div className="comprobante-upload" style={{marginTop:16}}>
+                          <input type="file" accept="image/*,application/pdf" onChange={e => setComprobante(e.target.files[0])} style={{marginBottom:10,width:'100%',padding:'10px',borderRadius:10,border:'2px solid #e3f2fd',background:'#f7fafd',fontWeight:600}} />
+                          {comprobanteError && <div className="pagos-error" style={{color:'#e53e3e',marginBottom:8}}>{comprobanteError}</div>}
+                          <button className="pagos-btn confirm-btn" onClick={handleComprobanteUpload} disabled={uploading || !comprobante} style={{width:'100%',padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',color:'#fff',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.12)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}}>{uploading ? "Subiendo..." : "Subir Comprobante"}</button>
+                        </div>
+                      </div>
+                      <div style={{marginTop:32}}>
+                        <button className="pagos-btn" style={{width:'100%',padding:'13px 0',fontSize:16,fontWeight:600,background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',color:'#1976d2',border:'none',borderRadius:12,boxShadow:'0 2px 8px rgba(25,118,210,0.08)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer',marginBottom:0}} onClick={()=>setStep("facturacion")}>← Atrás</button>
+                      </div>
+                    </>
+                  )}
                 </div>
-              ) : (
-                <>
-                  <button className="pagos-btn" style={{marginBottom:16,padding:'10px 0',width:'100%',fontSize:16,fontWeight:600,background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',color:'#1976d2',border:'none',borderRadius:10,boxShadow:'0 2px 8px rgba(25,118,210,0.08)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}} onClick={()=>setSelectedBanco(null)}>← Seleccionar otro banco</button>
-                  <div className="banco-info-pro" style={{background:'#fff',borderRadius:16,boxShadow:'0 2px 8px rgba(25,118,210,0.08)',padding:18,marginBottom:12,textAlign:'left',border:'2px solid #e3f2fd'}}>
-                    <h4 style={{color:'#1976d2',marginBottom:8,fontSize:'1.1rem',fontWeight:700}}>{selectedBanco?.nombre || ''}</h4>
-                    <div style={{marginBottom:4}}><strong>Cuenta de ahorros:</strong> {selectedBanco?.cuenta || ''}</div>
-                    <div style={{marginBottom:4}}><strong>Titular:</strong> {selectedBanco?.titular || ''}</div>
-                    <div style={{marginBottom:4}}><strong>CI:</strong> {selectedBanco?.ci || ''}</div>
-                    {selectedBanco?.telefono && <div style={{marginBottom:4}}><strong>Teléfono:</strong> {selectedBanco.telefono}</div>}
-                    <div style={{marginBottom:4}}><strong>Correo:</strong> {selectedBanco?.correo || ''}</div>
-                    <div className="comprobante-upload" style={{marginTop:16}}>
-                      <input type="file" accept="image/*,application/pdf" onChange={e => setComprobante(e.target.files[0])} style={{marginBottom:10,width:'100%',padding:'10px',borderRadius:10,border:'2px solid #e3f2fd',background:'#f7fafd',fontWeight:600}} />
-                      {comprobanteError && <div className="pagos-error" style={{color:'#e53e3e',marginBottom:8}}>{comprobanteError}</div>}
-                      <button className="pagos-btn confirm-btn" onClick={handleComprobanteUpload} disabled={uploading || !comprobante} style={{width:'100%',padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',color:'#fff',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.12)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}}>{uploading ? "Subiendo..." : "Subir Comprobante"}</button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         );
       case "paypal":
@@ -512,9 +568,24 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
               <h2 style={{marginTop:12,fontWeight:700,color:'#1976d2',letterSpacing:1}}>Pagar con Paypal</h2>
             </div>
             {!paypalStep && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24, gap:8 }}>
-                <button className="pagos-btn" style={{flex:1,padding:'14px 0',fontSize:16,fontWeight:700,background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',color:'#1976d2',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.08)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer',marginRight:8}} onClick={() => setPaypalStep("single")}>Pago único</button>
-                <button className="pagos-btn" style={{flex:1,padding:'14px 0',fontSize:16,fontWeight:700,background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',color:'#fff',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.12)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}} onClick={() => setPaypalStep("auto")}>Suscripción</button>
+              <>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24, gap:8 }}>
+                  <button className="pagos-btn" style={{flex:1,padding:'14px 0',fontSize:16,fontWeight:700,background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',color:'#1976d2',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.08)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer',marginRight:8}} onClick={() => setPaypalStep("single")}>Pago único</button>
+                  <button className="pagos-btn" style={{flex:1,padding:'14px 0',fontSize:16,fontWeight:700,background:'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',color:'#fff',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.12)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}} onClick={() => setPaypalStep("auto")}>Suscripción</button>
+                </div>
+                <div style={{marginTop:32}}>
+                  <button className="pagos-btn" style={{width:'100%',padding:'13px 0',fontSize:16,fontWeight:600,background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',color:'#1976d2',border:'none',borderRadius:12,boxShadow:'0 2px 8px rgba(25,118,210,0.08)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer',marginBottom:0}} onClick={()=>setStep("transferencia")}>← Atrás</button>
+                </div>
+              </>
+            )}
+            {paypalStep === "single" && (
+              <div style={{margin:'0 0 24px 0',padding:'16px',background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',borderRadius:12,boxShadow:'0 2px 8px rgba(25,118,210,0.08)',color:'#1976d2',fontWeight:600,fontSize:'1rem',textAlign:'center',letterSpacing:0.5}}>
+                <span>Este pago único <strong>no se renueva automáticamente</strong>. Si deseas continuar el servicio después del periodo, deberás realizar un nuevo pago manualmente.</span>
+              </div>
+            )}
+            {paypalStep === "auto" && (
+              <div style={{margin:'0 0 24px 0',padding:'16px',background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',borderRadius:12,boxShadow:'0 2px 8px rgba(25,118,210,0.08)',color:'#1976d2',fontWeight:600,fontSize:'1rem',textAlign:'center',letterSpacing:0.5}}>
+                <span>Este pago es una <strong>membresía que se renueva automáticamente</strong> cada periodo. Puedes cancelar la suscripción desde tu cuenta de Paypal o en <a href="https://activos.ec/configuracion-general" target="_blank" rel="noopener noreferrer" style={{color:'#1565c0',textDecoration:'underline'}}>activos.ec/configuracion-general</a>.</span>
               </div>
             )}
             {(paypalStep === "single" || paypalStep === "auto") && (
@@ -522,7 +593,7 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                 <PayPalScriptProvider options={{ "client-id": "AbsN1lxgxK9UDzodAY0RwHG-N2dZIBTdWJiy7m2dJJjVtDrw4aguKvSp9G8MmEARVhu4jaquxAhesqeU", currency: "USD", vault: true }}>
                   {paypalStep === "single" && (
                     <PayPalButtons
-                      style={{ shape: 'pill', color: 'blue', layout: 'vertical', label: 'subscribe' }}
+                      style={{ shape: 'pill', color: 'blue', layout: 'vertical', label: 'pay' }}
                       createOrder={(data, actions) => {
                         return actions.order.create({
                           purchase_units: [{
@@ -639,11 +710,8 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
                     </>
                   )}
                 </PayPalScriptProvider>
-                <button className="pagos-btn" style={{marginTop:24,width:'100%',padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',color:'#1976d2',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.08)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer'}} onClick={()=>setPaypalStep("")}>Volver</button>
+                <button className="pagos-btn" style={{width:'100%',padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',color:'#1976d2',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.08)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer',marginTop:8}} onClick={()=>setPaypalStep("")}>← Atrás</button>
               </div>
-            )}
-            {!paypalStep && (
-              <button className="pagos-btn" style={{width:'100%',padding:'14px 0',fontSize:18,fontWeight:700,background:'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',color:'#1976d2',border:'none',borderRadius:12,boxShadow:'0 4px 16px rgba(25,118,210,0.08)',letterSpacing:1,transition:'background 0.2s, box-shadow 0.2s',cursor:'pointer',marginTop:8}} onClick={()=>setStep("planSelection")}>Volver</button>
             )}
           </div>
         );
@@ -854,7 +922,6 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
         return null;
     }
   }
-
   return (
     <div className="pagos-modal-bg" onClick={onClose}>
       <div className="pagos-modal" onClick={(e) => e.stopPropagation()}>
