@@ -54,6 +54,9 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
   const [registerStep, setRegisterStep] = useState(0);
   const [regUsuario, setRegUsuario] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [regPasswordRepeat, setRegPasswordRepeat] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordStrengthLabel, setPasswordStrengthLabel] = useState("");
   const [regTelefono, setRegTelefono] = useState("");
   const [registerError, setRegisterError] = useState("");
   const [password, setPassword] = useState("");
@@ -177,6 +180,16 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
     if (registerStep < 2) {
       setRegisterStep(registerStep + 1);
       return;
+    }
+    if (registerStep === 2) {
+      if (regPassword.length < 6 || !/[A-Z]/.test(regPassword) || !/[0-9]/.test(regPassword)) {
+        setRegisterError("La contraseña debe tener al menos 6 caracteres, una mayúscula y un número.");
+        return;
+      }
+      if (regPassword !== regPasswordRepeat) {
+        setRegisterError("Las contraseñas no coinciden.");
+        return;
+      }
     }
     setLoading(true);
     try {
@@ -308,7 +321,7 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
   formData.append("comprobante", comprobante);
   formData.append("duration", duration);
   formData.append("banco", selectedBanco?.nombre || "");
-  formData.append("plan", selectedPlan?.name || "");
+  formData.append("plan", (selectedPlan?.name || "").toUpperCase());
         const res = await fetch("/api/subir-comprobante-mem", {
           method: "POST",
           body: formData
@@ -902,9 +915,100 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
             </div>
             <form onSubmit={handleRegister}>
               <input type="email" className="pagos-input" value={email} disabled name="email" autoComplete="email" style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />
-              {registerStep === 0 && <input type="text" className="pagos-input" placeholder="Nombre de usuario" value={regUsuario} onChange={e => setRegUsuario(e.target.value)} disabled={loading} autoFocus required name="username" style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />}
-              {registerStep === 1 && <input type="tel" className="pagos-input" placeholder="Teléfono" value={regTelefono} onChange={e => setRegTelefono(e.target.value)} disabled={loading} autoFocus required name="phone" style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />}
-              {registerStep === 2 && <input type="password" className="pagos-input" placeholder="Contraseña (mín. 6 caracteres)" value={regPassword} onChange={e => setRegPassword(e.target.value)} disabled={loading} autoFocus required name="password" style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}} />}
+              {registerStep === 0 && (
+                <input
+                  type="text"
+                  className="pagos-input"
+                  placeholder="Nombre de usuario"
+                  value={regUsuario}
+                  onChange={e => {
+                    let val = e.target.value
+                      .replace(/[^a-zA-Z0-9]/g, "") // solo letras y números
+                      .replace(/\s/g, "") // sin espacios
+                      .toLowerCase(); // minúsculas
+                    if (val.length > 16) val = val.slice(0, 16); // máximo 16
+                    setRegUsuario(val);
+                  }}
+                  minLength={4}
+                  maxLength={16}
+                  disabled={loading}
+                  autoFocus
+                  required
+                  name="username"
+                  style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}}
+                />
+              )}
+              {registerStep === 1 && (
+                <input
+                  type="tel"
+                  className="pagos-input"
+                  placeholder="Teléfono"
+                  value={regTelefono}
+                  onChange={e => {
+                    let val = e.target.value.replace(/[^0-9]/g, ""); // solo números
+                    if (val.length > 16) val = val.slice(0, 16); // máximo 16 dígitos
+                    setRegTelefono(val);
+                  }}
+                  minLength={7}
+                  maxLength={16}
+                  disabled={loading}
+                  autoFocus
+                  required
+                  name="phone"
+                  style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}}
+                />
+              )}
+              {registerStep === 2 && (
+                <>
+                  <input
+                    type="password"
+                    className="pagos-input"
+                    placeholder="Contraseña (mín. 6 caracteres, 1 mayúscula y 1 número)"
+                    value={regPassword}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setRegPassword(val);
+                      // Strength calculation
+                      let strength = 0;
+                      if (val.length >= 6) strength++;
+                      if (/[A-Z]/.test(val)) strength++;
+                      if (/[0-9]/.test(val)) strength++;
+                      if (val.length >= 10) strength++;
+                      setPasswordStrength(strength);
+                      if (strength <= 1) setPasswordStrengthLabel("Débil");
+                      else if (strength === 2) setPasswordStrengthLabel("Media");
+                      else if (strength >= 3) setPasswordStrengthLabel("Fuerte");
+                    }}
+                    disabled={loading}
+                    autoFocus
+                    required
+                    name="password"
+                    minLength={6}
+                    style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}}
+                  />
+                  <div style={{width:'100%',height:8,background:'#e3f2fd',borderRadius:6,marginBottom:8,overflow:'hidden'}}>
+                    <div style={{width: `${passwordStrength * 33}%`,height:'100%',background: passwordStrength >= 3 ? '#43a047' : passwordStrength === 2 ? '#fbc02d' : '#e53935',transition:'width 0.3s'}}></div>
+                  </div>
+                  <div style={{fontWeight:600,color: passwordStrength >= 3 ? '#43a047' : passwordStrength === 2 ? '#fbc02d' : '#e53935',marginBottom:8}}>{passwordStrengthLabel}</div>
+                  <input
+                    type="password"
+                    className="pagos-input"
+                    placeholder="Repetir contraseña"
+                    value={regPasswordRepeat}
+                    onChange={e => setRegPasswordRepeat(e.target.value)}
+                    disabled={loading}
+                    required
+                    name="password_repeat"
+                    minLength={6}
+                    style={{width:'100%',boxSizing:'border-box',padding:'14px 18px',borderRadius:12,border:'2px solid #e3f2fd',fontSize:18,background:'linear-gradient(90deg, #f7fafd 0%, #e3f2fd 100%)',boxShadow:'0 4px 16px rgba(25,118,210,0.10)',outline:'none',color:'#222',letterSpacing:1,fontWeight:600,marginTop:0,marginBottom:12,textAlign:'left',transition:'border-color 0.3s, box-shadow 0.3s'}}
+                  />
+                  {regPasswordRepeat && regPassword !== regPasswordRepeat && (
+                    <div className="pagos-error" style={{color:'#e53e3e',marginBottom:8}}>
+                      Las contraseñas no coinciden
+                    </div>
+                  )}
+                </>
+              )}
               {registerError && <div className="pagos-error" style={{color:'#e53e3e',marginBottom:8}}>{registerError}</div>}
               <div style={{display:'flex',gap:12,marginTop:12}}>
                 {registerStep > 0 && (
