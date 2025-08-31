@@ -13,9 +13,10 @@ import Forge  from 'node-forge';
 import Checkbox from '@material-ui/core/Checkbox';
 import SecureFirm from '../snippets/getSecureFirm';
 import NotaCredito from "../../public/static/NotaCreditoTemplate"
-import {updateVenta} from "../../reduxstore/actions/regcont"
-import Cuentas from "../cuentascompo/modalcuentas"
 
+import { addRegs, updateVenta, updateCuentas } from '../../reduxstore/actions/regcont';
+import Cuentas from "../cuentascompo/modalcuentas"
+import { ThreeSixtySharp } from '@material-ui/icons';
 
 class Contacto extends Component {
    
@@ -208,7 +209,7 @@ let data = await fetchData(this.props.state.userReducer,
     }  
 
 
-      genNotaCredito= async(SuperTotal, IvaEC)=>{
+      genNotaCredito= async(SuperTotal, IvaEC, valorModificacion)=>{
 
         this.setState({loading:true})
         
@@ -459,9 +460,12 @@ let data = await fetchData(this.props.state.userReducer,
                 }
 
                 let PDFdata = {
+                    ValorModificacion:valorModificacion,
                     CuentaCliente:this.state.cuentaCliente,
-                    vendedorCont,
-                    IDVenta:this.props.datos._id,
+                     Vendedor: vendedorCont,
+                    Tiempo:new Date().getTime(),
+                    _id:this.props.datos._id,
+                     IDVenta:this.props.datos.iDVenta,
                     ClaveAcceso:clavefinal, 
                     numeroAuto,
                      fechaAuto,
@@ -555,7 +559,9 @@ let data = await fetchData(this.props.state.userReducer,
                     if(response.status== "Ok"){
 
                       this.props.dispatch(updateVenta(response.updateVenta));
-                      this.Onsalida()
+                       this.props.dispatch(addRegs(response.arrRegsSend));
+                        this.props.dispatch(updateCuentas(response.arrCuentas));
+                        this.Onsalida()
                       let add = {
                         Estado:true,
                         Tipo:"success",
@@ -1134,8 +1140,8 @@ phone
        
          </div>
          <ValidatorForm
-   
-   onSubmit={()=>this.genNotaCredito(SuperTotal, IvaEC)}
+
+   onSubmit={()=>this.genNotaCredito(SuperTotal, IvaEC, valorModificacion)}
    onError={errors => console.log(errors)}
 >
     <div className="ContJustificacion">
@@ -1174,7 +1180,7 @@ phone
          <div className="contBotonPago">
                <button className={` btn btn-success botonedit2  `}
                 type='submit'
-                disabled={valorModificacion <= 0}
+                disabled={valorModificacion <= 0 || this.state.cuentaCliente == ""}
                 >
 <p>Generar</p>
 <i className="material-icons">
@@ -1194,37 +1200,35 @@ phone
 </div>
         </div>
 
+
+ {  this.state.cuentasmodal&&  < Cuentas 
+         FiltroP ={"CuentasNoPosesion" }
+               cuentacaller={"" }
+               cuentaEnviada={"" }
+               sendCuentaSelect={(cuenta)=>{
+           
+           this.setState({cuentasmodal:false, 
+            cuentaCliente:cuenta,
+            
+          })
+             
+               } }  
+            
+               Flecharetro3={
+                ()=>{
+                    this.setState({cuentasmodal:false, cuentaCliente:"" })
+                  }
+                        } 
+                      
+                       />}
+
+
                    <Snackbar open={this.state.Alert.Estado} autoHideDuration={10000} onClose={handleClose}>
             <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
                 <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>
             
             </Alert>
           </Snackbar>
-
-
-
-  {  this.state.cuentasmodal&&  < Cuentas 
-        
-               cuentacaller={"" }
-               cuentaEnviada={"" }
-               sendCuentaSelect={(cuenta)=>{
-           console.log(cuenta)
-
-           this.setState({cuentasmodal:false, 
-            cuentaCliente:cuenta,
-         
-          })
-             
-               } }  
-               FiltroP={"CuentasNoPosesion"}
-               Flecharetro3={
-                ()=>{
-                    this.setState({cuentasmodal:false, CuentaSelect:"" })
-                  }
-                        } 
-                      
-                       />}
-
         <style jsx >{`
            .maincontactoGenN{
             z-index: 1298;

@@ -4,7 +4,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import NotaCredito from "../public/static/NotaCreditoTemplate"
 import ModalDeleteGeneral from './cuentascompo/modal-delete-general';
 import { Animate } from "react-animate-mount";
-import {updateVenta} from "../reduxstore/actions/regcont"
+
 class Contacto extends Component {
   state={
 Html:"",

@@ -3506,18 +3506,78 @@ let nuevosFC = getVenta.FormasCredito.concat(arrpagos)
     let conn = await mongoose.connection.useDb(req.body.Userdata.DBname)
     let VentaModelSass = await conn.model('Venta', ventasSchema);
     let CounterModelSass = await conn.model('Counter', counterSchema);
-  
+   let CuentasModelSass = await conn.model('Cuenta', accountSchema);
+       let RegModelSass = await conn.model('Reg', regSchema);
+         let CatModelSass = await conn.model('Categoria', catSchema);
     const session = await mongoose.startSession();   
     session.startTransaction();
 
     try{
+  let data = req.body.PDFdata
+      
+       let arrRegs = []
+        let arrRegsSend = []
+            let arrCuentas = []
+            let counterRegs = 0
+             let findIdReg = await CounterModelSass.find({iDgeneral:9999999}, null,{session})
+  let catIngInv=  await CatModelSass.find({idCat:5}, null,{session, new:true} )
 
+           const fixedImport = new mongoose.Types.Decimal128(data.ValorModificacion)
 
-let update={NotaCredito: req.body.PDFdata}
+           let datareg= {
+          
+             Documento:data.Doctype,
+             Accion:"Ingreso",   
+           Tiempo:data.Tiempo,
+           TiempoEjecucion:data.Tiempo,
+           IdRegistro:findIdReg[0].ContRegs,
+         
+           CuentaSelec:{idCuenta:data.CuentaCliente._id,
+                        nombreCuenta: data.CuentaCliente.NombreC,
+                      },
+         
+                      CatSelect:{
+                        idCat:catIngInv[0].idCat,
+                       urlIcono:catIngInv[0].urlIcono,
+                       nombreCat:catIngInv[0].nombreCat,
+                       subCatSelect:catIngInv[0].subCatSelect,
+                       _id:catIngInv[0]._id,
+                  
+                     },
+         
+           Nota:"Nota de Crédito de la Venta N°"+ data.IDVenta,
+           Descripcion:"", 
+           Estado:false,
+           urlImg:[],
+           Valrep:"",
+           TipoRep:"No",
+           Importe:fixedImport,
+           Usuario:{
+             Nombre:data.Vendedor.Nombre,
+             Id:data.Vendedor.Id,
+             Tipo:data.Vendedor.Tipo,
+              
+           }}
+   let updateCuenta = { $inc: { DineroActual: fixedImport } }
+           let reg2 =  await RegModelSass.create([datareg],{session})
+           if(reg2[0] == null){
+            throw new Error("No se pudo crear el registro, intente despues")
+          }
+arrRegs.push(reg2[0]._id)
+ arrRegsSend.push(reg2[0])
+ let options = {new:true, session} 
+   let cuentaModi = await CuentasModelSass.findByIdAndUpdate(data.CuentaCliente._id, updateCuenta, options)
+          if(cuentaModi == null){
+            throw new Error(`No se pudo modificar la cuenta,${cuentaModi.NombreC} intente despues`)
+          }
+          arrCuentas.push(cuentaModi)
+        let newdata ={...data, arrRegs}
 
-      let updateVenta = await VentaModelSass.findByIdAndUpdate(req.body.PDFdata.IDVenta, update, {session, new:true})
+let update={NotaCredito: newdata}
 
-      let updatecounter = { $inc: { ContSecuencial: 1 } }
+      let updateVenta = await VentaModelSass.findByIdAndUpdate(req.body.PDFdata._id, update, {session, new:true})
+
+      let updatecounter = { $inc: { ContSecuencial: 1, ContRegs: 1 } }
       await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session} )
 
       pdf.create(req.body.Html, {
@@ -3712,7 +3772,7 @@ let update={NotaCredito: req.body.PDFdata}
 
       await session.commitTransaction();    
       session.endSession();                 
-      return res.send({status: "Ok", message: "nota Credito Agregada", updateVenta });
+      return res.send({status: "Ok", message: "nota Credito Agregada", updateVenta, arrRegsSend, arrCuentas});
       
 
      }
