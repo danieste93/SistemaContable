@@ -102,5 +102,5 @@ UserSchema.pre('save', function(next){
   this.Password = bcrypt.hashSync(this.Password, saltRounds);
   next();
 });
-// Exportamos el modelo para usarlo en otros ficheros
-module.exports = mongoose.model('usuarios', UserSchema);
+// Exportamos solo el esquema para usarlo en otros ficheros
+module.exports = UserSchema;

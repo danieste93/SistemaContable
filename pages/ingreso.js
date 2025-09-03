@@ -227,9 +227,6 @@ registroFuncion=(e)=>{
 
            const serializedState = JSON.stringify(localstate)
            localStorage.setItem("state", serializedState)
-           this.props.dispatch(cleanData());
-           this.props.dispatch(logOut());
-           
            this.props.dispatch(updateUser({usuario}))  
                   
             if(response.data.user.Tipo === "administrador"){
@@ -275,8 +272,6 @@ registroFuncion=(e)=>{
 
           const serializedState = JSON.stringify(localstate)
           localStorage.setItem("state", serializedState)
-          this.props.dispatch(cleanData());
-          this.props.dispatch(logOut());
           this.props.dispatch(updateUser({usuario}))  
 
 
@@ -331,8 +326,6 @@ this.setState({loading:false})
 
           const serializedState = JSON.stringify(localstate)
           localStorage.setItem("state", serializedState)
-          this.props.dispatch(cleanData());
-          this.props.dispatch(logOut());
           this.props.dispatch(updateUser({usuario}))  
 
 
@@ -678,8 +671,6 @@ inputProps={{ 'aria-label': 'primary checkbox' }}
 
           const serializedState = JSON.stringify(localstate)
           localStorage.setItem("state", serializedState)
-          this.props.dispatch(cleanData());
-          this.props.dispatch(logOut());
           this.props.dispatch(updateUser({usuario}))  
 
 

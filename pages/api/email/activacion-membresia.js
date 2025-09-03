@@ -1,6 +1,6 @@
 // Template y función para correo de activación de membresía
 
-export function getActivacionMembresiaHtml({ nombre, membresia, tiempo }) {
+ function getActivacionMembresiaHtml({ nombre, membresia, tiempo }) {
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -80,3 +80,4 @@ export function getActivacionMembresiaHtml({ nombre, membresia, tiempo }) {
 </body>
 </html>`;
 }
+module.exports = getActivacionMembresiaHtml;

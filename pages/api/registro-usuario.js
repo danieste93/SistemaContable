@@ -1,6 +1,6 @@
 
 import mongoose from 'mongoose';
-import UserSchema from '../../models/users';
+
 const UserSchema2 = require('../../models/users');
 
 export default async function handler(req, res) {
@@ -12,8 +12,7 @@ export default async function handler(req, res) {
   let MainConn = await mongoose.connection.useDb('datashop');
 
   try {
-    const UserModel = MainConn.models['usuarios'] ? MainConn.model('usuarios') : MainConn.model('usuarios', UserSchema);
-    let UserModelSass2 = await MainConn.model('usuarios', UserSchema2);
+     let UserModelSass2 = await MainConn.model('usuarios', UserSchema2);
     const usuarios = await UserModelSass2.find({ Email: correo });
     if (usuarios.length > 0) {
       return res.status(200).json({ registrado: true, mensaje: 'Usuario ya registrado, puede continuar con el pago.' });
