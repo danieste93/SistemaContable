@@ -1,9 +1,27 @@
 // 1) Imports
 import React, { useEffect, useState } from "react";
+import useUserRedux from '../components/useUserRedux';
 import WhatsappButton from "../components/WhatsappButton";
 import Head from "next/head";
+import Pagos from "../components/sistemapagos/pagos";
+
+const plansData = {
+  anual: [
+    { name: 'PRO', price: 45, id: 'pro-anual' },
+    { name: 'Plata', price: 115, id: 'plata-anual' },
+    { name: 'ORO', price: 200, id: 'oro-anual' },
+    { name: 'A MEDIDA', price: 500, id: 'amedida-anual' },
+  ],
+  mensual: [
+    { name: 'PRO', price: 4.50, id: 'pro-mensual' },
+    { name: 'Plata', price: 11.50, id: 'plata-mensual' },
+    { name: 'ORO', price: 22.50, id: 'oro-mensual' },
+    { name: 'A MEDIDA', price: 50, id: 'amedida-mensual' },
+  ]
+};
 
 export default function Precios() {
+  const user = useUserRedux();
   // 2) Estado de tema y toggles
   // Sincronizar scroll horizontal de ambas tablas en móvil
   useEffect(() => {
@@ -29,6 +47,8 @@ export default function Precios() {
   }, []);
   const [isDark, setIsDark] = useState(false);
   const [showDarkToggle, setShowDarkToggle] = useState(true);
+  const [showPagos, setShowPagos] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
   // Efecto: leer tema guardado y aplicarlo
   useEffect(() => {
@@ -59,6 +79,55 @@ export default function Precios() {
     }
   };
 
+  // Handler para mostrar el modal de pagos
+  const [showMembresiaModal, setShowMembresiaModal] = useState(false);
+  const [membresiaMsg, setMembresiaMsg] = useState("");
+
+  const handleCarritoClick = (planName, duration, price) => {
+    // Depuración: mostrar el objeto user
+    console.log('USER:', user);
+    // Validación de membresía activa para usuarios logeados
+    let expira;
+    if (user && user.Fechas && user.Fechas.ExpiraMem) {
+      expira = user.Fechas.ExpiraMem;
+    } else if (user && user.ExpiraMem) {
+      expira = user.ExpiraMem;
+    }
+    if (user && user.Membresia && ["PRO", "Premium", "Plata"].includes(user.Membresia)) {
+      const expiraDate = expira ? new Date(expira) : null;
+      const hoy = new Date();
+      console.log('Membresia:', user.Membresia, 'ExpiraMem:', expira, 'expiraDate:', expiraDate, 'Hoy:', hoy);
+      if (expiraDate && expiraDate > hoy) {
+        setMembresiaMsg(
+          <div style={{textAlign:'center',padding:'32px 18px',maxWidth:400,margin:'0 auto'}}>
+            <img src="https://contaluxestaging-b86e9da05a14.herokuapp.com/static/logo1.png" alt="Logo Contaluxe" style={{width:80,marginBottom:18,borderRadius:12,boxShadow:'0 2px 8px #6366f144'}} />
+            <h2 style={{color:'#6366f1',fontWeight:700,fontSize:'1.3em',marginBottom:12}}>¡Ya tienes una membresía activa!</h2>
+            <p style={{fontSize:'1.08em',color:'#232323',marginBottom:10}}>
+              Tu membresía <b style={{color:'#6366f1'}}>{user.Membresia}</b> está activa y caduca el <b style={{color:'#6366f1'}}>{expiraDate.toLocaleDateString()}</b>.<br/>
+              Si deseas hacer un <b>upgrade</b> de tu membresía, comunícate con <a href="https://api.whatsapp.com/send/?phone=%2B593962124673&text=Hola%2C+quiero+consultar+por+upgrade+de+membresía&type=phone_number&app_absent=0" target="_blank" style={{color:'#6366f1',textDecoration:'underline'}}>soporte</a>.
+            </p>
+            <button onClick={()=>setShowMembresiaModal(false)} style={{background:'#6366f1',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontWeight:600,marginTop:18,cursor:'pointer',boxShadow:'0 2px 8px #6366f144'}}>Cerrar</button>
+          </div>
+        );
+        setShowMembresiaModal(true);
+        return;
+      }
+    }
+    // Si no tiene membresía activa, puede avanzar
+    setSelectedPlan({ name: planName, duration, price });
+    setShowPagos(true);
+  };
+
+  const handlePlanConfirmed = (plan, user) => {
+    // Confirmar el pago solo después de la facturación
+    // Aquí podrías mostrar un modal de pago, redirigir, etc.
+    // Por ahora solo mostramos el mensaje y cerramos el modal
+    setTimeout(() => {
+      setShowPagos(false);
+      alert(`Procediendo al pago para el plan ${plan.name} (${plan.duration}) por $${plan.price}`);
+    }, 300); // Pequeño delay para asegurar que el flujo de facturación termine
+  }
+
   // 3) Secciones y acordeón (visual)
   const secciones = [
     'contable', 'registros', 'sri', 'inventario', 'punto-venta', 'tienda-online', 'almacenamiento'
@@ -66,6 +135,10 @@ export default function Precios() {
   const [abiertas, setAbiertas] = useState(Object.fromEntries(secciones.map(s => [s, true])));
   const handleToggleSeccion = (id) => setAbiertas(prev => ({ ...prev, [id]: !prev[id] }));
   const handleToggleAll = (open) => setAbiertas(Object.fromEntries(secciones.map(s => [s, open])));
+
+  function handleCotizarClick(plan) {
+    window.open('https://api.whatsapp.com/send/?phone=%2B593962124673&text=Hola%2C+quiero+m%C3%A1s+informaci%C3%B3n+sobre+las+membres%C3%ADas+de+Activos.ec&type=phone_number&app_absent=0', '_blank');
+  }
 
   return (
     <>
@@ -76,10 +149,18 @@ export default function Precios() {
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
       </Head>
       <main>
+        {/* Modal membresía activa */}
+        {showMembresiaModal && (
+          <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.18)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <div style={{background:'#fff',borderRadius:18,boxShadow:'0 2px 18px #6366f188',padding:'0 0 24px 0',maxWidth:420,width:'90vw'}}>
+              {membresiaMsg}
+            </div>
+          </div>
+        )}
         <div className="container" style={{ marginTop: 80 }}>
           {/* 4.1) Encabezado y botón tema */}
-          <h1>Elige tu Membresía - Activos.ec</h1>
-          <h2>Descubre todas las funciones disponibles en cada plan</h2>
+          <h1 className="titulo-minimalista">Elige tu Membresía</h1>
+          <h2 className="subtitulo-precios">Descubre todas las funciones disponibles en cada plan</h2>
 
           {showDarkToggle && (
             <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', margin: '0 0 12px 0' }}>
@@ -90,7 +171,7 @@ export default function Precios() {
           )}
 
           {/* 4.2) Tabla superior de precios (Anual/Mensual) */}
-          <div className="tabla-scroll tabla-sticky" id="stickyPrecios">
+          <div className="tabla-scroll tabla-sticky" id="stickyPrecios" style={{margin: '32px auto', padding: '0 16px', maxWidth: '900px'}}>
             <div style={{ minWidth: '600px' }}>
               <table id="tablaPrecios">
                 <thead>
@@ -100,7 +181,7 @@ export default function Precios() {
                     <th className="profesional">PRO</th>
                     <th className="plata">Plata</th>
                     <th className="premiun">ORO</th>
-                    <th className="personalizado">DIOS</th>
+                    <th className="personalizado">A MEDIDA</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -109,19 +190,51 @@ export default function Precios() {
                     <td className="libre centrado"><span className="precio">$0</span></td>
                     <td className="profesional centrado">
                       <span className="precio">$45</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('PRO', 'Anual', 45)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="plata centrado">
                       <span className="precio">$115</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('Plata', 'Anual', 115)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="premiun centrado">
                       <span className="precio">$200</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('ORO', 'Anual', 200)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="personalizado centrado">
-                      <span className="precio">$500</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a
+                        className="btn-cotizar"
+                        href="#"
+                        onClick={(e) => {e.preventDefault(); handleCotizarClick('A MEDIDA')}}
+                        style={{
+                          display: 'inline-block',
+                          padding: '6px 12px',
+                          fontSize: '0.95em',
+                          fontWeight: 700,
+                          background: 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 8,
+                          boxShadow: '0 2px 8px rgba(25,118,210,0.10)',
+                          letterSpacing: 1,
+                          transition: 'background 0.2s, box-shadow 0.2s',
+                          cursor: 'pointer',
+                          marginTop: 4,
+                          marginBottom: 2,
+                          textShadow: '0 1px 4px rgba(25,118,210,0.10)',
+                          textDecoration: 'none',
+                          outline: 'none',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          minWidth: '70px',
+                          maxWidth: '100px',
+                          textAlign: 'center'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'linear-gradient(90deg, #1565c0 0%, #42a5f5 100%)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)'}
+                      >
+                        <i className="fas fa-comments" style={{marginRight:5, fontSize:'0.9em'}}></i>
+                        Cotizar
+                      </a>
                     </td>
                   </tr>
                   <tr>
@@ -129,19 +242,51 @@ export default function Precios() {
                     <td className="libre centrado"><span className="precio">$0</span></td>
                     <td className="profesional centrado">
                       <span className="precio">$4.50</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('PRO', 'Mensual', 4.50)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="plata centrado">
                       <span className="precio">$11.50</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('Plata', 'Mensual', 11.50)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="premiun centrado">
                       <span className="precio">$22.50</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a className="btn-comprar" href="#" onClick={(e) => {e.preventDefault(); handleCarritoClick('ORO', 'Mensual', 22.50)}}><i className="fas fa-shopping-cart"></i></a>
                     </td>
                     <td className="personalizado centrado">
-                      <span className="precio">Mes</span><br />
-                      <a className="btn-comprar" href="#" onClick={(e)=>e.preventDefault()}><i className="fas fa-shopping-cart"></i></a>
+                      <a
+                        className="btn-cotizar"
+                        href="#"
+                        onClick={(e) => {e.preventDefault(); handleCotizarClick('A MEDIDA')}}
+                        style={{
+                          display: 'inline-block',
+                          padding: '6px 12px',
+                          fontSize: '0.95em',
+                          fontWeight: 700,
+                          background: 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 8,
+                          boxShadow: '0 2px 8px rgba(25,118,210,0.10)',
+                          letterSpacing: 1,
+                          transition: 'background 0.2s, box-shadow 0.2s',
+                          cursor: 'pointer',
+                          marginTop: 4,
+                          marginBottom: 2,
+                          textShadow: '0 1px 4px rgba(25,118,210,0.10)',
+                          textDecoration: 'none',
+                          outline: 'none',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          minWidth: '70px',
+                          maxWidth: '100px',
+                          textAlign: 'center'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'linear-gradient(90deg, #1565c0 0%, #42a5f5 100%)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)'}
+                      >
+                        <i className="fas fa-comments" style={{marginRight:5, fontSize:'0.9em'}}></i>
+                        Cotizar
+                      </a>
                     </td>
                   </tr>
                 </tbody>
@@ -159,7 +304,7 @@ export default function Precios() {
           </div>
 
           {/* 4.5) Tabla principal de características por sección */}
-          <div className="tabla-scroll main-content" id="mainContent">
+          <div className="tabla-scroll main-content" id="mainContent" style={{margin: '32px auto', padding: '0 16px', maxWidth: '900px'}}>
             <div style={{ minWidth: '600px' }}>
               <table id="tablaPrincipal">
                 <thead>
@@ -169,7 +314,7 @@ export default function Precios() {
                     <th className="profesional">PRO</th>
                     <th className="plata">Plata</th>
                     <th className="premiun">ORO</th>
-                    <th className="personalizado">DIOS</th>
+                    <th className="personalizado">A MEDIDA</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -259,7 +404,13 @@ export default function Precios() {
                   {abiertas['sri'] && (<>
                     <tr><td className="detalle">Archivo p12 1 año</td><td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="profesional centrado"><span style={{color:'green', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✔</span></td><td className="plata centrado"><span style={{color:'green', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✔</span></td><td className="premiun centrado"><span style={{color:'green', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✔</span></td><td className="personalizado centrado"><span style={{color:'green', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✔</span></td></tr>
                     <tr><td className="detalle">Archivo p12 1-6 meses</td><td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="profesional centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="plata centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="premiun centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="personalizado centrado"><span style={{color:'green', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✔</span></td></tr>
-                    <tr><td className="detalle">Facturación electrónica</td><td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="profesional centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="plata centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="premiun centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="personalizado centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td></tr>
+                    <tr><td className="detalle">Facturación electrónica</td>
+                      <td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td>
+                      <td className="profesional centrado"><span style={{color:'#1976d2', fontWeight:'bold', fontSize:'1.1em', display:'inline-block'}}>$20.000</span></td>
+                      <td className="plata centrado"><span style={{color:'#1976d2', fontWeight:'bold', fontSize:'1.1em', display:'inline-block'}}>$20.000</span></td>
+                      <td className="premiun centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td>
+                      <td className="personalizado centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td>
+                    </tr>
                     <tr><td className="detalle">Nota de crédito</td><td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="profesional centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="plata centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="premiun centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="personalizado centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td></tr>
                     <tr><td className="detalle">Guías de remisión</td><td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="profesional centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="plata centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="premiun centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="personalizado centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td></tr>
                     <tr><td className="detalle">Notas de débito</td><td className="libre centrado"><span style={{color:'red', fontWeight:'bold', fontSize:'1.2em', display:'inline-block'}}>✘</span></td><td className="profesional centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="plata centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="premiun centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td><td className="personalizado centrado"><span style={{color:'green', fontSize:'1.4em', fontWeight:'bold', display:'inline-block'}}>∞</span></td></tr>
@@ -334,7 +485,14 @@ export default function Precios() {
             </div>
           </div>
         </div>
-  </main>
+        {/* Modal de pagos minimalista */}
+        {showPagos && <Pagos
+            initialPlan={selectedPlan}
+            plansData={plansData}
+            onPlanConfirmed={handlePlanConfirmed}
+            onClose={() => setShowPagos(false)}
+        />}
+      </main>
 
       {/* Botón flotante de WhatsApp */}
       <WhatsappButton phone="+593962124673" message="Hola, quiero más información sobre las membresías de Activos.ec" title="Contáctanos por WhatsApp" />
@@ -347,6 +505,99 @@ export default function Precios() {
         <span className="texto-firma">Todos los planes anuales, incluyen <b>firma electrónica</b>!</span>
       </div>
       <style jsx>{`
+            .subtitulo-precios {
+              font-size: 1.18em;
+              font-weight: 600;
+              color: #6366f1;
+              margin: 0 auto 32px auto;
+              text-align: center;
+              letter-spacing: 1.2px;
+              font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+              text-shadow: 0 2px 12px #6366f144, 0 1px 0 #fff;
+              transition: all 0.2s;
+              max-width: 98vw;
+              padding: 0;
+            }
+            .dark-theme .subtitulo-precios {
+              color: #a5b4fc;
+              text-shadow: 0 2px 12px #6366f188, 0 1px 0 #23232a;
+            }
+            @media (max-width: 600px) {
+              .dark-toggle {
+                top: 54px !important;
+                right: 10px !important;
+                z-index: 99999;
+              }
+              .titulo-minimalista {
+                font-size: 1.25em;
+                padding: 12px 10px 10px 10px;
+                max-width: 98vw;
+                border-radius: 12px;
+              }
+              .titulo-minimalista::after {
+                height: 6px;
+                opacity: 0.28;
+              }
+            }
+            @media (max-width: 600px) {
+              .titulo-minimalista {
+                font-size: 1.25em;
+                padding: 12px 10px 10px 10px;
+                max-width: 98vw;
+                border-radius: 12px;
+              }
+              .titulo-minimalista::after {
+                height: 6px;
+                opacity: 0.28;
+              }
+            }
+            .titulo-minimalista {
+              font-size: 2.1em;
+              font-weight: 700;
+              color: #232323;
+              background: #fff;
+              border-radius: 18px;
+              padding: 18px 28px 14px 28px;
+              border: 1.5px solid #e5e7eb;
+              box-shadow: 0 2px 12px 0 #00000014;
+              text-align: center;
+              margin: 36px auto 28px auto;
+              letter-spacing: 0.8px;
+              line-height: 1.13;
+              font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+              width: 100%;
+              max-width: 480px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              overflow: hidden;
+              border-bottom: 2px solid #e5e7eb;
+            }
+            .titulo-minimalista::after {
+              content: "";
+              position: absolute;
+              left: 0; right: 0; bottom: 0;
+              height: 8px;
+              background: linear-gradient(90deg, #8b5cf6, #38bdf8, #8b5cf6);
+              opacity: 0.18;
+              z-index: 1;
+              animation: gradmove 3.5s linear infinite;
+            }
+            @keyframes gradmove {
+              0% { background-position: 0% 50%; }
+              100% { background-position: 100% 50%; }
+            }
+            .dark-theme .titulo-minimalista {
+              color: #e5e7eb;
+              background: #18181b;
+              border-color: #23232a;
+              box-shadow: 0 2px 12px 0 #00000066;
+            }
+            .dark-theme .titulo-minimalista::after {
+              background: linear-gradient(90deg, #6366f1, #38bdf8, #6366f1);
+              opacity: 0.32;
+            }
         .firma-flotante {
           position: fixed;
           left: 28px;
@@ -370,7 +621,7 @@ export default function Precios() {
           background: rgba(255,255,255,0.12);
           border-radius: 50%;
           padding: 6px;
-          box-shadow: 0 2px 8px rgba(37,211,102,0.10);
+          box-shadow: 0 2px 8px rgba(25,118,210,0.10);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -451,12 +702,19 @@ export default function Precios() {
         .free-button:hover { background-color: #ff33cc; }
 
         /* Botón flotante de tema */
-        .dark-toggle { position: fixed; top: 100px; right: 20px; z-index: 9999; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3); border: 2px solid rgba(255, 255, 255, 0.2); }
+        .dark-toggle { position: fixed; top: 100px; right: 20px; z-index: 9999; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(139,92,246,0.3); border: 2px solid rgba(255, 255, 255, 0.2); }
         .dark-toggle:hover { background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%); transform: scale(1.1); box-shadow: 0 6px 24px rgba(139, 92, 246, 0.5); }
 
         /* Responsive móvil */
         @media screen and (max-width: 600px) {
-          .tabla-scroll { width: 100vw; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .tabla-scroll {
+            width: 100vw;
+            box-sizing: border-box;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-left: 12px;
+            padding-right: 12px;
+          }
           .tabla-scroll > div { min-width: 700px; }
           table { width: 700px !important; min-width: 700px !important; max-width: none !important; font-size: 12px; table-layout: fixed; }
           th, td { padding: 8px 6px; min-width: 80px; text-align: center; }

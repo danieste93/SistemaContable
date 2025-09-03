@@ -113,8 +113,8 @@ setTimets=(tiempoRes)=>{
    
       if(actualStateadd.userReducer != "" ){
     
-      let deco = actualStateadd.userReducer.update.usuario.decodificado
-      let tiempoRes = deco.exp  - tiempoAct
+  let deco = actualStateadd.userReducer.update.usuario.decodificado
+  let tiempoRes = (deco && deco.exp) ? (deco.exp - tiempoAct) : 0;
 
         if (tiempoRes > 35){
         
@@ -179,7 +179,7 @@ this.channel1.subscribe('setTokenTimer', (data) => {
 if(actualState.userReducer != "" ){
 
 let deco = actualState.userReducer.update.usuario.decodificado
-let tiempoRes = deco.exp  - tiempoAct
+let tiempoRes = (deco && deco.exp) ? (deco.exp - tiempoAct) : 0
 
   if (tiempoRes > 65){
    this.setTimets(tiempoRes)

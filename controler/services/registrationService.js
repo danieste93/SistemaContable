@@ -1,3 +1,7 @@
+// Utilidad para convertir fechas a la zona horaria de Ecuador
+function fechaEcuador(date) {
+  return new Date(date).toLocaleString('es-EC', { timeZone: 'America/Guayaquil' });
+}
 // services/registrationService.js
 const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
@@ -59,7 +63,24 @@ async function registerFullUser(userInput) {
           Password: userInput.Contrasena,
           RegistradoPor: userInput.RegistradoPor,
           DBname: newDbName,
-          Membresia: "Gratuita"
+          Membresia: "Gratuita",
+          Fechas: {
+            Creacion: Date.now(),
+            InicioMem: null,
+            ExpiraMem: null,
+            InicioFirma: null,
+            ExpiraFirma: null
+          },
+          SiSPagos: {
+            TipoVentaMeM: "",
+            BancoMEM: "",
+            ComprobanteMeM: "",
+            FirmaCortesia: "",
+            FechaCompraFirma: null,
+            TipoVentaFirma: "",
+            ComprobanteFirma: "",
+            BancoFirma: ""
+          }
         }
       ], opts);
 

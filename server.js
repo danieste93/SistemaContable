@@ -49,12 +49,14 @@ nextApp.prepare().then(() => {
   app.use('/users',  require('./routes/users'))
   app.use('/cuentas',  require('./routes/cuentas'))
   app.use('/public',  require('./routes/public'))
+  
+   app.use('/api',  require('./routes/api'))
+  app.use('/correo',  require('./routes/correos'))
   //app.use(  require('./routes/webpush'))
 
   app.use('/static', express.static(path.join(__dirname, 'static'), {
     maxAge: dev ? '0' : '365d'
   }));
-//morgar looger
 
     // Example server-side routing
     app.get('/a', (req, res) => {
