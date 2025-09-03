@@ -1,4 +1,4 @@
-import dbConnect from '../../lib/dbConnect';
+
 import User from '../../models/usersSass';
 import sendActivacionMembresia from './email/activacion-membresia';
 
@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
-  await dbConnect();
+ 
   const { email, plan, duration, paypalOrderId, payer } = req.body;
   if (!email || !plan || !duration || !paypalOrderId) {
     return res.status(400).json({ error: 'Faltan datos requeridos' });
