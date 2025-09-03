@@ -1479,11 +1479,7 @@ if (yaExiste) {
                              
                                 cantidadRegistros += Diasestemes+1
                              
-                              
-                            
-                          
-
-                   
+       
                     }
                     else if(req.body.Valrep == "Cada Semana"){
 

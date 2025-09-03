@@ -2792,7 +2792,7 @@ const  Authdata =()=>{
 }      else{
 
 
-          res.status(500).send({status: "error", message: "AuthSucess",resdata});
+          res.status(500).send({status: "error", message: "sin autorizacion",auth});
         }
 
        
@@ -4619,8 +4619,6 @@ if(req.body.item.NotaCredito.arrRegs.length == 0 || req.body.item.NotaCredito.ar
         if(cuentaUpdate == null){
           throw new Error("Cuenta no encontrada")
         }
-
-
 
             let ventac = await VentaModelSass.findByIdAndUpdate(req.body.item._id,{NotaCredito:""}, {new:true})
             if(ventac == null){

@@ -5,7 +5,6 @@ import NotaVentaTemplate from "../public/static/NotaTemplate"
 import FacturaTemplate from "../public/static/FactTemplate"
 import NotaDebitoTemplate from "../public/static/NotaDebitoTemplate"
 import NotaCreditoTemplate from "../public/static/NotaCreditoTemplate"
-import { teal } from '@material-ui/core/colors';
 
 
 class ViewVentas extends Component {
@@ -23,24 +22,7 @@ detectDoc:""
 
        }, 500);
 
-console.log(this.props)
-      let TemplateAsignado 
 
-
-if(this.props.detectDoc == "Venta"){
-  
-
-      if(this.props.datos.Doctype == "Nota de venta"){
-TemplateAsignado = NotaVentaTemplate
-
-      }else{
-        TemplateAsignado = FacturaTemplate
-      }
- 
-}else if(this.props.detectDoc == "Nota de Débito"){
-  TemplateAsignado = NotaDebitoTemplate
-
-}
       let artImpuestos  = this.props.datos.articulosVendidos.filter(x=>x.Iva)
       let artSinImpuestos = this.props.datos.articulosVendidos.filter(x=>x.Iva == false)
       let totalSinImpuestos = 0
@@ -66,7 +48,16 @@ TemplateAsignado = NotaVentaTemplate
       var date = dia+ "/"+ mes+"/"+tiempo.getFullYear()
 
       let viewHTML
+       
       if(this.props.detectDoc == "Venta"){
+ let TemplateAsignado 
+ if(this.props.datos.Doctype == "Nota de venta"){
+TemplateAsignado = NotaVentaTemplate
+
+      }else{
+        TemplateAsignado = FacturaTemplate
+      }
+
 
        viewHTML = TemplateAsignado({...this.props.datos,
         baseImpoConImpuestos,
@@ -98,13 +89,25 @@ TemplateAsignado = NotaVentaTemplate
 
       })
 
-     }if(this.props.detectDoc == "Nota de Débito"){
-        viewHTML = TemplateAsignado({...this.props.datos.NotaDebito })
+     }else if(this.props.detectDoc == "Nota de Débito"){
+        viewHTML = NotaDebitoTemplate({...this.props.datos.NotaDebito })
+   }else if(this.props.detectDoc == "Nota de Crédito"){
+        viewHTML = NotaCreditoTemplate({...this.props.datos.NotaCredito })
    }
       this.setState({Html:viewHTML, detectDoc: this.props.detectDoc})
       
-      
+    }
+    componentDidUpdate(prevProps, prevState){
+      if(prevState.Html !== this.state.Html){
+        const el = document.getElementById('htmlContent');
+        if(el){
+          el.classList.remove('html-change-anim');
+          // force reflow to restart animation
+          void el.offsetWidth;
+          el.classList.add('html-change-anim');
+        }
       }
+    }
       viewVenta=()=>{
         let artImpuestos  = this.props.datos.articulosVendidos.filter(x=>x.Iva)
         let artSinImpuestos = this.props.datos.articulosVendidos.filter(x=>x.Iva == false)
@@ -183,6 +186,14 @@ detectDoc: "Venta"
             this.setState({Html:viewHTML,
               TituloDoc:`${"Nota de Débito"} - ${this.props.datos.iDVenta}`,
 detectDoc: "Nota de Débito"
+            })
+         }
+            viewNC=()=>{
+         
+            let    viewHTML = NotaCreditoTemplate({...this.props.datos.NotaCredito })
+            this.setState({Html:viewHTML,
+              TituloDoc:`${"Nota de Crédito"} - ${this.props.datos.iDVenta}`,
+detectDoc: "Nota de Crédito"
             })
          }
       downloadFact=()=>{  
@@ -277,7 +288,7 @@ console.log(this.props)
 
 </div>
 <div style={{display:"flex", alignItems:"center", flexFlow:"column", justifyContent: "center"}}>
-<Animate show={this.state.detectDoc == "Nota de Débito" || this.props.state == "Nota de Crédito"}>
+<Animate show={this.state.detectDoc == "Nota de Débito" || this.state.detectDoc == "Nota de Crédito"}>
 <button className=" btn btn-green " style={{margin:"10px"}} onClick={this.viewVenta} >
             <span className="material-icons" >
             cached
@@ -292,6 +303,15 @@ console.log(this.props)
             cached
           </span> 
           <p>N. Débito</p>
+          </button>
+
+</Animate>
+<Animate show={this.state.detectDoc == "Venta" && this.props.datos.NotaCredito}>
+<button className=" btn btn-green " style={{margin:"10px"}} onClick={this.viewNC} >
+            <span className="material-icons" >
+            cached
+          </span> 
+          <p>N. Crédito</p>
           </button>
 
 </Animate>
@@ -312,7 +332,7 @@ console.log(this.props)
 
 </div> 
 <div className="Scrolled">
-  {this.state.Html==""?<CircularProgress />:<div contentEditable='true' dangerouslySetInnerHTML={{ __html: this.state.Html }}></div>}
+  {this.state.Html==""?<CircularProgress />:<div contentEditable='true' id="htmlContent" dangerouslySetInnerHTML={{ __html: this.state.Html }}></div>}
 
 </div>
 </div>
@@ -378,10 +398,20 @@ console.log(this.props)
                       width: 98%;
                       display: flex;
                       flex-flow: column;
-                     
+                      
                       height: 80vh;
                       padding: 5px;
-                     
+                      
+                     }
+                     /* animation when Html content updates */
+                     #htmlContent.html-change-anim{
+                       animation: htmlUpdate 420ms cubic-bezier(.2,.8,.2,1);
+                     }
+
+                     @keyframes htmlUpdate{
+                       0%{ transform: translateY(12px) scale(0.995); opacity: 0; }
+                       60%{ transform: translateY(-6px) scale(1.01); opacity: 0.95; }
+                       100%{ transform: translateY(0) scale(1); opacity: 1; }
                      }
                       @media only screen and (min-width: 768px) { 
                          .contcontacto{

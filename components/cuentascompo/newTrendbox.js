@@ -13,20 +13,35 @@ import {
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
 function calcularPendiente(valores) {
-  const N = valores.length;
-  const x = [...Array(N).keys()];{
+  // Robust slope calculation:
+  // 1) convert to numbers, 2) cap values > 2 to 2, 3) min-max normalize to [0,1],
+  // 4) compute linear regression slope on normalized values.
+  if (!Array.isArray(valores) || valores.length < 2) return 0;
 
-console.log("pediente")
+  // Convert to numeric and replace non-numeric with 0
+  const nums = valores.map(v => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  });
 
-  }
+  // Cap outliers: any value > 2 becomes 2
+  const capped = nums.map(v => (v > 2 ? 2 : v));
+
+  // Min-max normalize to [0,1]
+  const minV = Math.min(...capped);
+  const maxV = Math.max(...capped);
+  const normalized = maxV === minV ? capped.map(() => 0) : capped.map(v => (v - minV) / (maxV - minV));
+
+  const N = normalized.length;
+  const x = Array.from({ length: N }, (_, i) => i);
 
   const sumX = x.reduce((a, b) => a + b, 0);
-  const sumY = valores.reduce((a, b) => a + b, 0);
-  const sumXY = x.reduce((acc, val, i) => acc + val * valores[i], 0);
-  const sumX2 = x.reduce((acc, val, i) => acc + val * val, 0);
+  const sumY = normalized.reduce((a, b) => a + b, 0);
+  const sumXY = x.reduce((acc, val, i) => acc + val * normalized[i], 0);
+  const sumX2 = x.reduce((acc, val) => acc + val * val, 0);
 
   const numerador = (N * sumXY) - (sumX * sumY);
-  const denominador = (N * sumX2) - (sumX * sumX);
+  const denominador = (N * sumX2) - (sumX * sumX) || 1; // protect against zero
 
   return numerador / denominador;
 }

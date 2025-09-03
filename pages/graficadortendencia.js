@@ -21,32 +21,64 @@ state={
   newIndex:[],
   identicalData:[],
   inidata:[
-    1.03,
-    4.26,
-    1.71,
+    4.42,
+    2.38,
+    3.07,
+    3.41,
+    5.61,
+    94.82,
+    27.62,
+    3.57,
+    2.44,
     1,
-    1.8,
-    7.19,
-    1.5,
-    1.36,
-    1.41,
-    2.09,
+    2.07,
+    8.62,
+    2.31,
+    12.3,
+    3.74,
+    1.66,
+    1.13,
+    1.24,
+    1.26,
+    8,
+    7.42,
+    1.05,
+    1.99,
     1,
-    2.59,
+    1.3,
+    1.76,
+    1.42,
+    2.54,
+    1.53,
     1.77,
     1.41,
-    2.12,
-    1.65,
-    4.68,
-    6.35,
-    3.539,
-    2.53,
-    1.24,
-    1.86,
-    1.12,
-    1.48,
-    2.86,
-    32.17
+    2.94,
+    1.15,
+    1.19,
+    1.71,
+    2.41,
+    9.03,
+    76.23,
+    13.57,
+    1,
+    5.74,
+    2.52,
+    1.76,
+    1,
+    2.34,
+    1.42,
+    1.4,
+    7.37,
+    1.93,
+    3.47,
+    4.89,
+    1.89,
+    1.46,
+    29.85,
+    1.09,
+    2.04,
+    4.3,
+    
 ],
   superdata:{
     labels:[],
@@ -300,7 +332,6 @@ MA= (data, windowSize) => {
                      superdata:indicesIniciales   
       
       })*/
-
 
    const socket = io("http://localhost:5000");
  
@@ -636,49 +667,87 @@ getLineStyle=(value, levels)=> {
    console.log("levels", levels)
       let ColorLinea =""
       let ultimoElemento =  this.state.superdata.datasets[0].data[this.state.superdata.datasets[0].data.length - 1];
+      console.log("ultimoElemento", ultimoElemento)
       let peniultimoElemento =  this.state.superdata.datasets[0].data[this.state.superdata.datasets[0].data.length - 2];
-      let PosicionLinea = levels.filter(x=> x.value==ultimoElemento)
-      if(PosicionLinea){
-        let Formallegada = ultimoElemento > peniultimoElemento?"subiendo":"bajando"
-
-        for(let x=0;x<PosicionLinea.length;x++){
-       
-          if(PosicionLinea[x].type=="resistencia" && Formallegada == "subiendo"){
+      // Use a small tolerance when comparing floating values from Chart ticks
+      const LEVEL_TOL = 0.1;
+      let PosicionLinea = levels.filter(x => Math.abs(x.value - ultimoElemento) <= LEVEL_TOL);
+      console.log('PosicionLinea', PosicionLinea)
+      if (PosicionLinea && PosicionLinea.length) {
+        let Formallegada = ultimoElemento > peniultimoElemento ? "subiendo" : "bajando";
+        console.log("Formallegada", Formallegada)
+        for (let i = 0; i < PosicionLinea.length; i++) {
+          const pl = PosicionLinea[i];
+          console.log("PosicionLinea", pl)
+          if (pl.type === "resistencia" && Formallegada === "subiendo") {
             LineOptions.scales.y.grid = {
-                                        color: (ctx)=>ctx.tick.value == ultimoElemento?"red":"",
-                                        lineWidth:()=>{
-                                          if(PosicionLinea[x].count == 2){
-                                            return 4
-                                          }else if(PosicionLinea[x].count == 3){
-                                            return 3
-                                          }else if(PosicionLinea[x].count == 4){
-                                            return 2
-                                          }else if(PosicionLinea[x].count >= 5){
-                                            return 1
-                                          }
-                                        }
-                                      }
-                                     
-          }else if(PosicionLinea[x].type=="soporte" && Formallegada == "bajando"){
-            
-            LineOptions.scales.y.grid = {
-              color: (ctx)=>ctx.tick.value == ultimoElemento?"green":"",
-              lineWidth:()=>{
-                if(PosicionLinea[x].count == 2){
-                  return 4
-                }else if(PosicionLinea[x].count == 3){
-                  return 3
-                }else if(PosicionLinea[x].count == 4){
-                  return 2
-                }else if(PosicionLinea[x].count >= 5){
-                  return 1
+              color: (ctx) => {
+                const tick = ctx && ctx.tick && ctx.tick.value;
+                // Log every tick evaluation so you can see why a match does or doesn't occur
+                console.log('grid tick:', tick, 'ultimoElemento:', ultimoElemento, 'level:', pl.value);
+                if (tick !== undefined && Math.abs(tick - pl.value) <= LEVEL_TOL) return 'red';
+                return 'rgba(0,0,0,0.05)';
+              },
+              lineWidth: (ctx) => {
+                const tick = ctx && ctx.tick && ctx.tick.value;
+                if (tick !== undefined && Math.abs(tick - pl.value) <= LEVEL_TOL) {
+                  if (pl.count == 2) return 4;
+                  if (pl.count == 3) return 3;
+                  if (pl.count == 4) return 2;
+                  if (pl.count >= 5) return 1;
                 }
+                return 1;
               }
-             
             }
+
+          } else if (pl.type === "soporte" && Formallegada === "bajando") {
+            console.log("dentro de soporte")
+            LineOptions.scales.y.grid = {
+              color: (ctx) => {
+                const tick = ctx && ctx.tick && ctx.tick.value;
+                console.log('grid tick:', tick, 'ultimoElemento:', ultimoElemento, 'level:', pl.value);
+                if (tick !== undefined && Math.abs(tick - pl.value) <= LEVEL_TOL) return 'green';
+                return 'rgba(0,0,0,0.05)';
+              },
+              lineWidth: (ctx) => {
+                const tick = ctx && ctx.tick && ctx.tick.value;
+                if (tick !== undefined && Math.abs(tick - pl.value) <= LEVEL_TOL) {
+                  if (pl.count == 2) return 4;
+                  if (pl.count == 3) return 3;
+                  if (pl.count == 4) return 2;
+                  if (pl.count >= 5) return 1;
+                }
+                return 1;
+              }
+
+            }
+
           }
         }
       }
+      // Si PosicionLinea no coincide con ticks (p.ej. no existe un tick con valor 4),
+      // añadimos un dataset horizontal para cada nivel detectado para garantizar su renderizado.
+      let renderData = JSON.parse(JSON.stringify(this.state.superdata));
+      // clone datasets array
+      renderData.datasets = this.state.superdata.datasets.slice();
+      if (PosicionLinea && PosicionLinea.length) {
+        PosicionLinea.forEach((pl, idx) => {
+          const color = pl.type === 'soporte' ? 'green' : 'red';
+          const width = pl.count == 2 ? 4 : pl.count == 3 ? 3 : pl.count == 4 ? 2 : 1;
+          const lineDataset = {
+            label: `nivel-${idx}-${pl.type}`,
+            data: new Array(this.state.superdata.datasets[0].data.length).fill(pl.value),
+            borderColor: color,
+            borderWidth: width,
+            pointRadius: 0,
+            fill: false,
+            tension: 0,
+          };
+          renderData.datasets.push(lineDataset);
+        });
+      }
+
+      console.log(JSON.stringify(LineOptions.scales.y))
       let Labels = []
 let indicesRender = this.state.inidata.map((value,i)=>{
 
@@ -746,7 +815,7 @@ let PendienteRenderEdit = pendienteEditConUmbral > 0?  'Alcista' :
             
              <div className='contLineas'>
              <div style={{ height: '350px', width: '100%' }}>
-             <Line data={this.state.superdata} 
+             <Line data={renderData} 
               plugins = {[yellowLinePlugin]}
              
 options = {LineOptions}
