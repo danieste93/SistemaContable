@@ -1381,18 +1381,20 @@ search
 <GenNotasDeb datos={this.state.dataNotaDeb} Flecharetro={()=>{this.setState({genNotaDeb:false})}} />
 </Animate>
 <Animate show={this.state.viewerNota}>
-<ViewNotasCred updateNotaCred={(e)=>{console.log(e);
-  this.props.dispatch(updateVenta(e.updatedVenta))}} 
+<ViewNotasCred updateNotaCred={(e)=>{
+          console.log(e);
+          this.props.dispatch(updateVenta(e.Venta))
+          e.arrRegs.forEach(x => { this.props.dispatch(deleteReg(x))  });
+          this.props.dispatch(updateCuentas(e.arrCuentas))
+          this.props.dispatch(addRegsDelete(e.arrRegsDell))
+}} 
   userData={this.props.state.userReducer.update} datos={this.state.viewerdataNota} Flecharetro={()=>{this.setState({viewerNota:false})}} />
 </Animate>
 <Animate show={this.state.viewerNotaDeb}>
-<ViewNotasDeb updateNotaCred={(e)=>{console.log(e);
+<ViewNotasDeb updateNotaDeb={(e)=>{console.log(e);
   this.props.dispatch(updateVenta(e.Venta))
      
-              e.arrRegs.forEach(x => {
-                
-                this.props.dispatch(deleteReg(x))
-              });
+              e.arrRegs.forEach(x => { this.props.dispatch(deleteReg(x)) });
 
                 this.props.dispatch(updateCuentas(e.arrCuentas))
 

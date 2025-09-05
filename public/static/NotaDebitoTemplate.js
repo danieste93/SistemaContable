@@ -544,7 +544,7 @@ margin-top: 4px;
 justify-content: space-between;
         }
              .empresaLogo{
-                width:100%;
+           
                 height: auto;
                 margin-left: 20px;
                 max-width: 150px;
@@ -552,10 +552,10 @@ justify-content: space-between;
                 border-radius: 10px;
              }.contLogo{
                  min-width: 150px;
-    display: flex
-;
-    justify-content: flex-end;
-    
+                  max-width: 250px;
+    display: flex;
+
+
              }
              .contClient{
                 display: -webkit-box;

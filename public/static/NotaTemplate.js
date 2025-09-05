@@ -355,11 +355,20 @@ margin-top: 4px;
 -ms-flex-pack: justify;
 justify-content: space-between;
         }
-             .empresaLogo{
-                width:110px;
-          
-                margin-left: 10px;
-                border-radius: 10px;
+              .empresaLogo{
+               
+    height: auto;
+    margin-left: 20px;
+   
+    margin-top: 10px;
+    border-radius: 10px;
+             }
+               .contLogo{
+                 min-width: 150px;
+                  max-width: 250px;
+    display: flex;
+ 
+    
              }
              .contClient{
                 display: -webkit-box;

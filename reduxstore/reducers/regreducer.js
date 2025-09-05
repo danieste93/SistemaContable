@@ -353,16 +353,17 @@ import {
                                             return {
                                               ...state, Reps
                                                                      };
-                   case UPDATE_VENTA: {
+                   case UPDATE_VENTA: 
+                  
   const { ventas } = action.payload;
-
+ 
   return {
     ...state,
     Ventas: state.Ventas.map(v =>
       v._id === ventas._id ? { ...ventas } : v
     )
   };
-}
+
                                                 
                 case  UPDATE_REP:
                                           

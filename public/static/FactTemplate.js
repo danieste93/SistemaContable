@@ -533,18 +533,20 @@ margin-top: 4px;
 justify-content: space-between;
         }
              .empresaLogo{
-                width:100%;
-                height: auto;
-                margin-left: 20px;
-                max-width: 150px;
-                margin-top:10px;
-                border-radius: 10px;
-             }.contLogo{
-                 min-width: 150px;
-    display: flex
-;
-    justify-content: flex-end;
-    
+              
+      height: auto;
+
+
+    border-radius: 10px;
+             }
+               .contLogo{
+                  min-width: 150px;
+    max-width: 250px;
+    display: flex;
+
+    width: 25%;
+    justify-content: center;
+       margin: 18px;
              }
              .contClient{
                 display: -webkit-box;

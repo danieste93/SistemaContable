@@ -51,8 +51,8 @@ detectDoc:""
        
       if(this.props.detectDoc == "Venta"){
  let TemplateAsignado 
- if(this.props.datos.Doctype == "Nota de venta"){
-TemplateAsignado = NotaVentaTemplate
+      if(this.props.datos.Doctype == "Nota de venta"){
+      TemplateAsignado = NotaVentaTemplate
 
       }else{
         TemplateAsignado = FacturaTemplate
@@ -70,6 +70,7 @@ TemplateAsignado = NotaVentaTemplate
         razonSocialComprador:this.props.datos.nombreCliente == ""?"CONSUMIDOR FINAL":this.props.datos.nombreCliente,
         identificacionComprador:this.props.datos.cedulaCliente==""?"9999999999999":this.props.datos.cedulaCliente,
         correoComprador:this.props.datos.correoCliente,
+        nombreComercial:this.props.usuario.user.Factura.nombreComercial,
         direccionComprador:this.props.datos.direccionCliente,
         ciudadComprador:this.props.datos.ciudadCliente,
         LogoEmp:this.props.usuario.user.Factura.logoEmp,
@@ -157,6 +158,7 @@ TemplateAsignado = NotaVentaTemplate
                 LogoEmp:this.props.usuario.user.Factura.logoEmp,
                 rimpeval:this.props.usuario.user.Factura.rimpe,
                 populares:JSON.parse(this.props.usuario.user.Factura.populares),
+                nombreComercial:this.props.usuario.user.Factura.nombreComercial,
                 estab:this.props.usuario.user.Factura.codigoEstab,
                 ptoEmi:this.props.usuario.user.Factura.codigoPuntoEmision,
                 secuencial:this.props.datos.Secuencial,
@@ -230,6 +232,9 @@ detectDoc: "Nota de Crédito"
             }
             }else if(this.state.detectDoc == "Nota de Débito"){
               genTitulo = `Nota de Débito Nº ${this.props.datos.NotaDebito.secuencial} ${this.props.usuario.user.Factura.nombreComercial} `
+            }
+            else if(this.state.detectDoc == "Nota de Crédito"){
+              genTitulo = `Nota de Crédito Nº ${this.props.datos.NotaCredito.secuencial} ${this.props.usuario.user.Factura.nombreComercial} `
             }
             const url = window.URL.createObjectURL(
               new Blob([Buffer.from(response.buffer)], { type: "application/pdf"}),

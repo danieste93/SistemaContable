@@ -122,8 +122,8 @@ Nota de Crédito de la Venta Nro - {this.props.datos.iDVenta}
         </div>
           <Animate show={this.state.modalDelete}> 
                 <ModalDeleteGeneral
-                 sendSuccess={(e)=>{this.props.updateNotaCred(e);this.Onsalida() }}
-                 sendError={()=>{console.log("deleteerror")}}
+                 sendSuccess={(e)=>{console.log(e);this.props.updateNotaCred(e);this.Onsalida() }}
+                 sendError={(e)=>{console.log("error al eliminar", e)}}
                 itemTodelete={{...this.props.datos, ...this.props.userData}}
                  mensajeDelete={{mensaje:"Seguro quieres eliminar esta Nota de Crédito? Recuerda que aun debes eliminarla en portal del SRI", 
                   url:"/public/deleteNotaCredito" }}

@@ -83,7 +83,7 @@ let Rimpeval =""
             <div class="clave">
             Nota de Crédito Nº
             </div>
-            <div class="valor">
+            <div class="valorNC">
             <span>{`  ${Inf.estab} - ${Inf.ptoEmi} - ${Inf.secuencial}`}</span> 
             </div>
             </div>  
@@ -91,7 +91,7 @@ let Rimpeval =""
             <div class="clave">
             Fecha:
             </div>
-            <div class="valor">
+            <div class="valorNC">
             {Inf.fechaEmision}
             </div>
             </div>          
@@ -99,7 +99,7 @@ let Rimpeval =""
             <div class="clave">
            RUC:
             </div>
-            <div class="valor">
+            <div class="valorNC">
            {Inf.ruc}
             </div>
             </div>
@@ -116,7 +116,7 @@ let Rimpeval =""
         </div>
         <div class="Cont1FactTo">
 
-        <p class="enfData" >Valor Total</p> 
+        <p class="enfData" >valor Total</p> 
         <span class="subenfData">${Inf.SuperTotal.toFixed(2)}</span> 
         <span class="subenfData">{}</span>
         <span class="subenfData">{}</span>
@@ -167,7 +167,7 @@ let Rimpeval =""
         </div>
         <div class="ContDetalle contValues" >
         <div class="divigualData">
-        Valor {process.env.IVA_EC}%: 
+        valorNC {process.env.IVA_EC}%: 
         </div>
         
         <div class="divigual">
@@ -187,6 +187,16 @@ let Rimpeval =""
         </div>
         <div class="divigual">
       $  {Inf.SuperTotal.toFixed(2)}
+        </div>
+        </div>
+         <div class="ContDetalle contValues" >
+        <div class="divigualData">
+        V.Modificación: 
+        </div>
+        
+        
+        <div class="divigual">
+      $  {Inf.ValorModificacion}
         </div>
         </div>
         </div>
@@ -411,11 +421,20 @@ margin-top: 5px;
 
 
         }
-             .empresaLogo{
-                width:110px;
-          
-                margin-left: 10px;
-                border-radius: 10px;
+               .empresaLogo{
+                width: 90%;
+    height: auto;
+    margin-left: 20px;
+   
+    margin-top: 10px;
+    border-radius: 10px;
+             }
+               .contLogo{
+                 min-width: 150px;
+                  max-width: 250px;
+    display: flex;
+    justify-content: flex-end;
+    
              }
              .contClient{
                 display: -webkit-box;
