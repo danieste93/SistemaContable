@@ -199,17 +199,7 @@ if(response.articulosCreados.length > 0)
         }, 500);
       }
       
-      handleXml=(e)=>{
-        
-        let reader = new FileReader();
-        reader.onload = function(e) {
-          readXml=e.target.result;
-        
-          var parser = new DOMParser();
-          var doc = parser.parseFromString(readXml, "application/xml");
-         
-      }
-      }
+
       valFact=(e)=>{
        
              
@@ -279,7 +269,7 @@ if(response.articulosCreados.length > 0)
       setChangeinput=(e)=>{
         this.setState({xmlData:{fechaAutorizacion:[""]},  Comprobante:"",})
         let selectedFile = this.componentRef.current.files[0];
-        console.log(selectedFile)
+     
         if(selectedFile.type=="text/xml")  {
         let readXml=null;
 
@@ -617,14 +607,44 @@ Agregar Factura
 
 
 </div> 
-<div className="Contxml">
-<label for="myfile">Seleccione un xml:</label>
-<input    ref={this.componentRef} type="file" id="myXMLfile"  name="myXMLfile" 
-onChange={this.setChangeinput}
-
-/>
-
-                    </div>
+<div className="Contxml" style={{ textAlign: 'center' }}>
+          <label 
+            htmlFor="myfile" 
+            style={{
+              display: 'block',
+              marginBottom: '10px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+            }}
+          >
+            Seleccione un xml:
+          </label>
+          <input
+            ref={this.componentRef}
+            type="file"
+            id="myXMLfile"
+            name="myXMLfile"
+            onChange={this.setChangeinput}
+            style={{
+              padding: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '5px',
+              background: 'linear-gradient(145deg, #e0e0e0, #ffffff)',
+              boxShadow: '5px 5px 10px #babecc, -5px -5px 10px #ffffff',
+              transition: 'all 0.3s ease',
+              color: '#007BFF',
+              fontWeight: 'bold',
+            }}
+            onMouseOver={(e) => {
+              e.target.style.boxShadow = 'inset 5px 5px 10px #babecc, inset -5px -5px 10px #ffffff';
+              e.target.style.background = 'linear-gradient(145deg, #d1d9e6, #ffffff)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.boxShadow = '5px 5px 10px #babecc, -5px -5px 10px #ffffff';
+              e.target.style.background = 'linear-gradient(145deg, #e0e0e0, #ffffff)';
+            }}
+          />
+        </div>
                     <div style={{width:"100%"}}> 
          <Animate  show={this.state.xmlData.fechaAutorizacion[0] != ""}>        
 <div className="Scrolled">
@@ -635,7 +655,7 @@ onChange={this.setChangeinput}
   {/*  <div className="contValfact">
              
              
-      <Animate show={!this.state.validfact}>
+        <Animate show={!this.state.validfact}>
         <div className="ContFlex">
         <Animate show={!this.state.waitingdata}>
       <button className="botoncontact botoupload" onClick={this.valFact}>

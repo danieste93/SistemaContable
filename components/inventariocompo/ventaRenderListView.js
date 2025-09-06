@@ -4,7 +4,7 @@ import Dropdown from 'react-bootstrap/Dropdown';
 
 import CustomDropdown from "./CustomDropdown"
 import React, { useState,useEffect } from 'react';
-const ArtRender = ({ Titulos,uploadToFact, datos,getNota,getNotaDeb, watchNotaCredito, watchNotaDebito,deleteVentaList,user,resendProcess,sendView,viewCreds}) => {
+const ArtRender = ({ Titulos,uploadToFact, datos,getNota,getNotaDeb, getRetencion, watchNotaCredito, watchNotaDebito,deleteVentaList,user,resendProcess,sendView,viewCreds}) => {
   // Estado para controlar apertura/cierre del Dropdown
   const [showDropdown, setShowDropdown] = useState(false);
   const [visual, setvisual] = useState(false );
@@ -13,6 +13,7 @@ const ArtRender = ({ Titulos,uploadToFact, datos,getNota,getNotaDeb, watchNotaCr
   const [backGroundVent, setbackGroundVent] = useState("");
   const [visualProcess, setvisualProcess] = useState(false);
   const [visualNota, setvisualNota] = useState(false);
+   const [visualRet, setvisualRet] = useState(false);
   const [visualNotaDeb, setvisualNotaDeb] = useState(false);
   const [watchNota, setwatchNota] = useState(false);
   const [watchNotaDeb, setwatchNotaDeb] = useState(false);
@@ -52,6 +53,11 @@ if(datos.TipoVenta == "Credito"){
 
   if(user == "administrador" || user == "tesorero" ){
     setvisual(true)
+  }
+
+  if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != "" &&datos.nombreCliente != "Consumidor Final" && (datos.Retencion == null || datos.Retencion == "") ){
+  
+    setvisualRet(true)
   }
 
   if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != "" &&datos.nombreCliente != "Consumidor Final" && (datos.NotaCredito == null || datos.NotaCredito == "")){
@@ -286,6 +292,13 @@ var date = (
                     icon: 'post_add',
                     className: 'btn btn-success btnDropDowm',
                     onClick: (e) => { e.stopPropagation(); getNotaDeb(datos); }
+                  },
+                  visualRet && {
+                    key: `Retención-${datos.iDVenta}`,
+                    label: 'Retención',
+                    icon: 'money_off',
+                    className: 'btn btn-warning btnDropDowm',
+                    onClick: (e) => { e.stopPropagation(); getRetencion(datos); }
                   },
                   watchNota && {
                     key: `ver-nota-credito-${datos.iDVenta}`,

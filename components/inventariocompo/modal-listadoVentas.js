@@ -13,6 +13,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import ViewVenta from "../modal-viewventas"
 
 import GenNotas from "./modal-genNotas"
+import AddRetencion from "./modal-addRetencion"
 import GenNotasDeb from "./modal-genNotasDeb"
 import ViewNotasCred from "../modal-viewvNotaCred"
 import ViewNotasDeb from "../modal-viewvNotaDeb"
@@ -66,6 +67,8 @@ class Listvent extends Component {
     dataventa:"",
     viewVenta:false,
     anchorEl:null,
+    viewRetencion:false, 
+    dataRetencion:{},
     genNotaDeb:false,
     dataNotaDeb:{}
    }
@@ -904,6 +907,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
           datos={comp} 
           getNotaDeb={(datos)=>{ this.setState({genNotaDeb:true, dataNotaDeb:datos})}} 
           getNota={(datos)=>{ this.setState({viewNota:true, dataNota:datos})}} 
+           getRetencion={(datos)=>{ this.setState({viewRetencion:true, dataRetencion:datos})}} 
           watchNotaCredito={(datos)=>{ this.setState({viewerNota:true, viewerdataNota:datos})}}
           watchNotaDebito={(datos)=>{ this.setState({viewerNotaDeb:true, viewerdataNota:datos})}}
           viewCreds={(datos)=>{ this.setState({viewCreds:true, dataCred:datos})}} 
@@ -1376,6 +1380,9 @@ search
 
 <Animate show={this.state.viewNota}>
 <GenNotas datos={this.state.dataNota} Flecharetro={()=>{this.setState({viewNota:false})}} />
+</Animate>
+<Animate show={this.state.viewRetencion}>
+<AddRetencion datos={this.state.dataRetencion} Flecharetro={()=>{this.setState({viewRetencion:false})}} />
 </Animate>
 <Animate show={this.state.genNotaDeb}>
 <GenNotasDeb datos={this.state.dataNotaDeb} Flecharetro={()=>{this.setState({genNotaDeb:false})}} />
