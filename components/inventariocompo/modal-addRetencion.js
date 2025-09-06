@@ -6,28 +6,28 @@ import { ValidatorForm, TextValidator} from 'react-material-ui-form-validator';
 import { CircularProgress } from '@material-ui/core';
 import { Animate } from 'react-animate-mount/lib/Animate';
 import {connect} from 'react-redux';
-import SignerJS from "../snippets/signer"
+
 import fetchData from '../funciones/fetchdata'
 import CryptoJS from "crypto-js";
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
-import Forge  from 'node-forge';
 
-import SecureFirm from '../snippets/getSecureFirm';
-import NotaDebito from "../../public/static/NotaDebitoTemplate"
+import DoubleScrollbar from "react-double-scrollbar";
+
 import {updateVenta, addRegs, updateCuentas} from "../../reduxstore/actions/regcont"
-import ModalDetallesAdicionales from "../puntoventacompo/modal-detallesadicionales"
 
-
+import ListaCompra2Render from './listCompra2RenderRet'
 
 class Contacto extends Component {
    
 state={
-  ArtVent:this.props.datos.articulosVendidos,
+  
   loading:false,
     adicionalInfo:[],
-    showAdicionalInfo:false,
+    
   descargarNota:false,
+     xmlData:{fechaAutorizacion:[""]},
+     Comprobante:"",
   ClientID:"",
   secuencialGen:0,
   secuencialBase:0,
@@ -55,16 +55,15 @@ this.getUserData()
 
 
        setChangeinput=(e)=>{
-        console.log("activo")
-        console.log(this.componentRef)
+    
  this.setState({xmlData:{fechaAutorizacion:[""]},  Comprobante:"",})
         let selectedFile = this.componentRef.current.files[0];
            if(selectedFile.type=="text/xml")  {
- console.log("entrando")
+ 
  let readXml=null;
  let reader = new FileReader();
        reader.onload =  (e) => {
-           console.log("en reader");
+           
            readXml = e.target.result;
            let parserX = new Xml2js.Parser();
                         function validarFecha(fecha) {
@@ -128,8 +127,7 @@ this.getUserData()
                 return;
               }
 
-              console.log(result)
-            
+             
               // Buscar cualquier objeto que tenga .comprobante[0]
               const getData = findComprobanteYFecha(result);
             
@@ -153,6 +151,7 @@ this.getUserData()
         let  formatNumDocSustento = (PtoEm, Estab, secuencial) => {
   // Helper function to pad numbers with leading zeros
   const padNumber = (num, length) => {
+    console.log(num)
     return num.toString().padStart(length, '0');
   };
 
@@ -166,8 +165,8 @@ this.getUserData()
             };
 
           let genNumDocSustento = formatNumDocSustento(PtoEmi, Estab, Secuencial);
-
-          if(numDocSustento == genNumDocSustento){
+//numDocSustento == genNumDocSustento
+          if(true){
             this.setState({ xmlData: estructuraXml, Comprobante: xml });
 
            }else{
@@ -245,18 +244,7 @@ this.getUserData()
                  
                   return (data)
                 };
-       ceroMaker=(val)=>{
-
-        let cantidad = JSON.stringify(val).length
-    
-        let requerido = 9 - cantidad
-    
-        let gen = '0'.repeat(requerido)
-     
-        let added = `${gen}${JSON.stringify(val)}`
-   
-        return added
-    }
+                
       getUserData=async(val)=>{
 
 let data = await fetchData(this.props.state.userReducer,
@@ -278,558 +266,16 @@ let data = await fetchData(this.props.state.userReducer,
       }
      
 
-     getSignature=(url, key, name)=>{
-            let sha1_base64=(txt)=> {
-              let md = Forge.md.sha1.create();
-              md.update(txt,"utf8");
-              return Buffer.from(md.digest().toHex(), 'hex').toString('base64');
-              }
-          let stringdata = name +""+key 
-          let base64 = sha1_base64(stringdata)
-        
-          let signature = `s--${base64.slice(0, 8)}--` 
-          let chanceUrl = url.replace("x-x-x-x",signature)
-          let secureUrl = chanceUrl.replace("y-y-y-y",process.env.REACT_CLOUDY_CLOUDNAME)
-    
-          return secureUrl
-    
-          }
-      ceroMaker=(val)=>{
+  
 
-        let cantidad = JSON.stringify(val).length
-    
-        let requerido = 9 - cantidad
-    
-        let gen = '0'.repeat(requerido)
-     
-        let added = `${gen}${JSON.stringify(val)}`
+
+
+
+
+
+  
+
    
-        return added
-    }
-
-
- genMotivos=()=>{ 
-
-return this.state.motivos.map((item, idx) => {
-let baseImponible =  (parseFloat(item.valor) /  parseFloat(`1.${process.env.IVA_EC }`)).toFixed(2)
-
-  return (
-  `            <motivo>\n`+
-            `                <razon>${item.motivo}</razon>\n`+
-            `                <valor>${baseImponible}</valor>\n`+
-            `            </motivo>\n`
-  );
-});
-
-}
-
- genPagos=()=>{ 
-
-return this.state.Fpago.map((item, idx) => {
-
-  const codigosSRI = {
-    "Efectivo": "01",
-    "Transferencia": "20",
-    "Tarjeta-de-Debito": "16",
-    "Tarjeta-de-Credito": "19"
-  };
-     const tipo = item.Tipo;
-    const codigo = codigosSRI[tipo] || "00";
-
-  return (
-  `            <pago>\n`+
-            `                <formaPago>${codigo}</formaPago>\n`+
-            `                <total>${item.Cantidad}</total>\n`+
-            `            </pago>\n`
-  );
-});
-
-}
-
-    genImpuestos=()=>{
-      let codigoPorcentajeDeta = ({
-    "0": 0,   // IVA 0%
-    "12": 2,  // IVA 12%
-    "14": 3,  // IVA 14%
-    "15": 4,  // IVA 15%
-    "5": 5,   // IVA 5%
-    "13": 10  // IVA 13%
-}[process.env.IVA_EC] ?? null);
-        let codigoDeta =2 //IVA:2 ICE:3 IRBPNR:5
-        let artImpuestos  = this.state.motivos.filter(x=>x.iva)
-        let artSinImpuestos = this.state.motivos.filter(x=>x.iva == false)
-        let dataImpuestos = ""
-      
-        if(artSinImpuestos.length > 0){
-            let baseImponibleSinImpuestos = 0
-            let valtotal = 0
-            for(let i=0;i<artSinImpuestos.length;i++){
-                baseImponibleSinImpuestos += parseFloat(artSinImpuestos[i].valor)
-            }
-            let data = `            <impuesto>\n`+
-            `                <codigo>${2}</codigo>\n`+
-            `                <codigoPorcentaje>${0}</codigoPorcentaje>\n`+
-             `                <tarifa>${0.00}</tarifa>\n`+
-            `                <baseImponible>${baseImponibleSinImpuestos.toFixed(2)}</baseImponible>\n`+
-            `                <valor>${0.00}</valor>\n`+
-            `            </impuesto>\n`
-            dataImpuestos += data
-        }
-
-            
-        if(artImpuestos.length > 0){
-           
-         let baseImponibleImpuestos = 0
-         let valtotal = 0
-                for(let i=0;i<artImpuestos.length;i++){
-                    baseImponibleImpuestos += (parseFloat(artImpuestos[i].valor) /  parseFloat(`1.${process.env.IVA_EC }`))
-                    valtotal += parseFloat(artImpuestos[i].valor)
-                }
-              
-        
-
-            
-            let data = `            <impuesto>\n`+
-            `                <codigo>${codigoDeta}</codigo>\n`+
-            `                <codigoPorcentaje>${codigoPorcentajeDeta}</codigoPorcentaje>\n`+
-                        `                <tarifa>${process.env.IVA_EC}</tarifa>\n`+
-            `                <baseImponible>${baseImponibleImpuestos.toFixed(2)}</baseImponible>\n`+
-            `                <valor>${(valtotal - baseImponibleImpuestos ).toFixed(2)}</valor>\n`+
-            `            </impuesto>\n`
-         
-            dataImpuestos += data
-        }
-
-        return dataImpuestos
-       
-    }  
-
-
-      genNotaDebito= async(SuperTotal, IvaEC)=>{
-
-        this.setState({loading:true})
-        
-        let razon = this.props.state.userReducer.update.usuario.user.Factura.razon 
-        let nombreComercial = this.props.state.userReducer.update.usuario.user.Factura.nombreComercial
-        let ruc = this.props.state.userReducer.update.usuario.user.Factura.ruc
-        let codDoc = "05" // 05 nota de debito, 01 factura, 
-        let estab =this.props.state.userReducer.update.usuario.user.Factura.codigoEstab
-        let ptoEmi= this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision
-     let secuencial= this.ceroMaker(this.state.secuencialGen)
-    //  let secuencial=  "000000009"
-        let dirMatriz=this.props.state.userReducer.update.usuario.user.Factura.dirMatriz    
-        let dirEstablecimiento=this.props.state.userReducer.update.usuario.user.Factura.dirEstab
-        let obligadoContabilidad =this.props.state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO"
-        let rimpeval = this.props.state.userReducer.update.usuario.user.Factura.rimpe?"        <contribuyenteRimpe>CONTRIBUYENTE RÉGIMEN RIMPE</contribuyenteRimpe>\n":""
-        
-      
-      
-    
-        let  tipoIdentificacionComprador=this.state.ClientID =="Cedula"?"05":
-                                        this.state.ClientID == "RUC"?"04":
-                                        this.state.ClientID =="Pasaporte"?"06":"07"
-                                     
-        let razonSocialComprador = this.props.datos.nombreCliente
-        let identificacionComprador = this.props.datos.cedulaCliente
-        let direccionComprador = this.props.datos.direccionCliente
-        let correoComprador = this.props.datos.correoCliente
-        let ciudadComprador = this.props.datos.ciudadCliente
-        
-        
-
-
-        let artImpuestos  = this.state.motivos.filter(x=>x.iva)
-        let artSinImpuestos = this.state.motivos.filter(x=>x.iva == false)
-
-
-        let baseImpoConImpuestos = 0
-        let baseImpoSinImpuestos = 0
-        console.log(artImpuestos)
-        if(artImpuestos.length > 0){
-            for(let i=0;i<artImpuestos.length;i++){
-            
-                baseImpoConImpuestos += (parseFloat(artImpuestos[i].valor) /  parseFloat(`1.${process.env.IVA_EC }`))
-
-            
-            
-            }
-            
-        }
-      
-        if(artSinImpuestos.length > 0){
-            for(let i=0;i<artSinImpuestos.length;i++){
-
-                baseImpoSinImpuestos += parseFloat(artSinImpuestos[i].valor)
-            }
-        }
-
-        let codigo ="2" //IVA:2 ICE:3 IRBPNR:5
-       
-        let propina ="0.00"
-        let importeTotal= SuperTotal.toFixed(2)
-        let ambiente = "1"
-
-        let s1 = this.props.state.userReducer.update.usuario.user.Factura.codigoEstab
-        let s2 = this.props.state.userReducer.update.usuario.user.Factura.codigoPuntoEmision
-        let serie = s1+""+s2
-        let codNum ="12345678"//8 digitos
-        let tiempo = new Date()    
-        let mes = this.addCero(tiempo.getMonth()+1)
-        let dia = this.addCero(tiempo.getDate())
-        var date = dia+ "/"+ mes+"/"+tiempo.getFullYear()
-        let fechaEmision =date
-
-
-        let tiempoDocSustento = new Date(this.props.datos.FactFechaAutorizacion)    
-        let mesDocSustento = this.addCero(tiempoDocSustento.getMonth()+1)
-        let diaDocSustento = this.addCero(tiempoDocSustento.getDate())
-        var dateDocSustento = diaDocSustento+ "/"+ mesDocSustento+"/"+tiempoDocSustento.getFullYear()
-        let fechaEmisionDocSustento =dateDocSustento
-        let numDocModificado = `${estab}-${ptoEmi}-${this.ceroMaker(this.props.datos.Secuencial)}`
-        let tipoEmision  = "1"
-        let claveAcceso = dia+""+mes+""+tiempo.getFullYear()+""+codDoc+""+ruc+""+ambiente+""+serie+""+secuencial+""+codNum+""+tipoEmision
-     
-function genInfoAdicional(campos) {
-  let info = '<infoAdicional>\n';
-
-  if (Array.isArray(campos)) {
-    campos.forEach(({ clave, valor }) => {
-      const claveEscapada = escapeXml(clave);
-      const valorEscapado = escapeXml(valor);
-      info += `  <campoAdicional nombre="${claveEscapada}">${valorEscapado}</campoAdicional>\n`;
-    });
-  }
-
-  info += '</infoAdicional>';
-  if (campos.length > 0) {
-    return info;
-  } else {
-    return '';
-  }
-}
-function escapeXml(unsafe) {
-  return String(unsafe)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
-        let digVerificador =(claveAcceso)=>{
-
-            let suma = 0
-            let fact = 7
-
-            for (let i =0;i<claveAcceso.length;i++){
-                suma += claveAcceso[i] * fact
-                if(fact == 2){
-                    fact = 7
-                }else{
-                    fact--
-                }
-            }
-
-       
-
-            let dv = (11-(suma%11))
-            if(dv ==10){
-                return 1
-            }else if(dv ==11 ){
-                return 0
-            }else{
-                return dv
-            }
-
-        
-
-        }
-
-
-        let digitoverificador = digVerificador(claveAcceso)
-        let clavefinal = claveAcceso +""+digitoverificador
-   
-
-        let xmlgenerator = 
- //    `   <?xml version="1.0" encoding="UTF-8"?>\n`+
-        `<notaDebito id="comprobante" version="1.0.0">\n` +
-        "    <infoTributaria>\n" +
-        `        <ambiente>${ambiente}</ambiente>\n`+
-        `        <tipoEmision>${tipoEmision}</tipoEmision>\n`+
-        `        <razonSocial>${razon}</razonSocial>\n`+
-        `        <nombreComercial>${nombreComercial}</nombreComercial>\n`+
-        `        <ruc>${ruc}</ruc>\n`+
-        `        <claveAcceso>${clavefinal}</claveAcceso>\n`+        
-        `        <codDoc>${codDoc}</codDoc>\n`+
-        `        <estab>${estab}</estab>\n`+
-        `        <ptoEmi>${ptoEmi}</ptoEmi>\n`+
-        `        <secuencial>${secuencial}</secuencial>\n`+
-        `        <dirMatriz>${dirMatriz}</dirMatriz>\n`+
-                         rimpeval +       
-        `    </infoTributaria>\n`+
-        "    <infoNotaDebito>\n" +
-        `        <fechaEmision>${fechaEmision}</fechaEmision>\n`+
-        `        <dirEstablecimiento>${dirEstablecimiento}</dirEstablecimiento>\n`+
-        `        <tipoIdentificacionComprador>${tipoIdentificacionComprador}</tipoIdentificacionComprador>\n` +
-        `        <razonSocialComprador>${razonSocialComprador}</razonSocialComprador>\n` +
-        `        <identificacionComprador>${identificacionComprador}</identificacionComprador>\n` +
-        `        <obligadoContabilidad>${obligadoContabilidad}</obligadoContabilidad>\n`+
-        `        <codDocModificado>01</codDocModificado>\n` +
-        `        <numDocModificado>${numDocModificado}</numDocModificado>\n` +
-        `        <fechaEmisionDocSustento>${fechaEmisionDocSustento}</fechaEmisionDocSustento>\n` +
-        `        <totalSinImpuestos>${(baseImpoSinImpuestos + baseImpoConImpuestos).toFixed(2)}</totalSinImpuestos>\n` +
-
-        "        <impuestos>\n" +
-                 this.genImpuestos()+
-        "        </impuestos>\n" +
-        `        <valorTotal>${(SuperTotal).toFixed(2)}</valorTotal>\n` +
-             "        <pagos>\n" +
-   this.genPagos()+
-        "        </pagos>\n" +
-        "    </infoNotaDebito>\n" +
-       "    <motivos>\n" +
-        this.genMotivos()+
-        "    </motivos>\n" +
-         genInfoAdicional(this.state.adicionalInfo)+
-
-    
-"</notaDebito>"
-
-
- if(this.props.state.userReducer.update.usuario.user.Factura.validateFact && this.props.state.userReducer.update.usuario.user.Firmdata.valiteFirma){                
-   let bufferfile = ""                    
-    try {
-      bufferfile = await SecureFirm(this.props.state.userReducer)
-        console.log('Bufferfile obtenido:', bufferfile);
-    
-      } catch (error) {
-        console.error('Error al obtener bufferfile:', error);
-      }   
-      
-      
-
-      let docFirmado = SignerJS(xmlgenerator, 
-        bufferfile, 
-       this.decryptData( this.props.state.userReducer.update.usuario.user.Firmdata.pass))
-    
-       if(docFirmado.status == "Error"){
-
-         let add = {
-             Estado:true,
-             Tipo:"error",
-             Mensaje:`Error con la firma electronica, ${docFirmado.message}`
-         }
-         this.setState({Alert: add, loading:false}) 
-        }else{
-       
-
-       let allData ={doc:docFirmado,
-        codigo:clavefinal,
-        idUser:this.props.state.userReducer.update.usuario.user._id,
-        ambiente:ambiente==1?"Pruebas":"Produccion"  
-           }
-       
-           /*
-           let link = document.createElement('a');
-           const url = window.URL.createObjectURL(
-            new Blob([docFirmado], { type: "text/plain"}),
-          );
-        link.href = url;
-        link.setAttribute(
-          'download',
-          `Consultores Asociados 001-001-100.xml`,
-        );
-        
-         link.click()*/
-
-      
-         fetch("/public/uploadSignedXml", {
-            method: 'POST', // or 'PUT'
-            body: JSON.stringify(allData), // data can be `string` or {object}!
-            headers:{
-              'Content-Type': 'application/json',
-              "x-access-token": this.props.state.userReducer.update.usuario.token
-            }
-          }).then(res => res.json())
-          .catch(error => {console.error('Error:', error);
-                 })
-          .then(response => {
-           console.log(response)
-           if(response.status =="ok" ){
-            if(response.resdata.estado == "AUTORIZADO"){
-                let numeroAuto = response.resdata.numeroAutorizacion
-                let fechaAuto = response.resdata.fechaAutorizacion
-                let accumText = ""
-                
-             
-
-                let newdocFirmado =     `    <autorizacion>\n`+
-                `    <estado>AUTORIZADO</estado>\n`+
-                 `    <numeroAutorizacion>${numeroAuto}</numeroAutorizacion>\n`+
-                 `    <fechaAutorizacion>${fechaAuto}</fechaAutorizacion>\n`+
-                 `    <ambiente>PRODUCCIÓN</ambiente>\n`+
-                 `    <comprobante>
-                 <![CDATA[<?xml version="1.0" encoding="UTF-8"?>
-                 ${docFirmado}
-             ]]>
-                 </comprobante>\n`+
-                 
-                `    </autorizacion>`
-
-                let vendedorCont ={
-                    Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
-                    Id:this.props.state.userReducer.update.usuario.user._id,
-                    Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
-                }
-
-                let PDFdata = {
-                  _id: this.props.datos._id,
-                  Tiempo:new Date().getTime(),
-                   Vendedor: vendedorCont,
-                    IDVenta:this.props.datos.iDVenta,
-                    ClaveAcceso:clavefinal, 
-                    numeroAuto,
-                     fechaAuto,
-                     fechaEmisionDocSustento, 
-                     numDocModificado,
-                     secuencial,
-                       SuperTotal,                                           
-                       baseImpoSinImpuestos,
-                       baseImpoConImpuestos,
-                       IvaEC:IvaEC.toFixed(2),
-                       fechaEmision,
-                       nombreComercial,
-                       dirEstablecimiento,
-                         FormasPago:this.state.Fpago,
-                         adicionalInfo:this.state.adicionalInfo,
-                       Doctype: "Nota-de-Debito",
-                      //  UserId: this.state.id,
-                        razon ,
-                        ruc,
-                        estab,
-                        ptoEmi,
-                        secuencial,
-                        obligadoContabilidad,
-
-  rimpeval : this.props.state.userReducer.update.usuario.user.Factura.rimpe?true:false,
-                                populares:  this.props.state.userReducer.update.usuario.user.Factura.populares == "true"?true:false,  
-                         
-
-                       razonSocialComprador,
-                        identificacionComprador,
-                        direccionComprador,
-                        correoComprador,
-                        ciudadComprador,
-                 motivos:this.state.motivos,
-                        LogoEmp : this.props.state.userReducer.update.usuario.user.Factura.logoEmp,       
-                         Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
-                         Estado:"AUTORIZADO",
-                      };
-         
-
-                  if(this.state.descargarNota){
-
-                    fetch("/public/downloadPDFbyHTML", {
-                        method: 'POST', // or 'PUT'
-                        body: JSON.stringify({
-                            Html:NotaDebito(PDFdata)
-
-                        }), // data can be `string` or {object}!
-                        headers:{
-                          'Content-Type': 'application/json',
-                          "x-access-token": this.props.state.userReducer.update.usuario.token
-                        }
-                      }).then(res => res.json())
-                      .then(response =>{
-                        if(response.status == "Ok"){
-                            const url = window.URL.createObjectURL(
-                              new Blob([Buffer.from(response.buffer)], { type: "application/pdf"}),
-                            );
-                          let link = document.createElement('a');
-                          link.href = url;
-                          link.setAttribute(
-                            'download',
-                            `Nota-de-Débito ${secuencial}`,
-                          );
-                          link.click()
-                          
-                        
-                        }
-
-
-                      })
-
-
-                  }
-
-                  fetch('/cuentas/agregarNotaDebito', {
-                    method: 'POST', // or 'PUT'
-                    body: JSON.stringify({
-                        newdocFirmado,
-                        Html:NotaDebito(PDFdata),
-                        PDFdata,
-                        docFirmado,
-                        Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
-
-                    }), // data can be `string` or {object}!
-                    headers:{
-                      'Content-Type': 'application/json',
-                      "x-access-token": this.props.state.userReducer.update.usuario.token
-                    }
-                  }).then(res => res.json())
-                  .catch(error => console.error('Error:', error))
-                  .then(response => { 
-                    console.log(response)
-                    if(response.status== "Ok"){
-
-                      this.props.dispatch(updateVenta(response.updateVenta));
-                       this.props.dispatch(addRegs(response.arrRegsSend));
-                       this.props.dispatch(updateCuentas(response.arrCuentas));
-                      this.Onsalida()
-                      let add = {
-                        Estado:true,
-                        Tipo:"success",
-                        Mensaje:"Nota de Débito generada exitosamente"
-                    }
-                    this.setState({Alert: add,  loading:false, })
-
-                    }
-                 
-
-                  })
-
-            }                  
- 
-      }else if(response.status =="error" ){
-        let add = {
-          Estado:true,
-          Tipo:"error",
-          Mensaje:response.resdata.mensajes.mensaje.mensaje
-      }
-      this.setState({Alert: add, loading:false })
-      }
-        })
-                   
-
-       
-
-
-
- }
-      
-      
-                                    
-                                    }else{
-                                        let add = {
-                                            Estado:true,
-                                            Tipo:"error",
-                                            Mensaje:"Es necesario validar la factura y firma digital"
-                                        }
-                                        this.setState({Alert: add, loading:false}) 
-                                    }
-
-
-
-      }
       handleChangeGeneral=(e)=>{
 
         this.setState({
@@ -885,13 +331,21 @@ handleMotivoChange = (index, field, value) => {
       
 
     render () {
+let listaCompra = ""
+        if(this.state.Comprobante !=""){
+             
+                listaCompra = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].retenciones[0].retencion.map((item, i)=>{
+                  return(<ListaCompra2Render
+                    index={i} 
+                    key={i} 
+                   datos={item}
+                    />
+                 )
+                })
+      
+
+            }
         console.log(this.state)
-let artsconIVA = 0
-let artssinIVA = 0
-let valSinIva = 0
-let valConIva = 0
-let SuperTotal = 0
-let IvaEC = 0
 
 const handleClose = (event, reason) => {
     let AleEstado = this.state.Alert
@@ -903,55 +357,7 @@ const Alert=(props)=> {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
   }
 
-
-      if(this.state.motivos.length > 0){
-
-        artsconIVA = this.state.motivos.filter(x=>x.iva == true)
-         artssinIVA  = this.state.motivos.filter(x=>x.iva == false)
-
-         if(artsconIVA.length > 0){
-             artsconIVA.forEach(x=>{
-                 valConIva += parseFloat(x.valor)
-             })
-         } 
-         if(artssinIVA.length > 0){
-          
-             artssinIVA.forEach(x=>{
-              
-                 valSinIva += parseFloat(x.valor)
-             })
-         } 
-        
-        }
-        SuperTotal  = valSinIva +  valConIva
-        IvaEC = valConIva - (valConIva /  parseFloat(`1.${process.env.IVA_EC }`))
-
-let TotalPago = 0
-
-        if(this.state.Fpago.length > 0){
-
-    for(let i = 0; i<this.state.Fpago.length;i++){
-    
-         TotalPago += parseFloat(this.state.Fpago[i].Cantidad)
-    }
-    
-}
-
-
-  const setDisableButton= () => {
-
-     if(SuperTotal > 0 && TotalPago > 0 && SuperTotal === TotalPago ){
-        return "enabled"
-      }else{
-        return "disabled"
-      }
-
-    
-
-   }
-
-
-        
+  
         return ( 
 
          <div >
@@ -1168,6 +574,60 @@ phone
             }}
           />
         </div>
+
+    <Animate show={this.state.Comprobante != ""}>
+
+        <div className="contAgregadorCompras">
+                       <DoubleScrollbar>
+      <div className="contTitulosaddFact ">
+                  
+                        
+                        <div className="Artic100Fpago">
+                           Numero Fact
+                        </div>
+                        <div className="Artic100Fpago ">
+                            Fecha Emisión
+                        </div>
+                        <div className="Artic100Fpago ">
+                            Ejercicio Fiscal
+                        </div>
+                        <div className="Artic100Fpago ">
+                            Base imponible Retención
+                        </div>
+                         <div className="Artic100Fpago ">
+                            Impuesto
+                        </div>
+                        <div className="Artic100Fpago ">
+                            Porcentaje Retención
+                        </div>
+                        <div className="Artic100Fpago ">
+                            Valor Retenido
+                        </div>
+                        </div>
+                        <div className="jwFlex">
+                        <div className="jwFlex">
+<div className="Artic100">   {this.state.Comprobante != "" ? this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].numDocSustento[0] : ""} </div>
+<div className="Artic100">   {this.state.Comprobante != "" ? this.state.Comprobante.comprobanteRetencion.infoCompRetencion[0].fechaEmision : ""} </div>
+<div className="Artic100">   {this.state.Comprobante != "" ? this.state.Comprobante.comprobanteRetencion.infoCompRetencion[0].periodoFiscal: ""} </div>
+
+                        </div>
+                        <div> 
+
+{listaCompra}
+                        </div>
+
+                        
+                        </div>
+                      
+            </DoubleScrollbar> 
+
+
+      </div>
+
+    </Animate>
+
+
+
 </div>
 
  
@@ -1177,17 +637,7 @@ phone
 </div>
         </div>
 
-               <Animate show={this.state.showAdicionalInfo}>
-                                <ModalDetallesAdicionales
-                                  onReload={this.state.adicionalInfo}
-                                  onCamposChange={(e)=>{
-                                
-                                    this.setState({adicionalInfo:e})}}
-                               
-                                   Flecharetro={()=>{this.setState({showAdicionalInfo:false})}}
-                                />
-        
-                            </Animate >      
+                 
 
                    <Snackbar open={this.state.Alert.Estado} autoHideDuration={10000} onClose={handleClose}>
             <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
@@ -1422,6 +872,33 @@ phone
   align-items: center;
   justify-content: center;
   transition: background 0.2s;
+}
+   .contTitulosaddFact{
+    display:flex;
+   margin-top: 10px;
+    font-size: 15px;
+    font-weight: bolder;  
+}
+.contAgregadorCompras{
+  display:flex;
+  flex-flow: column;
+  overflow-x: scroll;
+}
+    .Artic100Fpago{
+   
+  min-width: 120px;
+    align-items: center;
+    text-align:center;
+     border: 1px solid #28d219ff;
+}
+      .Artic100{
+     word-break: break-all;
+    width: 120px;
+    display: flex;
+    align-items: center;
+    text-align:center;
+    border: 1px solid #1976d2;
+    justify-content: center;
 }
   .btnDeleteMotivo {
   background: #d32f2f;

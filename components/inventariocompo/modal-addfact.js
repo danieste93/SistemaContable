@@ -987,7 +987,7 @@ SendAceptar={()=>{   this.setState({xmlData:this.state.preventxmlData, Comproban
   flex-flow: column;
   overflow-x: scroll;
 }
-}
+
 .accClass{
   width: 10%;  
   min-width:50px;
