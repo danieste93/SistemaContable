@@ -3782,8 +3782,102 @@ let update={NotaCredito: newdata}
 
 
    }
+
+    async function agregarRetencion (req, res) {
+      let conn = await mongoose.connection.useDb(req.body.Userdata.DBname)
+    let VentaModelSass = await conn.model('Venta', ventasSchema);
+    let CounterModelSass = await conn.model('Counter', counterSchema);
+     let CuentasModelSass = await conn.model('Cuenta', accountSchema);
+       let RegModelSass = await conn.model('Reg', regSchema);
+         let CatModelSass = await conn.model('Categoria', catSchema);
+          const session = await mongoose.startSession();   
+    session.startTransaction();
+
+    try{ 
+let data = req.body.PDFdata
+      console.log(data)
+ let arrRegs = []
+ let arrRegsSend = []
+ let arrCuentas = []
+     let findIdReg = await CounterModelSass.find({iDgeneral:9999999}, null,{session})
+    
+     let cuentaSRI = await CuentasModelSass.find({idCuenta: 8}, null,{session})
+const fixedImport = new mongoose.Types.Decimal128(data.TotalRetenido.toFixed(2))
+
+    let dataregTrans = {
+          Accion:"Trans",   
+          Tiempo:data.Tiempo,
+           TiempoEjecucion:data.Tiempo,
+            IdRegistro:findIdReg[0].ContRegs,
+  
+          CatSelect:{},
+          CuentaSelec:{idCuenta:data.cuentaPago._id,
+                      nombreCuenta: data.cuentaPago.NombreC,
+                  },
+    
+    
+          CuentaSelec2:{idCuenta:cuentaSRI[0]._id,
+                        nombreCuenta: cuentaSRI[0].NombreC,
+                      },
+
+
+          Nota:"Retención a la Venta N° "+ data.iDVenta,
+          Descripcion:"",
+          Estado:false,
+          urlImg:[],
+          Valrep:"",
+          TipoRep:"No",
+          Importe:fixedImport,
+          Versiones: [],
+           Usuario:{
+             Nombre:data.Vendedor.Nombre,
+             Id:data.Vendedor.Id,
+             Tipo:data.Vendedor.Tipo,
+              
+           }
+      }
+    
+           let regRete =  await RegModelSass.create([dataregTrans],{session})
+           if(regRete[0] == null){
+            throw new Error("No se pudo crear el registro, intente despues")
+          }
+ arrRegs.push(regRete[0]._id)
+ arrRegsSend.push(regRete[0])
+ let options = {new:true, session} 
+ let updateCuenta1 = { $inc: { DineroActual: fixedImport * -1 } }
+ let updateCuenta2 = { $inc: { DineroActual: fixedImport  } }
+   const cuentaModi1 = await CuentasModelSass.findByIdAndUpdate(data.cuentaPago._id, updateCuenta1, options)
+   const cuentaModi2 = await CuentasModelSass.findByIdAndUpdate(cuentaSRI[0]._id, updateCuenta2, options)
+  
+ if (!cuentaModi1 || !cuentaModi2) {
+  throw new Error(`No se pudo modificar la(s) cuenta(s): ${!cuentaModi1 ? 'cuentaModi1' : ''} ${!cuentaModi2 ? 'cuentaModi2' : ''}`.trim());
+}
+
+          arrCuentas.push(cuentaModi1, cuentaModi2)
+        let newdata ={...data, arrRegs}   
+        let update={Retencion: newdata} 
+
+         let updateVenta = await VentaModelSass.findByIdAndUpdate(req.body.PDFdata._id, update, {session, new:true})
+      let updatecounter = { $inc: { ContSecuencial: 1, ContRegs: 1 } }
+      await CounterModelSass.findOneAndUpdate({iDgeneral:9999999}, updatecounter,{session} )
+  await session.commitTransaction();    
+      session.endSession();                 
+      return res.send({status: "Ok", message: "Retencion Agregada", updateVenta, arrRegsSend, arrCuentas});
+      
+
+
+
+    }
+     catch(error){
+      await session.abortTransaction();
+      session.endSession();
+      console.log(error, "errr")
+      return res.json({status: "Error", message: error.name, error:error.message });
+    }
+
+    }
      async function agregarNotaDebito (req, res) {
-    console.log("GenNotaDebito")
+  
     let conn = await mongoose.connection.useDb(req.body.Userdata.DBname)
     let VentaModelSass = await conn.model('Venta', ventasSchema);
     let CounterModelSass = await conn.model('Counter', counterSchema);
@@ -4409,4 +4503,4 @@ let newTime = new Date(req.body.fechaAuto).getTime()
  }
 
 }
-module.exports = {agregarNotaDebito,genCierreCaja,uploadFact,agregarNotaCredito,getRegsDeleteTime,getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};
+module.exports = {agregarRetencion,agregarNotaDebito,genCierreCaja,uploadFact,agregarNotaCredito,getRegsDeleteTime,getVentasHtml,getRegsTime,getRegsbyCuentas,exeRegs,getMontRegs,getCuentasRegs,getInvs,addAbono,getAllReps,getCuentasyCats,getVentas,getVentasByTime,getAllCompras,getArmoextraData,getCompras,getTipos,getRCR2,deleteTiemporegs,getCuentaslim,getPartData3,getArts,getPartData2,addCierreCaja,profesorAdd, generarFact, getRCR,getMainData,findCuenta,generarCredito, generarVenta, editCat, editRep, deleteRepeticion, getRepeticiones,editCount,addCount,getCuentas,getTipoCuentas, addNewTipe,deleteTipe,deleteCount,deleteCat,addReg,getRegs, addCat,getCat,editReg,deleteReg, addRepeticiones};

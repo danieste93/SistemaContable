@@ -431,7 +431,7 @@ let data = await fetchData(this.props.state.userReducer,
           .catch(error => {console.error('Error:', error);
                  })
           .then(response => {
-           console.log(response)
+          
            if(response.status =="ok" ){
             if(response.resdata.estado == "AUTORIZADO"){
                 let numeroAuto = response.resdata.numeroAutorizacion

@@ -41,8 +41,8 @@ componentRef = React.createRef();
     componentDidMount(){
 
     
-      console.log(this.state)
-      console.log(this.props)
+      
+     
       setTimeout(function(){ 
         
         document.getElementById('mainxx').classList.add("entradaaddc")
@@ -52,6 +52,122 @@ componentRef = React.createRef();
 this.getUserData()
         
       }
+
+AgregarRetencion=async(totalRet)=>{
+  this.setState({loading:true})
+
+     let vendedorCont ={
+                    Nombre:this.props.state.userReducer.update.usuario.user.Usuario,
+                    Id:this.props.state.userReducer.update.usuario.user._id,
+                    Tipo:this.props.state.userReducer.update.usuario.user.Tipo,
+                }
+ let cuentaPago = this.props.datos.formasdePago[0].Cuenta
+
+ let razon = this.state.Comprobante.comprobanteRetencion.infoTributaria[0].razonSocial[0]
+ let nombreComercial = this.state.Comprobante.comprobanteRetencion.infoTributaria[0].nombreComercial[0]
+ let ruc = this.state.Comprobante.comprobanteRetencion.infoTributaria[0].ruc[0]
+ let dirMatriz=this.state.Comprobante.comprobanteRetencion.infoTributaria[0].dirMatriz[0]    
+ let secuencial = this.state.Comprobante.comprobanteRetencion.infoTributaria[0].secuencial[0]
+let estab = this.state.Comprobante.comprobanteRetencion.infoTributaria[0].estab[0]
+let ptoEmi = this.state.Comprobante.comprobanteRetencion.infoTributaria[0].ptoEmi[0]
+let clavefinal = this.state.Comprobante.comprobanteRetencion.infoTributaria[0].claveAcceso[0]
+let numeroAuto = this.state.xmlData.numeroAutorizacion[0]
+let fechaAuto = this.state.xmlData.fechaAutorizacion[0]
+
+let razonSocialComprador = this.state.Comprobante.comprobanteRetencion.infoCompRetencion[0].razonSocialSujetoRetenido[0] 
+let identificacionComprador = this.state.Comprobante.comprobanteRetencion.infoCompRetencion[0].identificacionSujetoRetenido[0]
+let direccionComprador = this.state.Comprobante.comprobanteRetencion.infoCompRetencion[0].dirEstablecimiento[0]
+let periodoFiscal = this.state.Comprobante.comprobanteRetencion.infoCompRetencion[0].periodoFiscal[0]
+
+let fechaEmisionDocSustento = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].fechaEmisionDocSustento[0]
+let fechaRegistroContable = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].fechaRegistroContable[0]
+let numDocModificado = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].numDocSustento[0]
+let numAutoDocSustento = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].numAutDocSustento[0]
+
+let fechaEmision = this.state.Comprobante.comprobanteRetencion.infoCompRetencion[0].fechaEmision[0]
+              
+let totalSinImpuestos = this.state.Comprobante.docsSustento[0].docSustento[0].totalSinImpuestos[0]
+ let TotalRetenido = totalRet
+ let retenciones = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].retenciones[0].retencion
+let importeTotal = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].importeTotal[0]
+let infoAdicional = this.state.Comprobante.comprobanteRetencion.infoAdicional ? this.state.Comprobante.comprobanteRetencion.infoAdicional[0].campoAdicional : []
+
+    let PDFdata = {
+                     Vendedor: vendedorCont,
+                      cuentaPago,
+                    Tiempo:new Date().getTime(),
+                    _id:this.props.datos._id,
+                    TotalRetenido,
+                     IDVenta:this.props.datos.iDVenta,
+                    ClaveAcceso:clavefinal, 
+                    periodoFiscal,
+                    retenciones,
+                    infoAdicional,
+                    importeTotal,
+                    totalSinImpuestos,
+                    numAutoDocSustento,
+                    fechaRegistroContable,
+                    dirMatriz,
+                    numeroAuto,
+                     fechaAuto,
+                     fechaEmisionDocSustento, 
+                     numDocModificado,
+                     secuencial,
+                       fechaEmision,
+                       nombreComercial,
+                       dirEstablecimiento,
+                       Doctype: "Retención-Recibida",
+                        razon ,
+                        ruc,
+                        estab,
+                        ptoEmi,
+                         razonSocialComprador,
+                        identificacionComprador,
+                        direccionComprador,
+                        correoComprador,
+                        ciudadComprador,
+                         Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
+                         Estado:"AUTORIZADO",
+                      
+                     };
+
+ fetch('/cuentas/agregarRetencion', {
+                    method: 'POST', // or 'PUT'
+                    body: JSON.stringify({
+                      
+                        PDFdata,
+                    
+                        Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname} , 
+
+                    }), // data can be `string` or {object}!
+                    headers:{
+                      'Content-Type': 'application/json',
+                      "x-access-token": this.props.state.userReducer.update.usuario.token
+                    }
+                  }).then(res => res.json())
+                  .catch(error => console.error('Error:', error))
+                  .then(response => { 
+                    console.log(response)
+                    if(response.status== "Ok"){
+
+                      this.props.dispatch(updateVenta(response.updateVenta));
+                       this.props.dispatch(addRegs(response.arrRegsSend));
+                        this.props.dispatch(updateCuentas(response.arrCuentas));
+                        this.Onsalida()
+                      let add = {
+                        Estado:true,
+                        Tipo:"success",
+                        Mensaje:"Retencion agregada exitosamente"
+                    }
+                    this.setState({Alert: add,  loading:false, })
+
+                    }
+                 
+
+                  })
+
+
+                     }
 
 
        setChangeinput=(e)=>{
@@ -252,8 +368,7 @@ let data = await fetchData(this.props.state.userReducer,
     this.props.datos.idCliente)
 
     this.setState({ClientID:data.Client.TipoID,
-              secuencialGen:data.Counters,
-              secuencialBase:data.Counters,
+             
 
     })
        }
@@ -282,24 +397,7 @@ let data = await fetchData(this.props.state.userReducer,
         [e.target.name]:e.target.value
         })
         } 
-        handleChangeSecuencial=(e)=>{
-            if(e.target.value >= this.state.secuencialBase){
-
-            
-            this.setState({
-            [e.target.name]:parseInt(e.target.value)
-            })}
-            else{
-
-                let add = {
-                    Estado:true,
-                    Tipo:"error",
-                    Mensaje:`No se puede elegir un secuencial menor`
-                }
-                this.setState({Alert: add, }) 
-
-            }
-            } 
+      
     
 
   
@@ -332,8 +430,22 @@ handleMotivoChange = (index, field, value) => {
 
     render () {
 let listaCompra = ""
+let totalRet = 0;
+ console.log(this.props)
+ console.log(this.state )
         if(this.state.Comprobante !=""){
              
+try {
+  const docs =
+    this.state?.Comprobante?.comprobanteRetencion?.docsSustento?.[0]?.docSustento?.[0]
+      ?.retenciones?.[0]?.retencion || [];
+  totalRet = docs.reduce((sum, r) => {
+    const v = parseFloat((r?.valorRetenido?.[0]) || 0);
+    return sum + (isNaN(v) ? 0 : v);
+  }, 0);
+} catch (e) {
+  totalRet = 0;
+}
                 listaCompra = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].retenciones[0].retencion.map((item, i)=>{
                   return(<ListaCompra2Render
                     index={i} 
@@ -615,12 +727,33 @@ phone
 
 {listaCompra}
                         </div>
-
-                        
+   
                         </div>
-                      
+                {/* Bloque del total (imponente) */}
+         <div className="totalRow">
+           <div className="totalLabel">Total Retenido:</div>
+           <button className="totalBtn">${totalRet.toFixed(2)}</button>
+         </div>
+                           
             </DoubleScrollbar> 
 
+ 
+
+           <div className="contBotonPago">
+             <Animate show={this.state.loading}>
+  <CircularProgress />
+  </Animate>
+  <Animate show={!this.state.loading}>
+   <button style={{width:"50%",maxWidth:"200px"}} className={` btn btn-success botonedit2 `} onClick={()=>{this.AgregarRetencion(totalRet )}}>
+<p>Agregar</p>
+<i className="material-icons">
+add
+</i>
+
+</button>
+  </Animate>
+                 
+</div>   
 
       </div>
 
@@ -735,7 +868,7 @@ phone
     .contventa{
     margin-top: 50px;
     width: 100%;
-    max-width: 920px;
+   
     }
      .tituloArtic{
     width: 250px;  
@@ -793,6 +926,32 @@ phone
     justify-content: center;
     text-align: center;
 }  
+     .totalRow{
+                 display:flex;
+                 justify-content:flex-end;
+                 align-items:center;
+                 gap:12px;
+                 width:100%;
+                 margin:12px 0;
+               }
+               .totalLabel{
+                 font-weight:800;
+                 font-size:18px;
+                 color:#222;
+               }
+               .totalBtn{
+                 background: linear-gradient(90deg,#ff7a18,#ff4e50);
+                 color:#fff;
+                 font-weight:900;
+                 font-size:18px;
+                 padding:10px 20px;
+                 border-radius:12px;
+                 box-shadow: 0 6px 18px rgba(255,78,80,0.28);
+                 border:none;
+                 cursor:default;
+               }
+               .totalBtn:active{ transform: translateY(1px); }
+               
     .totalp{
     text-align: center;
     font-size: 28px;
@@ -808,6 +967,8 @@ phone
              .contBotonPago{
                     margin: 20px 0px;
                     display: flex;
+                    width: 200px;
+                    flex-flow: column;
                     align-items: center;
                     justify-content: space-around;
                 }
@@ -878,20 +1039,37 @@ phone
    margin-top: 10px;
     font-size: 15px;
     font-weight: bolder;  
-}
+    /* visual only */
+    background: linear-gradient(180deg, rgba(250,251,255,0.9), rgba(245,247,255,0.85));
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(12, 24, 48, 0.06);
+    border: 1px solid rgba(10,20,40,0.05);
+    color: #0b1720;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
 .contAgregadorCompras{
   display:flex;
   flex-flow: column;
   overflow-x: scroll;
+      align-items: center;
 }
     .Artic100Fpago{
-   
+   width: 120px;
   min-width: 120px;
     align-items: center;
     text-align:center;
-     border: 1px solid #28d219ff;
+     /* visual only */
+     background: linear-gradient(180deg, #ffffff, #fbfdff);
+     border: 1px solid rgba(40,130,60,0.12);
+     border-radius: 8px;
+     box-shadow: 0 4px 10px rgba(10,20,40,0.03);
+     color: #0b2a16;
+     font-weight: 800;
+     margin: 6px;
 }
       .Artic100{
+      margin: 6px;
      word-break: break-all;
     width: 120px;
     display: flex;

@@ -64,6 +64,7 @@ console.log(item)
                 width: 120px;
                 align-items: center;
                 text-align:center;
+                margin: 6px;
             }
             .Articid{
                 width: 10%;  

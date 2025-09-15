@@ -153,6 +153,9 @@ const OrderSchema = new Schema({
             NotaDebito:{
 
            },
+             Retencion:{
+
+           },
            Html:{
             type: String,
            },
