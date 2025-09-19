@@ -691,7 +691,8 @@ phone
     <Animate show={this.state.Comprobante != ""}>
 
         <div className="contAgregadorCompras">
-                       <DoubleScrollbar>
+        <div className="centrador">             
+  <DoubleScrollbar>
       <div className="contTitulosaddFact ">
                   
                         
@@ -737,7 +738,6 @@ phone
          </div>
                            
             </DoubleScrollbar> 
-
  
 
            <div className="contBotonPago">
@@ -757,7 +757,7 @@ add
 </div>   
 
       </div>
-
+</div>
     </Animate>
 
 
@@ -962,16 +962,16 @@ add
      .inputDes{
             border-radius:5px;
             width: 50%;
-            overflow: hidden;
+           
             max-width: 150px;
         }     
              .contBotonPago{
-                    margin: 20px 0px;
+                    margin: auto;
                     display: flex;
-                    width: 200px;
+                    width: 100%
                     flex-flow: column;
                     align-items: center;
-                    justify-content: space-around;
+                    justify-content: center;
                 }
                        .botonedit2{
                     display:flex;
@@ -1036,11 +1036,10 @@ add
   transition: background 0.2s;
 }
    .contTitulosaddFact{
-    display:flex;
-   margin-top: 10px;
+    display: flex;
+    margin-top: 10px;
     font-size: 15px;
-    font-weight: bolder;  
-    /* visual only */
+    font-weight: bolder;
     background: linear-gradient(180deg, rgba(250,251,255,0.9), rgba(245,247,255,0.85));
     border-radius: 10px;
     box-shadow: 0 6px 18px rgba(12, 24, 48, 0.06);
@@ -1048,12 +1047,23 @@ add
     color: #0b1720;
     text-transform: uppercase;
     letter-spacing: 0.6px;
+    min-width: 840px;
+    width: max-content;
+     
+    box-sizing: border-box;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
+    
 .contAgregadorCompras{
-  display:flex;
-  flex-flow: column;
-  overflow-x: scroll;
-      align-items: center;
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
 }
     .Artic100Fpago{
    width: 120px;
@@ -1153,6 +1163,8 @@ add
   color: #6b7280;
   cursor: not-allowed;
 }
+  .centrador{
+  margin: auto;}
            `}</style>
         
 

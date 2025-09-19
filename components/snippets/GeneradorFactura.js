@@ -131,7 +131,7 @@ function escapeXml(unsafe) {
   const pagosXML = pagos.map(pago => {
     const tipo = pago.Tipo;
     const codigo = codigosSRI[tipo] || "00";
-    const monto = pago.Cantidad?.toFixed(2) || "0.00";
+    const monto = parseFloat(pago.Cantidad)?.toFixed(2) || "0.00";
    
 
     return `

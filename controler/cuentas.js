@@ -3801,13 +3801,13 @@ let data = req.body.PDFdata
  let arrCuentas = []
      let findIdReg = await CounterModelSass.find({iDgeneral:9999999}, null,{session})
     
-     let cuentaSRI = await CuentasModelSass.find({idCuenta: 8}, null,{session})
+     let cuentaSRI = await CuentasModelSass.find({iDcuenta: 8}, null,{session})
 const fixedImport = new mongoose.Types.Decimal128(data.TotalRetenido.toFixed(2))
 
     let dataregTrans = {
           Accion:"Trans",   
-          Tiempo:data.Tiempo,
-           TiempoEjecucion:data.Tiempo,
+          Tiempo:new Date(data.fechaAuto).getTime(),
+           TiempoEjecucion:new Date(data.fechaAuto).getTime(),
             IdRegistro:findIdReg[0].ContRegs,
   
           CatSelect:{},
