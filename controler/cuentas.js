@@ -3789,7 +3789,7 @@ let update={NotaCredito: newdata}
     let CounterModelSass = await conn.model('Counter', counterSchema);
      let CuentasModelSass = await conn.model('Cuenta', accountSchema);
        let RegModelSass = await conn.model('Reg', regSchema);
-         let CatModelSass = await conn.model('Categoria', catSchema);
+         
           const session = await mongoose.startSession();   
     session.startTransaction();
 
@@ -3821,7 +3821,7 @@ const fixedImport = new mongoose.Types.Decimal128(data.TotalRetenido.toFixed(2))
                       },
 
 
-          Nota:"Retención a la Venta N° "+ data.iDVenta,
+          Nota:"Retención a la Venta N° "+ data.IDVenta,
           Descripcion:"",
           Estado:false,
           urlImg:[],

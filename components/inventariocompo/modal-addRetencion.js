@@ -78,6 +78,7 @@ let razonSocialComprador = this.state.Comprobante.comprobanteRetencion.infoCompR
 let identificacionComprador = this.state.Comprobante.comprobanteRetencion.infoCompRetencion[0].identificacionSujetoRetenido[0]
 let direccionComprador = this.state.Comprobante.comprobanteRetencion.infoCompRetencion[0].dirEstablecimiento[0]
 let periodoFiscal = this.state.Comprobante.comprobanteRetencion.infoCompRetencion[0].periodoFiscal[0]
+        let correoComprador = this.props.state.userReducer.update.usuario.user.Email
 
 let fechaEmisionDocSustento = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].fechaEmisionDocSustento[0]
 let fechaRegistroContable = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].fechaRegistroContable[0]
@@ -86,7 +87,7 @@ let numAutoDocSustento = this.state.Comprobante.comprobanteRetencion.docsSustent
 
 let fechaEmision = this.state.Comprobante.comprobanteRetencion.infoCompRetencion[0].fechaEmision[0]
               
-let totalSinImpuestos = this.state.Comprobante.docsSustento[0].docSustento[0].totalSinImpuestos[0]
+let totalSinImpuestos = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].totalSinImpuestos[0]
  let TotalRetenido = totalRet
  let retenciones = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].retenciones[0].retencion
 let importeTotal = this.state.Comprobante.comprobanteRetencion.docsSustento[0].docSustento[0].importeTotal[0]
@@ -115,7 +116,7 @@ let infoAdicional = this.state.Comprobante.comprobanteRetencion.infoAdicional ? 
                      secuencial,
                        fechaEmision,
                        nombreComercial,
-                       dirEstablecimiento,
+                       
                        Doctype: "Retención-Recibida",
                         razon ,
                         ruc,
@@ -125,7 +126,7 @@ let infoAdicional = this.state.Comprobante.comprobanteRetencion.infoAdicional ? 
                         identificacionComprador,
                         direccionComprador,
                         correoComprador,
-                        ciudadComprador,
+                    
                          Userdata:{DBname:this.props.state.userReducer.update.usuario.user.DBname}, 
                          Estado:"AUTORIZADO",
                       
@@ -744,7 +745,7 @@ phone
   <CircularProgress />
   </Animate>
   <Animate show={!this.state.loading}>
-   <button style={{width:"50%",maxWidth:"200px"}} className={` btn btn-success botonedit2 `} onClick={()=>{this.AgregarRetencion(totalRet )}}>
+   <button style={{maxWidth:"200px"}} className={` btn btn-success botonedit2 `} onClick={()=>{this.AgregarRetencion(totalRet )}}>
 <p>Agregar</p>
 <i className="material-icons">
 add
