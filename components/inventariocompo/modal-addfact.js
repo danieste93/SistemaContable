@@ -2,6 +2,9 @@ import BarcodeCameraDirectReader from '../../components/BarcodeCameraDirectReade
 import React, { Component } from 'react'
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
+import IconButton from '@material-ui/core/IconButton';
+import CameraAltIcon from '@material-ui/icons/CameraAlt';
+import CropFreeIcon from '@material-ui/icons/CropFree';
 import Autosuggestjw from '../suggesters/jwsuggest-autorender';
 import DropFileInput from "../drop-file-input/DropFileInputp12"
 import Xml2js from 'xml2js';
@@ -185,19 +188,17 @@ class Contacto extends Component {
             // Priorizar la clave más larga encontrada (idealmente de 49 dígitos)
             posiblesClaves.sort((a, b) => b.length !== a.length ? b.length - a.length : b.localeCompare(a));
             console.log('Sugerencias posiblesClaves:', posiblesClaves);
-            // Si hay al menos una clave y el usuario no ha editado manualmente, autocompletar con la más larga
-            if (posiblesClaves.length > 0 && (!this.state.claveAccesoInput || this.state.claveAccesoInput.length < 44)) {
-              this.setState({ claveAccesoInput: posiblesClaves[0], consultandoSRI: false, clavesDetectadas: posiblesClaves, mostrarClavesAlternas: false, Alert: { Estado: false } });
-            } else if (posiblesClaves.length === 1) {
-              // Si solo hay una sugerencia, consultar SRI automáticamente (igual que caso positivo)
-              this.setState({ claveAccesoInput: posiblesClaves[0], consultandoSRI: false, clavesDetectadas: posiblesClaves, mostrarClavesAlternas: false, Alert: { Estado: false } }, () => {
+            // Si hay al menos una clave de 49 dígitos, autocompletar y consultar SRI automáticamente
+            const clave49 = posiblesClaves.find(x => x.length === 49);
+            if (clave49) {
+              this.setState({ claveAccesoInput: clave49, consultandoSRI: false, clavesDetectadas: posiblesClaves, mostrarClavesAlternas: false, Alert: { Estado: false } }, () => {
                 if (typeof this.consultarSRI === 'function') {
                   this.consultarSRI(true); // true = consulta automática por OCR
                 }
               });
-            } else if (posiblesClaves.length > 1) {
-              // Si hay varias sugerencias, dejar la más larga y permitir edición
-              this.setState({ claveAccesoInput: posiblesClaves[0], consultandoSRI: false, clavesDetectadas: posiblesClaves, mostrarClavesAlternas: false, Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró número de autorización en la imagen. Se detectó la clave más probable.' } });
+            } else if (posiblesClaves.length > 0) {
+              // Si hay claves pero ninguna de 49 dígitos, solo sugerir la más larga
+              this.setState({ claveAccesoInput: posiblesClaves[0], consultandoSRI: false, clavesDetectadas: posiblesClaves, mostrarClavesAlternas: false, Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró clave de 49 dígitos. Se detectó la clave más probable.' } });
             } else {
               this.setState({ consultandoSRI: false, Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró número de autorización en la imagen.' }, clavesDetectadas: [], mostrarClavesAlternas: false });
             }
@@ -1002,26 +1003,37 @@ Agregar Factura
       {this.state.consultandoSRI ? 'Consultando...' : 'Consultar SRI'}
     </button>
   </div>
-  <div style={{display:'flex',alignItems:'center',gap:8,marginTop:8}}>
-    <label htmlFor="fotoFacturaInput" style={{ cursor: 'pointer', color: '#1976d2', textDecoration: 'underline', margin:0 }}>
-      Tomar foto de factura
-      <input
-        type="file"
+  <div style={{display:'flex',alignItems:'center',gap:16,marginTop:8}}>
+    <input
+      type="file"
       id="fotoFacturaInput"
       accept="image/*"
       capture="environment"
       style={{ display: 'none' }}
       onChange={this.handleFotoFactura}
-      />
-    </label>
-    <button
-      type="button"
-      style={{height:36, minWidth:44, background:'#fff', border:'2px solid #1976d2', borderRadius:6, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, color:'#1976d2'}}
-      title="Escanear código de barras"
-      onClick={()=>this.setState({showBarcodeDirect:true})}
+    />
+    <IconButton
+      color="primary"
+      aria-label="Tomar foto de factura"
+      component="span"
+      onClick={() => document.getElementById('fotoFacturaInput').click()}
+      style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', marginRight:4 }}
+      title="Tomar foto de factura"
     >
-      <span role="img" aria-label="barcode">&#128439;</span>
-    </button>
+      <CameraAltIcon style={{ fontSize:32 }} />
+    </IconButton>
+    <span style={{fontSize:15, color:'#1976d2', fontWeight:500, marginRight:12}}>Foto de factura</span>
+    <IconButton
+      color="primary"
+      aria-label="Escanear código de barras"
+      component="span"
+      onClick={()=>this.setState({showBarcodeDirect:true})}
+      style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', marginLeft:4 }}
+      title="Escanear código de barras"
+    >
+      <CropFreeIcon style={{ fontSize:32 }} />
+    </IconButton>
+    <span style={{fontSize:15, color:'#1976d2', fontWeight:500}}>Código de barras</span>
     {this.state.showBarcodeDirect && (
       <BarcodeCameraDirectReader
         onDetected={clave => {
