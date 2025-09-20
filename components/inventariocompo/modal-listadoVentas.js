@@ -18,6 +18,7 @@ import GenNotasDeb from "./modal-genNotasDeb"
 import ViewNotasCred from "../modal-viewvNotaCred"
 import ViewNotasDeb from "../modal-viewvNotaDeb"
 
+import ViewRetencion from "../modal-viewvRet"
 import ViewCreds from "../modal-viewCreds"
 import "./mediaprint.css"
 import DropdownButtonVentas from './usefull/dropdownbuttonVentas';
@@ -1391,7 +1392,7 @@ search
 </Animate>
 <Animate show={this.state.viewerNota}>
 <ViewNotasCred updateNotaCred={(e)=>{
-          console.log(e);
+         
           this.props.dispatch(updateVenta(e.Venta))
           e.arrRegs.forEach(x => { this.props.dispatch(deleteReg(x))  });
           this.props.dispatch(updateCuentas(e.arrCuentas))
@@ -1400,7 +1401,7 @@ search
   userData={this.props.state.userReducer.update} datos={this.state.viewerdataNota} Flecharetro={()=>{this.setState({viewerNota:false})}} />
 </Animate>
 <Animate show={this.state.viewerNotaDeb}>
-<ViewNotasDeb updateNotaDeb={(e)=>{console.log(e);
+<ViewNotasDeb updateNotaDeb={(e)=>{
   this.props.dispatch(updateVenta(e.Venta))
      
               e.arrRegs.forEach(x => { this.props.dispatch(deleteReg(x)) });
@@ -1412,6 +1413,22 @@ search
 }
 } 
   userData={this.props.state.userReducer.update} datos={this.state.viewerdataNota} Flecharetro={()=>{this.setState({viewerNotaDeb:false})}} />
+</Animate>
+
+
+<Animate show={this.state.viewerRet}>
+<ViewRetencion updateRet={(e)=>{console.log(e);
+  this.props.dispatch(updateVenta(e.Venta))
+     
+              e.arrRegs.forEach(x => { this.props.dispatch(deleteReg(x)) });
+
+                this.props.dispatch(updateCuentas(e.arrCuentas))
+
+                  this.props.dispatch(addRegsDelete(e.arrRegsDell))
+
+}
+} 
+  userData={this.props.state.userReducer.update} datos={this.state.viewerdataRetencion} Flecharetro={()=>{this.setState({viewerRet:false})}} />
 </Animate>
 
 <Animate show={this.state.ModaluploadFact}>

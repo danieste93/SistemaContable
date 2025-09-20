@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 
 import CircularProgress from '@material-ui/core/CircularProgress';
-import NotaDebito from "../public/static/NotaDebitoTemplate"
+import Retencion from "../public/static/RetencionTemplate"
 import ModalDeleteGeneral from './cuentascompo/modal-delete-general';
 import { Animate } from "react-animate-mount";
 class Contacto extends Component {
@@ -17,7 +17,7 @@ modalDelete:false
 
        }, 500);
 
-    let viewHTML = NotaDebito(this.props.datos.NotaDebito)
+    let viewHTML = Retencion(this.props.datos.Retencion)
 
    this.setState({Html:viewHTML})
       
@@ -57,7 +57,7 @@ modalDelete:false
           link.href = url;
           link.setAttribute(
             'download',
-            `Nota-de-Débito ${this.props.datos.NotaDebito.secuencial}`,
+            `Retencion ${this.props.datos.Retencion.secuencial}`,
           );
           link.click()
           
@@ -89,7 +89,7 @@ console.log(this.state)
            />
   <div className="tituloventa">
 
-Nota de Débito de la Venta Nro - {this.props.datos.iDVenta}
+Retención de la Venta Nro - {this.props.datos.iDVenta}
 
 
 
@@ -100,7 +100,7 @@ Nota de Débito de la Venta Nro - {this.props.datos.iDVenta}
             <span className="material-icons" >
             download
           </span>
-          <p>Descargar Nota D.</p>
+          <p>Descargar Retención.</p>
           </button>
 
           <button  className="btn btn-danger btnDropDowm " onClick={(e)=>{ this.setState({modalDelete:true}) }}><span className="material-icons">delete
@@ -121,11 +121,11 @@ Nota de Débito de la Venta Nro - {this.props.datos.iDVenta}
         </div>
           <Animate show={this.state.modalDelete}> 
                 <ModalDeleteGeneral
-                 sendSuccess={(e)=> {this.props.updateNotaDeb(e);this.Onsalida() }}
+                 sendSuccess={(e)=> {this.props.updateRetencion(e);this.Onsalida() }}
                  sendError={()=>{console.log("deleteerror")}}
                 itemTodelete={{...this.props.datos, ...this.props.userData}}
-                 mensajeDelete={{mensaje:"Seguro quieres eliminar esta Nota de Crédito? Recuerda que aun debes eliminarla en portal del SRI", 
-                  url:"/public/deleteNotaDebito" }}
+                 mensajeDelete={{mensaje:"Seguro quieres eliminar esta Retención? Recuerda que aun debes eliminarla en portal del SRI", 
+                  url:"/public/deleteRetencion" }}
                 Flecharetro={()=>this.setState({modalDelete:false})}
           
                 />
