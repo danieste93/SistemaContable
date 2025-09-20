@@ -1,3 +1,4 @@
+import DescriptionIcon from '@material-ui/icons/Description';
 import BarcodeCameraDirectReader from '../../components/BarcodeCameraDirectReader';
 import React, { Component } from 'react'
 import Snackbar from '@material-ui/core/Snackbar';
@@ -22,9 +23,20 @@ import DoubleScrollbar from "react-double-scrollbar";
 class Contacto extends Component {
   state = {
     ...this.state,
-  showBarcodeCamera: false,
-  showBarcodeDirect: false
+    showBarcodeCamera: false,
+    showBarcodeDirect: false,
+    isCompact: false
   };
+  componentDidUpdate(prevProps, prevState) {
+    // Refuerzo: siempre que xmlData.fechaAutorizacion[0] tenga valor, isCompact true
+    const xmlOk = this.state.xmlData && this.state.xmlData.fechaAutorizacion && this.state.xmlData.fechaAutorizacion[0] !== '';
+    if (xmlOk && !this.state.isCompact) {
+      this.setState({ isCompact: true });
+    }
+    if (!xmlOk && this.state.isCompact) {
+      this.setState({ isCompact: false });
+    }
+  }
   // OCR: Tomar foto y extraer clave de acceso
   handleFotoFactura = async (event) => {
     const file = event.target.files[0];
@@ -937,8 +949,82 @@ Agregar Factura
 </div> 
 <div className="Contxml">
 
-<label htmlFor="myfile">Seleccione un xml:</label>
-<input ref={this.componentRef} type="file" id="myXMLfile" name="myXMLfile" onChange={this.setChangeinput} />
+
+<div className={this.state.isCompact ? 'compact-icons compact-anim' : 'iconos-factura'} style={{display:'flex', justifyContent:'center', alignItems:'flex-end', gap:32, margin:'18px 0 8px 0'}}>
+  {/* XML */}
+  <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+    <input
+      ref={this.componentRef}
+      type="file"
+      id="myXMLfile"
+      name="myXMLfile"
+      accept=".xml,text/xml,application/xml"
+      style={{ display: 'none' }}
+      onChange={this.setChangeinput}
+    />
+    <IconButton
+      color="primary"
+      aria-label="Seleccionar archivo XML"
+      component="span"
+      onClick={() => document.getElementById('myXMLfile').click()}
+      style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', width:48, height:48, marginBottom:2 }}
+      title="Seleccionar archivo XML"
+    >
+      <DescriptionIcon style={{ fontSize:32, color:'#ff9800' }} />
+    </IconButton>
+    <span style={{fontSize:13, color:'#ff9800', fontWeight:700, marginTop:2, letterSpacing:1}}>xml</span>
+  </div>
+  {/* Foto de factura */}
+  <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+    <input
+      type="file"
+      id="fotoFacturaInput"
+      accept="image/*"
+      capture="environment"
+      style={{ display: 'none' }}
+      onChange={this.handleFotoFactura}
+    />
+    <IconButton
+      color="primary"
+      aria-label="Tomar foto de factura"
+      component="span"
+      onClick={() => document.getElementById('fotoFacturaInput').click()}
+      style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', width:48, height:48, marginBottom:2 }}
+      title="Tomar foto de factura"
+    >
+      <CameraAltIcon style={{ fontSize:32 }} />
+    </IconButton>
+    <span style={{fontSize:13, color:'#1976d2', fontWeight:500, marginTop:2}}>Foto factura</span>
+  </div>
+  {/* Código de barras */}
+  <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+    <IconButton
+      color="primary"
+      aria-label="Escanear código de barras"
+      component="span"
+      onClick={()=>this.setState({showBarcodeDirect:true})}
+      style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', width:48, height:48, marginBottom:2 }}
+      title="Escanear código de barras"
+    >
+      <CropFreeIcon style={{ fontSize:32 }} />
+    </IconButton>
+    <span style={{fontSize:13, color:'#1976d2', fontWeight:500, marginTop:2}}>Código barras</span>
+    {this.state.showBarcodeDirect && (
+      <BarcodeCameraDirectReader
+        onDetected={clave => {
+          if (clave && clave.length >= 44 && clave.length <= 49) {
+            this.setState({ claveAccesoInput: clave, showBarcodeDirect: false });
+            alert('Código de barras leído correctamente.');
+          } else {
+            this.setState({ showBarcodeDirect: false });
+            alert('No se detectó un código de barras válido (44-49 dígitos).');
+          }
+        }}
+        onClose={()=>this.setState({showBarcodeDirect:false})}
+      />
+    )}
+  </div>
+</div>
 
 <div style={{ marginTop: 10, marginBottom: 10 }}>
   {/* Mostrar claves detectadas solo si mostrarClavesAlternas es true y hay claves */}
@@ -1003,52 +1089,7 @@ Agregar Factura
       {this.state.consultandoSRI ? 'Consultando...' : 'Consultar SRI'}
     </button>
   </div>
-  <div style={{display:'flex',alignItems:'center',gap:16,marginTop:8}}>
-    <input
-      type="file"
-      id="fotoFacturaInput"
-      accept="image/*"
-      capture="environment"
-      style={{ display: 'none' }}
-      onChange={this.handleFotoFactura}
-    />
-    <IconButton
-      color="primary"
-      aria-label="Tomar foto de factura"
-      component="span"
-      onClick={() => document.getElementById('fotoFacturaInput').click()}
-      style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', marginRight:4 }}
-      title="Tomar foto de factura"
-    >
-      <CameraAltIcon style={{ fontSize:32 }} />
-    </IconButton>
-    <span style={{fontSize:15, color:'#1976d2', fontWeight:500, marginRight:12}}>Foto de factura</span>
-    <IconButton
-      color="primary"
-      aria-label="Escanear código de barras"
-      component="span"
-      onClick={()=>this.setState({showBarcodeDirect:true})}
-      style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', marginLeft:4 }}
-      title="Escanear código de barras"
-    >
-      <CropFreeIcon style={{ fontSize:32 }} />
-    </IconButton>
-    <span style={{fontSize:15, color:'#1976d2', fontWeight:500}}>Código de barras</span>
-    {this.state.showBarcodeDirect && (
-      <BarcodeCameraDirectReader
-        onDetected={clave => {
-          if (clave && clave.length >= 44 && clave.length <= 49) {
-            this.setState({ claveAccesoInput: clave, showBarcodeDirect: false });
-            alert('Código de barras leído correctamente.');
-          } else {
-            this.setState({ showBarcodeDirect: false });
-            alert('No se detectó un código de barras válido (44-49 dígitos).');
-          }
-        }}
-        onClose={()=>this.setState({showBarcodeDirect:false})}
-      />
-    )}
-  </div>
+
 </div>
 
                     </div>
