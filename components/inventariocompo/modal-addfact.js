@@ -1,3 +1,4 @@
+import BarcodeCameraDirectReader from '../../components/BarcodeCameraDirectReader';
 import React, { Component } from 'react'
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
@@ -16,6 +17,199 @@ import Prevent from "../cuentascompo/modal-prevent"
 import CircularProgress from '@material-ui/core/CircularProgress';
 import DoubleScrollbar from "react-double-scrollbar";
 class Contacto extends Component {
+  state = {
+    ...this.state,
+  showBarcodeCamera: false,
+  showBarcodeDirect: false
+  };
+  // OCR: Tomar foto y extraer clave de acceso
+  handleFotoFactura = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    this.setState({ consultandoSRI: true, Alert: { Estado: false }, ocrDebugText: '', ocrDebugText120: '', ocrDebugText220: '', ocrDebugTextOriginal: '' });
+    try {
+      const { default: Tesseract } = await import('./tesseractLoader');
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const img = new window.Image();
+        img.onload = async () => {
+          // Helper para binarizar con umbral
+          const binarize = (threshold) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+              const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+              const bin = avg > threshold ? 255 : 0;
+              data[i] = data[i + 1] = data[i + 2] = bin;
+            }
+            ctx.putImageData(imageData, 0, 0);
+            return canvas.toDataURL('image/png');
+          };
+          // OCR sin binarización (original)
+          const originalCanvas = document.createElement('canvas');
+          originalCanvas.width = img.width;
+          originalCanvas.height = img.height;
+          const originalCtx = originalCanvas.getContext('2d');
+          originalCtx.drawImage(img, 0, 0);
+          const originalDataUrl = originalCanvas.toDataURL('image/png');
+          // Ejecutar OCR para cada variante
+          const [resultOriginal, result100, result120, result140, result180, result200, result220, result240] = await Promise.all([
+            Tesseract.recognize(originalDataUrl, 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
+            Tesseract.recognize(binarize(100), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
+            Tesseract.recognize(binarize(120), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
+            Tesseract.recognize(binarize(140), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
+            Tesseract.recognize(binarize(180), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
+            Tesseract.recognize(binarize(200), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
+            Tesseract.recognize(binarize(220), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
+            Tesseract.recognize(binarize(240), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 })
+          ]);
+          // Guardar resultados en el state
+          this.setState({
+            ocrDebugTextOriginal: resultOriginal.data.text,
+            ocrDebugText100: result100.data.text,
+            ocrDebugText120: result120.data.text,
+            ocrDebugText140: result140.data.text,
+            ocrDebugText180: result180.data.text, // 180 es el "por defecto"
+            ocrDebugText200: result200.data.text,
+            ocrDebugText220: result220.data.text,
+            ocrDebugText240: result240.data.text,
+            ocrDebugText220: result220.data.text
+          });
+
+          // Lógica inteligente para extraer clave de acceso
+          function extractClaveInteligente(text) {
+            // 1. Limpiar texto: quitar espacios, guiones, puntos y caracteres no numéricos
+            let clean = (text || '').replace(/[\s\-\.]/g, '');
+            let claves = [];
+            // 2. Buscar todas las secuencias de 44 a 49 dígitos (priorizar 49)
+            let matches = clean.match(/[0-9]{44,49}/g) || [];
+            claves.push(...matches);
+
+            // 3. Buscar patrones con palabras clave oficiales y unir fragmentos numéricos cercanos
+            const titulos = [
+              /clave\s*de\s*acceso/i,
+              /n[uú]mero\s*de\s*autorizaci[oó]n/i,
+              /c[oó]digo\s*de\s*autorizaci[oó]n/i,
+              /c[oó]digo\s*[uú]nico\s*del?\s*comprobante\s*electr[oó]nico/i
+            ];
+            let lineas = (text || '').split(/\n|\r/);
+            for (let i = 0; i < lineas.length; i++) {
+              let l = lineas[i];
+              for (let pat of titulos) {
+                if (pat.test(l)) {
+                  // Unir hasta 8 líneas siguientes para buscar y concatenar todos los números
+                  let claveConcat = '';
+                  for (let j = 1; j <= 8 && (i + j) < lineas.length; j++) {
+                    let nums = (lineas[i + j] || '').match(/[0-9]+/g);
+                    if (nums) claveConcat += nums.join('');
+                    if (claveConcat.length >= 49) break;
+                  }
+                  // Si se logró una clave de 44-49 dígitos, agregarla
+                  if (claveConcat.length >= 44 && claveConcat.length <= 49) {
+                    claves.push(claveConcat);
+                  }
+                }
+              }
+            }
+
+            // 4. Buscar secuencias "sucias" de 44-49 dígitos (con separadores)
+            let sucias = (text || '').match(/[0-9\-\.\s]{25,}/g) || [];
+            sucias.forEach(seq => {
+              let soloDigitos = seq.replace(/[^0-9]/g, '');
+              if (soloDigitos.length >= 44 && soloDigitos.length <= 49) {
+                claves.push(soloDigitos);
+              }
+            });
+
+            // 5. Buscar si hay código de barras (opcional: aquí solo log, pues requiere OCR especial)
+            if (/c[oó]digo\s*de\s*barras/i.test(text)) {
+              console.log('Posible código de barras detectado en el texto.');
+            }
+
+            // Quitar duplicados y solo 44-49 dígitos
+            claves = [...new Set(claves)].filter(x => x.length >= 44 && x.length <= 49);
+            // Priorizar las de 49 dígitos
+            claves.sort((a, b) => b.length - a.length);
+            return claves;
+          }
+
+          // Buscar primero por títulos oficiales y 49 dígitos después
+          const titulos = [
+            /clave\s*de\s*acceso[\s:;\-_/]*([0-9]{49})/i,
+            /n[uú]mero\s*de\s*autorizaci[oó]n[\s:;\-_/]*([0-9]{49})/i,
+            /c[oó]digo\s*de\s*autorizaci[oó]n[\s:;\-_/]*([0-9]{49})/i,
+            /c[oó]digo\s*[uú]nico\s*del?\s*comprobante\s*electr[oó]nico[\s:;\-_/]*([0-9]{49})/i,
+            /clave\s*de\s*acceso\s*\/\s*autorizaci[oó]n[\s:;\-_/]*([0-9]{49})/i
+          ];
+          let claveTitulo = null;
+          let fuenteTitulo = null;
+          const textosOCR = [result180.data.text, result120.data.text, result220.data.text, resultOriginal.data.text];
+          for (let txt of textosOCR) {
+            for (let pat of titulos) {
+              let m = (txt || '').match(pat);
+              if (m && m[1]) {
+                claveTitulo = m[1];
+                fuenteTitulo = txt;
+                break;
+              }
+            }
+            if (claveTitulo) break;
+          }
+
+          // Si se encontró clave con título, intentar consulta SRI automática
+          if (claveTitulo) {
+            console.log('claveTitulo detectada:', claveTitulo);
+            this.setState({ claveAccesoInput: claveTitulo, mostrarClavesAlternas: false, clavesDetectadas: [claveTitulo], Alert: { Estado: false } }, () => {
+              console.log('Llamando consultarSRI automática');
+              if (typeof this.consultarSRI === 'function') {
+                this.consultarSRI(true); // true = consulta automática por OCR
+              }
+            });
+            return; // Detener flujo, no mostrar mensaje ni claves alternativas
+          }
+
+          // Si no se encontró clave con título, o la consulta SRI falló, mostrar todas las claves detectadas como antes
+          if (!claveTitulo) {
+            // Unificar todos los textos OCR de todas las variantes
+            console.log('Contenido textosOCR:', textosOCR);
+            let posiblesClaves = [];
+            textosOCR.forEach(txt => {
+              posiblesClaves = posiblesClaves.concat(extractClaveInteligente(txt));
+            });
+            posiblesClaves = [...new Set(posiblesClaves)].filter(x => x.length >= 44 && x.length <= 49);
+            // Priorizar la clave más larga encontrada (idealmente de 49 dígitos)
+            posiblesClaves.sort((a, b) => b.length !== a.length ? b.length - a.length : b.localeCompare(a));
+            console.log('Sugerencias posiblesClaves:', posiblesClaves);
+            // Si hay al menos una clave y el usuario no ha editado manualmente, autocompletar con la más larga
+            if (posiblesClaves.length > 0 && (!this.state.claveAccesoInput || this.state.claveAccesoInput.length < 44)) {
+              this.setState({ claveAccesoInput: posiblesClaves[0], consultandoSRI: false, clavesDetectadas: posiblesClaves, mostrarClavesAlternas: false, Alert: { Estado: false } });
+            } else if (posiblesClaves.length === 1) {
+              // Si solo hay una sugerencia, consultar SRI automáticamente (igual que caso positivo)
+              this.setState({ claveAccesoInput: posiblesClaves[0], consultandoSRI: false, clavesDetectadas: posiblesClaves, mostrarClavesAlternas: false, Alert: { Estado: false } }, () => {
+                if (typeof this.consultarSRI === 'function') {
+                  this.consultarSRI(true); // true = consulta automática por OCR
+                }
+              });
+            } else if (posiblesClaves.length > 1) {
+              // Si hay varias sugerencias, dejar la más larga y permitir edición
+              this.setState({ claveAccesoInput: posiblesClaves[0], consultandoSRI: false, clavesDetectadas: posiblesClaves, mostrarClavesAlternas: false, Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró número de autorización en la imagen. Se detectó la clave más probable.' } });
+            } else {
+              this.setState({ consultandoSRI: false, Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró número de autorización en la imagen.' }, clavesDetectadas: [], mostrarClavesAlternas: false });
+            }
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      this.setState({ consultandoSRI: false, Alert: { Estado: true, Tipo: 'error', Mensaje: 'Error al procesar imagen.' } });
+    }
+  }
    state={
     masterInsumo:false,
     Alert:{Estado:false},
@@ -32,19 +226,20 @@ class Contacto extends Component {
      validfact:false,
      waitingdata:false,
      claveAccesoInput: '',
-     consultandoSRI: false
+     consultandoSRI: false,
+     mostrarClavesAlternas: false
    }
   handleClaveAccesoChange = (e) => {
     this.setState({ claveAccesoInput: e.target.value });
   }
 
-  consultarSRI = async () => {
+  consultarSRI = async (autoOCR = false) => {
     const claveAcceso = this.state.claveAccesoInput.trim();
     if (!claveAcceso || claveAcceso.length < 40) {
       this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'Clave de acceso inválida.' } });
       return;
     }
-    this.setState({ consultandoSRI: true, Alert: { Estado: false } });
+  this.setState({ consultandoSRI: true, Alert: { Estado: false } });
     try {
       const res = await fetch('/api/sri-consulta', {
         method: 'POST',
@@ -75,17 +270,77 @@ class Contacto extends Component {
               this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'Error al parsear XML.' }, consultandoSRI: false });
               return;
             }
-            // Simular el mismo flujo que setChangeinput/handleXml
-            this.setState({
-              Comprobante: result,
-              xmlData: { fechaAutorizacion: [fechaAutorizacion] },
-              validfact: false,
-              waitingdata: false,
-              consultandoSRI: false
-            });
+            // Buscar cualquier objeto que tenga .comprobante[0] y desglosar como en el flujo de archivo/foto
+            const findComprobanteYFecha = (obj) => {
+              let resultado = { comprobante: null, fechaAutorizacion: null, numeroAutorizacion: null };
+              for (let key in obj) {
+                if (!obj.hasOwnProperty(key)) continue;
+                if (key === "comprobante" && Array.isArray(obj[key]) && obj[key].length > 0) {
+                  resultado.comprobante = obj[key][0];
+                }
+                if (key === "fechaAutorizacion" && Array.isArray(obj[key]) && obj[key].length > 0) {
+                  resultado.fechaAutorizacion = obj[key][0];
+                }
+                if (key === "numeroAutorizacion" && Array.isArray(obj[key]) && obj[key].length > 0) {
+                  resultado.numeroAutorizacion = obj[key][0];
+                }
+                if (typeof obj[key] === "object") {
+                  const nestedResult = findComprobanteYFecha(obj[key]);
+                  if (nestedResult.comprobante) resultado.comprobante = nestedResult.comprobante;
+                  if (nestedResult.fechaAutorizacion) resultado.fechaAutorizacion = nestedResult.fechaAutorizacion;
+                  if (nestedResult.numeroAutorizacion) resultado.numeroAutorizacion = nestedResult.numeroAutorizacion;
+                  if (resultado.comprobante && resultado.fechaAutorizacion && resultado.numeroAutorizacion) break;
+                }
+              }
+              return resultado.comprobante || resultado.fechaAutorizacion || resultado.numeroAutorizacion ? resultado : false;
+            };
+            const getData = findComprobanteYFecha(result);
+            if (getData && getData.comprobante && getData.fechaAutorizacion) {
+              parserX.parseString(getData.comprobante, (err2, xml) => {
+                if (err2) {
+                  this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'Error al parsear comprobante.' }, consultandoSRI: false });
+                  return;
+                }
+                // Agrupar items y validar RUC como en flujo de archivo/foto
+                if(xml.factura && xml.factura.detalles && xml.factura.detalles[0].detalle) {
+                  xml.factura.detalles[0].detalle = this.agruparItemsPorCodigo(xml.factura.detalles[0].detalle);
+                }
+                let estructuraXml = {fechaAutorizacion:[getData.fechaAutorizacion],numeroAutorizacion:[getData.numeroAutorizacion]};
+                if(xml.factura){
+                  if (xml.factura.infoFactura[0].identificacionComprador[0] != this.props.state.userReducer.update.usuario.user.Factura.ruc) {
+                    this.setState({ prevent1: true, preventData1: xml, preventxmlData:estructuraXml, consultandoSRI: false, clavesDetectadas: [], mostrarClavesAlternas: false, Alert: { Estado: false } });
+                  } else {
+                    this.setState({ xmlData: estructuraXml, Comprobante: xml, consultandoSRI: false, clavesDetectadas: [], mostrarClavesAlternas: false, Alert: { Estado: false } });
+                  }
+                } else if(xml.comprobanteRetencion){
+                  // Si es comprobante de retención, lógica similar
+                  this.setState({ xmlData: estructuraXml, Comprobante: xml, consultandoSRI: false, clavesDetectadas: [], mostrarClavesAlternas: false, Alert: { Estado: false } });
+                } else {
+                  // Si no es factura ni retención, solo guardar el objeto
+                  this.setState({ Comprobante: xml, consultandoSRI: false, clavesDetectadas: [], mostrarClavesAlternas: false, Alert: { Estado: false } });
+                }
+              });
+            } else {
+              // Si no se encuentra comprobante anidado, guardar el objeto plano
+              this.setState({
+                Comprobante: result,
+                xmlData: { fechaAutorizacion: [fechaAutorizacion] },
+                validfact: false,
+                waitingdata: false,
+                consultandoSRI: false,
+                clavesDetectadas: [],
+                mostrarClavesAlternas: false,
+                Alert: { Estado: false }
+              });
+            }
           });
         } else {
-          this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró comprobante autorizado.' }, consultandoSRI: false });
+          if (autoOCR) {
+            // Si la consulta fue automática por OCR, mostrar mensaje de error y mostrar claves alternativas
+            this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró comprobante autorizado.' }, consultandoSRI: false, mostrarClavesAlternas: true });
+          } else {
+            this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró comprobante autorizado.' }, consultandoSRI: false });
+          }
         }
       } else {
         this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'No autorizado o error SRI.' }, consultandoSRI: false });
@@ -685,26 +940,103 @@ Agregar Factura
 <input ref={this.componentRef} type="file" id="myXMLfile" name="myXMLfile" onChange={this.setChangeinput} />
 
 <div style={{ marginTop: 10, marginBottom: 10 }}>
-  <label htmlFor="claveAccesoInput">O ingrese clave de acceso SRI:</label>
-  <input
-    type="text"
-    id="claveAccesoInput"
-    name="claveAccesoInput"
-    value={this.state.claveAccesoInput}
-    onChange={this.handleClaveAccesoChange}
-    placeholder="Clave de acceso (44 dígitos)"
-    style={{ width: '100%', padding: 6, marginRight: 8 }}
-    maxLength={49}
-  />
-  <button
-    type="button"
-    className="botoncontact botoupload"
-    onClick={this.consultarSRI}
-    disabled={this.state.consultandoSRI}
-    style={{ marginLeft: 8 }}
-  >
-    {this.state.consultandoSRI ? 'Consultando...' : 'Consultar SRI'}
-  </button>
+  {/* Mostrar claves detectadas solo si mostrarClavesAlternas es true y hay claves */}
+  {/*
+  <div style={{background:'#f9f9f9',color:'#333',padding:6,margin:'6px 0',fontSize:11,border:'1px solid #bbb',maxHeight:120,overflow:'auto',borderRadius:4}}>
+    <b>OCR sin binarización:</b>
+    <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-all',margin:0}}>{this.state.ocrDebugTextOriginal || '[VACÍO]'}</pre>
+  </div>
+  <div style={{background:'#f9f9f9',color:'#333',padding:6,margin:'6px 0',fontSize:11,border:'1px solid #bbb',maxHeight:120,overflow:'auto',borderRadius:4}}>
+    <b>OCR binarización umbral 120:</b>
+    <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-all',margin:0}}>{this.state.ocrDebugText120 || '[VACÍO]'}</pre>
+  </div>
+  <div style={{background:'#f9f9f9',color:'#333',padding:6,margin:'6px 0',fontSize:11,border:'1px solid #bbb',maxHeight:120,overflow:'auto',borderRadius:4}}>
+    <b>OCR binarización umbral 180:</b>
+    <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-all',margin:0}}>{this.state.ocrDebugText || '[VACÍO]'}</pre>
+  </div>
+  <div style={{background:'#f9f9f9',color:'#333',padding:6,margin:'6px 0',fontSize:11,border:'1px solid #bbb',maxHeight:120,overflow:'auto',borderRadius:4}}>
+    <b>OCR binarización umbral 220:</b>
+    <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-all',margin:0}}>{this.state.ocrDebugText220 || '[VACÍO]'}</pre>
+  </div>
+  */}
+  {/* Campo único para clave de acceso, visual amigable en bloques de 8 dígitos */}
+  <label htmlFor="claveAccesoInput" style={{marginTop:8,display:'block'}}>Clave de acceso SRI:</label>
+  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+    <div style={{display:'flex',alignItems:'flex-start',gap:8}}>
+      <textarea
+        id="claveAccesoInput"
+        name="claveAccesoInput"
+        value={(() => {
+          // Divide la clave en bloques de 8
+          const clave = this.state.claveAccesoInput;
+          let bloques = [];
+          for (let i = 0; i < clave.length; i += 16) {
+            let bloque1 = clave.substr(i, 8);
+            let bloque2 = clave.substr(i + 8, 8);
+            // Rellenar con espacios para alinear si es necesario
+            if (bloque1.length < 8) bloque1 = bloque1.padEnd(8, ' ');
+            if (bloque2.length < 8) bloque2 = bloque2.padEnd(8, ' ');
+            bloques.push(`${bloque1}  ${bloque2}`);
+          }
+          return bloques.join('\n').trim();
+        })()}
+        onChange={e => {
+          // Eliminar todo lo que no sea dígito y actualizar el estado sin saltos de línea
+          const val = e.target.value.replace(/\D/g, '').slice(0,49);
+          this.setState({ claveAccesoInput: val });
+        }}
+        placeholder="Clave de acceso (44-49 dígitos)"
+        style={{ width: '100%', minHeight: 44, maxHeight: 90, padding: 8, fontSize:16, letterSpacing:2, fontFamily:'monospace', border:'2px solid #1976d2', borderRadius:4, resize:'vertical', lineHeight: '1.8', overflowY:'auto' }}
+        maxLength={61}
+        autoComplete="off"
+        rows={2}
+      />
+    </div>
+    <button
+      type="button"
+      className="botoncontact botoupload"
+      onClick={this.consultarSRI}
+      disabled={this.state.consultandoSRI}
+      style={{ minWidth:120 }}
+    >
+      {this.state.consultandoSRI ? 'Consultando...' : 'Consultar SRI'}
+    </button>
+  </div>
+  <div style={{display:'flex',alignItems:'center',gap:8,marginTop:8}}>
+    <label htmlFor="fotoFacturaInput" style={{ cursor: 'pointer', color: '#1976d2', textDecoration: 'underline', margin:0 }}>
+      Tomar foto de factura
+      <input
+        type="file"
+      id="fotoFacturaInput"
+      accept="image/*"
+      capture="environment"
+      style={{ display: 'none' }}
+      onChange={this.handleFotoFactura}
+      />
+    </label>
+    <button
+      type="button"
+      style={{height:36, minWidth:44, background:'#fff', border:'2px solid #1976d2', borderRadius:6, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, color:'#1976d2'}}
+      title="Escanear código de barras"
+      onClick={()=>this.setState({showBarcodeDirect:true})}
+    >
+      <span role="img" aria-label="barcode">&#128439;</span>
+    </button>
+    {this.state.showBarcodeDirect && (
+      <BarcodeCameraDirectReader
+        onDetected={clave => {
+          if (clave && clave.length >= 44 && clave.length <= 49) {
+            this.setState({ claveAccesoInput: clave, showBarcodeDirect: false });
+            alert('Código de barras leído correctamente.');
+          } else {
+            this.setState({ showBarcodeDirect: false });
+            alert('No se detectó un código de barras válido (44-49 dígitos).');
+          }
+        }}
+        onClose={()=>this.setState({showBarcodeDirect:false})}
+      />
+    )}
+  </div>
 </div>
 
                     </div>
