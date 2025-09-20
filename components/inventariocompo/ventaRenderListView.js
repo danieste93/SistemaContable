@@ -4,7 +4,7 @@ import Dropdown from 'react-bootstrap/Dropdown';
 
 import CustomDropdown from "./CustomDropdown"
 import React, { useState,useEffect } from 'react';
-const ArtRender = ({ Titulos,uploadToFact, datos,getNota,getNotaDeb, getRetencion, watchNotaCredito, watchNotaDebito,deleteVentaList,user,resendProcess,sendView,viewCreds}) => {
+const ArtRender = ({ Titulos,uploadToFact, datos,getNota,getNotaDeb, getRetencion, watchRetencion, watchNotaCredito, watchNotaDebito,deleteVentaList,user,resendProcess,sendView,viewCreds}) => {
   // Estado para controlar apertura/cierre del Dropdown
   const [showDropdown, setShowDropdown] = useState(false);
   const [visual, setvisual] = useState(false );
@@ -17,6 +17,7 @@ const ArtRender = ({ Titulos,uploadToFact, datos,getNota,getNotaDeb, getRetencio
   const [visualNotaDeb, setvisualNotaDeb] = useState(false);
   const [watchNota, setwatchNota] = useState(false);
   const [watchNotaDeb, setwatchNotaDeb] = useState(false);
+    const [watchRet, setwatchRet] = useState(false);
 
 useEffect(() => {
 console.log(datos)
@@ -24,6 +25,7 @@ setwatchNotaDeb(false);
 setvisualNotaDeb(false);
 setvisualNota(false);
 setwatchNota(false);
+setwatchRet(false);
 
 if(datos.TipoVenta == "Credito"){
   setvisualCred(true)
@@ -76,6 +78,11 @@ if(datos.TipoVenta == "Credito"){
   if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != "" && datos.NotaDebito && datos.NotaDebito.Doctype == "Nota-de-Debito"){
 
     setwatchNotaDeb(true)
+    
+  }
+    if(datos.Doctype == "Factura-Electronica" &&datos.nombreCliente != "" && datos.Retencion && datos.Retencion.Doctype == "Retención-Recibida"){
+
+    setwatchRet(true)
     
   }
   if(datos.Doctype == "Nota de venta" ){
@@ -138,13 +145,19 @@ const mesesCorto = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep
 let dia = addCero(tiempo.getDate());
 let mesNombre = mesesCorto[tiempo.getMonth()];
 let year = tiempo.getFullYear();
-let hora = addCero(tiempo.getHours()) + ':' + addCero(tiempo.getMinutes());
-// Nuevo estilo minimalista y moderno para fecha y hora
+let horaNum = tiempo.getHours();
+let horaStr = addCero(horaNum) + ':' + addCero(tiempo.getMinutes());
+// Emoji de reloj dinámico según la hora
+const getClockEmoji = (h) => {
+  const clockEmojis = ['🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛'];
+  const idx = ((h % 12) + 12) % 12;
+  return clockEmojis[idx];
+};
 var date = (
   <span style={{
     display: 'inline-flex',
     alignItems: 'center',
-    background: '#8bb1e93b',
+    background: 'rgb(65, 143, 226)',
     borderRadius: '8px',
     padding: '4px 8px',
     fontSize: '15px',
@@ -153,12 +166,12 @@ var date = (
     justifyContent: 'space-around'
   }}>
     <div style={{width:"45%"}}>
-    <span style={{ color:'#1976d2'}}>📅</span>
-    <span style={{fontWeight:'500', color:'#1976d2'}}>{dia} {mesNombre}</span>
-</div>
-  <div>
-    <span style={{ color:'#43a047'}}>🕒</span>
-    <span style={{fontWeight:'500', color:'#43a047'}}>{hora}</span>
+      <span style={{ }}>📅</span>
+      <span style={{fontWeight:'500', color:"white"}}>{dia} {mesNombre}</span>
+    </div>
+    <div>
+      <span style={{  fontSize:'20px'}}>{getClockEmoji(horaNum)}</span>
+      <span style={{fontWeight:'500', color:'white'}}>{horaStr}</span>
     </div>
   </span>
 );
@@ -191,6 +204,10 @@ var date = (
                       </Animate>
                            <Animate show={watchNotaDeb}>
                       <span style={{fontSize:"12px", border:"1px solid blue", borderRadius:"5px", textAlign:"center", width:"80px" }}>N.Débito</span>  
+
+                      </Animate>
+                          <Animate show={watchRet}>
+                      <span style={{fontSize:"12px", border:"1px solid blue", borderRadius:"5px", textAlign:"center", width:"80px" }}>Retención</span>  
 
                       </Animate>
                     <div className="valorD "> <p className="parrafoD doscincuenta">  {date}  </p></div>
@@ -313,6 +330,13 @@ var date = (
                     icon: 'post_add',
                     className: 'btn btn-success btnDropDowm',
                     onClick: (e) => { e.stopPropagation(); watchNotaDebito(datos); }
+                  },
+                  watchRet && {
+                    key: `ver-retencion-${datos.iDVenta}`,
+                    label: 'Visualizar Retención',
+                    icon: 'money_off',
+                    className: 'btn btn-warning btnDropDowm',
+                    onClick: (e) => { e.stopPropagation(); watchRetencion(datos); }
                   },
                   visualProcess && {
                     key: `reenviar-${datos.iDVenta}`,

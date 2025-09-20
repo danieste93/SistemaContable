@@ -1086,7 +1086,7 @@ add
     display: flex;
     align-items: center;
     text-align:center;
-    border: 1px solid #1976d2;
+
     justify-content: center;
 }
   .btnDeleteMotivo {
@@ -1164,7 +1164,9 @@ add
   cursor: not-allowed;
 }
   .centrador{
-  margin: auto;}
+  margin: auto;
+      padding-bottom: 15px;
+  }
            `}</style>
         
 

@@ -31,6 +31,7 @@ class Listvent extends Component {
     expandTitulos:false,
     chartModal:false,
     viewerNota:false,
+    viewerRet:false,
     searcherIn:"",
     searcherOut:"",
     filtrosTiempo:true,
@@ -910,6 +911,7 @@ let imageActive = this.state.vista=="pickmode"?"listActive":""
            getRetencion={(datos)=>{ this.setState({viewRetencion:true, dataRetencion:datos})}} 
           watchNotaCredito={(datos)=>{ this.setState({viewerNota:true, viewerdataNota:datos})}}
           watchNotaDebito={(datos)=>{ this.setState({viewerNotaDeb:true, viewerdataNota:datos})}}
+          watchRetencion={(datos)=>{ this.setState({viewerRet:true, viewerdataRetencion:datos})}}
           viewCreds={(datos)=>{ this.setState({viewCreds:true, dataCred:datos})}} 
           sendView={(datos)=>{ this.setState({viewVenta:true, dataventa:datos})}} 
             

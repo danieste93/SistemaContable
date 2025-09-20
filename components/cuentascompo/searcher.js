@@ -569,7 +569,13 @@ console.log(registrosenseñar)
 
 
     let asdx = registrosenseñar.map((reg, i)=>{
-      let   elegido = <Inggas reg={reg} key={i} in={i} cuentaActual={{_id:0}}  />
+      let   elegido = <Inggas
+       reg={reg} 
+       key={i} 
+       in={i}
+        cuentaActual={{_id:0}}
+         stateData={this.props.state}
+        />
 return(elegido)
     })
    
