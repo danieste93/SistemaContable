@@ -30,8 +30,70 @@ class Contacto extends Component {
      },
      prevent1:false,
      validfact:false,
-     waitingdata:false
+     waitingdata:false,
+     claveAccesoInput: '',
+     consultandoSRI: false
    }
+  handleClaveAccesoChange = (e) => {
+    this.setState({ claveAccesoInput: e.target.value });
+  }
+
+  consultarSRI = async () => {
+    const claveAcceso = this.state.claveAccesoInput.trim();
+    if (!claveAcceso || claveAcceso.length < 40) {
+      this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'Clave de acceso inválida.' } });
+      return;
+    }
+    this.setState({ consultandoSRI: true, Alert: { Estado: false } });
+    try {
+      const res = await fetch('/api/sri-consulta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ claveAcceso })
+      });
+      const data = await res.json();
+      if (data.status === 'ok' && data.sri && data.sri.RespuestaAutorizacionComprobante) {
+        // Extraer el XML del comprobante
+        const autorizaciones = data.sri.RespuestaAutorizacionComprobante.autorizaciones;
+        let comprobanteXML = '';
+        let fechaAutorizacion = '';
+        let numeroAutorizacion = '';
+        if (autorizaciones && autorizaciones.autorizacion) {
+          const aut = autorizaciones.autorizacion;
+          comprobanteXML = aut.comprobante;
+          fechaAutorizacion = aut.fechaAutorizacion;
+          numeroAutorizacion = aut.numeroAutorizacion;
+        }
+        if (comprobanteXML) {
+          // Parsear el XML igual que handleXml
+          const parser = new window.DOMParser();
+          const doc = parser.parseFromString(comprobanteXML, 'application/xml');
+          // Usar Xml2js para convertir a objeto JS
+          const parserX = new Xml2js.Parser();
+          parserX.parseString(comprobanteXML, (err, result) => {
+            if (err) {
+              this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'Error al parsear XML.' }, consultandoSRI: false });
+              return;
+            }
+            // Simular el mismo flujo que setChangeinput/handleXml
+            this.setState({
+              Comprobante: result,
+              xmlData: { fechaAutorizacion: [fechaAutorizacion] },
+              validfact: false,
+              waitingdata: false,
+              consultandoSRI: false
+            });
+          });
+        } else {
+          this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró comprobante autorizado.' }, consultandoSRI: false });
+        }
+      } else {
+        this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'No autorizado o error SRI.' }, consultandoSRI: false });
+      }
+    } catch (err) {
+      this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'Error consultando SRI.' }, consultandoSRI: false });
+    }
+  }
    componentRef = React.createRef(); 
     componentDidMount(){
       setTimeout(function(){ 
@@ -618,11 +680,32 @@ Agregar Factura
 
 </div> 
 <div className="Contxml">
-<label for="myfile">Seleccione un xml:</label>
-<input    ref={this.componentRef} type="file" id="myXMLfile"  name="myXMLfile" 
-onChange={this.setChangeinput}
 
-/>
+<label htmlFor="myfile">Seleccione un xml:</label>
+<input ref={this.componentRef} type="file" id="myXMLfile" name="myXMLfile" onChange={this.setChangeinput} />
+
+<div style={{ marginTop: 10, marginBottom: 10 }}>
+  <label htmlFor="claveAccesoInput">O ingrese clave de acceso SRI:</label>
+  <input
+    type="text"
+    id="claveAccesoInput"
+    name="claveAccesoInput"
+    value={this.state.claveAccesoInput}
+    onChange={this.handleClaveAccesoChange}
+    placeholder="Clave de acceso (44 dígitos)"
+    style={{ width: '100%', padding: 6, marginRight: 8 }}
+    maxLength={49}
+  />
+  <button
+    type="button"
+    className="botoncontact botoupload"
+    onClick={this.consultarSRI}
+    disabled={this.state.consultandoSRI}
+    style={{ marginLeft: 8 }}
+  >
+    {this.state.consultandoSRI ? 'Consultando...' : 'Consultar SRI'}
+  </button>
+</div>
 
                     </div>
                     <div style={{width:"100%"}}> 

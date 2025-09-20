@@ -97,7 +97,7 @@
     "resize-observer": "^1.0.4",
     "serve-build": "^0.1.0",
     "sharp": "^0.27.0",
-    "soap": "^0.19.0",
+    "soap": "^1.4.1",
     "socket.io": "^3.1.2",
     "socket.io-client": "^4.8.0",
     "tabletop": "^1.6.3",

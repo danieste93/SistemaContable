@@ -213,4 +213,24 @@ async function actualizarFacturacion(req, res) {
   }
 }
 
-module.exports = {pruebaFuncion, validarCorreo, validarUsuario, actualizarFacturacion, subirComprobanteMeM, activarMembresiaPaypal}
+// ...existing code...
+
+// Consulta comprobante SRI (SOAP)
+const soap = require('soap');
+const SRI_WSDL = 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl';
+
+async function sriConsultaComprobante(req, res) {
+  const { claveAcceso } = req.body;
+  if (!claveAcceso) {
+    return res.status(400).json({ status: 'error', message: 'claveAcceso requerida' });
+  }
+  try {
+    const client = await soap.createClientAsync(SRI_WSDL);
+    const [result] = await client.autorizacionComprobanteAsync({ claveAccesoComprobante: claveAcceso });
+    return res.status(200).json({ status: 'ok', sri: result });
+  } catch (err) {
+    return res.status(500).json({ status: 'error', message: err.message });
+  }
+}
+
+module.exports = {pruebaFuncion, validarCorreo, validarUsuario, actualizarFacturacion, subirComprobanteMeM, activarMembresiaPaypal, sriConsultaComprobante}
