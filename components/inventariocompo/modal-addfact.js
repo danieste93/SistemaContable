@@ -1419,148 +1419,159 @@ Agregar Factura
 </div> 
 <div className="Contxml">
 
-
-<div className={this.state.isCompact ? 'compact-icons' : 'iconos-factura'} style={{display:'flex', justifyContent:'center', alignItems:'flex-end', gap:32, margin:'18px 0 8px 0'}}>
-  {/* XML */}
-  <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
-    <input
-      ref={this.componentRef}
-      type="file"
-      id="myXMLfile"
-      name="myXMLfile"
-      accept=".xml,text/xml,application/xml"
-      style={{ display: 'none' }}
-      onChange={this.setChangeinput}
-    />
-    <IconButton
-      color="primary"
-      aria-label="Seleccionar archivo XML"
-      component="span"
-      onClick={() => document.getElementById('myXMLfile').click()}
-      style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', width:48, height:48, marginBottom:2 }}
-      title="Seleccionar archivo XML"
-    >
-      <DescriptionIcon style={{ fontSize:32, color:'#ff9800' }} />
-    </IconButton>
-    <span style={{fontSize:13, color:'#ff9800', fontWeight:700, marginTop:2, letterSpacing:1}}>xml</span>
-  </div>
-  {/* Foto de factura */}
-  <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
-    <input
-      type="file"
-      id="fotoFacturaInput"
-      accept="image/*"
-      capture="environment"
-      style={{ display: 'none' }}
-      onChange={this.handleFotoFactura}
-    />
-    <IconButton
-      color="primary"
-      aria-label="Tomar foto de factura"
-      component="span"
-      onClick={() => document.getElementById('fotoFacturaInput').click()}
-      style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', width:48, height:48, marginBottom:2 }}
-      title="Tomar foto de factura"
-    >
-      <CameraAltIcon style={{ fontSize:32 }} />
-    </IconButton>
-    <span style={{fontSize:13, color:'#1976d2', fontWeight:500, marginTop:2}}>Foto factura</span>
-  </div>
-  {/* Código de barras */}
-  <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
-    <IconButton
-      color="primary"
-      aria-label="Escanear código de barras"
-      component="span"
-      onClick={()=>this.setState({showBarcodeDirect:true})}
-      style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', width:48, height:48, marginBottom:2 }}
-      title="Escanear código de barras"
-    >
-      <CropFreeIcon style={{ fontSize:32 }} />
-    </IconButton>
-    <span style={{fontSize:13, color:'#1976d2', fontWeight:500, marginTop:2}}>Código barras</span>
-    {this.state.showBarcodeDirect && (
-      <BarcodeCameraDirectReader
-        onDetected={clave => {
-          if (clave && clave.length >= 44 && clave.length <= 49) {
-            this.setState({ claveAccesoInput: clave, showBarcodeDirect: false });
-            alert('Código de barras leído correctamente.');
-          } else {
-            this.setState({ showBarcodeDirect: false });
-            alert('No se detectó un código de barras válido (44-49 dígitos).');
-          }
-        }}
-        onClose={()=>this.setState({showBarcodeDirect:false})}
+{/* Sección 1: Método XML directo */}
+<div style={{background:'#f8f9fa', padding:'16px', borderRadius:'8px', marginBottom:'16px', border:'1px solid #e9ecef'}}>
+  <h4 style={{margin:'0 0 12px 0', fontSize:'14px', color:'#495057', fontWeight:'600'}}>📄 Subir archivo XML</h4>
+  <div style={{display:'flex', justifyContent:'center'}}>
+    <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+      <input
+        ref={this.componentRef}
+        type="file"
+        id="myXMLfile"
+        name="myXMLfile"
+        accept=".xml,text/xml,application/xml"
+        style={{ display: 'none' }}
+        onChange={this.setChangeinput}
       />
-    )}
-  </div>
-</div>
-
-<div style={{ marginTop: 10, marginBottom: 10 }}>
-  {/* Mostrar claves detectadas solo si mostrarClavesAlternas es true y hay claves */}
-  {/*
-  <div style={{background:'#f9f9f9',color:'#333',padding:6,margin:'6px 0',fontSize:11,border:'1px solid #bbb',maxHeight:120,overflow:'auto',borderRadius:4}}>
-    <b>OCR sin binarización:</b>
-    <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-all',margin:0}}>{this.state.ocrDebugTextOriginal || '[VACÍO]'}</pre>
-  </div>
-  <div style={{background:'#f9f9f9',color:'#333',padding:6,margin:'6px 0',fontSize:11,border:'1px solid #bbb',maxHeight:120,overflow:'auto',borderRadius:4}}>
-    <b>OCR binarización umbral 120:</b>
-    <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-all',margin:0}}>{this.state.ocrDebugText120 || '[VACÍO]'}</pre>
-  </div>
-  <div style={{background:'#f9f9f9',color:'#333',padding:6,margin:'6px 0',fontSize:11,border:'1px solid #bbb',maxHeight:120,overflow:'auto',borderRadius:4}}>
-    <b>OCR binarización umbral 180:</b>
-    <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-all',margin:0}}>{this.state.ocrDebugText || '[VACÍO]'}</pre>
-  </div>
-  <div style={{background:'#f9f9f9',color:'#333',padding:6,margin:'6px 0',fontSize:11,border:'1px solid #bbb',maxHeight:120,overflow:'auto',borderRadius:4}}>
-    <b>OCR binarización umbral 220:</b>
-    <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-all',margin:0}}>{this.state.ocrDebugText220 || '[VACÍO]'}</pre>
-  </div>
-  */}
-  {/* Campo único para clave de acceso, visual amigable en bloques de 8 dígitos */}
-  <label htmlFor="claveAccesoInput" style={{marginTop:8,display:'block'}}>Clave de acceso SRI:</label>
-  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-    <div style={{display:'flex',alignItems:'flex-start',gap:8}}>
-      <textarea
-        id="claveAccesoInput"
-        name="claveAccesoInput"
-        value={(() => {
-          // Divide la clave en bloques de 8
-          const clave = this.state.claveAccesoInput;
-          let bloques = [];
-          for (let i = 0; i < clave.length; i += 16) {
-            let bloque1 = clave.substr(i, 8);
-            let bloque2 = clave.substr(i + 8, 8);
-            // Rellenar con espacios para alinear si es necesario
-            if (bloque1.length < 8) bloque1 = bloque1.padEnd(8, ' ');
-            if (bloque2.length < 8) bloque2 = bloque2.padEnd(8, ' ');
-            bloques.push(`${bloque1}  ${bloque2}`);
-          }
-          return bloques.join('\n').trim();
-        })()}
-        onChange={e => {
-          // Eliminar todo lo que no sea dígito y actualizar el estado sin saltos de línea
-          const val = e.target.value.replace(/\D/g, '').slice(0,49);
-          this.setState({ claveAccesoInput: val });
-        }}
-        placeholder="Clave de acceso (44-49 dígitos)"
-        style={{ width: '100%', minHeight: 44, maxHeight: 90, padding: 8, fontSize:16, letterSpacing:2, fontFamily:'monospace', border:'2px solid #1976d2', borderRadius:4, resize:'vertical', lineHeight: '1.8', overflowY:'auto' }}
-        maxLength={61}
-        autoComplete="off"
-        rows={2}
-      />
+      <IconButton
+        color="primary"
+        aria-label="Seleccionar archivo XML"
+        component="span"
+        onClick={() => document.getElementById('myXMLfile').click()}
+        style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', width:48, height:48, marginBottom:2 }}
+        title="Seleccionar archivo XML"
+      >
+        <DescriptionIcon style={{ fontSize:32, color:'#ff9800' }} />
+      </IconButton>
+      <span style={{fontSize:13, color:'#ff9800', fontWeight:700, marginTop:2, letterSpacing:1}}>xml</span>
     </div>
-    <button
-      type="button"
-      className="botoncontact botoupload"
-      onClick={this.consultarSRI}
-      disabled={this.state.consultandoSRI}
-      style={{ minWidth:120 }}
-    >
-      {this.state.consultandoSRI ? 'Consultando...' : 'Consultar SRI'}
-    </button>
+  </div>
+</div>
+
+{/* Sección 2: Métodos SRI (foto + código + campo + botón) */}
+<div style={{background:'#f0f8ff', padding:'16px', borderRadius:'8px', marginBottom:'16px', border:'1px solid #cce7ff'}}>
+  <h4 style={{margin:'0 0 12px 0', fontSize:'14px', color:'#1976d2', fontWeight:'600'}}>🔍 Consulta SRI por clave de acceso</h4>
+  
+  {/* Métodos para obtener clave */}
+  <div style={{marginBottom:'12px'}}>
+    <p style={{fontSize:'12px', color:'#666', margin:'0 0 8px 0', textAlign:'center'}}>Métodos para obtener clave automáticamente:</p>
+    <div style={{display:'flex', justifyContent:'center', gap:'24px'}}>
+      {/* Foto de factura */}
+      <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+        <input
+          type="file"
+          id="fotoFacturaInput"
+          accept="image/*"
+          capture="environment"
+          style={{ display: 'none' }}
+          onChange={this.handleFotoFactura}
+        />
+        <IconButton
+          color="primary"
+          aria-label="Tomar foto de factura"
+          component="span"
+          onClick={() => document.getElementById('fotoFacturaInput').click()}
+          style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', width:48, height:48, marginBottom:2, position:'relative' }}
+          title="Tomar foto de factura para detectar clave de acceso automáticamente"
+        >
+          <CameraAltIcon style={{ fontSize:32 }} />
+          <span style={{
+            position: 'absolute',
+            top: -6,
+            right: -6,
+            background: '#ff5722',
+            color: 'white',
+            fontSize: 8,
+            fontWeight: 'bold',
+            padding: '1px 4px',
+            borderRadius: 3,
+            lineHeight: 1
+          }}>
+            BETA
+          </span>
+        </IconButton>
+        <span style={{fontSize:11, color:'#1976d2', fontWeight:500, marginTop:2, textAlign:'center', lineHeight:1.2, maxWidth:80, wordWrap:'break-word'}}>Foto factura</span>
+      </div>
+      
+      {/* Código de barras */}
+      <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+        <IconButton
+          color="primary"
+          aria-label="Escanear código de barras"
+          component="span"
+          onClick={()=>this.setState({showBarcodeDirect:true})}
+          style={{ background:'#fff', border:'2px solid #1976d2', borderRadius:8, boxShadow:'0 1px 4px #0001', width:48, height:48, marginBottom:2 }}
+          title="Escanear código de barras"
+        >
+          <CropFreeIcon style={{ fontSize:32 }} />
+        </IconButton>
+        <span style={{fontSize:11, color:'#1976d2', fontWeight:500, marginTop:2, textAlign:'center'}}>Código barras</span>
+        {this.state.showBarcodeDirect && (
+          <BarcodeCameraDirectReader
+            onDetected={clave => {
+              if (clave && clave.length >= 44 && clave.length <= 49) {
+                this.setState({ claveAccesoInput: clave, showBarcodeDirect: false });
+                alert('Código de barras leído correctamente.');
+              } else {
+                this.setState({ showBarcodeDirect: false });
+                alert('No se detectó un código de barras válido (44-49 dígitos).');
+              }
+            }}
+            onClose={()=>this.setState({showBarcodeDirect:false})}
+          />
+        )}
+      </div>
+    </div>
   </div>
 
+  {/* Campo de clave de acceso y botón consultar */}
+  <div>
+    <label htmlFor="claveAccesoInput" style={{marginTop:8,display:'block', fontSize:'13px', fontWeight:'500'}}>O ingresa la clave manualmente:</label>
+    <div style={{display:'flex',alignItems:'center',gap:8,marginTop:8}}>
+      <div style={{display:'flex',alignItems:'flex-start',gap:8, flex:1}}>
+        <textarea
+          id="claveAccesoInput"
+          name="claveAccesoInput"
+          value={(() => {
+            // Divide la clave en bloques de 8
+            const clave = this.state.claveAccesoInput;
+            let bloques = [];
+            for (let i = 0; i < clave.length; i += 16) {
+              let bloque1 = clave.substr(i, 8);
+              let bloque2 = clave.substr(i + 8, 8);
+              // Rellenar con espacios para alinear si es necesario
+              if (bloque1.length < 8) bloque1 = bloque1.padEnd(8, ' ');
+              if (bloque2.length < 8) bloque2 = bloque2.padEnd(8, ' ');
+              bloques.push(`${bloque1}  ${bloque2}`);
+            }
+            return bloques.join('\n').trim();
+          })()}
+          onChange={e => {
+            // Eliminar todo lo que no sea dígito y actualizar el estado sin saltos de línea
+            const val = e.target.value.replace(/\D/g, '').slice(0,49);
+            this.setState({ claveAccesoInput: val });
+          }}
+          placeholder="Clave de acceso (44-49 dígitos)"
+          style={{ width: '100%', minHeight: 44, maxHeight: 90, padding: 8, fontSize:16, letterSpacing:2, fontFamily:'monospace', border:'2px solid #1976d2', borderRadius:4, resize:'vertical', lineHeight: '1.8', overflowY:'auto' }}
+          maxLength={61}
+          autoComplete="off"
+          rows={2}
+        />
+      </div>
+      <button
+        type="button"
+        className="botoncontact botoupload"
+        onClick={this.consultarSRI}
+        disabled={this.state.consultandoSRI}
+        style={{ minWidth:120 }}
+      >
+        {this.state.consultandoSRI ? 'Consultando...' : 'Consultar SRI'}
+      </button>
+    </div>
+  </div>
 </div>
+
+
 
                     </div>
                     <div style={{width:"100%"}}> 
