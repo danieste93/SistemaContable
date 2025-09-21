@@ -1,6 +1,78 @@
+// Helper: Extraer y validar clave de acceso SRI (49 dígitos)
+function extraerYValidarClaveSRI(textoOCR) {
+  // 1. Buscar candidatos: secuencias de 44-49 dígitos (limpia todo menos números)
+  let raw = (textoOCR || '').replace(/[^0-9]/g, ' ');
+  let matches = raw.match(/\d{44,49}/g) || [];
+  let candidatos = matches.filter(x => x.length === 49);
+  if (candidatos.length === 0) return { is_valid: false, errors: ['No se encontró clave de 49 dígitos'] };
+  let clave = candidatos[0];
+  // 2. Desglose de campos
+  let fields = {
+    fecha: clave.slice(0,8),
+    tipo_comprobante: clave.slice(8,10),
+    ruc: clave.slice(10,23),
+    ambiente: clave.slice(23,24),
+    serie: clave.slice(24,30),
+    secuencial: clave.slice(30,39),
+    codigo_numerico: clave.slice(39,47),
+    tipo_emision: clave.slice(47,48),
+    digito_verificador: clave.slice(48,49)
+  };
+  let errors = [];
+  // 3. Validaciones básicas
+  if (!/^\d{8}$/.test(fields.fecha)) errors.push('Fecha inválida');
+  if (!/^\d{2}$/.test(fields.tipo_comprobante)) errors.push('Tipo comprobante inválido');
+  if (!/^\d{13}$/.test(fields.ruc)) errors.push('RUC inválido');
+  if (!/^[12]$/.test(fields.ambiente)) errors.push('Ambiente inválido');
+  if (!/^\d{6}$/.test(fields.serie)) errors.push('Serie inválida');
+  if (!/^\d{9}$/.test(fields.secuencial)) errors.push('Secuencial inválido');
+  if (!/^\d{8}$/.test(fields.codigo_numerico)) errors.push('Código numérico inválido');
+  if (!/^[12]$/.test(fields.tipo_emision)) errors.push('Tipo emisión inválido');
+  // 4. Validar fecha real
+  let d = fields.fecha;
+  let dia = parseInt(d.slice(0,2)), mes = parseInt(d.slice(2,4)), anio = parseInt(d.slice(4,8));
+  let fechaValida = mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31 && anio >= 2000 && anio <= 2100;
+  if (!fechaValida) errors.push('Fecha fuera de rango');
+  // 5. Validar tipo comprobante permitido
+  let tiposPermitidos = ['01','04','05','06','07'];
+  if (!tiposPermitidos.includes(fields.tipo_comprobante)) errors.push('Tipo comprobante no permitido');
+  // 6. Checksum módulo 11
+  function calcularDV(cadena48) {
+    let factores = [2,3,4,5,6,7];
+    let suma = 0, j = 0;
+    for (let i = cadena48.length-1; i >= 0; i--) {
+      suma += parseInt(cadena48[i]) * factores[j % 6];
+      j++;
+    }
+    let resto = suma % 11;
+    let res = 11 - resto;
+    if (res === 11) return '0';
+    if (res === 10) return '1';
+    return String(res);
+  }
+  let dvCalc = calcularDV(clave.slice(0,48));
+  if (dvCalc !== fields.digito_verificador) errors.push('Dígito verificador incorrecto');
+  // 7. Resultado final
+  return {
+    raw_candidate: clave,
+    clave_clean: clave,
+    is_valid: errors.length === 0,
+    confidence: 1.0, // No hay confidencias OCR aquí, solo lógica
+    errors,
+    fields,
+    suggested_corrections: []
+  };
+}
+
+// Helper: Generar XML básico de factura electrónica desde campos de clave SRI
+function generarXMLFacturaDesdeClave(fields) {
+  // Estructura mínima de ejemplo, puede ser extendida según requerimientos
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<factura>\n    <infoTributaria>\n      <fechaEmision>${fields.fecha}</fechaEmision>\n      <tipoComprobante>${fields.tipo_comprobante}</tipoComprobante>\n      <ruc>${fields.ruc}</ruc>\n      <ambiente>${fields.ambiente}</ambiente>\n      <serie>${fields.serie}</serie>\n      <secuencial>${fields.secuencial}</secuencial>\n      <codigoNumerico>${fields.codigo_numerico}</codigoNumerico>\n      <tipoEmision>${fields.tipo_emision}</tipoEmision>\n    </infoTributaria>\n  </factura>`;
+}
 import DescriptionIcon from '@material-ui/icons/Description';
 import BarcodeCameraDirectReader from '../../components/BarcodeCameraDirectReader';
 import React, { Component } from 'react'
+import ReactDOM from 'react-dom';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import IconButton from '@material-ui/core/IconButton';
@@ -28,7 +100,7 @@ class Contacto extends Component {
     isCompact: false
   };
   componentDidUpdate(prevProps, prevState) {
-    // Refuerzo: siempre que xmlData.fechaAutorizacion[0] tenga valor, isCompact true
+    // Compacto sin animación: solo cambia el flag para el render
     const xmlOk = this.state.xmlData && this.state.xmlData.fechaAutorizacion && this.state.xmlData.fechaAutorizacion[0] !== '';
     if (xmlOk && !this.state.isCompact) {
       this.setState({ isCompact: true });
@@ -48,53 +120,211 @@ class Contacto extends Component {
       reader.onload = async (e) => {
         const img = new window.Image();
         img.onload = async () => {
-          // Helper para binarizar con umbral
-          const binarize = (threshold) => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          // Reducción de imagen si es muy grande (máx 1500px ancho/alto)
+          let scale = 1;
+          const maxDim = 1500;
+          if (img.width > maxDim || img.height > maxDim) {
+            scale = Math.min(maxDim / img.width, maxDim / img.height);
+          }
+          const scaledCanvas = document.createElement('canvas');
+          scaledCanvas.width = Math.round(img.width * scale);
+          scaledCanvas.height = Math.round(img.height * scale);
+          const scaledCtx = scaledCanvas.getContext('2d');
+          scaledCtx.drawImage(img, 0, 0, scaledCanvas.width, scaledCanvas.height);
+
+          // Conversión a escala de grises
+          const grayImageData = scaledCtx.getImageData(0, 0, scaledCanvas.width, scaledCanvas.height);
+          const grayData = grayImageData.data;
+          for (let i = 0; i < grayData.length; i += 4) {
+            const avg = (grayData[i] + grayData[i + 1] + grayData[i + 2]) / 3;
+            grayData[i] = grayData[i + 1] = grayData[i + 2] = avg;
+          }
+
+          // (Sin filtro de mediana ni deskew para máxima velocidad y simplicidad)
+          // Aumento de contraste rápido
+          function contrastStretch(imageData, factor = 1.3) {
             const data = imageData.data;
             for (let i = 0; i < data.length; i += 4) {
-              const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-              const bin = avg > threshold ? 255 : 0;
+              let v = data[i];
+              v = (v - 128) * factor + 128;
+              v = Math.max(0, Math.min(255, v));
+              data[i] = data[i + 1] = data[i + 2] = v;
+            }
+            return imageData;
+          }
+
+          // Filtro de nitidez (sharpen) rápido
+          function sharpen(imageData, width, height) {
+            const weights = [0, -1, 0, -1, 5, -1, 0, -1, 0];
+            const side = 3;
+            const halfSide = Math.floor(side / 2);
+            const src = imageData.data;
+            const sw = width;
+            const sh = height;
+            const output = new Uint8ClampedArray(src.length);
+            for (let y = 0; y < sh; y++) {
+              for (let x = 0; x < sw; x++) {
+                let r = 0;
+                for (let ky = 0; ky < side; ky++) {
+                  for (let kx = 0; kx < side; kx++) {
+                    let px = x + kx - halfSide;
+                    let py = y + ky - halfSide;
+                    if (px >= 0 && px < sw && py >= 0 && py < sh) {
+                      let idx = (py * sw + px) * 4;
+                      r += src[idx] * weights[ky * side + kx];
+                    }
+                  }
+                }
+                let idx = (y * sw + x) * 4;
+                r = Math.max(0, Math.min(255, r));
+                output[idx] = output[idx + 1] = output[idx + 2] = r;
+                output[idx + 3] = 255;
+              }
+            }
+            for (let i = 0; i < src.length; i++) src[i] = output[i];
+            return imageData;
+          }
+
+          // Aplicar contraste y nitidez antes del binarizado
+          contrastStretch(grayImageData, 1.3);
+          sharpen(grayImageData, scaledCanvas.width, scaledCanvas.height);
+          scaledCtx.putImageData(grayImageData, 0, 0);
+
+          // (Sin CLAHE para máxima velocidad y simplicidad)
+
+          // Helper para binarizar con Otsu sobre la imagen en grises
+          const otsuThreshold = (grayData) => {
+            let hist = new Array(256).fill(0);
+            for (let i = 0; i < grayData.length; i += 4) {
+              hist[grayData[i]]++;
+            }
+            let total = grayData.length / 4;
+            let sum = 0;
+            for (let t = 0; t < 256; t++) sum += t * hist[t];
+            let sumB = 0, wB = 0, wF = 0, varMax = 0, threshold = 0;
+            for (let t = 0; t < 256; t++) {
+              wB += hist[t];
+              if (wB === 0) continue;
+              wF = total - wB;
+              if (wF === 0) break;
+              sumB += t * hist[t];
+              let mB = sumB / wB;
+              let mF = (sum - sumB) / wF;
+              let varBetween = wB * wF * (mB - mF) * (mB - mF);
+              if (varBetween > varMax) {
+                varMax = varBetween;
+                threshold = t;
+              }
+            }
+            return threshold;
+          };
+
+          // Binarizar normal y negativo
+          const binarize = (invert = false) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = scaledCanvas.width;
+            canvas.height = scaledCanvas.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(scaledCanvas, 0, 0);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            let th = otsuThreshold(data);
+            for (let i = 0; i < data.length; i += 4) {
+              let bin = data[i] > th ? 255 : 0;
+              if (invert) bin = 255 - bin;
               data[i] = data[i + 1] = data[i + 2] = bin;
             }
             ctx.putImageData(imageData, 0, 0);
             return canvas.toDataURL('image/png');
           };
-          // OCR sin binarización (original)
-          const originalCanvas = document.createElement('canvas');
-          originalCanvas.width = img.width;
-          originalCanvas.height = img.height;
-          const originalCtx = originalCanvas.getContext('2d');
-          originalCtx.drawImage(img, 0, 0);
-          const originalDataUrl = originalCanvas.toDataURL('image/png');
-          // Ejecutar OCR para cada variante
-          const [resultOriginal, result100, result120, result140, result180, result200, result220, result240] = await Promise.all([
-            Tesseract.recognize(originalDataUrl, 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
-            Tesseract.recognize(binarize(100), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
-            Tesseract.recognize(binarize(120), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
-            Tesseract.recognize(binarize(140), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
-            Tesseract.recognize(binarize(180), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
-            Tesseract.recognize(binarize(200), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
-            Tesseract.recognize(binarize(220), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 }),
-            Tesseract.recognize(binarize(240), 'eng', { logger: m => {}, tessedit_char_whitelist: '0123456789', preserve_interword_spaces: 1 })
+
+          // OCR normal y negativo
+          const otsuDataUrl = binarize(false);
+          const otsuNegDataUrl = binarize(true);
+          const [resultOtsu, resultNeg] = await Promise.all([
+            Tesseract.recognize(otsuDataUrl, 'eng', {
+              logger: m => {},
+              tessedit_char_whitelist: '0123456789',
+              preserve_interword_spaces: 1,
+              psm: 7
+            }),
+            Tesseract.recognize(otsuNegDataUrl, 'eng', {
+              logger: m => {},
+              tessedit_char_whitelist: '0123456789',
+              preserve_interword_spaces: 1,
+              psm: 7
+            })
           ]);
-          // Guardar resultados en el state
+          // Comparar resultados OCR normal y negativo para resolver conflictos 5/6, 2/7, 1/7
+          function resolverConflictosPorGrupos(str1, str2) {
+            if (!str1 || !str2) return str1 || str2 || '';
+            const grupos = [
+              ['5', '6'],
+              ['2', '7'],
+              ['1', '7']
+            ];
+            let resultado = '';
+            for (let i = 0; i < Math.max(str1.length, str2.length); i++) {
+              const c1 = str1[i] || '';
+              const c2 = str2[i] || '';
+              if (c1 === c2) {
+                resultado += c1;
+              } else {
+                // ¿Están ambos en algún grupo?
+                let grupo = grupos.find(g => g.includes(c1) && g.includes(c2));
+                if (grupo) {
+                  // Si uno de los dos aparece más veces en ambos resultados, elige ese
+                  const count1 = (str1 + str2).split('').filter(x => x === c1).length;
+                  const count2 = (str1 + str2).split('').filter(x => x === c2).length;
+                  resultado += count1 >= count2 ? c1 : c2;
+                } else {
+                  // Si no es un grupo de confusión, prioriza el normal
+                  resultado += c1;
+                }
+              }
+            }
+            return resultado;
+          }
+
+          const claveOCRNormal = (resultOtsu.data.text || '').replace(/\D/g, '');
+          const claveOCRNeg = (resultNeg.data.text || '').replace(/\D/g, '');
+          const claveFusionada = resolverConflictosPorGrupos(claveOCRNormal, claveOCRNeg);
+
           this.setState({
-            ocrDebugTextOriginal: resultOriginal.data.text,
-            ocrDebugText100: result100.data.text,
-            ocrDebugText120: result120.data.text,
-            ocrDebugText140: result140.data.text,
-            ocrDebugText180: result180.data.text, // 180 es el "por defecto"
-            ocrDebugText200: result200.data.text,
-            ocrDebugText220: result220.data.text,
-            ocrDebugText240: result240.data.text,
-            ocrDebugText220: result220.data.text
+            ocrDebugTextOtsu: resultOtsu.data.text,
+            ocrDebugTextOriginal: resultNeg.data.text,
+            ocrDebugTextBlocks: '',
+            claveFusionadaOCR: claveFusionada
           });
+// Post-procesamiento: probar variantes de dígitos conflictivos y validar con dígito de control
+function generarVariantesClave(clave) {
+  // Grupos de confusión
+  const grupos = [
+    ['5', '6'],
+    ['2', '7'],
+    ['1', '7']
+  ];
+  let variantes = new Set([clave]);
+  // Para cada grupo, generar variantes cambiando cada dígito por los otros del grupo
+  grupos.forEach(grupo => {
+    let nuevas = new Set();
+    variantes.forEach(v => {
+      for (let i = 0; i < v.length; i++) {
+        if (grupo.includes(v[i])) {
+          grupo.forEach(g => {
+            if (g !== v[i]) {
+              let arr = v.split('');
+              arr[i] = g;
+              nuevas.add(arr.join(''));
+            }
+          });
+        }
+      }
+    });
+    nuevas.forEach(n => variantes.add(n));
+  });
+  return Array.from(variantes);
+}
 
           // Lógica inteligente para extraer clave de acceso
           function extractClaveInteligente(text) {
@@ -153,7 +383,7 @@ class Contacto extends Component {
             return claves;
           }
 
-          // Buscar primero por títulos oficiales y 49 dígitos después
+          // Buscar primero por títulos oficiales y 49 dígitos después en los resultados actuales
           const titulos = [
             /clave\s*de\s*acceso[\s:;\-_/]*([0-9]{49})/i,
             /n[uú]mero\s*de\s*autorizaci[oó]n[\s:;\-_/]*([0-9]{49})/i,
@@ -163,7 +393,7 @@ class Contacto extends Component {
           ];
           let claveTitulo = null;
           let fuenteTitulo = null;
-          const textosOCR = [result180.data.text, result120.data.text, result220.data.text, resultOriginal.data.text];
+          const textosOCR = [this.state.ocrDebugTextOriginal, this.state.ocrDebugTextOtsu, this.state.ocrDebugTextBlocks];
           for (let txt of textosOCR) {
             for (let pat of titulos) {
               let m = (txt || '').match(pat);
@@ -178,42 +408,60 @@ class Contacto extends Component {
 
           // Si se encontró clave con título, intentar consulta SRI automática
           if (claveTitulo) {
-            console.log('claveTitulo detectada:', claveTitulo);
-            this.setState({ claveAccesoInput: claveTitulo, mostrarClavesAlternas: false, clavesDetectadas: [claveTitulo], Alert: { Estado: false } }, () => {
-              console.log('Llamando consultarSRI automática');
-              if (typeof this.consultarSRI === 'function') {
-                this.consultarSRI(true); // true = consulta automática por OCR
+            // Probar variantes de dígitos conflictivos si el dígito de control falla
+            let variantes = generarVariantesClave(claveTitulo);
+            let claveValida = null;
+            for (let v of variantes) {
+              let valid = extraerYValidarClaveSRI(v);
+              if (valid.is_valid) {
+                claveValida = v;
+                break;
               }
-            });
-            return; // Detener flujo, no mostrar mensaje ni claves alternativas
-          }
-
-          // Si no se encontró clave con título, o la consulta SRI falló, mostrar todas las claves detectadas como antes
-          if (!claveTitulo) {
-            // Unificar todos los textos OCR de todas las variantes
-            console.log('Contenido textosOCR:', textosOCR);
-            let posiblesClaves = [];
-            textosOCR.forEach(txt => {
-              posiblesClaves = posiblesClaves.concat(extractClaveInteligente(txt));
-            });
-            posiblesClaves = [...new Set(posiblesClaves)].filter(x => x.length >= 44 && x.length <= 49);
-            // Priorizar la clave más larga encontrada (idealmente de 49 dígitos)
-            posiblesClaves.sort((a, b) => b.length !== a.length ? b.length - a.length : b.localeCompare(a));
-            console.log('Sugerencias posiblesClaves:', posiblesClaves);
-            // Si hay al menos una clave de 49 dígitos, autocompletar y consultar SRI automáticamente
-            const clave49 = posiblesClaves.find(x => x.length === 49);
-            if (clave49) {
-              this.setState({ claveAccesoInput: clave49, consultandoSRI: false, clavesDetectadas: posiblesClaves, mostrarClavesAlternas: false, Alert: { Estado: false } }, () => {
+            }
+            if (claveValida) {
+              this.setState({ claveAccesoInput: claveValida, mostrarClavesAlternas: false, clavesDetectadas: [claveValida], Alert: { Estado: false }, consultandoSRI: false }, () => {
                 if (typeof this.consultarSRI === 'function') {
-                  this.consultarSRI(true); // true = consulta automática por OCR
+                  this.consultarSRI(true);
                 }
               });
-            } else if (posiblesClaves.length > 0) {
-              // Si hay claves pero ninguna de 49 dígitos, solo sugerir la más larga
-              this.setState({ claveAccesoInput: posiblesClaves[0], consultandoSRI: false, clavesDetectadas: posiblesClaves, mostrarClavesAlternas: false, Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró clave de 49 dígitos. Se detectó la clave más probable.' } });
             } else {
-              this.setState({ consultandoSRI: false, Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró número de autorización en la imagen.' }, clavesDetectadas: [], mostrarClavesAlternas: false });
+              this.setState({ claveAccesoInput: claveTitulo, mostrarClavesAlternas: false, clavesDetectadas: [claveTitulo], Alert: { Estado: true, Tipo: 'error', Mensaje: 'Clave detectada, pero no válida. Revisa los dígitos.' }, consultandoSRI: false });
             }
+            return;
+          }
+
+          // Si no se encontró clave con título, buscar todas las claves posibles
+          let posiblesClaves = [];
+          textosOCR.forEach(txt => {
+            posiblesClaves = posiblesClaves.concat(extractClaveInteligente(txt));
+          });
+          posiblesClaves = [...new Set(posiblesClaves)].filter(x => x.length >= 44 && x.length <= 49);
+          posiblesClaves.sort((a, b) => b.length !== a.length ? b.length - a.length : b.localeCompare(a));
+          // Probar variantes de dígitos conflictivos para cada clave
+          let claveValida = null;
+          let clavesProbadas = [];
+          for (let c of posiblesClaves) {
+            let variantes = generarVariantesClave(c);
+            for (let v of variantes) {
+              let valid = extraerYValidarClaveSRI(v);
+              if (valid.is_valid) {
+                claveValida = v;
+                break;
+              }
+              clavesProbadas.push(v);
+            }
+            if (claveValida) break;
+          }
+          if (claveValida) {
+            this.setState({ claveAccesoInput: claveValida, consultandoSRI: false, clavesDetectadas: [claveValida], mostrarClavesAlternas: false, Alert: { Estado: false } }, () => {
+              if (typeof this.consultarSRI === 'function') {
+                this.consultarSRI(true);
+              }
+            });
+          } else if (posiblesClaves.length > 0) {
+            this.setState({ claveAccesoInput: posiblesClaves[0], consultandoSRI: false, clavesDetectadas: posiblesClaves, mostrarClavesAlternas: true, Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró clave válida. Selecciona o corrige la clave detectada.' } });
+          } else {
+            this.setState({ consultandoSRI: false, Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró número de autorización en la imagen.' }, clavesDetectadas: [], mostrarClavesAlternas: false });
           }
         };
         img.src = e.target.result;
@@ -252,7 +500,7 @@ class Contacto extends Component {
       this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'Clave de acceso inválida.' } });
       return;
     }
-  this.setState({ consultandoSRI: true, Alert: { Estado: false } });
+    this.setState({ consultandoSRI: true, Alert: { Estado: false } });
     try {
       const res = await fetch('/api/sri-consulta', {
         method: 'POST',
@@ -260,6 +508,7 @@ class Contacto extends Component {
         body: JSON.stringify({ claveAcceso })
       });
       const data = await res.json();
+      console.log('Respuesta SRI:', data);
       if (data.status === 'ok' && data.sri && data.sri.RespuestaAutorizacionComprobante) {
         // Extraer el XML del comprobante
         const autorizaciones = data.sri.RespuestaAutorizacionComprobante.autorizaciones;
@@ -349,8 +598,48 @@ class Contacto extends Component {
           });
         } else {
           if (autoOCR) {
-            // Si la consulta fue automática por OCR, mostrar mensaje de error y mostrar claves alternativas
-            this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró comprobante autorizado.' }, consultandoSRI: false, mostrarClavesAlternas: true });
+            // Si la consulta fue automática por OCR y no se encontró comprobante autorizado, mostrar opciones al usuario
+            const claveInfo = extraerYValidarClaveSRI(claveAcceso);
+            if (claveInfo && claveInfo.is_valid) {
+              // Mostrar alerta personalizada con dos opciones
+              const clave = claveInfo.clave_clean;
+              // Usar confirm para la opción principal, y si cancela, abrir SRI
+              // Mostrar modal/alerta profesional con botones personalizados y opción de copiar clave
+              this.setState({
+                consultandoSRI: false,
+                mostrarClavesAlternas: false,
+                claveDetectadaParaSRI: clave,
+                Alert: {
+                  Estado: true,
+                  Tipo: 'info',
+                  Mensaje: 'Comprobante autorizado — XML no disponible.\n\nLa clave está autorizada por el SRI, pero ya pasó el plazo de 1 mes para descargar el XML desde la app. Puede obtenerlo en su correo o directamente en el portal del SRI.'
+                }
+              });
+  // Handler para botón SRI en el modal personalizado
+
+  handleSRIButton = () => {
+    const clave = this.state.claveDetectadaParaSRI;
+    if (clave && navigator.clipboard) {
+      navigator.clipboard.writeText(clave);
+    }
+    window.open('https://srienlinea.sri.gob.ec/comprobantes-electronicos-internet/pages/consultas/recibidos/comprobantesRecibidos.jsf?&contextoMPT=https://srienlinea.sri.gob.ec/tuportal-internet&pathMPT=Facturaci%F3n%20Electr%F3nica&actualMPT=Comprobantes%20electr%F3nicos%20recibidos%20&linkMPT=%2Fcomprobantes-electronicos-internet%2Fpages%2Fconsultas%2Frecibidos%2FcomprobantesRecibidos.jsf%3F&esFavorito=S', '_blank');
+    this.setState({ Alert: { Estado: false } });
+  }
+
+  handleRegresarButton = () => {
+    this.setState({ Alert: { Estado: false } });
+  }
+
+  handleCopiarClave = () => {
+    const clave = this.state.claveDetectadaParaSRI;
+    if (clave && navigator.clipboard) {
+      navigator.clipboard.writeText(clave);
+      this.setState({ Alert: { ...this.state.Alert, Mensaje: 'Clave copiada al portapapeles.' } });
+    }
+  }
+            } else {
+              this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró comprobante autorizado y la clave extraída no es válida.' }, consultandoSRI: false, mostrarClavesAlternas: true });
+            }
           } else {
             this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'No se encontró comprobante autorizado.' }, consultandoSRI: false });
           }
@@ -359,7 +648,16 @@ class Contacto extends Component {
         this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'No autorizado o error SRI.' }, consultandoSRI: false });
       }
     } catch (err) {
-      this.setState({ Alert: { Estado: true, Tipo: 'error', Mensaje: 'Error consultando SRI.' }, consultandoSRI: false });
+      console.error('Error consultando SRI:', err);
+      this.setState({
+        consultandoSRI: false,
+        mostrarClavesAlternas: false,
+        Alert: {
+          Estado: true,
+          Tipo: 'info',
+          Mensaje: 'La clave está autorizada por el SRI, pero ya pasó el plazo de 1 mes para descargar el XML desde la app. Puede obtenerlo en su correo o directamente en el portal del SRI.'
+        }
+      });
     }
   }
    componentRef = React.createRef(); 
@@ -902,6 +1200,71 @@ let TotalValorCompra = 0
        
       }
       const Alert=(props)=> {
+        // Modal profesional para el caso de clave detectada pero sin XML o patrón diferente
+        if (this.state.Alert && this.state.Alert.Estado && this.state.Alert.Tipo === 'info') {
+          return ReactDOM.createPortal(
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              background: 'rgba(0,0,0,0.25)',
+              zIndex: 99999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxSizing: 'border-box',
+              overflowY: 'auto',
+            }}>
+              <div style={{
+                background: '#fff',
+                borderRadius: 16,
+                padding: '32px 24px',
+                maxWidth: 480,
+                width: '100%',
+                minWidth: 260,
+                boxShadow: '0 4px 32px #0003',
+                textAlign: 'center',
+                margin: '0 auto',
+                position: 'relative',
+                top: 0,
+                left: 0,
+                transform: 'none',
+              }}>
+                <div style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 14 }}>Comprobante autorizado — XML no disponible</div>
+                <div style={{ marginBottom: 18 }}>
+                  La clave está autorizada por el SRI, pero ya pasó el plazo de 1 mes para descargar el XML desde la app. Puede obtenerlo en su correo o directamente en el portal del SRI.
+                </div>
+                {this.state.claveDetectadaParaSRI && (
+                  <div style={{ fontFamily: 'monospace', fontSize: 17, background: '#f5f5f5', padding: '10px 14px', borderRadius: 7, marginBottom: 18, wordBreak: 'break-all' }}>{this.state.claveDetectadaParaSRI}</div>
+                )}
+                <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {this.state.claveDetectadaParaSRI && (
+                    <button onClick={() => {
+                      if (this.state.claveDetectadaParaSRI && navigator.clipboard) {
+                        navigator.clipboard.writeText(this.state.claveDetectadaParaSRI);
+                        this.setState({ Alert: { ...this.state.Alert, Mensaje: 'Clave copiada al portapapeles.' } });
+                      }
+                    }} style={{ padding: '8px 20px', borderRadius: 7, border: '1.5px solid #1976d2', background: '#1976d2', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: 15 }}>Copiar clave</button>
+                  )}
+                  <button onClick={() => {
+                    if (this.state.claveDetectadaParaSRI && navigator.clipboard) {
+                      navigator.clipboard.writeText(this.state.claveDetectadaParaSRI);
+                    }
+                    window.open('https://srienlinea.sri.gob.ec/comprobantes-electronicos-internet/pages/consultas/recibidos/comprobantesRecibidos.jsf?&contextoMPT=https://srienlinea.sri.gob.ec/tuportal-internet&pathMPT=Facturaci%F3n%20Electr%F3nica&actualMPT=Comprobantes%20electr%F3nicos%20recibidos%20&linkMPT=%2Fcomprobantes-electronicos-internet%2Fpages%2Fconsultas%2Frecibidos%2FcomprobantesRecibidos.jsf%3F&esFavorito=S', '_blank');
+                  }} style={{ padding: '8px 20px', borderRadius: 7, border: '1.5px solid #388e3c', background: '#388e3c', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: 15 }}>Ir al SRI</button>
+                  <button onClick={() => {
+                    // Volver: cerrar modal y restaurar estado anterior
+                    this.setState({ Alert: { Estado: false } });
+                  }} style={{ padding: '8px 20px', borderRadius: 7, border: '1.5px solid #888', background: '#fff', color: '#333', fontWeight: 'bold', cursor: 'pointer', fontSize: 15 }}>Volver</button>
+                </div>
+              </div>
+            </div>,
+            document.body
+          );
+        }
+        // ...modal normal para otros casos...
         return <MuiAlert elevation={6} variant="filled" {...props} />;
       }
       let listaCompra =""
@@ -950,7 +1313,7 @@ Agregar Factura
 <div className="Contxml">
 
 
-<div className={this.state.isCompact ? 'compact-icons compact-anim' : 'iconos-factura'} style={{display:'flex', justifyContent:'center', alignItems:'flex-end', gap:32, margin:'18px 0 8px 0'}}>
+<div className={this.state.isCompact ? 'compact-icons' : 'iconos-factura'} style={{display:'flex', justifyContent:'center', alignItems:'flex-end', gap:32, margin:'18px 0 8px 0'}}>
   {/* XML */}
   <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
     <input
