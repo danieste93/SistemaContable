@@ -42,6 +42,11 @@ class Contacto extends Component {
               
               }  
           } 
+        
+        console.log('DEBUG: Datos enviados para eliminar compra:', datos);
+        console.log('DEBUG: Registro completo de compra:', reg);
+        console.log('DEBUG: ArtComprados:', reg.ArtComprados);
+        
         let lol = JSON.stringify(datos)
       
         var url= '/public/deletecompra';

@@ -757,7 +757,9 @@ let filtrados=[]
           let add = {
             Estado:true,
             Tipo:"error",
-            Mensaje:`Existencias insuficientes, del articulo ${data.Titulo}, con el codigo ${data.Eqid}`
+            Mensaje: data && data.Titulo 
+              ? `Existencias insuficientes, del articulo ${data.Titulo}, con el codigo ${data.Eqid}`
+              : "Existencias insuficientes para eliminar esta compra. Algunos productos pueden haber sido vendidos."
         }
           this.setState({deleteCompra:false, Alert: add })
         }}

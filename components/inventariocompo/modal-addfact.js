@@ -1,3 +1,50 @@
+// --- ZOOM LOCAL Y OCR EN DÍGITOS DUDOSOS ---
+// Helpers fuera de la clase para sintaxis válida
+var gruposConf = [
+  ['5', '6'],
+  ['1', '2', '7']
+];
+function posicionesDudosas(str1, str2) {
+  var dudas = [];
+  for (var i = 0; i < Math.min(str1.length, str2.length); i++) {
+    if (str1[i] !== str2[i]) {
+      for (var g = 0; g < gruposConf.length; g++) {
+        if (gruposConf[g].includes(str1[i]) && gruposConf[g].includes(str2[i])) {
+          dudas.push({ pos: i, grupo: gruposConf[g] });
+        }
+      }
+    }
+  }
+  return dudas;
+}
+function ocrZoomDigito(canvas, x, y, w, h, grupo) {
+  return new Promise(function(resolve) {
+    var zoom = 3;
+    var blockCanvas = document.createElement('canvas');
+    blockCanvas.width = w * zoom;
+    blockCanvas.height = h * zoom;
+    var blockCtx = blockCanvas.getContext('2d');
+    blockCtx.imageSmoothingEnabled = false;
+    blockCtx.drawImage(canvas, x, y, w, h, 0, 0, w * zoom, h * zoom);
+    var imageData = blockCtx.getImageData(0, 0, blockCanvas.width, blockCanvas.height);
+    var th = 128;
+    for (var i = 0; i < imageData.data.length; i += 4) {
+      var v = imageData.data[i];
+      var bin = v > th ? 255 : 0;
+      imageData.data[i] = imageData.data[i + 1] = imageData.data[i + 2] = bin;
+    }
+    blockCtx.putImageData(imageData, 0, 0);
+    var whitelist = grupo.join('');
+    window.Tesseract.recognize(blockCanvas.toDataURL('image/png'), 'eng', {
+      logger: function(m) {},
+      tessedit_char_whitelist: whitelist,
+      preserve_interword_spaces: 1,
+      psm: 10
+    }).then(function(result) {
+      resolve((result.data.text || '').replace(/\D/g, ''));
+    });
+  });
+}
 // Helper: Extraer y validar clave de acceso SRI (49 dígitos)
 function extraerYValidarClaveSRI(textoOCR) {
   // 1. Buscar candidatos: secuencias de 44-49 dígitos (limpia todo menos números)
@@ -583,17 +630,37 @@ function generarVariantesClave(clave) {
                 }
               });
             } else {
-              // Si no se encuentra comprobante anidado, guardar el objeto plano
-              this.setState({
-                Comprobante: result,
-                xmlData: { fechaAutorizacion: [fechaAutorizacion] },
-                validfact: false,
-                waitingdata: false,
-                consultandoSRI: false,
-                clavesDetectadas: [],
-                mostrarClavesAlternas: false,
-                Alert: { Estado: false }
-              });
+              // Si no se encuentra comprobante anidado, verificar estructura antes de guardar
+              console.log('DEBUG: No se encontró comprobante anidado, verificando estructura...');
+              console.log('DEBUG: result structure:', result);
+              
+              // Solo asignar si result tiene la estructura esperada de factura
+              if (result && result.factura && result.factura.detalles && result.factura.detalles[0] && result.factura.detalles[0].detalle) {
+                // Aplicar el mismo procesamiento que se hace con XML: agrupar items por código
+                result.factura.detalles[0].detalle = this.agruparItemsPorCodigo(result.factura.detalles[0].detalle);
+                
+                this.setState({
+                  Comprobante: result,
+                  xmlData: { 
+                    fechaAutorizacion: [fechaAutorizacion],
+                    numeroAutorizacion: [claveAcceso]  // Agregar número de autorización desde la clave
+                  },
+                  validfact: false,
+                  waitingdata: false,
+                  consultandoSRI: false,
+                  clavesDetectadas: [],
+                  mostrarClavesAlternas: false,
+                  Alert: { Estado: false }
+                });
+              } else {
+                console.log('DEBUG: Estructura de result no válida para renderizar');
+                this.setState({
+                  Alert: { Estado: true, Tipo: 'error', Mensaje: 'La estructura del comprobante no es válida.' },
+                  consultandoSRI: false,
+                  clavesDetectadas: [],
+                  mostrarClavesAlternas: false
+                });
+              }
             }
           });
         } else {
@@ -720,7 +787,22 @@ function generarVariantesClave(clave) {
          
         
               var url = '/public/generate-factcompra';
-              let newstate = this.state
+              
+              // Construir solo los datos necesarios para el servidor (no enviar todo el estado)
+              let newstate = {
+                Comprobante: this.state.Comprobante,
+                xmlData: this.state.xmlData,
+                Fpago: this.state.Fpago,
+                Vendedor: this.state.Vendedor,
+                Ruc: this.state.Ruc,
+                numeroFact: this.state.numeroFact,
+                codemision: this.state.codemision,
+                codpunto: this.state.codpunto,
+                usuario: this.state.usuario,
+                direccion: this.state.direccion,
+                proveedor: this.state.proveedor
+              };
+              
             let Deta = newstate.Comprobante.factura.detalles[0].detalle
               
 const totalSumaItems = Deta.reduce((sum, item) => sum + item.precioFinal, 0);
@@ -739,6 +821,16 @@ if(diferencia>0){
               newstate.Userdata ={DBname:this.props.state.userReducer.update.usuario.user.DBname}
               newstate.fecha = this.state.xmlData.fechaAutorizacion[0]
           
+             console.log('DEBUG: Datos enviados al servidor:', {
+               TotalValorCompra: newstate.TotalValorCompra,
+               TotalPago: newstate.TotalPago,
+               fecha: newstate.fecha,
+               Comprobante: newstate.Comprobante,
+               xmlData: newstate.xmlData,
+               xmlDataDetalle: newstate.xmlData.fechaAutorizacion,
+               ComprobanteFull: newstate
+             });
+             
              var lol = JSON.stringify(newstate)
              fetch(url, {
               method: 'POST', // or 'PUT'
@@ -752,10 +844,25 @@ if(diferencia>0){
             .then(response => {
               console.log('Response addfact:', response)
               if(response.status=="Error"){
+                // Convertir response.message a string si es un objeto
+                let mensaje = "";
+                if (typeof response.message === 'object' && response.message !== null) {
+                  // Si es un objeto, intentar extraer información útil o usar JSON.stringify
+                  if (response.message.error) {
+                    mensaje = response.message.error;
+                  } else if (Object.keys(response.message).length === 0) {
+                    mensaje = "Error al procesar la factura";
+                  } else {
+                    mensaje = JSON.stringify(response.message);
+                  }
+                } else {
+                  mensaje = response.message || "Error desconocido";
+                }
+                
                 let add = {
                   Estado:true,
                   Tipo:"error",
-                  Mensaje:response.message
+                  Mensaje: mensaje
               }
               this.setState({Alert: add, loading:false}) 
             } else if(response.message=="Factura ya ingresada"){
@@ -1620,7 +1727,14 @@ SendAceptar={()=>{   this.setState({xmlData:this.state.preventxmlData, Comproban
         </Animate> 
         <Snackbar open={this.state.Alert.Estado} autoHideDuration={20000} onClose={handleClose}>
     <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
-        <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>
+        <p style={{textAlign:"center"}}> 
+          {typeof this.state.Alert.Mensaje === 'string' 
+            ? this.state.Alert.Mensaje 
+            : typeof this.state.Alert.Mensaje === 'object' 
+              ? JSON.stringify(this.state.Alert.Mensaje) 
+              : String(this.state.Alert.Mensaje)
+          } 
+        </p>
     
     </Alert>
   </Snackbar>
