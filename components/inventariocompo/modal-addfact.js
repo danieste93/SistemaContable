@@ -1553,7 +1553,7 @@ Agregar Factura
             const val = e.target.value.replace(/\D/g, '').slice(0,49);
             this.setState({ claveAccesoInput: val });
           }}
-          placeholder="Clave de acceso (44-49 dígitos)"
+          placeholder="Clave de acceso (49 dígitos)"
           style={{ width: '100%', minHeight: 44, maxHeight: 90, padding: 8, fontSize:16, letterSpacing:2, fontFamily:'monospace', border:'2px solid #1976d2', borderRadius:4, resize:'vertical', lineHeight: '1.8', overflowY:'auto' }}
           maxLength={61}
           autoComplete="off"
