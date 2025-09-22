@@ -241,6 +241,22 @@ account_balance
 <p>Cuentas</p>
 </button>
         </Dropdown.Item>
+        <Dropdown.Item href={"/inventario"}>
+        <button className='btn btn-info btnDropDowm ' >  
+      <span className="material-icons">
+inventory_2
+</span>
+<p>Inventario</p>
+</button>
+        </Dropdown.Item>
+        <Dropdown.Item href={"/punto-de-venta"}>
+        <button className='btn btn-secondary btnDropDowm ' >  
+      <span className="material-icons">
+point_of_sale
+</span>
+<p>P. Venta</p>
+</button>
+        </Dropdown.Item>
       <Dropdown.Item href={this.asignadorDeRuta()}>
         
       <button className='btn btn-success btnDropDowm ' >  
