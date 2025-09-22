@@ -18,6 +18,8 @@ import { Pie, Line, Bar } from 'react-chartjs-2';
 import {Chart} from"chart.js"
 import 'chart.js/auto';
 import AddCero from '../../components/funciones/addcero';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Switch, FormControlLabel, Select, MenuItem, FormControl, InputLabel, Fab, Grid, Typography, Box } from '@material-ui/core';
+import SettingsIcon from '@material-ui/icons/Settings';
 
 
 
@@ -29,6 +31,27 @@ class admins extends Component {
     cuentaToAdd:{},
     Alert:{Estado:false},
     tiempoValue:"diario",
+    
+    // Estados para personalización de widgets
+    showCustomizationPanel: false,
+    widgetConfig: {
+      showIncomeChart: true,
+      showExpenseChart: true,
+      showPieChart: true,
+      showBarChart: true,
+      showLiquidityChart: true, // Nuevo widget de liquidez
+      incomeChartType: 'line', // line, bar, area
+      expenseChartType: 'line',
+      pieChartType: 'pie', // pie, doughnut
+      barChartType: 'bar', // bar, horizontalBar
+      liquidityChartType: 'line', // line, area
+      customColors: {
+        income: '#8cf73a',
+        expense: '#f1586e',
+        liquidity: '#00d4aa', // Color para liquidez
+        pieColors: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+      }
+    }
    }
    channel2 = null;
    componentDidMount(){
@@ -43,6 +66,9 @@ class admins extends Component {
      
           this.getCuentasyCats()
     }
+
+    // Cargar configuración de widgets guardada
+    this.loadWidgetConfig();
 
    }
 
@@ -231,6 +257,63 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
               }
   
   }
+
+  // Funciones para personalización de widgets
+  toggleCustomizationPanel = () => {
+    this.setState({
+      showCustomizationPanel: !this.state.showCustomizationPanel
+    });
+  }
+
+  updateWidgetVisibility = (widgetName, isVisible) => {
+    this.setState({
+      widgetConfig: {
+        ...this.state.widgetConfig,
+        [widgetName]: isVisible
+      }
+    });
+  }
+
+  updateChartType = (chartName, newType) => {
+    this.setState({
+      widgetConfig: {
+        ...this.state.widgetConfig,
+        [chartName]: newType
+      }
+    });
+  }
+
+  updateCustomColor = (colorName, newColor) => {
+    this.setState({
+      widgetConfig: {
+        ...this.state.widgetConfig,
+        customColors: {
+          ...this.state.widgetConfig.customColors,
+          [colorName]: newColor
+        }
+      }
+    });
+  }
+
+  saveWidgetConfig = () => {
+    localStorage.setItem('widgetConfig', JSON.stringify(this.state.widgetConfig));
+    this.setState({
+      Alert: {
+        Estado: true,
+        Tipo: "success",
+        Mensaje: "Configuración de widgets guardada exitosamente"
+      }
+    });
+  }
+
+  loadWidgetConfig = () => {
+    const savedConfig = localStorage.getItem('widgetConfig');
+    if (savedConfig) {
+      this.setState({
+        widgetConfig: JSON.parse(savedConfig)
+      });
+    }
+  }
  render() {
   let nameUser = this.props.state.userReducer !=""? this.props.state.userReducer.update.usuario.user.Usuario:""
   const defaultLegendClickHandler = Chart.defaults.plugins.legend.onClick;
@@ -257,8 +340,13 @@ let deberTotal=0
 let ingresoActive = this.state.pieValue == "ingresos"?"ingresoActive":""
 let gastoActive = this.state.pieValue == "gastos"?"gastoActive":""
 
+// Inicialización de variables de liquidez
+let liquidezLabels = [];
+let liquidezData = [];
+let DetallesPorrender = []; // Inicializar array vacío por defecto
+
 if(this.props.state.RegContableReducer.Regs){
-  let DetallesPorrender = this.props.state.RegContableReducer.Regs.filter(x => {
+  DetallesPorrender = this.props.state.RegContableReducer.Regs.filter(x => {
    
     return x.TiempoEjecucion  !=0
   }
@@ -475,6 +563,62 @@ if(this.props.state.RegContableReducer.Cuentas){
 
       balanceTotal = capitalTotal + deberTotal 
 
+  // Cálculo simplificado de liquidez para el widget usando las variables ya inicializadas
+  if (DetallesPorrender.length > 0) {
+    let liquidezPorPeriodo = {};
+    let acumuladoLiquidez = balanceTotal;
+    
+    // Filtrar transacciones según el tiempo seleccionado
+    let transaccionesFiltradas;
+    if (this.state.tiempoValue === "diario") {
+      transaccionesFiltradas = this.DiaryFilter(DetallesPorrender);
+    } else {
+      transaccionesFiltradas = this.MensualFilter(DetallesPorrender);
+    }
+    
+    // Solo ingresos y gastos, ordenados cronológicamente (más reciente primero)
+    const transaccionesOrdenadas = transaccionesFiltradas
+      .filter(x => x.Accion !== "Trans")
+      .sort((a, b) => b.Tiempo - a.Tiempo);
+    
+    // Agrupar transacciones por periodo y calcular liquidez
+    transaccionesOrdenadas.forEach(transaccion => {
+      const fecha = new Date(transaccion.Tiempo);
+      let periodo;
+      
+      if (this.state.tiempoValue === "diario") {
+        periodo = fecha.getHours().toString().padStart(2, '0') + ":00";
+      } else {
+        periodo = fecha.getDate().toString();
+      }
+      
+      // Solo almacenar el primer valor para cada periodo (el más reciente)
+      if (!liquidezPorPeriodo[periodo]) {
+        liquidezPorPeriodo[periodo] = acumuladoLiquidez;
+      }
+      
+      // Restar del acumulado para obtener liquidez histórica
+      if (transaccion.Accion === "Ingreso") {
+        acumuladoLiquidez -= transaccion.Importe;
+      } else if (transaccion.Accion === "Gasto") {
+        acumuladoLiquidez += transaccion.Importe;
+      }
+    });
+    
+    // Ordenar periodos y crear arrays para el gráfico
+    const periodosOrdenados = Object.keys(liquidezPorPeriodo).sort((a, b) => {
+      if (this.state.tiempoValue === "diario") {
+        // Para horas, ordenar numéricamente
+        return parseInt(a.split(':')[0]) - parseInt(b.split(':')[0]);
+      }
+      // Para días, ordenar numéricamente
+      return parseInt(a) - parseInt(b);
+    });
+    
+    liquidezLabels = periodosOrdenados;
+    liquidezData = periodosOrdenados.map(periodo => liquidezPorPeriodo[periodo].toFixed(2));
+  }
+
   this.props.state.RegContableReducer.Cuentas.filter(x=> x.DineroActual.$numberDecimal != "0" && x.DineroActual.$numberDecimal != "0.00" && x.CheckedP == true && x.Tipo != "Inventario" ).sort((a, b) =>parseFloat(b.DineroActual.$numberDecimal)  - parseFloat(a.DineroActual.$numberDecimal)).slice(0,10)
   .forEach(x=>{
 
@@ -521,6 +665,24 @@ if(this.props.state.RegContableReducer.Cuentas){
            data: valCat,
            backgroundColor: coloresElegidos
         } ]  }
+
+      // Dataset para el widget de liquidez
+      let superdataLiquidez = {
+        labels: liquidezLabels,
+        datasets: [{
+          label: 'Evolución de Liquidez',
+          data: liquidezData,
+          borderColor: this.state.widgetConfig.customColors.liquidity,
+          backgroundColor: this.state.widgetConfig.customColors.liquidity + '20',
+          fill: this.state.widgetConfig.liquidityChartType === 'area',
+          tension: 0.4,
+          borderWidth: 3,
+          pointBackgroundColor: this.state.widgetConfig.customColors.liquidity,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 5
+        }]
+      };
 
 
   const handleClose = (event, reason) => {
@@ -649,6 +811,196 @@ const Alert=(props)=> {
      
       this.setState({pieValue:data})
      };
+
+    // Componente del Panel de Personalización de Widgets
+    const CustomizationPanel = () => {
+      return (
+        <Dialog 
+          open={this.state.showCustomizationPanel} 
+          onClose={this.toggleCustomizationPanel}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            <Box display="flex" alignItems="center">
+              <SettingsIcon style={{ marginRight: 8 }} />
+              <Typography variant="h6">Personalizar Dashboard</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={3}>
+              
+              {/* Sección de Visibilidad de Widgets */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom style={{ color: '#004a9b', marginBottom: 16 }}>
+                  Mostrar/Ocultar Widgets
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={this.state.widgetConfig.showIncomeChart}
+                      onChange={(e) => this.updateWidgetVisibility('showIncomeChart', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Gráfico de Ingresos"
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={this.state.widgetConfig.showExpenseChart}
+                      onChange={(e) => this.updateWidgetVisibility('showExpenseChart', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Gráfico de Gastos"
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={this.state.widgetConfig.showPieChart}
+                      onChange={(e) => this.updateWidgetVisibility('showPieChart', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Gráfico Circular"
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={this.state.widgetConfig.showBarChart}
+                      onChange={(e) => this.updateWidgetVisibility('showBarChart', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Gráfico de Barras"
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={this.state.widgetConfig.showLiquidityChart}
+                      onChange={(e) => this.updateWidgetVisibility('showLiquidityChart', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Evolución de Liquidez"
+                />
+              </Grid>
+
+              {/* Sección de Tipos de Gráficos */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom style={{ color: '#004a9b', marginTop: 16, marginBottom: 16 }}>
+                  Tipos de Gráficos
+                </Typography>
+              </Grid>
+
+              {this.state.widgetConfig.showIncomeChart && (
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Tipo Gráfico Ingresos</InputLabel>
+                    <Select
+                      value={this.state.widgetConfig.incomeChartType}
+                      onChange={(e) => this.updateChartType('incomeChartType', e.target.value)}
+                    >
+                      <MenuItem value="line">Línea</MenuItem>
+                      <MenuItem value="bar">Barras</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              )}
+
+              {this.state.widgetConfig.showExpenseChart && (
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Tipo Gráfico Gastos</InputLabel>
+                    <Select
+                      value={this.state.widgetConfig.expenseChartType}
+                      onChange={(e) => this.updateChartType('expenseChartType', e.target.value)}
+                    >
+                      <MenuItem value="line">Línea</MenuItem>
+                      <MenuItem value="bar">Barras</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              )}
+
+              {this.state.widgetConfig.showPieChart && (
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Tipo Gráfico Circular</InputLabel>
+                    <Select
+                      value={this.state.widgetConfig.pieChartType}
+                      onChange={(e) => this.updateChartType('pieChartType', e.target.value)}
+                    >
+                      <MenuItem value="pie">Pastel</MenuItem>
+                      <MenuItem value="doughnut">Dona</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              )}
+
+              {this.state.widgetConfig.showBarChart && (
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Tipo Gráfico Barras</InputLabel>
+                    <Select
+                      value={this.state.widgetConfig.barChartType}
+                      onChange={(e) => this.updateChartType('barChartType', e.target.value)}
+                    >
+                      <MenuItem value="bar">Barras Verticales</MenuItem>
+                      <MenuItem value="horizontalBar">Barras Horizontales</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              )}
+
+              {this.state.widgetConfig.showLiquidityChart && (
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Tipo Gráfico Liquidez</InputLabel>
+                    <Select
+                      value={this.state.widgetConfig.liquidityChartType}
+                      onChange={(e) => this.updateChartType('liquidityChartType', e.target.value)}
+                    >
+                      <MenuItem value="line">Línea</MenuItem>
+                      <MenuItem value="area">Área</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              )}
+
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.toggleCustomizationPanel} color="secondary">
+              Cancelar
+            </Button>
+            <Button onClick={() => {
+              this.saveWidgetConfig();
+              this.toggleCustomizationPanel();
+            }} color="primary" variant="contained">
+              Guardar Configuración
+            </Button>
+          </DialogActions>
+        </Dialog>
+      );
+    };
+
   return(
  
   <div className='fondoAdmin'> 
@@ -700,6 +1052,7 @@ const Alert=(props)=> {
       </AppBar>
       </div>
       <div className='contCuadros'>
+        {this.state.widgetConfig.showIncomeChart && (
         <div className={`cuadroPlantilla cuadroIngreso ${ingresoActive}`}>
           <div className='contTextoscuadro'>
             <div className='jwFlex tituloCard'>
@@ -721,6 +1074,7 @@ const Alert=(props)=> {
             }
             
             }}>
+{this.state.widgetConfig.incomeChartType === 'line' ? (
 <Line data={superDataIng}   options={{
    tension: 0.4,
   responsive: true,
@@ -760,9 +1114,47 @@ const Alert=(props)=> {
                             },
                         }
     }} />
+) : (
+<Bar data={superDataIng} options={{
+   responsive: true,
+  maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        },
+      },
+     scales: {
+                            yAxes:{
+                                grid: {
+                                    drawBorder: true,
+                                    color: '#FFFFFF',
+                                },
+                                ticks:{
+                                    beginAtZero: true,
+                                    color: 'white',
+                                    fontSize: 12,
+                                }
+                            },
+                            xAxes: {
+                                grid: {
+                                    drawBorder: true,
+                                    color: '#FFFFFF',
+                                    display:false,
+                                },
+                                ticks:{
+                                    beginAtZero: true,
+                                    color: 'white',
+                                    fontSize: 12,
+                                }
+                            },
+                        }
+    }} />
+)}
 </div>
           </div>  
+        )}
        
+        {this.state.widgetConfig.showExpenseChart && (
           <div className={`cuadroPlantilla cuadroGasto ${gastoActive}`}>
           <div className='contTextoscuadro'>
           <div className='jwFlex tituloCard'>
@@ -782,6 +1174,7 @@ const Alert=(props)=> {
               this.setState({pieValue:"gastos"})
             }
             }}>
+{this.state.widgetConfig.expenseChartType === 'line' ? (
 <Line data={superDataGas}   options={{
    tension: 0.4,
   responsive: true,
@@ -821,12 +1214,50 @@ const Alert=(props)=> {
                             },
                         }
     }} />
+) : (
+<Bar data={superDataGas} options={{
+   responsive: true,
+  maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        },
+      },
+     scales: {
+                            yAxes:{
+                                grid: {
+                                    drawBorder: true,
+                                    color: '#FFFFFF',
+                                },
+                                ticks:{
+                                    beginAtZero: true,
+                                    color: 'white',
+                                    fontSize: 12,
+                                }
+                            },
+                            xAxes: {
+                                grid: {
+                                    drawBorder: true,
+                                    color: '#FFFFFF',
+                                    display:false,
+                                },
+                                ticks:{
+                                    beginAtZero: true,
+                                    color: 'White',
+                                    fontSize: 12,
+                                }
+                            },
+                        }
+    }} />
+)}
 </div>
           </div> 
+        )}
       </div>
 </div>
 
 </div>
+{this.state.widgetConfig.showPieChart && (
 <div className='glassStyle custonPieCont'>
 
       <div className='contPie'>
@@ -889,6 +1320,8 @@ const Alert=(props)=> {
     }} />
     </div>
 </div>
+)}
+{this.state.widgetConfig.showBarChart && (
 <div className='glassStyle custonBarrasCuentas'>
 <Bar data={superdatabar}   options={{
   responsive: true,
@@ -928,6 +1361,64 @@ plugins: {
 },
 }} />
 </div>
+)}
+
+{/* Widget de Liquidez */}
+{this.state.widgetConfig.showLiquidityChart && (
+<div className='glassStyle custonLiquidezCont'>
+  <div className='contLiquidez'>
+    <div className='headerLiquidez'>
+      <div className='jwFlex tituloCard'>
+        <i className="material-icons">
+          trending_up
+        </i>
+        <span className='tituloLiquidez'>Evolución de Liquidez</span>
+      </div>
+    </div>
+    <div className="centrar contLiquidezChart">
+      <Line 
+        data={superdataLiquidez}
+        options={{
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => `Liquidez: $${context.parsed.y}`,
+              },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              grid: {
+                color: 'rgba(255,255,255,0.1)',
+              },
+              ticks: {
+                color: 'white',
+                callback: function(value) {
+                  return '$' + value;
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false,
+              },
+              ticks: {
+                color: 'white',
+              }
+            }
+          }
+        }}
+      />
+    </div>
+  </div>
+</div>
+)}
 
      </div>
      <div className="contbarra">
@@ -942,6 +1433,27 @@ plugins: {
   
 {this.state.modalagregador && <Modal updateData={()=>{ }}  cuentaToAdd={this.state.cuentaToAdd}  flechafun={()=>{this.setState({modalagregador:false})}}/>
   }
+
+  {/* Panel de Personalización */}
+  <CustomizationPanel />
+  
+  {/* Botón Flotante para Personalización */}
+  <Fab 
+    color="primary" 
+    aria-label="personalizar" 
+    onClick={this.toggleCustomizationPanel}
+    style={{
+      position: 'fixed',
+      bottom: 20,
+      right: 20,
+      zIndex: 1000,
+      background: 'linear-gradient(45deg, #004a9b 30%, #0066cc 90%)',
+      color: 'white'
+    }}
+  >
+    <SettingsIcon />
+  </Fab>
+
    <Snackbar open={this.state.Alert.Estado} autoHideDuration={5000} onClose={handleClose}>
     <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
         <p style={{textAlign:"center"}}> {this.state.Alert.Mensaje} </p>    
@@ -991,6 +1503,31 @@ font-size:25px
   width: 100%;
   max-width: 450px;
   height:300px
+}
+
+.custonLiquidezCont{
+  width: 100%;
+  max-width: 600px;
+  height: 350px;
+}
+
+.contLiquidez{
+  height: 90%;
+  padding: 10px 20px;
+}
+
+.headerLiquidez{
+  margin-bottom: 10px;
+}
+
+.tituloLiquidez{
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.contLiquidezChart{
+  height: 85%;
 }
  
   .adminitemConts{
