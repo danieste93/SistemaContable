@@ -67,6 +67,7 @@ periodo:false,
 AddCuenta:false,
 addmitipo:false, 
 searchMode:false, 
+vistaFormato:"cuadros", // Nuevo estado: "cuadros" o "lista"
 visibility:false,
 
 superTotal:false,
@@ -120,7 +121,7 @@ modalBalance:false
  
   }
 
-componentDidMount(){
+        componentDidMount(){
   this.channelCroom = postal.channel();
   this.channelCroom.subscribe('UpdateCount', (data) => {
  
@@ -147,13 +148,61 @@ componentDidMount(){
 
 
      this.channel1 = postal.channel();
+     
+     // Agregar listeners para activar búsqueda con cualquier tecla de letra y ESC para salir
+     this.handleKeyPress = this.handleKeyPress.bind(this);
+     this.handleKeyDown = this.handleKeyDown.bind(this);
+     document.addEventListener('keypress', this.handleKeyPress);
+     document.addEventListener('keydown', this.handleKeyDown);
  
    
 
 
 
 
+        }        componentWillUnmount() {
+          // Remover los listeners cuando el componente se desmonte
+          document.removeEventListener('keypress', this.handleKeyPress);
+          document.removeEventListener('keydown', this.handleKeyDown);
         }
+        
+        handleKeyDown = (event) => {
+          // Detectar tecla ESC para salir del modo búsqueda
+          if (event.key === 'Escape' && this.state.searchMode) {
+            this.setState({
+              searchMode: false,
+              cuentasSearcher: ""
+            });
+          }
+        }
+        
+        handleKeyPress = (event) => {
+          // Solo activar si estamos en la vista principal de cuentas (no en detalles ni modales)
+          if (this.state.allcuentas && !this.state.searchMode) {
+            // Verificar que sea una letra (a-z, A-Z) y no una tecla especial
+            const isLetter = /^[a-zA-Z]$/.test(event.key);
+            
+            if (isLetter) {
+              // Activar modo búsqueda y enfocar el input
+              this.setState({ 
+                searchMode: true,
+                cuentasSearcher: event.key // Comenzar con la letra presionada
+              }, () => {
+                // Scroll hacia arriba y enfocar el input después de que se active
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  const input = document.querySelector('input[name="cuentasSearcher"]');
+                  if (input) {
+                    input.focus();
+                    // Posicionar el cursor al final
+                    input.setSelectionRange(input.value.length, input.value.length);
+                  }
+                }, 100);
+              });
+            }
+          }
+        }
+        
         printEstado=()=>{
           this.setState({titleToPrint:true})
           setTimeout(()=>{
@@ -299,27 +348,79 @@ fetch("/cuentas/getcuentas", {
              }
              let cuenEditMode= this.state.cuenEditMode?"cseditmodeactive":"";
              let oculta= cuenta.Visibility?"":"hiddenCustom"
+             
+             // Usar el mismo diseño visual que las cuentas normales
+             let backgroundSolido = cuenta.Background.Seleccionado=="Solido"?cuenta.Background.colorPicked:""
+             let backgroundImagen = cuenta.Background.Seleccionado=="Imagen"?cuenta.Background.urlBackGround:""
+             
              return(
-                  <div key ={i}className={ `  cuentanameSearch jwPointer ${cuenEditMode} ${oculta}`} onClick={()=>{
-
-                  if(this.state.cuenEditMode){
-                    this.editCustomCuenta(cuenta)
-                  }else{
-                    this.getcuentaRegs(cuenta)
-                  }
-                  }}>
-                    <div className="boxp">
-                  <p >
-                  {cuenta.NombreC}
-                  </p>
-                  <p className={tintura()}>
-                  {`$ ${parseFloat(cuenta.DineroActual.$numberDecimal).toFixed(2)}` }
-                  </p>
-                  </div>
-                  <div className="boxs">
-                  {cuenta.Tipo.toUpperCase()}
-                  </div>
+                  <div key ={cuenta._id} className={ ` contenedorCuenta ${oculta}`}>
+                    <div className={ `  cuentaContenedor jwPointer  ${cuenEditMode}`} 
+                    onClick={()=>{
+                      if(this.state.cuenEditMode){
+                        this.editCustomCuenta(cuenta)
+                      }else{
+                        this.getcuentaRegs(cuenta)
+                      }
+                    }}
+                    style={{
+                      backgroundColor:backgroundSolido,
+                      backgroundImage: `url(${backgroundImagen})`,
+                      position: 'relative'
+                    }}
+                    >
+                      <div className='jwFlexEnd'>
+                        <div className="contIconoCroom">
+                          <img  className='iconoCuenta' src={cuenta.urlIcono}/>
+                        </div>
+                        {/* Etiqueta de tipo de cuenta */}
+                        <div style={{
+                          position: 'absolute',
+                          top: '5px',
+                          left: '5px',
+                          backgroundColor: '#1976d2',
+                          color: 'white',
+                          fontSize: '11px',
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          fontWeight: '700',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          zIndex: 10,
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                        }}>
+                          {cuenta.Tipo}
+                        </div>
                       </div>
+                      <div className="contDataCuenta">
+                        <div className="conteliminal">
+                          <p className={tintura()}>
+                            {`$ ${parseFloat(cuenta.DineroActual.$numberDecimal).toFixed(2)}` }
+                          </p>
+                          <Animate show={this.state.cuenEditMode}>
+                            <i className="material-icons" onClick={(e)=>{
+                              e.stopPropagation()
+                              if(cuenta.Tipo== "Inventario" ){
+                                let add = {
+                                  Estado:true,
+                                  Tipo:"Warning",
+                                  Mensaje:"No se puede eliminar cuentas de inventario directamente."
+                                }
+                                this.setState({Alert: add})
+                              }else{
+                                this.setState({ModalDeleteC:true, CuentaPorDel:cuenta})
+                              }
+                            }}>
+                            delete
+                            </i>
+                          </Animate>
+                        </div>
+                        <p className='textoNombreCuenta' >
+                          {cuenta.NombreC}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
              )
 
@@ -1181,6 +1282,7 @@ ${parseFloat(ResultCuentas).toFixed(2)}
 
 </div>
 <div className="confiltroCuentra">
+{this.state.vistaFormato === "cuadros" && (
 <i className="material-icons" onClick={(e)=>{
 
   if(this.state.cuentaExpand == item){
@@ -1193,9 +1295,10 @@ ${parseFloat(ResultCuentas).toFixed(2)}
   }}>
   {flechaCuentas}
 </i>
+)}
+        </div>
 </div>
-</div>
-<Animate show={this.state.cuentaExpand != item}>
+<Animate show={this.state.cuentaExpand != item && this.state.vistaFormato === "cuadros"}>
 <div className="contcuentas">
 <Tabs
          value={0} // siempre válido
@@ -1206,19 +1309,17 @@ ${parseFloat(ResultCuentas).toFixed(2)}
           aria-label="scrollable auto tabs example"
         >
        
-{ generadorCuentas(cuentasrender,"cuadros")
+{ generadorCuentas(cuentasrender, "cuadros")
  }
 
 
 </Tabs>
 </div></Animate>
-<Animate show={this.state.cuentaExpand == item}>
+<Animate show={this.state.vistaFormato === "lista"}>
 <div className='contcuentaslista'>
 
 { generadorCuentas(cuentasrender,"lista")
- }
-
-</div>
+ }</div>
 </Animate>
       </div>
     )}}
@@ -1474,6 +1575,35 @@ if(cuentasrenderNoPosesion.length > 0){
           edit
           </span>
           </button>
+          <button className={`btn ${this.state.searchMode ? 'btn-success' : 'btn-secondary'} botonAddCrom`} onClick={()=>{
+            const newSearchMode = !this.state.searchMode;
+            this.setState({
+              searchMode: newSearchMode,
+              cuentasSearcher: newSearchMode ? this.state.cuentasSearcher : "" // Limpiar búsqueda si se desactiva
+            });
+            // Si se está activando el modo búsqueda, hacer scroll hacia arriba
+            if (newSearchMode) {
+              setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }, 100);
+            }
+          }}>
+            <span className="material-icons">
+              {this.state.searchMode ? 'view_list' : 'search'}
+            </span>
+          </button>
+          <button className="btn btn-info botonAddCrom" 
+                  onClick={()=>{
+                    this.setState({
+                      vistaFormato: this.state.vistaFormato === "cuadros" ? "lista" : "cuadros"
+                    });
+                  }}
+                  title={`Cambiar a vista ${this.state.vistaFormato === "cuadros" ? "lista" : "cuadros"}`}
+          >
+            <span className="material-icons">
+              {this.state.vistaFormato === "cuadros" ? 'view_list' : 'view_module'}
+            </span>
+          </button>
        
           <Dropdown>
         
@@ -1486,14 +1616,6 @@ if(cuentasrenderNoPosesion.length > 0){
        <Dropdown.Menu>
        
    
-       <Dropdown.Item>
-       <button className=" btn btn-secondary btnDropDowm" onClick={()=>{this.setState({searchMode:!this.state.searchMode})}}>
-            <span className="material-icons">
-          search
-          </span>
-          <p>Buscar</p>
-          </button>
-          </Dropdown.Item>
           <Dropdown.Item>
           <button className=" btn btn-warning btnDropDowm" onClick={this.updateData}>
          
@@ -1865,12 +1987,47 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
     <div className="contCentrado">
     <div className="contSuggester">
     
-      <div className="react-autosuggest__container">
-    <input name="cuentasSearcher" className="react-autosuggest__input" onChange={this.handleChangeGeneral} placeholder="Busca tus Cuentas" /> 
-    
+      <div className="react-autosuggest__container" style={{position: 'relative', display: 'flex', alignItems: 'center'}}>
+    <input 
+      name="cuentasSearcher" 
+      className="react-autosuggest__input" 
+      onChange={this.handleChangeGeneral} 
+      placeholder="Busca tus Cuentas"
+      value={this.state.cuentasSearcher}
+      style={{paddingRight: '40px'}}
+    /> 
+    {this.state.cuentasSearcher && (
+      <button 
+        onClick={() => {
+          this.setState({
+            cuentasSearcher: "",
+            searchMode: false
+          });
+        }}
+        style={{
+          position: 'absolute',
+          right: '10px',
+          background: 'none',
+          border: 'none',
+          fontSize: '20px',
+          color: '#666',
+          cursor: 'pointer',
+          padding: '0',
+          width: '25px',
+          height: '25px',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+        className="clear-search-btn"
+      >
+        ×
+      </button>
+    )}
       </div>
     </div>
-    <div className="contCuentasSearch">
+    <div className="contcuentas-search">
     {this.displayCuentas()}
     </div>
     </div>
@@ -2762,6 +2919,69 @@ p{
                   width: 99vw;
                   max-width: 800px;
                 
+                }
+                
+                /* Estilos específicos para el grid de búsqueda de cuentas */
+                .contcuentas-search {
+                  padding: 5px;
+                  display: flex;
+                  flex-wrap: wrap;
+                  justify-content: flex-start;
+                  align-items: flex-start;
+                  gap: 10px;
+                  min-height: 140px;
+                }
+                
+                /* Media queries solo para búsqueda de cuentas */
+                @media (max-width: 768px) {
+                  .contcuentas-search {
+                    justify-content: center;
+                    gap: 8px;
+                  }
+                  .contcuentas-search .contenedorCuenta {
+                    width: calc(100% - 10px);
+                    max-width: 100%;
+                    min-width: 280px;
+                    margin: 0;
+                  }
+                }
+                
+                @media (min-width: 769px) and (max-width: 1024px) {
+                  .contcuentas-search {
+                    justify-content: flex-start;
+                    gap: 10px;
+                  }
+                  .contcuentas-search .contenedorCuenta {
+                    width: calc(50% - 5px);
+                    min-width: 200px;
+                    max-width: 300px;
+                    margin: 0;
+                  }
+                }
+                
+                @media (min-width: 1025px) {
+                  .contcuentas-search {
+                    justify-content: flex-start;
+                    gap: 15px;
+                  }
+                  .contcuentas-search .contenedorCuenta {
+                    width: calc(33.333% - 10px);
+                    min-width: 220px;
+                    max-width: 280px;
+                    margin: 0;
+                  }
+                }
+                
+                @media (min-width: 1400px) {
+                  .contcuentas-search .contenedorCuenta {
+                    width: calc(25% - 12px);
+                  }
+                }
+                
+                /* Estilo para el botón de limpiar búsqueda */
+                .clear-search-btn:hover {
+                  background-color: #f0f0f0 !important;
+                  color: #333 !important;
                 }
        
   .minigen{
