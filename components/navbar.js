@@ -233,6 +233,14 @@ usercont=(e)=>{
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
+      <Dropdown.Item href={"/registro-contable"}>
+        <button className='btn btn-warning btnDropDowm ' >  
+      <span className="material-icons">
+account_balance
+</span>
+<p>Cuentas</p>
+</button>
+        </Dropdown.Item>
       <Dropdown.Item href={this.asignadorDeRuta()}>
         
       <button className='btn btn-success btnDropDowm ' >  
