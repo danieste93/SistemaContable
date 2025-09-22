@@ -3064,6 +3064,8 @@ p{
                   align-items: flex-start;
                   gap: 10px;
                   min-height: 140px;
+                  position: relative;
+                  z-index: 1;
                 }
                 
                 /* Media queries solo para búsqueda de cuentas */
