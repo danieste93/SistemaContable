@@ -38,6 +38,7 @@ class Croom extends Component {
       ValorCuenta:true,
       Alert:{Estado:false},
         Tipos:[],
+        ordenCuentas:{}, // Para manejar el orden individual por tipo de cuenta
         tiempo: new Date(),
         CuentasD:[],
         sequence:"",
@@ -321,6 +322,19 @@ fetch("/cuentas/getcuentas", {
           
 
         };
+
+        // Método para alternar el orden de las cuentas por tipo
+        toggleOrdenCuentas = (tipoClicked) => {
+          const ordenActual = this.state.ordenCuentas[tipoClicked] || 'desc';
+          const nuevoOrden = ordenActual === 'desc' ? 'asc' : 'desc';
+          
+          this.setState({
+            ordenCuentas: {
+              ...this.state.ordenCuentas,
+              [tipoClicked]: nuevoOrden
+            }
+          });
+        }
     
 
         displayCuentas=()=>{
@@ -347,14 +361,17 @@ fetch("/cuentas/getcuentas", {
               else{ return "" }
              }
              let cuenEditMode= this.state.cuenEditMode?"cseditmodeactive":"";
-             let oculta= cuenta.Visibility?"":"hiddenCustom"
+             
+             // Lógica mejorada para cuentas ocultas durante búsqueda
+             let esOculta = !cuenta.Visibility && this.state.visibility == false;
+             let claseOculta = esOculta ? "cuenta-oculta-visible" : "";
              
              // Usar el mismo diseño visual que las cuentas normales
              let backgroundSolido = cuenta.Background.Seleccionado=="Solido"?cuenta.Background.colorPicked:""
              let backgroundImagen = cuenta.Background.Seleccionado=="Imagen"?cuenta.Background.urlBackGround:""
              
              return(
-                  <div key ={cuenta._id} className={ ` contenedorCuenta ${oculta}`}>
+                  <div key ={cuenta._id} className={ ` contenedorCuenta ${claseOculta}`}>
                     <div className={ `  cuentaContenedor jwPointer  ${cuenEditMode}`} 
                     onClick={()=>{
                       if(this.state.cuenEditMode){
@@ -370,6 +387,22 @@ fetch("/cuentas/getcuentas", {
                     }}
                     >
                       <div className='jwFlexEnd'>
+                        {/* Indicador de cuenta oculta durante búsqueda */}
+                        {esOculta && (
+                          <i className="material-icons" style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            fontSize: '16px',
+                            color: '#666',
+                            background: 'rgba(255,255,255,0.8)',
+                            borderRadius: '50%',
+                            padding: '2px',
+                            zIndex: 15
+                          }}>
+                            visibility_off
+                          </i>
+                        )}
                         <div className="contIconoCroom">
                           <img  className='iconoCuenta' src={cuenta.urlIcono}/>
                         </div>
@@ -900,7 +933,18 @@ return saldofinal.toFixed(2)
       let flechaCuentasPsinT = this.state.cuentaExpand == "PosesionSinTotal"?"expand_less":"expand_more" 
       let generadorCuentas = (grupoCuentas,formato)=> grupoCuentas.map((cuenta,i)=>{
         let Actualdata  = 0
-        let novisible = cuenta.Visibility == false && this.state.visibility == false?"invisiblex":""
+        
+        // Lógica mejorada para cuentas ocultas durante búsqueda
+        let novisible = "";
+        let esOculta = cuenta.Visibility == false && this.state.visibility == false;
+        let hayBusqueda = this.state.cuentasSearcher != "";
+        
+        if (esOculta && !hayBusqueda) {
+          novisible = "invisiblex"; // Completamente oculta cuando no hay búsqueda
+        } else if (esOculta && hayBusqueda) {
+          novisible = "cuenta-oculta-visible"; // Visible pero con estilo diferente durante búsqueda
+        }
+        
         if(this.props.regC.Regs){
         let registros  = this.props.regC.Regs.filter(x => x.CuentaSelec.idCuenta === cuenta._id   )
         let transregister  = this.props.regC.Regs.filter(x => x.Accion === "Trans" )
@@ -974,6 +1018,21 @@ return saldofinal.toFixed(2)
 
      
           <div className='jwFlexEnd'>
+        {/* Indicador de cuenta oculta durante búsqueda */}
+        {esOculta && hayBusqueda && (
+          <i className="material-icons" style={{
+            position: 'absolute',
+            top: '4px',
+            right: '4px',
+            fontSize: '16px',
+            color: '#666',
+            background: 'rgba(255,255,255,0.8)',
+            borderRadius: '50%',
+            padding: '2px'
+          }}>
+            visibility_off
+          </i>
+        )}
         <div className="contIconoCroom">
           <img  className='iconoCuenta' src={cuenta.urlIcono}/>
         </div>
@@ -1028,9 +1087,23 @@ this.getcuentaRegs(cuenta)
 }
 }}
 
-style={{backgroundColor:backgroundSolido,backgroundImage: `url(${backgroundImagen})`}}
+style={{backgroundColor:backgroundSolido,backgroundImage: `url(${backgroundImagen})`, position: 'relative'}}
 >
-  
+  {/* Indicador de cuenta oculta durante búsqueda - Lista */}
+  {esOculta && hayBusqueda && (
+    <i className="material-icons" style={{
+      position: 'absolute',
+      top: '4px',
+      right: '4px',
+      fontSize: '16px',
+      color: '#666',
+      background: 'rgba(255,255,255,0.8)',
+      borderRadius: '50%',
+      padding: '2px'
+    }}>
+      visibility_off
+    </i>
+  )}
 <div className="contIconoCroomLista">
   <img  className='iconoLista' src={cuenta.urlIcono}/>
   <p className='jwbolder' >
@@ -1206,7 +1279,15 @@ DragableContent = ArrTipos.map((item, index) => (
           if(this.props.regC.Cuentas.length > 0){
       
       
-    let cuentasfiltradas = this.props.regC.Cuentas.filter(cuentaper => cuentaper.Tipo === item  ).sort((a, b) =>parseFloat(b.DineroActual.$numberDecimal)  - parseFloat(a.DineroActual.$numberDecimal))
+    // Obtener el orden actual para este tipo de cuenta (por defecto: descendente)
+    const ordenActual = this.state.ordenCuentas[item] || 'desc';
+    
+    let cuentasfiltradas;
+    if (ordenActual === 'desc') {
+      cuentasfiltradas = this.props.regC.Cuentas.filter(cuentaper => cuentaper.Tipo === item).sort((a, b) => parseFloat(b.DineroActual.$numberDecimal) - parseFloat(a.DineroActual.$numberDecimal));
+    } else {
+      cuentasfiltradas = this.props.regC.Cuentas.filter(cuentaper => cuentaper.Tipo === item).sort((a, b) => parseFloat(a.DineroActual.$numberDecimal) - parseFloat(b.DineroActual.$numberDecimal));
+    }
      
     if(this.state.cuentas0){
       cuentasrender = cuentasfiltradas.filter(x=> x.DineroActual.$numberDecimal != "0" && x.DineroActual.$numberDecimal != "0.00")
@@ -1282,6 +1363,31 @@ ${parseFloat(ResultCuentas).toFixed(2)}
 
 </div>
 <div className="confiltroCuentra">
+{/* Botón de ordenamiento */}
+<i className="material-icons" 
+   onClick={(e)=>{
+     e.stopPropagation();
+     this.toggleOrdenCuentas(item);
+   }}
+   title={`Ordenar de ${(this.state.ordenCuentas[item] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
+   style={{
+     fontSize: '20px',
+     color: '#1976d2',
+     cursor: 'pointer',
+     marginRight: '8px',
+     padding: '2px',
+     borderRadius: '4px',
+     transition: 'all 0.3s ease'
+   }}
+   onMouseEnter={(e) => {
+     e.target.style.backgroundColor = '#e3f2fd';
+   }}
+   onMouseLeave={(e) => {
+     e.target.style.backgroundColor = 'transparent';
+   }}
+>
+  {(this.state.ordenCuentas[item] || 'desc') === 'desc' ? 'arrow_downward' : 'arrow_upward'}
+</i>
 {this.state.vistaFormato === "cuadros" && (
 <i className="material-icons" onClick={(e)=>{
 
@@ -1581,11 +1687,16 @@ if(cuentasrenderNoPosesion.length > 0){
               searchMode: newSearchMode,
               cuentasSearcher: newSearchMode ? this.state.cuentasSearcher : "" // Limpiar búsqueda si se desactiva
             });
-            // Si se está activando el modo búsqueda, hacer scroll hacia arriba
+            // Si se está activando el modo búsqueda, hacer scroll hacia arriba y enfocar input
             if (newSearchMode) {
               setTimeout(() => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-              }, 100);
+                // Enfocar automáticamente el input para abrir el teclado en móviles
+                const input = document.querySelector('input[name="cuentasSearcher"]');
+                if (input) {
+                  input.focus();
+                }
+              }, 150); // Pequeño delay para asegurar que el input esté renderizado
             }
           }}>
             <span className="material-icons">
@@ -1995,6 +2106,9 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
       placeholder="Busca tus Cuentas"
       value={this.state.cuentasSearcher}
       style={{paddingRight: '40px'}}
+      autoFocus={this.state.searchMode}
+      autoComplete="off"
+      inputMode="text"
     /> 
     {this.state.cuentasSearcher && (
       <button 
@@ -2561,6 +2675,11 @@ margin: 10px 0px;
 }
 .invisiblex{
   display: none;
+}
+.cuenta-oculta-visible {
+  opacity: 0.6;
+  filter: grayscale(20%);
+  border: 1px dashed #ccc !important;
 }
 .headercroom{
   display:flex;
