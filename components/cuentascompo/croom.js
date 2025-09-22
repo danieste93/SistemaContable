@@ -179,11 +179,18 @@ modalBalance:false
         
         handleKeyPress = (event) => {
           // Solo activar si estamos en la vista principal de cuentas (no en detalles ni modales)
-          if (this.state.allcuentas && !this.state.searchMode) {
+          // Y si el foco NO está en un input (para evitar duplicar teclas)
+          const isInputFocused = document.activeElement && document.activeElement.tagName === 'INPUT';
+          
+          if (this.state.allcuentas && !this.state.searchMode && !isInputFocused) {
             // Verificar que sea una letra (a-z, A-Z) y no una tecla especial
             const isLetter = /^[a-zA-Z]$/.test(event.key);
             
             if (isLetter) {
+              // Prevenir que el evento se propague al input
+              event.preventDefault();
+              event.stopPropagation();
+              
               // Activar modo búsqueda y enfocar el input
               this.setState({ 
                 searchMode: true,
@@ -2096,7 +2103,15 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
     <div className="contFull100">
     <Animate show={this.state.searchMode}>
     <div className="contCentrado">
-    <div className="contSuggester">
+    <div className="contSuggester" style={{
+      position: 'sticky',
+      top: '80px',
+      backgroundColor: '#ffffff',
+      zIndex: 50,
+      padding: '10px 0',
+      borderRadius: '8px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+    }}>
     
       <div className="react-autosuggest__container" style={{position: 'relative', display: 'flex', alignItems: 'center'}}>
     <input 
