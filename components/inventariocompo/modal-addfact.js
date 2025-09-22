@@ -1399,9 +1399,7 @@ let TotalValorCompra = 0
         dataFact= this.state.Comprobante.factura
       }
         return ( 
-
-         <div >
-
+<>
 <div className="maincontactoFact" id="mainAddFact" >
 <div className="contcontactoFact"  >
 <div className="headercontact">
@@ -1417,6 +1415,10 @@ Agregar Factura
 
 
 </div> 
+
+{/* Mostrar secciones de carga solo cuando NO hay datos */}
+{this.state.xmlData.fechaAutorizacion[0] === "" && (
+<>
 <div className="Contxml">
 
 {/* Sección 1: Método XML directo */}
@@ -1571,9 +1573,10 @@ Agregar Factura
   </div>
 </div>
 
+</div>
+</>
+)}
 
-
-                    </div>
                     <div style={{width:"100%"}}> 
          <Animate  show={this.state.xmlData.fechaAutorizacion[0] != ""}>        
 <div className="Scrolled">
@@ -1722,13 +1725,12 @@ add
     
 </div>
 </Animate>   
-</div>
-</div>
+
+                    </div>   
 
 
 
 
-        </div>
         <Animate show={this.state.prevent1}>
 <Prevent 
 Mensaje={"Su RUC no coincide con el RUC del comprador de la factura. ¿Desea continuar?"}
@@ -1749,6 +1751,8 @@ SendAceptar={()=>{   this.setState({xmlData:this.state.preventxmlData, Comproban
     
     </Alert>
   </Snackbar>
+</div>
+</div>
         <style jsx >{`
         botonedit2{
           width: 50%;  
@@ -1984,10 +1988,7 @@ SendAceptar={()=>{   this.setState({xmlData:this.state.preventxmlData, Comproban
             }
 
            `}</style>
-        
-
-          
-           </div>
+</>
         )
     }
 }
