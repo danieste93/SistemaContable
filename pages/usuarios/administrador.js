@@ -3685,7 +3685,9 @@ plugins: {
   <style jsx>{`
    
 .balanceCont{
- 
+  max-width: 1200px; /* 🔥 Ancho máximo para pantallas grandes */
+  margin: 0 auto; /* 🔥 Centrar horizontalmente */
+  padding: 0 20px; /* 🔥 Padding lateral */
 }
 .contCuadros{
   display: flex;
