@@ -1634,8 +1634,7 @@ const Alert=(props)=> {
 
 <div className='glassStyle'>
 
-
-
+{/* Contenedor para widgets que SÍ necesitan filtros de tiempo (Pie, Bar, Liquidez) */}
 <div className='contenedorEstadisticas'>
 <div className='contFiltros'>
 <AppBar position="static" color="default">
@@ -1654,303 +1653,281 @@ const Alert=(props)=> {
       </AppBar>
       </div>
       <div className='contCuadros'>
-        {this.state.widgetConfig.showIncomeChart && (
-        <div 
-          className={`cuadroPlantilla cuadroIngreso ${ingresoActive}`} 
-          style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showIncomeChart') }}
-          data-widget-name="showIncomeChart"
-          draggable={this.state.editMode}
-          onDragStart={(e) => this.handleDragStart(e, 'showIncomeChart')}
-          onDragOver={this.handleDragOver}
-          onDrop={(e) => this.handleDrop(e, 'showIncomeChart')}
-          onDragEnd={this.handleDragEnd}
-          onTouchStart={(e) => this.handleTouchStart(e, 'showIncomeChart')}
-        >
-          
-          {/* Botón de eliminación estilo Apple */}
-          {this.state.editMode && (
-            <IconButton
-              onClick={() => this.removeWidget('showIncomeChart')}
-              style={{
-                position: 'absolute',
-                top: '-8px',
-                right: '-8px',
-                zIndex: 10,
-                backgroundColor: '#ff1744',
-                color: 'white',
-                width: '24px',
-                height: '24px',
-                '&:hover': {
-                  backgroundColor: '#d50000'
-                }
-              }}
-              size="small"
-            >
-              <CloseIcon style={{ fontSize: '16px' }} />
-            </IconButton>
-          )}
-
-          {/* Indicador de arrastre en modo edición */}
-          {this.state.editMode && (
-            <DragIndicatorIcon 
-              style={{
-                position: 'absolute',
-                top: '8px',
-                left: '8px',
-                color: '#666',
-                opacity: 0.7
-              }}
-            />
-          )}
-
-          <div className='contTextoscuadro'>
-            <div className='jwFlex tituloCard'>
-            <i className="material-icons ">
-            trending_up
-</i>
-            <span className='cuadroTituloPlantilla tituloIngreso'> Ingresos </span>
-            </div>
-      
-          <span className='valorCuadro'>${sumaIng.toFixed(2)}</span>
-          </div>
-          <div className="centrar contLineChart" onClick={()=>{
-            
-           
-            if(this.state.pieValue == "ingresos"){
-              this.setState({pieValue:"gastos"})
-            }else{
-              this.setState({pieValue:"ingresos"})
-            }
-            
-            }}>
-{this.state.widgetConfig.incomeChartType === 'line' ? (
-<Line data={superDataIng}   options={{
-   tension: 0.4,
-  responsive: true,
-  maintainAspectRatio: false,
-
-      plugins: {
-        legend: {
-     
-          display: false,
-        },
-       
-      },
-     scales: {
-                            yAxes:{
-                                grid: {
-                                    drawBorder: true,
-                                    color: '#FFFFFF',
-                                
-                                },
-                                ticks:{
-                                    beginAtZero: true,
-                                    color: 'white',
-                                    fontSize: 12,
-                                }
-                            },
-                            xAxes: {
-                                grid: {
-                                    drawBorder: true,
-                                    color: '#FFFFFF',
-                                    display:false,
-                                },
-                                ticks:{
-                                    beginAtZero: true,
-                                    color: 'white',
-                                    fontSize: 12,
-                                }
-                            },
-                        }
-    }} />
-) : (
-<Bar data={superDataIng} options={{
-   responsive: true,
-  maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false,
-        },
-      },
-     scales: {
-                            yAxes:{
-                                grid: {
-                                    drawBorder: true,
-                                    color: '#FFFFFF',
-                                },
-                                ticks:{
-                                    beginAtZero: true,
-                                    color: 'white',
-                                    fontSize: 12,
-                                }
-                            },
-                            xAxes: {
-                                grid: {
-                                    drawBorder: true,
-                                    color: '#FFFFFF',
-                                    display:false,
-                                },
-                                ticks:{
-                                    beginAtZero: true,
-                                    color: 'white',
-                                    fontSize: 12,
-                                }
-                            },
-                        }
-    }} />
-)}
-</div>
-          </div>  
-        )}
-       
-        {this.state.widgetConfig.showExpenseChart && (
-        <div 
-          className={`cuadroPlantilla cuadroGasto ${gastoActive}`} 
-          style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showExpenseChart') }}
-          data-widget-name="showExpenseChart"
-          draggable={this.state.editMode}
-          onDragStart={(e) => this.handleDragStart(e, 'showExpenseChart')}
-          onDragOver={this.handleDragOver}
-          onDrop={(e) => this.handleDrop(e, 'showExpenseChart')}
-          onDragEnd={this.handleDragEnd}
-          onTouchStart={(e) => this.handleTouchStart(e, 'showExpenseChart')}
-        >          {/* Botón de eliminación estilo Apple */}
-          {this.state.editMode && (
-            <IconButton
-              onClick={() => this.removeWidget('showExpenseChart')}
-              style={{
-                position: 'absolute',
-                top: '-8px',
-                right: '-8px',
-                zIndex: 10,
-                backgroundColor: '#ff1744',
-                color: 'white',
-                width: '24px',
-                height: '24px',
-                '&:hover': {
-                  backgroundColor: '#d50000'
-                }
-              }}
-              size="small"
-            >
-              <CloseIcon style={{ fontSize: '16px' }} />
-            </IconButton>
-          )}
-
-          {/* Indicador de arrastre en modo edición */}
-          {this.state.editMode && (
-            <DragIndicatorIcon 
-              style={{
-                position: 'absolute',
-                top: '8px',
-                left: '8px',
-                color: '#666',
-                opacity: 0.7
-              }}
-            />
-          )}
-
-          <div className='contTextoscuadro'>
-          <div className='jwFlex tituloCard'>
-            <i className="material-icons ">
-            trending_down
-</i>
-            <span className='cuadroTituloPlantilla tituloIngreso'> Gastos </span>
-            </div>
-          <span className='valorCuadro'>${sumaGas.toFixed(2)}</span>
-          </div>
-          <div className="centrar contLineChart" onClick={()=>{
-            
-            
-            if(this.state.pieValue == "gastos"){
-              this.setState({pieValue:"ingresos"})
-            }else{
-              this.setState({pieValue:"gastos"})
-            }
-            }}>
-{this.state.widgetConfig.expenseChartType === 'line' ? (
-<Line data={superDataGas}   options={{
-   tension: 0.4,
-  responsive: true,
-  maintainAspectRatio: false,
-
-      plugins: {
-        legend: {
-     
-          display: false,
-        },
-       
-      },
-     scales: {
-                            yAxes:{
-                                grid: {
-                                    drawBorder: true,
-                                    color: '#FFFFFF',
-                                
-                                },
-                                ticks:{
-                                    beginAtZero: true,
-                                    color: 'white',
-                                    fontSize: 12,
-                                }
-                            },
-                            xAxes: {
-                                grid: {
-                                    drawBorder: true,
-                                    color: '#FFFFFF',
-                                    display:false,
-                                },
-                                ticks:{
-                                    beginAtZero: true,
-                                    color: 'White',
-                                    fontSize: 12,
-                                }
-                            },
-                        }
-    }} />
-) : (
-<Bar data={superDataGas} options={{
-   responsive: true,
-  maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false,
-        },
-      },
-     scales: {
-                            yAxes:{
-                                grid: {
-                                    drawBorder: true,
-                                    color: '#FFFFFF',
-                                },
-                                ticks:{
-                                    beginAtZero: true,
-                                    color: 'white',
-                                    fontSize: 12,
-                                }
-                            },
-                            xAxes: {
-                                grid: {
-                                    drawBorder: true,
-                                    color: '#FFFFFF',
-                                    display:false,
-                                },
-                                ticks:{
-                                    beginAtZero: true,
-                                    color: 'White',
-                                    fontSize: 12,
-                                }
-                            },
-                        }
-    }} />
-)}
-</div>
-          </div> 
-        )}
+        {/* Los widgets de ingresos y gastos fueron movidos a contenedores independientes */}
+        
       </div>
 </div>
 
 </div>
+
+{/* Contenedores completamente independientes para widgets de Ingresos y Gastos */}
+{this.state.widgetConfig.showIncomeChart && (
+<div className='glassStyle' style={{ marginBottom: '20px' }}>
+  <div className='contCuadros'>
+    <div 
+      className={`cuadroPlantilla cuadroIngreso ${ingresoActive}`} 
+      style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showIncomeChart') }}
+      data-widget-name="showIncomeChart"
+      draggable={this.state.editMode}
+      onDragStart={(e) => this.handleDragStart(e, 'showIncomeChart')}
+      onDragOver={this.handleDragOver}
+      onDrop={(e) => this.handleDrop(e, 'showIncomeChart')}
+      onDragEnd={this.handleDragEnd}
+      onTouchStart={(e) => this.handleTouchStart(e, 'showIncomeChart')}
+    >
+      
+      {/* Botón de eliminación estilo Apple */}
+      {this.state.editMode && (
+        <IconButton
+          onClick={() => this.removeWidget('showIncomeChart')}
+          style={{
+            position: 'absolute',
+            top: '-8px',
+            right: '-8px',
+            backgroundColor: '#ff4444',
+            color: 'white',
+            zIndex: 1001,
+            padding: '4px',
+            '&:hover': {
+              backgroundColor: '#d50000'
+            }
+          }}
+          size="small"
+        >
+          <CloseIcon style={{ fontSize: '16px' }} />
+        </IconButton>
+      )}
+
+      {/* Indicador de arrastre en modo edición */}
+      {this.state.editMode && (
+        <DragIndicatorIcon 
+          style={{
+            position: 'absolute',
+            top: '8px',
+            left: '8px',
+            color: '#666',
+            opacity: 0.7
+          }}
+        />
+      )}
+
+      <div className='contTextoscuadro'>
+        <div className='tituloContenedor'>
+          <p>Ingresos</p>
+        </div>
+        <div className='valorCuadro'>
+          <p>$ {sumaIng.toFixed(2)}</p>
+        </div>
+      </div>
+      <div className='contLIneChart' style={{height:'85%'}}>
+        {this.state.widgetConfig.incomeChartType === 'line' ? (
+          <Line data={superDataIng} options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+            scales: {
+              yAxes:{
+                grid: {
+                  drawBorder: true,
+                  color: '#FFFFFF',
+                },
+                ticks:{
+                  beginAtZero: true,
+                  color: 'white',
+                  fontSize: 12,
+                }
+              },
+              xAxes: {
+                grid: {
+                  drawBorder: true,
+                  color: '#FFFFFF',
+                },
+                ticks:{
+                  beginAtZero: true,
+                  color: 'white',
+                  fontSize: 12,
+                }
+              },
+            }
+          }} />
+        ) : (
+          <Bar data={superDataIng} options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+            scales: {
+              yAxes:{
+                grid: {
+                  drawBorder: true,
+                  color: '#FFFFFF',
+                },
+                ticks:{
+                  beginAtZero: true,
+                  color: 'white',
+                  fontSize: 12,
+                }
+              },
+              xAxes: {
+                grid: {
+                  drawBorder: true,
+                  color: '#FFFFFF',
+                },
+                ticks:{
+                  beginAtZero: true,
+                  color: 'white',
+                  fontSize: 12,
+                }
+              },
+            }
+          }} />
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+)}
+
+{this.state.widgetConfig.showExpenseChart && (
+<div className='glassStyle' style={{ marginBottom: '20px' }}>
+  <div className='contCuadros'>
+    <div 
+      className={`cuadroPlantilla cuadroGasto ${gastoActive}`} 
+      style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showExpenseChart') }}
+      data-widget-name="showExpenseChart"
+      draggable={this.state.editMode}
+      onDragStart={(e) => this.handleDragStart(e, 'showExpenseChart')}
+      onDragOver={this.handleDragOver}
+      onDrop={(e) => this.handleDrop(e, 'showExpenseChart')}
+      onDragEnd={this.handleDragEnd}
+      onTouchStart={(e) => this.handleTouchStart(e, 'showExpenseChart')}
+    >
+      
+      {/* Botón de eliminación estilo Apple */}
+      {this.state.editMode && (
+        <IconButton
+          onClick={() => this.removeWidget('showExpenseChart')}
+          style={{
+            position: 'absolute',
+            top: '-8px',
+            right: '-8px',
+            backgroundColor: '#ff4444',
+            color: 'white',
+            zIndex: 1001,
+            padding: '4px',
+            '&:hover': {
+              backgroundColor: '#d50000'
+            }
+          }}
+          size="small"
+        >
+          <CloseIcon style={{ fontSize: '16px' }} />
+        </IconButton>
+      )}
+
+      {/* Indicador de arrastre en modo edición */}
+      {this.state.editMode && (
+        <DragIndicatorIcon 
+          style={{
+            position: 'absolute',
+            top: '8px',
+            left: '8px',
+            color: '#666',
+            opacity: 0.7
+          }}
+        />
+      )}
+
+      <div className='contTextoscuadro'>
+        <div className='tituloContenedor'>
+          <p>Gastos</p>
+        </div>
+        <div className='valorCuadro'>
+          <p>$ {sumaGas.toFixed(2)}</p>
+        </div>
+      </div>
+      <div className='contLIneChart' style={{height:'85%'}}>
+        {this.state.widgetConfig.expenseChartType === 'line' ? (
+          <Line data={superDataGas} options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+            scales: {
+              yAxes:{
+                grid: {
+                  drawBorder: true,
+                  color: '#FFFFFF',
+                },
+                ticks:{
+                  beginAtZero: true,
+                  color: 'white',
+                  fontSize: 12,
+                }
+              },
+              xAxes: {
+                grid: {
+                  drawBorder: true,
+                  color: '#FFFFFF',
+                },
+                ticks:{
+                  beginAtZero: true,
+                  color: 'white',
+                  fontSize: 12,
+                }
+              },
+            }
+          }} />
+        ) : (
+          <Bar data={superDataGas} options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+            scales: {
+              yAxes:{
+                grid: {
+                  drawBorder: true,
+                  color: '#FFFFFF',
+                },
+                ticks:{
+                  beginAtZero: true,
+                  color: 'white',
+                  fontSize: 12,
+                }
+              },
+              xAxes: {
+                grid: {
+                  drawBorder: true,
+                  color: '#FFFFFF',
+                },
+                ticks:{
+                  beginAtZero: true,
+                  color: 'white',
+                  fontSize: 12,
+                }
+              },
+            }
+          }} />
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+)}
 {this.state.widgetConfig.showPieChart && (
 <div 
           className='glassStyle custonPieCont' 
