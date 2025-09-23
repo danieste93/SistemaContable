@@ -1311,21 +1311,42 @@ style={{
 }}
 title={esOculta ? "Cuenta Oculta - Visible durante búsqueda" : ""}
 >
-  {/* Indicador de cuenta oculta mejorado - Lista */}
-  {esOculta && (
-    <div className="indicador-cuenta-oculta">
-      <i className="material-icons">
-        visibility_off
-      </i>
-      OCULTA
-    </div>
-  )}
 <div className="contIconoCroomLista">
   <img  className='iconoLista' src={cuenta.urlIcono}/>
-  <p className='jwbolder' >
-{cuenta.NombreC}
-</p>
+  {/* Para cuentas ocultas: mostrar "OCULTA" en lugar del nombre */}
+  {esOculta ? (
+    <p className='jwbolder'>
+      {cuenta.NombreC}
+    </p>
+  ) : (
+    <p className='jwbolder'>
+      {cuenta.NombreC}
+    </p>
+  )}
 </div>
+{/* Indicador OCULTA para cuentas ocultas */}
+{esOculta && (
+  <div style={{
+    position: 'absolute',
+    top: '50%',
+    right: '50%',
+    transform: 'translate(50%, -50%)',
+    background: 'rgba(255, 0, 0, 0.8)',
+    color: 'white',
+    padding: '2px 6px',
+    borderRadius: '8px',
+    fontSize: '10px',
+    fontWeight: 'bold',
+    zIndex: 15,
+    display: 'inline-flex',
+    alignItems: 'center'
+  }}>
+    <i className="material-icons" style={{ fontSize: '12px', marginRight: '2px' }}>
+      visibility_off
+    </i>
+    OCULTA
+  </div>
+)}
 <div className='contValoreslista'> 
 <p className={tintura()}>
 <Animate show={this.state.ValorCuenta}>
