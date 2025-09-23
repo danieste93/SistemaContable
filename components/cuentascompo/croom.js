@@ -168,7 +168,9 @@ modalBalance:false
         // Función para cargar configuración de vista de cuentas
         loadCuentasConfig = async () => {
           try {
-            console.log('🔍 [CUENTAS] Cargando configuración de vista de cuentas...');
+            console.log('� [CUENTAS] *** INICIANDO CARGA DE CONFIGURACIÓN ***');
+            console.log('⚡ [CUENTAS] Estado actual de ordenCuentas antes de cargar:', this.state.ordenCuentas);
+            console.log('�🔍 [CUENTAS] Cargando configuración de vista de cuentas...');
             
             // Verificar si tenemos acceso al usuario desde Redux
             if (!this.props.state.userReducer?.update?.usuario?.user?._id) {
@@ -212,6 +214,7 @@ modalBalance:false
               if (result.status === "Ok" && result.data && result.data.cuentasVistaConfig) {
                 const config = result.data.cuentasVistaConfig;
                 console.log('🎯 [CUENTAS] Aplicando configuración encontrada:', config);
+                console.log('🔧 [CUENTAS] OrdenCuentas recibido:', config.ordenCuentas);
                 
                 this.setState({
                   visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
@@ -259,6 +262,9 @@ modalBalance:false
               });
             }
           }
+          
+          console.log('🏁 [CUENTAS] *** CARGA DE CONFIGURACIÓN COMPLETADA ***');
+          console.log('🎯 [CUENTAS] Estado final de ordenCuentas:', this.state.ordenCuentas);
         };
 
         // Función para guardar configuración de vista de cuentas
@@ -528,7 +534,6 @@ fetch("/cuentas/getcuentas", {
             }
           }, () => this.saveCuentasConfig());
         }
-    
 
         displayCuentas=()=>{
           let cuentas = this.props.regC.Cuentas
@@ -1935,6 +1940,32 @@ if(this.props.regC.Cuentas){
       cuentasrenderPosesionsinTotal = cuentasrenderPosesionsinTotal.filter(x=> x.Visibility !== false)
       cuentasrenderNoPosesion = cuentasrenderNoPosesion.filter(x=> x.Visibility !== false)
     }   
+
+    // Aplicar ordenamiento a las cuentas de Posesiones
+    const ordenPosesion = this.state.ordenCuentas['Posesion'] || 'desc';
+    const ordenNoPosesion = this.state.ordenCuentas['NoPosesion'] || 'desc';
+    const ordenPosesionSinTotal = this.state.ordenCuentas['PosesionSinTotal'] || 'desc';
+
+    // Ordenar cuentasrenderPosesion
+    cuentasrenderPosesion = cuentasrenderPosesion.sort((a, b) => {
+      const valorA = parseFloat(a.DineroActual.$numberDecimal);
+      const valorB = parseFloat(b.DineroActual.$numberDecimal);
+      return ordenPosesion === 'desc' ? valorB - valorA : valorA - valorB;
+    });
+
+    // Ordenar cuentasrenderNoPosesion
+    cuentasrenderNoPosesion = cuentasrenderNoPosesion.sort((a, b) => {
+      const valorA = parseFloat(a.DineroActual.$numberDecimal);
+      const valorB = parseFloat(b.DineroActual.$numberDecimal);
+      return ordenNoPosesion === 'desc' ? valorB - valorA : valorA - valorB;
+    });
+
+    // Ordenar cuentasrenderPosesionsinTotal
+    cuentasrenderPosesionsinTotal = cuentasrenderPosesionsinTotal.sort((a, b) => {
+      const valorA = parseFloat(a.DineroActual.$numberDecimal);
+      const valorB = parseFloat(b.DineroActual.$numberDecimal);
+      return ordenPosesionSinTotal === 'desc' ? valorB - valorA : valorA - valorB;
+    });
   
     if(PasivosP.length > 0){
       for(let i = 0; i < PasivosP.length; i++){
@@ -2263,6 +2294,32 @@ if(cuentasrenderNoPosesion.length > 0){
     <div className="tituloPrin">POSESIÓN</div> 
     <div className={`valorcuentas  `}>${sumatoriaP.toFixed(2)}</div>
     <div className="confiltroCuentra">
+    {/* Botón de ordenamiento */}
+    <i className="material-icons" 
+       onClick={(e)=>{
+         e.stopPropagation();
+         this.toggleOrdenCuentas('Posesion');
+       }}
+       title={`Ordenar de ${(this.state.ordenCuentas['Posesion'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
+       style={{
+         fontSize: '20px',
+         color: '#1976d2',
+         cursor: 'pointer',
+         marginRight: '8px',
+         padding: '2px',
+         borderRadius: '4px',
+         transition: 'all 0.3s ease',
+         position: 'relative'
+       }}
+       onMouseEnter={(e) => {
+         e.target.style.backgroundColor = '#e3f2fd';
+       }}
+       onMouseLeave={(e) => {
+         e.target.style.backgroundColor = 'transparent';
+       }}
+    >
+      {(this.state.ordenCuentas['Posesion'] || 'desc') === 'desc' ? 'trending_down' : 'trending_up'}
+    </i>
 <i className="material-icons" onClick={(e)=>{
 
   if(this.state.cuentaExpand == "Posesion"){
@@ -2310,6 +2367,32 @@ if(cuentasrenderNoPosesion.length > 0){
     <div className="tituloPrin">NO Posesión</div> 
     <div className={`valorcuentas  `}>${sumatoriaNP.toFixed(2)}</div>
     <div className="confiltroCuentra">
+    {/* Botón de ordenamiento */}
+    <i className="material-icons" 
+       onClick={(e)=>{
+         e.stopPropagation();
+         this.toggleOrdenCuentas('NoPosesion');
+       }}
+       title={`Ordenar de ${(this.state.ordenCuentas['NoPosesion'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
+       style={{
+         fontSize: '20px',
+         color: '#1976d2',
+         cursor: 'pointer',
+         marginRight: '8px',
+         padding: '2px',
+         borderRadius: '4px',
+         transition: 'all 0.3s ease',
+         position: 'relative'
+       }}
+       onMouseEnter={(e) => {
+         e.target.style.backgroundColor = '#e3f2fd';
+       }}
+       onMouseLeave={(e) => {
+         e.target.style.backgroundColor = 'transparent';
+       }}
+    >
+      {(this.state.ordenCuentas['NoPosesion'] || 'desc') === 'desc' ? 'trending_down' : 'trending_up'}
+    </i>
     <i className="material-icons" onClick={(e)=>{
 
 if(this.state.cuentaExpand == "NoPosesion"){
@@ -2354,6 +2437,32 @@ if(this.state.cuentaExpand == "NoPosesion"){
     <div className="tituloPrin">Posesión SIN TOTAL</div> 
     <div className={`valorcuentas  `}>${sumatoriaPST.toFixed(2)}</div>
     <div className="confiltroCuentra">
+    {/* Botón de ordenamiento */}
+    <i className="material-icons" 
+       onClick={(e)=>{
+         e.stopPropagation();
+         this.toggleOrdenCuentas('PosesionSinTotal');
+       }}
+       title={`Ordenar de ${(this.state.ordenCuentas['PosesionSinTotal'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
+       style={{
+         fontSize: '20px',
+         color: '#1976d2',
+         cursor: 'pointer',
+         marginRight: '8px',
+         padding: '2px',
+         borderRadius: '4px',
+         transition: 'all 0.3s ease',
+         position: 'relative'
+       }}
+       onMouseEnter={(e) => {
+         e.target.style.backgroundColor = '#e3f2fd';
+       }}
+       onMouseLeave={(e) => {
+         e.target.style.backgroundColor = 'transparent';
+       }}
+    >
+      {(this.state.ordenCuentas['PosesionSinTotal'] || 'desc') === 'desc' ? 'trending_down' : 'trending_up'}
+    </i>
     <i className="material-icons" onClick={(e)=>{
 
 if(this.state.cuentaExpand == "PosesionSinTotal"){

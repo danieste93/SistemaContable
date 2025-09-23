@@ -185,7 +185,8 @@ ImagenP: {
      visualtipos: { type: Boolean, default: true },
      visibility: { type: Boolean, default: false },
      cuentas0: { type: Boolean, default: false },
-     vistaFormato: { type: String, default: 'cuadros' }
+     vistaFormato: { type: String, default: 'cuadros' },
+     ordenCuentas: { type: Schema.Types.Mixed, default: {} }
    },
    // Configuraciones generales de UI
    uiConfig: {

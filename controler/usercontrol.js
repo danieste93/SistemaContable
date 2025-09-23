@@ -1301,7 +1301,8 @@ if(bcrypt.compareSync(pass, UsuarioFind[0].Password)) {
                   let MainConn = mongoose.connection.useDb("datashop");  
                   let UserModelSass = MainConn.model('User', UserSchema);
                   
-                  const user = await UserModelSass.findById(userId);
+                  // Forzar lectura fresca sin cache
+                  const user = await UserModelSass.findById(userId).lean();
                   console.log('👤 Usuario encontrado:', user ? 'Sí' : 'No');
                   
                   if (!user) {
@@ -1313,6 +1314,14 @@ if(bcrypt.compareSync(pass, UsuarioFind[0].Password)) {
                   
                   console.log('✅ Configuración encontrada:', user.ConfiguracionPersonalizada);
                   console.log('🔍 Estructura completa ConfiguracionPersonalizada:', JSON.stringify(user.ConfiguracionPersonalizada, null, 2));
+                  
+                  // Debug específico para cuentasVistaConfig
+                  if (user.ConfiguracionPersonalizada && user.ConfiguracionPersonalizada.cuentasVistaConfig) {
+                    console.log('🔍 cuentasVistaConfig específico:', JSON.stringify(user.ConfiguracionPersonalizada.cuentasVistaConfig, null, 2));
+                    console.log('🔍 ordenCuentas dentro de cuentasVistaConfig:', user.ConfiguracionPersonalizada.cuentasVistaConfig.ordenCuentas);
+                  } else {
+                    console.log('❌ No se encontró cuentasVistaConfig');
+                  }
                   
                   res.status(200).json({
                     status: "Ok",
