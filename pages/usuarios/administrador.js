@@ -2211,7 +2211,12 @@ const Alert=(props)=> {
 
             {/* Contenido del widget de filtros de tiempo */}
             <div className='contenedorEstadisticas' style={{ 
-              pointerEvents: this.state.editMode ? 'none' : 'auto'
+              pointerEvents: this.state.editMode ? 'none' : 'auto',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center', // 🔥 Siempre centrado
+              padding: '15px 0' // 🔥 Padding intermedio
             }}>
               <div className='contFiltros'>
                 <AppBar position="static" color="default" style={{ 
@@ -3099,8 +3104,7 @@ const Alert=(props)=> {
             )}
 
             <div className='contLiquidityChart' style={{
-              height: window.innerWidth >= 1200 ? '87%' : // 🔥 Más alto en desktop 
-                     window.innerWidth >= 768 ? '85%' : '80%' // 🔥 Más alto en tablet también
+              height: '85%' // 🔥 Altura fija para evitar SSR error
             }}>
               <div style={{ 
                 display: 'flex', 
@@ -3119,11 +3123,10 @@ const Alert=(props)=> {
                 </h3>
               </div>
               <div style={{
-                height: window.innerWidth >= 1200 ? 'calc(100% - 65px)' : // 🔥 Menos espacio arriba en desktop
-                       window.innerWidth >= 768 ? 'calc(100% - 70px)' : 'calc(100% - 65px)',
+                height: 'calc(100% - 70px)', // 🔥 Menos altura para dar más espacio abajo
                 padding: '0 15px',
-                paddingBottom: window.innerWidth >= 768 ? '12px' : '12px', // 🔥 Menos padding en desktop
-                minHeight: window.innerWidth >= 768 ? '260px' : '180px' // 🔥 Altura mínima mayor en desktop
+                paddingBottom: '18px', // 🔥 Más padding abajo para móvil
+                minHeight: '200px' // 🔥 Altura mínima reducida
               }}>
                 <Line data={superdataLiquidez} options={{
                   maintainAspectRatio: false,
@@ -3229,8 +3232,7 @@ const Alert=(props)=> {
             )}
 
             <div className='contPatrimonioChart' style={{
-              height: window.innerWidth >= 1200 ? '82%' : 
-                     window.innerWidth >= 768 ? '80%' : '80%' // 🔥 Reducido en móvil también
+              height: '82%' // 🔥 Altura fija para evitar SSR error
             }}>
               <div style={{ 
                 display: 'flex', 
@@ -3249,10 +3251,10 @@ const Alert=(props)=> {
                 </h3>
               </div>
               <div style={{
-                height: window.innerWidth >= 768 ? 'calc(100% - 70px)' : 'calc(100% - 65px)', // 🔥 Menos espacio en móvil
+                height: 'calc(100% - 72px)', // 🔥 Menos altura para dar más espacio abajo
                 padding: '0 15px',
-                paddingBottom: window.innerWidth >= 768 ? '15px' : '12px', // 🔥 Padding específico por tamaño
-                minHeight: window.innerWidth >= 768 ? '240px' : '180px' // 🔥 Altura mínima menor en móvil
+                paddingBottom: '18px', // 🔥 Más padding abajo para móvil
+                minHeight: '190px' // 🔥 Altura mínima reducida
               }}>
                 <Line data={superdataPatrimonio} options={{
                   maintainAspectRatio: false,
