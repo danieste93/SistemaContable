@@ -2292,7 +2292,7 @@ if(cuentasrenderNoPosesion.length > 0){
     <div className="tipoMain">  
     <div className="contFlexSpaceB" style={{background: 'linear-gradient(90deg,#00c9a7 60%,#1976d2 100%)', borderRadius: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '12px 0', marginBottom: '10px', alignItems: 'center'}}>  
       <div style={{display:'flex',alignItems:'center',gap:'8px',marginRight:'12px'}}>
-        <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>attach_money</span>
+  <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>payments</span>
         <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>credit_card</span>
         <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>monetization_on</span>
         <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>water_drop</span>
