@@ -380,7 +380,7 @@ const Alert=(props)=> {
           <div className="contDatosX">   
           <div className="grupoDatos">
         <div className="cDc1x">
-              <p style={{fontWeight:"bolder"}}>  Posesión  </p>
+              <p style={{fontWeight:"bolder"}}>  Posesión (Liquidez)  </p>
             
               </div>
               <div id =""className="cDc2x" >
@@ -401,7 +401,7 @@ const Alert=(props)=> {
               </div> 
           <div className="grupoDatos">
         <div className="cDc1x">
-              <p style={{fontWeight:"bolder"}}>  Incluir en el total   </p>
+              <p style={{fontWeight:"bolder"}}>  Incluir en el total (Capital)   </p>
             
               </div>
               <div id =""className="cDc2x" >
