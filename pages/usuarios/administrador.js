@@ -2854,9 +2854,10 @@ const Alert=(props)=> {
 
             <div className='contBarChart' style={{
               flex: '1', // 🔥 Toma la mayor parte del espacio
-              minHeight: '250px', // 🔥 Altura mínima para el gráfico
-              maxHeight: '280px', // 🔥 Altura máxima para el gráfico
-              overflow: 'hidden' // 🔥 Prevenir desborde
+              minHeight: '200px', // 🔥 Gráfico más bajo pero con espacio para etiquetas
+              maxHeight: '240px', // 🔥 Altura máxima reducida
+              overflow: 'hidden', // 🔥 Prevenir desborde
+              paddingBottom: '35px' // 🔥 Más espacio abajo para nombres verticales
             }}>
               <Bar 
                 ref={(ref) => this.chartRefs['barChart-' + this.state.barValue] = ref}
@@ -2864,6 +2865,11 @@ const Alert=(props)=> {
                 options={{
                 maintainAspectRatio: false,
                 responsive: true,
+                layout: {
+                  padding: {
+                    bottom: 45 // 🔥 Más espacio para etiquetas verticales
+                  }
+                },
                 plugins: {
                   legend: {
                     display: false, // ✅ Ocultar la leyenda que causa problemas
@@ -2910,7 +2916,13 @@ const Alert=(props)=> {
                   },
                   xAxes: {
                     grid: { drawBorder: true, color: '#FFFFFF' },
-                    ticks: { beginAtZero: true, color: 'white', fontSize: 12 }
+                    ticks: { 
+                      beginAtZero: true, 
+                      color: 'white', 
+                      fontSize: 9, // 🔥 Texto un poco más grande para legibilidad
+                      maxRotation: 45, // 🔥 Inclinación suave como antes
+                      minRotation: 45  // 🔥 Inclinación suave como antes
+                    }
                   }
                 }
               }} />
@@ -2918,11 +2930,12 @@ const Alert=(props)=> {
             {/* Lista de cuentas clickeable para toggle */}
             <div style={{ 
               marginTop: '8px', 
-              padding: '5px',
-              height: '60px', // 🔥 Altura fija pequeña
-              overflowY: 'auto', // 🔥 Scroll vertical si es necesario
-              overflowX: 'hidden', // 🔥 Sin scroll horizontal
-              flexShrink: 0 // 🔥 No se encoge
+              padding: '2px', // 🔥 Padding mínimo
+              height: '50px', // 🔥 Altura reducida para botones más pequeños
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              flexShrink: 0,
+              fontSize: '0' // 🔥 Eliminar espacios entre elementos inline-block
             }}>
               {(() => {
                 // 🔥 Generar lista de cuentas localmente
@@ -2997,15 +3010,22 @@ const Alert=(props)=> {
                       display: 'inline-block',
                       backgroundColor: this.state.hiddenBarChartAccounts[index] ? '#888' : '#007BFF',
                       color: 'white',
-                      padding: '2px 6px',
-                      margin: '1px 2px',
-                      borderRadius: '3px',
-                      fontSize: '9px',
+                      padding: '1px 1px', // 🔥 Padding súper mínimo
+                      margin: '0.5px 0.5px', // 🔥 Margen súper pequeño
+                      borderRadius: '1px', // 🔥 Casi sin bordes redondeados
+                      fontSize: '6px', // 🔥 Texto muy pequeño
                       cursor: 'pointer',
                       textDecoration: this.state.hiddenBarChartAccounts[index] ? 'line-through' : 'none',
                       opacity: this.state.hiddenBarChartAccounts[index] ? 0.6 : 1,
-                      border: '1px solid rgba(255,255,255,0.3)',
-                      transition: 'all 0.2s ease'
+                      border: '0.5px solid rgba(255,255,255,0.3)', // 🔥 Borde más delgado
+                      transition: 'all 0.2s ease',
+                      wordBreak: 'break-word',
+                      maxWidth: '35px', // 🔥 Ancho súper pequeño
+                      minWidth: '25px', // 🔥 Ancho mínimo muy pequeño
+                      textAlign: 'center',
+                      lineHeight: '0.9', // 🔥 Altura de línea muy compacta
+                      height: '12px', // 🔥 Altura fija muy pequeña
+                      overflow: 'hidden' // 🔥 Cortar contenido que se desborde
                     }}
                     onMouseEnter={(e) => {
                       if (!this.state.hiddenBarChartAccounts[index]) {
@@ -3016,9 +3036,9 @@ const Alert=(props)=> {
                       e.target.style.backgroundColor = this.state.hiddenBarChartAccounts[index] ? '#888' : '#007BFF';
                     }}
                   >
-                    {cuentaObj && cuentaObj.NombreC && cuentaObj.NombreC.length > 15 ? 
-                      cuentaObj.NombreC.substring(0, 12) + '...' : 
-                      (cuentaObj && cuentaObj.NombreC ? cuentaObj.NombreC : 'Sin nombre')
+                    {cuentaObj && cuentaObj.NombreC && cuentaObj.NombreC.length > 4 ? 
+                      cuentaObj.NombreC.substring(0, 3) + '.' : // 🔥 Solo 3 caracteres + punto
+                      (cuentaObj && cuentaObj.NombreC ? cuentaObj.NombreC.substring(0, 4) : 'Sin')
                     }
                   </div>
                 ));
