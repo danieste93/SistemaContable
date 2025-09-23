@@ -1240,19 +1240,33 @@ return saldofinal.toFixed(2)
 
      
           <div className='jwFlexEnd'>
-        {/* Indicador de cuenta oculta mejorado */}
+        <div className="contIconoCroom">
+          <img  className='iconoCuenta' src={cuenta.urlIcono}/>
+        </div>
+        </div>
+        {/* Indicador OCULTA para cuentas ocultas en formato cuadros */}
         {esOculta && (
-          <div className="indicador-cuenta-oculta">
-            <i className="material-icons">
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            right: '50%',
+            transform: 'translate(50%, -50%)',
+            background: 'rgba(255, 0, 0, 0.8)',
+            color: 'white',
+            padding: '2px 6px',
+            borderRadius: '8px',
+            fontSize: '10px',
+            fontWeight: 'bold',
+            zIndex: 15,
+            display: 'inline-flex',
+            alignItems: 'center'
+          }}>
+            <i className="material-icons" style={{ fontSize: '12px', marginRight: '2px' }}>
               visibility_off
             </i>
             OCULTA
           </div>
         )}
-        <div className="contIconoCroom">
-          <img  className='iconoCuenta' src={cuenta.urlIcono}/>
-        </div>
-        </div>
         <div className="contDataCuenta">
         <div className="conteliminal">
         <p className={tintura()}>
