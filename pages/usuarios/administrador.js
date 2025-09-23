@@ -73,6 +73,10 @@ class admins extends Component {
       }
     }
    }
+   
+   // Referencias para los charts
+   chartRefs = {};
+   
    channel2 = null;
    componentDidMount(){
 
@@ -1315,12 +1319,11 @@ if(this.props.state.RegContableReducer.Cuentas){
       x.Tipo != "Inventario" 
     );
   } else if (this.state.barValue === "noliquidez") {
-    // Cuentas sin liquidez (no posesión)
+    // Cuentas sin liquidez (no posesión) - INCLUIR inventario ya que no es líquido
     cuentasFiltradas = this.props.state.RegContableReducer.Cuentas.filter(x=> 
       x.DineroActual.$numberDecimal != "0" && 
       x.DineroActual.$numberDecimal != "0.00" && 
-      (x.CheckedP == false || x.CheckedA == false) &&
-      x.Tipo != "Inventario" 
+      (x.CheckedP == false || x.CheckedA == false || x.Tipo == "Inventario") // ✅ Incluir inventario
     );
   } else {
     // Por defecto, mostrar cuentas con liquidez
@@ -2699,9 +2702,21 @@ const Alert=(props)=> {
     // Widget de Bar Chart
     if (widgetName === 'showBarChart' && this.state.widgetConfig.showBarChart) {
       return (
-        <div key="bar" className='glassStyle custonBarrasCuentas widgetResponsive' style={{ order: index }}>
+        <div key="bar" className='glassStyle custonBarrasCuentas widgetResponsive' style={{ 
+          order: index,
+          height: '420px', // 🔥 Altura fija
+          overflow: 'hidden', // 🔥 Prevenir desborde
+          display: 'flex',
+          flexDirection: 'column' // 🔥 Layout vertical controlado
+        }}>
           <div 
-            style={{ position: 'relative' }}
+            style={{ 
+              position: 'relative',
+              flex: '1', // 🔥 Toma el espacio disponible
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0 // 🔥 Permite shrinking
+            }}
             data-widget-name="showBarChart"
             draggable={this.state.editMode}
             onDragStart={(e) => this.handleDragStart(e, 'showBarChart')}
@@ -2827,14 +2842,21 @@ const Alert=(props)=> {
               </button>
             </div>
 
-            <div className='contBarChart'>
-              <Bar data={superdatabar} options={{
+            <div className='contBarChart' style={{
+              flex: '1', // 🔥 Toma la mayor parte del espacio
+              minHeight: '250px', // 🔥 Altura mínima para el gráfico
+              maxHeight: '280px', // 🔥 Altura máxima para el gráfico
+              overflow: 'hidden' // 🔥 Prevenir desborde
+            }}>
+              <Bar 
+                ref={(ref) => this.chartRefs['barChart-' + this.state.barValue] = ref}
+                data={superdatabar} 
+                options={{
                 maintainAspectRatio: false,
                 responsive: true,
                 plugins: {
                   legend: {
-                    labels: { fontColor: "white" },
-                    position: 'top',
+                    display: false, // ✅ Ocultar la leyenda que causa problemas
                   },
                   datalabels: {
                     backgroundColor: function(context) { return "white"; },
@@ -2845,6 +2867,30 @@ const Alert=(props)=> {
                     borderRadius: 15,
                     padding: 3,
                     font: { size: "12px", weight: 'bold' },
+                  }
+                },
+                onClick: (event, elements) => {
+                  // ✅ Manejar click en las barras individuales
+                  if (elements.length > 0) {
+                    const dataIndex = elements[0].index;
+                    const chart = elements[0].element.chart;
+                    
+                    // 🔥 Validar que chart existe y tiene el método getDatasetMeta
+                    if (chart && typeof chart.getDatasetMeta === 'function') {
+                      const meta = chart.getDatasetMeta(0);
+                      
+                      // 🔥 Validar que meta y meta.data existen
+                      if (meta && meta.data && meta.data[dataIndex]) {
+                        // Toggle visibilidad usando el método correcto
+                        if (meta.data[dataIndex].hidden) {
+                          meta.data[dataIndex].hidden = false;
+                        } else {
+                          meta.data[dataIndex].hidden = true;
+                        }
+                        
+                        chart.update();
+                      }
+                    }
                   }
                 },
                 scales: {
@@ -2858,6 +2904,71 @@ const Alert=(props)=> {
                   }
                 }
               }} />
+            
+            {/* Lista de cuentas clickeable para toggle */}
+            <div style={{ 
+              marginTop: '8px', 
+              padding: '5px',
+              height: '60px', // 🔥 Altura fija pequeña
+              overflowY: 'auto', // 🔥 Scroll vertical si es necesario
+              overflowX: 'hidden', // 🔥 Sin scroll horizontal
+              flexShrink: 0 // 🔥 No se encoge
+            }}>
+              {LabelsBar.map((cuenta, index) => (
+                <div
+                  key={cuenta}
+                  onClick={() => {
+                    // Toggle visibilidad de la cuenta específica
+                    const chartInstance = this.chartRefs['barChart-' + this.state.barValue];
+                    if (chartInstance && chartInstance.chart) {
+                      const chart = chartInstance.chart;
+                      
+                      // 🔥 Validar que chart existe y tiene el método getDatasetMeta
+                      if (chart && typeof chart.getDatasetMeta === 'function') {
+                        const meta = chart.getDatasetMeta(0);
+                        
+                        // 🔥 Validar que meta y meta.data existen
+                        if (meta && meta.data && meta.data[index]) {
+                          meta.data[index].hidden = !meta.data[index].hidden;
+                          chart.update();
+                        }
+                      }
+                    }
+                  }}
+                  style={{
+                    display: 'inline-block',
+                    margin: '1px 3px', // 🔥 Márgenes más pequeños
+                    padding: '2px 6px', // 🔥 Padding más compacto
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    borderRadius: '8px', // 🔥 Bordes más pequeños
+                    fontSize: '10px', // 🔥 Texto más pequeño
+                    color: 'white',
+                    cursor: 'pointer',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    transition: 'all 0.2s',
+                    whiteSpace: 'nowrap', // 🔥 No romper texto
+                    textDecoration: (() => {
+                      const chartInstance = this.chartRefs['barChart-' + this.state.barValue];
+                      if (chartInstance && chartInstance.chart && typeof chartInstance.chart.getDatasetMeta === 'function') {
+                        const meta = chartInstance.chart.getDatasetMeta(0);
+                        return (meta && meta.data && meta.data[index] && meta.data[index].hidden) ? 'line-through' : 'none';
+                      }
+                      return 'none';
+                    })(),
+                    opacity: (() => {
+                      const chartInstance = this.chartRefs['barChart-' + this.state.barValue];
+                      if (chartInstance && chartInstance.chart && typeof chartInstance.chart.getDatasetMeta === 'function') {
+                        const meta = chartInstance.chart.getDatasetMeta(0);
+                        return (meta && meta.data && meta.data[index] && meta.data[index].hidden) ? 0.5 : 1;
+                      }
+                      return 1;
+                    })()
+                  }}
+                >
+                  {cuenta}
+                </div>
+              ))}
+            </div>
             </div>
           </div>
         </div>
