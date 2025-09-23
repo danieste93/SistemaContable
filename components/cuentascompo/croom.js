@@ -2140,7 +2140,7 @@ if(cuentasrenderNoPosesion.length > 0){
          <span className="material-icons">
          account_balance_wallet
        </span>
-       <p>Posesiones</p>
+       <p>{this.state.visualtipos ? 'Liquidez' : 'Tipos'}</p>
        </button>
           </Dropdown.Item>
           <Dropdown.Item>
