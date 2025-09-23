@@ -42,6 +42,11 @@ class admins extends Component {
     showAddWidgetsPanel: false, // Panel para agregar widgets
     showCustomizationPanel: false,
     draggedWidget: null, // Widget que se está arrastrando
+    // Estados para touch (móvil)
+    touchStartPos: null,
+    touchTargetWidget: null,
+    isDragging: false,
+    touchStartTime: null,
     widgetOrder: ['showIncomeChart', 'showExpenseChart', 'showPieChart', 'showBarChart', 'showLiquidityChart'], // Orden de widgets
     widgetConfig: {
       showIncomeChart: true,
@@ -304,9 +309,12 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
   }
 
   toggleAddWidgetsPanel = () => {
+    console.log('🔴 toggleAddWidgetsPanel called, current state:', this.state.showAddWidgetsPanel);
     this.setState({
       showAddWidgetsPanel: !this.state.showAddWidgetsPanel,
       editMode: false // Salir del modo edición al agregar widgets
+    }, () => {
+      console.log('🟢 New showAddWidgetsPanel state:', this.state.showAddWidgetsPanel);
     });
   }
 
@@ -454,7 +462,7 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
     }
   }
 
-  // Funciones para drag & drop de widgets
+  // Funciones para drag & drop de widgets (Desktop)
   handleDragStart = (e, widgetName) => {
     this.setState({ draggedWidget: widgetName });
     e.dataTransfer.effectAllowed = 'move';
@@ -499,6 +507,141 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
     
     // Remover clase visual de arrastre
     e.target.classList.remove('dragging');
+  }
+
+  // Funciones para touch events (Mobile)
+  handleTouchStart = (e, widgetName) => {
+    if (!this.state.editMode) return;
+    
+    // Prevenir comportamiento por defecto inmediatamente
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const touch = e.touches[0];
+    this.setState({ 
+      draggedWidget: widgetName,
+      touchStartPos: { x: touch.clientX, y: touch.clientY },
+      isDragging: false,
+      touchStartTime: Date.now()
+    });
+    
+    console.log('🟡 Touch start en widget:', widgetName);
+    
+    // Agregar clase visual
+    e.currentTarget.classList.add('dragging');
+    
+    // Agregar listeners globales para capturar movimiento fuera del elemento
+    document.addEventListener('touchmove', this.handleTouchMoveGlobal, { passive: false });
+    document.addEventListener('touchend', this.handleTouchEndGlobal, { passive: false });
+  }
+
+  handleTouchMove = (e) => {
+    // Esta función ahora está vacía, usamos la global
+  }
+
+  handleTouchMoveGlobal = (e) => {
+    if (!this.state.draggedWidget) return;
+    
+    // Prevenir scroll de la página
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const touch = e.touches[0];
+    const startPos = this.state.touchStartPos;
+    
+    // Calcular distancia movida
+    const deltaX = Math.abs(touch.clientX - startPos.x);
+    const deltaY = Math.abs(touch.clientY - startPos.y);
+    const totalDelta = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // Considerar drag si se mueve más de 15px
+    if (totalDelta > 15) {
+      if (!this.state.isDragging) {
+        console.log('🔵 Iniciando drag');
+        this.setState({ isDragging: true });
+      }
+      
+      // Encontrar el elemento debajo del dedo
+      const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+      const widgetElement = elementBelow?.closest('[data-widget-name]');
+      
+      if (widgetElement) {
+        const targetWidget = widgetElement.getAttribute('data-widget-name');
+        if (targetWidget !== this.state.draggedWidget) {
+          console.log('🟢 Target widget:', targetWidget);
+          this.setState({ touchTargetWidget: targetWidget });
+          
+          // Agregar feedback visual temporal
+          document.querySelectorAll('[data-widget-name]').forEach(el => {
+            el.style.transform = '';
+            el.style.opacity = '';
+          });
+          
+          if (elementBelow) {
+            widgetElement.style.transform = 'scale(1.05)';
+            widgetElement.style.opacity = '0.8';
+          }
+        }
+      }
+    }
+  }
+
+  handleTouchEnd = (e) => {
+    // Esta función ahora está vacía, usamos la global
+  }
+
+  handleTouchEndGlobal = (e) => {
+    if (!this.state.draggedWidget) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Remover listeners globales
+    document.removeEventListener('touchmove', this.handleTouchMoveGlobal);
+    document.removeEventListener('touchend', this.handleTouchEndGlobal);
+    
+    const draggedWidget = this.state.draggedWidget;
+    const targetWidget = this.state.touchTargetWidget;
+    const timeDiff = Date.now() - this.state.touchStartTime;
+    
+    console.log('🔴 Touch end - Dragged:', draggedWidget, 'Target:', targetWidget, 'IsDragging:', this.state.isDragging);
+    
+    // Solo reordenar si realmente se arrastró, hay un target válido y no fue un tap rápido
+    if (this.state.isDragging && targetWidget && draggedWidget !== targetWidget && timeDiff > 200) {
+      const currentOrder = [...this.state.widgetOrder];
+      const draggedIndex = currentOrder.indexOf(draggedWidget);
+      const targetIndex = currentOrder.indexOf(targetWidget);
+      
+      if (draggedIndex !== -1 && targetIndex !== -1) {
+        console.log('🟢 Reordenando de', draggedIndex, 'a', targetIndex);
+        
+        // Reordenar el array
+        currentOrder.splice(draggedIndex, 1);
+        currentOrder.splice(targetIndex, 0, draggedWidget);
+        
+        this.setState({ 
+          widgetOrder: currentOrder
+        }, () => {
+          this.saveWidgetConfig();
+        });
+      }
+    }
+    
+    // Limpiar todos los estilos temporales
+    document.querySelectorAll('[data-widget-name]').forEach(el => {
+      el.style.transform = '';
+      el.style.opacity = '';
+      el.classList.remove('dragging');
+    });
+    
+    // Limpiar estado
+    this.setState({ 
+      draggedWidget: null,
+      touchTargetWidget: null,
+      isDragging: false,
+      touchStartPos: null,
+      touchStartTime: null
+    });
   }
 
  render() {
@@ -1188,74 +1331,248 @@ const Alert=(props)=> {
       );
     };
 
-    // Panel para Agregar Widgets estilo Apple
+    // Panel para Agregar Widgets estilo Apple con Previews
     const AddWidgetsPanel = () => {
       const availableWidgets = [
-        { key: 'showIncomeChart', name: 'Gráfico de Ingresos', description: 'Muestra la evolución de ingresos', icon: '📈' },
-        { key: 'showExpenseChart', name: 'Gráfico de Gastos', description: 'Muestra la evolución de gastos', icon: '📉' },
-        { key: 'showPieChart', name: 'Gráfico Circular', description: 'Distribución por categorías', icon: '🥧' },
-        { key: 'showBarChart', name: 'Gráfico de Barras', description: 'Comparación de periodos', icon: '📊' },
-        { key: 'showLiquidityChart', name: 'Evolución de Liquidez', description: 'Seguimiento de liquidez', icon: '💧' }
+        { 
+          key: 'showIncomeChart', 
+          name: 'Gráfico de Ingresos', 
+          description: 'Muestra la evolución de ingresos en el tiempo', 
+          icon: '📈',
+          color: '#8cf73a',
+          preview: 'Línea ascendente mostrando crecimiento de ingresos'
+        },
+        { 
+          key: 'showExpenseChart', 
+          name: 'Gráfico de Gastos', 
+          description: 'Muestra la evolución de gastos en el tiempo', 
+          icon: '📉',
+          color: '#f1586e',
+          preview: 'Línea mostrando fluctuaciones de gastos'
+        },
+        { 
+          key: 'showPieChart', 
+          name: 'Gráfico Circular', 
+          description: 'Distribución de gastos por categorías', 
+          icon: '🥧',
+          color: '#36A2EB',
+          preview: 'Gráfico circular con divisiones por categoría'
+        },
+        { 
+          key: 'showBarChart', 
+          name: 'Gráfico de Barras', 
+          description: 'Comparación de ingresos vs gastos por período', 
+          icon: '📊',
+          color: '#FFCE56',
+          preview: 'Barras comparativas de diferentes períodos'
+        },
+        { 
+          key: 'showLiquidityChart', 
+          name: 'Evolución de Liquidez', 
+          description: 'Seguimiento de liquidez y capital disponible', 
+          icon: '💧',
+          color: '#00d4aa',
+          preview: 'Gráfico de área mostrando evolución de liquidez'
+        }
       ];
 
       const hiddenWidgets = availableWidgets.filter(widget => !this.state.widgetConfig[widget.key]);
+
+      const renderWidgetPreview = (widget) => {
+        return (
+          <Box 
+            style={{
+              width: '100%',
+              height: '120px',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: `2px solid ${widget.color}20`,
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Preview específico para cada tipo de widget */}
+            {widget.key === 'showIncomeChart' && (
+              <svg width="100" height="60" style={{ opacity: 0.7 }}>
+                <polyline 
+                  points="10,50 30,40 50,25 70,15 90,10" 
+                  fill="none" 
+                  stroke={widget.color} 
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+                <circle cx="90" cy="10" r="3" fill={widget.color} />
+              </svg>
+            )}
+            
+            {widget.key === 'showExpenseChart' && (
+              <svg width="100" height="60" style={{ opacity: 0.7 }}>
+                <polyline 
+                  points="10,20 30,30 50,25 70,40 90,45" 
+                  fill="none" 
+                  stroke={widget.color} 
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+                <circle cx="90" cy="45" r="3" fill={widget.color} />
+              </svg>
+            )}
+            
+            {widget.key === 'showPieChart' && (
+              <svg width="80" height="80" style={{ opacity: 0.7 }}>
+                <circle cx="40" cy="40" r="30" fill="none" stroke="#e0e0e0" strokeWidth="15" />
+                <circle 
+                  cx="40" cy="40" r="30" 
+                  fill="none" 
+                  stroke={widget.color} 
+                  strokeWidth="15"
+                  strokeDasharray="56 188"
+                  transform="rotate(-90 40 40)"
+                />
+                <circle 
+                  cx="40" cy="40" r="30" 
+                  fill="none" 
+                  stroke="#36A2EB" 
+                  strokeWidth="15"
+                  strokeDasharray="47 188"
+                  strokeDashoffset="-56"
+                  transform="rotate(-90 40 40)"
+                />
+              </svg>
+            )}
+            
+            {widget.key === 'showBarChart' && (
+              <Box style={{ display: 'flex', alignItems: 'end', gap: '8px', height: '60px' }}>
+                <Box style={{ width: '12px', height: '40px', backgroundColor: widget.color, borderRadius: '2px 2px 0 0' }} />
+                <Box style={{ width: '12px', height: '25px', backgroundColor: '#f1586e', borderRadius: '2px 2px 0 0' }} />
+                <Box style={{ width: '12px', height: '50px', backgroundColor: widget.color, borderRadius: '2px 2px 0 0' }} />
+                <Box style={{ width: '12px', height: '35px', backgroundColor: '#f1586e', borderRadius: '2px 2px 0 0' }} />
+              </Box>
+            )}
+            
+            {widget.key === 'showLiquidityChart' && (
+              <svg width="100" height="60" style={{ opacity: 0.7 }}>
+                <defs>
+                  <linearGradient id="liquidityGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={widget.color} stopOpacity="0.8"/>
+                    <stop offset="100%" stopColor={widget.color} stopOpacity="0.1"/>
+                  </linearGradient>
+                </defs>
+                <path 
+                  d="M 10,40 Q 30,20 50,30 T 90,25 L 90,50 L 10,50 Z" 
+                  fill="url(#liquidityGradient)"
+                  stroke={widget.color}
+                  strokeWidth="2"
+                />
+              </svg>
+            )}
+            
+            {/* Icono en la esquina */}
+            <Box 
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                fontSize: '16px',
+                opacity: 0.8
+              }}
+            >
+              {widget.icon}
+            </Box>
+          </Box>
+        );
+      };
 
       return (
         <Dialog 
           open={this.state.showAddWidgetsPanel} 
           onClose={this.toggleAddWidgetsPanel}
-          maxWidth="sm"
+          maxWidth="md"
           fullWidth
         >
           <DialogTitle>
             <Box display="flex" alignItems="center">
-              <AddIcon style={{ marginRight: 8 }} />
-              <Typography variant="h6">Agregar Widgets</Typography>
+              <AddIcon style={{ marginRight: 8, color: '#004a9b' }} />
+              <Typography variant="h6" style={{ fontWeight: 'bold' }}>
+                Agregar Widgets al Dashboard
+              </Typography>
             </Box>
+            <Typography variant="body2" color="textSecondary" style={{ marginTop: 4 }}>
+              Selecciona los widgets que deseas agregar a tu dashboard
+            </Typography>
           </DialogTitle>
           <DialogContent>
             {hiddenWidgets.length === 0 ? (
-              <Box textAlign="center" py={3}>
+              <Box textAlign="center" py={4}>
+                <Box style={{ fontSize: '48px', marginBottom: '16px' }}>🎉</Box>
+                <Typography variant="h6" style={{ marginBottom: '8px', fontWeight: 'bold' }}>
+                  ¡Todos los widgets están activos!
+                </Typography>
                 <Typography variant="body1" color="textSecondary">
-                  Todos los widgets están actualmente visibles
+                  Actualmente tienes todos los widgets disponibles en tu dashboard
                 </Typography>
               </Box>
             ) : (
-              <Grid container spacing={2}>
+              <Grid container spacing={3}>
                 {hiddenWidgets.map((widget) => (
-                  <Grid item xs={12} key={widget.key}>
+                  <Grid item xs={12} sm={6} key={widget.key}>
                     <Box 
                       onClick={() => this.addWidget(widget.key)}
                       style={{
-                        padding: '16px',
+                        padding: '20px',
                         border: '2px solid #e0e0e0',
-                        borderRadius: '12px',
+                        borderRadius: '16px',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
+                        height: '100%',
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px'
+                        flexDirection: 'column',
+                        gap: '16px'
                       }}
                       onMouseEnter={(e) => {
-                        e.target.style.borderColor = '#004a9b';
-                        e.target.style.backgroundColor = '#f5f7ff';
+                        e.currentTarget.style.borderColor = widget.color;
+                        e.currentTarget.style.backgroundColor = '#fafbff';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,74,155,0.15)';
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.borderColor = '#e0e0e0';
-                        e.target.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.borderColor = '#e0e0e0';
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.transform = 'translateY(0px)';
+                        e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
-                      <Box style={{ fontSize: '24px' }}>{widget.icon}</Box>
+                      {/* Preview del Widget */}
+                      {renderWidgetPreview(widget)}
+                      
+                      {/* Información del Widget */}
                       <Box>
-                        <Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>
-                          {widget.name}
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
+                        <Box display="flex" alignItems="center" justifyContent="space-between" marginBottom="8px">
+                          <Typography variant="subtitle1" style={{ fontWeight: 'bold', color: '#333' }}>
+                            {widget.name}
+                          </Typography>
+                          <Box 
+                            style={{
+                              backgroundColor: widget.color,
+                              color: 'white',
+                              borderRadius: '50%',
+                              width: '28px',
+                              height: '28px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '14px'
+                            }}
+                          >
+                            <AddIcon style={{ fontSize: '16px' }} />
+                          </Box>
+                        </Box>
+                        <Typography variant="body2" color="textSecondary" style={{ lineHeight: 1.4 }}>
                           {widget.description}
                         </Typography>
-                      </Box>
-                      <Box style={{ marginLeft: 'auto' }}>
-                        <AddIcon style={{ color: '#004a9b' }} />
                       </Box>
                     </Box>
                   </Grid>
@@ -1263,8 +1580,13 @@ const Alert=(props)=> {
               </Grid>
             )}
           </DialogContent>
-          <DialogActions>
-            <Button onClick={this.toggleAddWidgetsPanel} color="primary">
+          <DialogActions style={{ padding: '16px 24px' }}>
+            <Button 
+              onClick={this.toggleAddWidgetsPanel} 
+              color="primary"
+              variant="outlined"
+              style={{ borderRadius: '8px' }}
+            >
               Cerrar
             </Button>
           </DialogActions>
@@ -1327,11 +1649,13 @@ const Alert=(props)=> {
         <div 
           className={`cuadroPlantilla cuadroIngreso ${ingresoActive}`} 
           style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showIncomeChart') }}
+          data-widget-name="showIncomeChart"
           draggable={this.state.editMode}
           onDragStart={(e) => this.handleDragStart(e, 'showIncomeChart')}
           onDragOver={this.handleDragOver}
           onDrop={(e) => this.handleDrop(e, 'showIncomeChart')}
           onDragEnd={this.handleDragEnd}
+          onTouchStart={(e) => this.handleTouchStart(e, 'showIncomeChart')}
         >
           
           {/* Botón de eliminación estilo Apple */}
@@ -1471,17 +1795,17 @@ const Alert=(props)=> {
         )}
        
         {this.state.widgetConfig.showExpenseChart && (
-          <div 
-            className={`cuadroPlantilla cuadroGasto ${gastoActive}`} 
-            style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showExpenseChart') }}
-            draggable={this.state.editMode}
-            onDragStart={(e) => this.handleDragStart(e, 'showExpenseChart')}
-            onDragOver={this.handleDragOver}
-            onDrop={(e) => this.handleDrop(e, 'showExpenseChart')}
-            onDragEnd={this.handleDragEnd}
-          >
-          
-          {/* Botón de eliminación estilo Apple */}
+        <div 
+          className={`cuadroPlantilla cuadroGasto ${gastoActive}`} 
+          style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showExpenseChart') }}
+          data-widget-name="showExpenseChart"
+          draggable={this.state.editMode}
+          onDragStart={(e) => this.handleDragStart(e, 'showExpenseChart')}
+          onDragOver={this.handleDragOver}
+          onDrop={(e) => this.handleDrop(e, 'showExpenseChart')}
+          onDragEnd={this.handleDragEnd}
+          onTouchStart={(e) => this.handleTouchStart(e, 'showExpenseChart')}
+        >          {/* Botón de eliminación estilo Apple */}
           {this.state.editMode && (
             <IconButton
               onClick={() => this.removeWidget('showExpenseChart')}
@@ -1622,11 +1946,13 @@ const Alert=(props)=> {
 <div 
           className='glassStyle custonPieCont' 
           style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showPieChart') }}
+          data-widget-name="showPieChart"
           draggable={this.state.editMode}
           onDragStart={(e) => this.handleDragStart(e, 'showPieChart')}
           onDragOver={this.handleDragOver}
           onDrop={(e) => this.handleDrop(e, 'showPieChart')}
           onDragEnd={this.handleDragEnd}
+          onTouchStart={(e) => this.handleTouchStart(e, 'showPieChart')}
         >
 
           {/* Botón de eliminación estilo Apple */}
@@ -1730,11 +2056,13 @@ const Alert=(props)=> {
 <div 
           className='glassStyle custonBarrasCuentas' 
           style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showBarChart') }}
+          data-widget-name="showBarChart"
           draggable={this.state.editMode}
           onDragStart={(e) => this.handleDragStart(e, 'showBarChart')}
           onDragOver={this.handleDragOver}
           onDrop={(e) => this.handleDrop(e, 'showBarChart')}
           onDragEnd={this.handleDragEnd}
+          onTouchStart={(e) => this.handleTouchStart(e, 'showBarChart')}
         >
 
           {/* Botón de eliminación estilo Apple */}
@@ -1818,11 +2146,13 @@ plugins: {
 <div 
           className='glassStyle custonLiquidezCont' 
           style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showLiquidityChart') }}
+          data-widget-name="showLiquidityChart"
           draggable={this.state.editMode}
           onDragStart={(e) => this.handleDragStart(e, 'showLiquidityChart')}
           onDragOver={this.handleDragOver}
           onDrop={(e) => this.handleDrop(e, 'showLiquidityChart')}
           onDragEnd={this.handleDragEnd}
+          onTouchStart={(e) => this.handleTouchStart(e, 'showLiquidityChart')}
         >
 
           {/* Botón de eliminación estilo Apple */}
@@ -1931,6 +2261,9 @@ plugins: {
 
   {/* Panel de Personalización */}
   <CustomizationPanel />
+  
+  {/* Panel de Agregar Widgets */}
+  <AddWidgetsPanel />
   
   {/* Botones Flotantes estilo Apple */}
   <div style={{
