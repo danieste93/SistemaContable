@@ -2304,11 +2304,30 @@ const Alert=(props)=> {
     // Widget de Ingresos
     if (widgetName === 'showIncomeChart' && this.state.widgetConfig.showIncomeChart) {
       return (
-        <div key="income" className='glassStyle widgetResponsive' style={{ order: index }}>
-          <div className='contCuadros'>
+        <div key="income" className='glassStyle widgetResponsive' style={{ 
+          order: index,
+          display: 'flex',
+          justifyContent: 'center', // 🔥 Centrar horizontalmente
+          alignItems: 'center', // 🔥 Centrar verticalmente
+          padding: '5px' // 🔥 Padding súper mínimo
+        }}>
+          <div className='contCuadros' style={{
+            width: '98%', // 🔥 Aumentado al 98% (máximo posible)
+            maxWidth: '600px', // 🔥 Ancho máximo muy grande
+            minWidth: '350px' // 🔥 Ancho mínimo aumentado
+          }}>
             <div 
               className={`cuadroPlantilla cuadroIngreso ${ingresoActive}`} 
-              style={{ position: 'relative' }}
+              style={{ 
+                position: 'relative',
+                height: 'auto', // 🔥 Altura automática y responsiva
+                minHeight: '220px', // 🔥 Altura mínima menor para móvil
+                maxHeight: '420px', // 🔥 Altura máxima limitada para PC
+                display: 'flex', // 🔥 Flexbox para mejor control
+                flexDirection: 'column', // 🔥 Dirección vertical
+                margin: '18px 8px', // 🔥 Margen horizontal igual al de Gastos para separación uniforme
+                boxShadow: '0 4px 16px 0 #8cf73a33' // 🔥 Sombra verde más visible y compatible
+              }}
               data-widget-name="showIncomeChart"
               draggable={this.state.editMode}
               onDragStart={(e) => this.handleDragStart(e, 'showIncomeChart')}
@@ -2387,7 +2406,13 @@ const Alert=(props)=> {
                   <p>$ {sumaIng.toFixed(2)}</p>
                 </div>
               </div>
-              <div className='contLIneChart' style={{height:'85%'}}>
+              <div className='contLIneChart' style={{
+                height: '70%', // 🔥 Más contenido dentro del recuadro
+                width: '100%', // 🔥 Que no se salga horizontalmente
+                overflow: 'hidden', // 🔥 Oculta el desborde
+                flex: '1', // 🔥 Tomar el espacio restante disponible
+                minHeight: '120px' // 🔥 Altura mínima menor para móvil
+              }}> {/* 🔥 Ajustado para respetar el contenedor verde */}
                 {this.state.widgetConfig.incomeChartType === 'line' ? (
                   <Line data={superDataIng} options={{
                     responsive: true,
@@ -2419,11 +2444,30 @@ const Alert=(props)=> {
     // Widget de Gastos
     if (widgetName === 'showExpenseChart' && this.state.widgetConfig.showExpenseChart) {
       return (
-        <div key="expense" className='glassStyle widgetResponsive' style={{ order: index }}>
-          <div className='contCuadros'>
+        <div key="expense" className='glassStyle widgetResponsive' style={{ 
+          order: index,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '5px'
+        }}>
+          <div className='contCuadros' style={{
+            width: '98%',
+            maxWidth: '600px',
+            minWidth: '350px'
+          }}>
             <div 
               className={`cuadroPlantilla cuadroGasto ${gastoActive}`} 
-              style={{ position: 'relative' }}
+              style={{ 
+                position: 'relative',
+                height: 'auto',
+                minHeight: '220px',
+                maxHeight: '420px',
+                display: 'flex',
+                flexDirection: 'column',
+                margin: '18px 8px',
+                boxShadow: '0 4px 16px 0 #f1586e33'
+              }}
               data-widget-name="showExpenseChart"
               draggable={this.state.editMode}
               onDragStart={(e) => this.handleDragStart(e, 'showExpenseChart')}
@@ -3861,10 +3905,43 @@ font-size:25px
 .tituloCard i{
   font-size: 30px;
 }
-.ingresoActive{
-  box-shadow: 0px 0px 8px 3px green;
-  height: 210px;
+ .cuadroIngreso {
+   box-shadow: 0px 0px 8px 3px #2e7d32 !important;
+ }
+ .cuadroGasto {
+   box-shadow: 0px 0px 8px 3px #f1586e !important;
+ }
+ .ingresoActive{
+   height: 210px;
+ }
+ .gastoActive{
+   height: 210px;
+ }
 
+@media only screen and (max-width: 600px) {
+  .cuadroIngreso.cuadroPlantilla, .cuadroGasto.cuadroPlantilla {
+    margin-top: 24px !important;
+    margin-bottom: 24px !important;
+    height: 160px !important;
+    min-width: 120px !important;
+    max-width: 95vw !important;
+    width: 95vw !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  .ingresoActive {
+    height: 170px !important;
+    min-width: 140px !important;
+    max-width: 98vw !important;
+    box-shadow: 0px 0px 8px 3px #2e7d32 !important;
+  }
+}
 }
 .gastoActive{
   box-shadow: 0px 0px 8px 3px red;
@@ -3872,7 +3949,20 @@ font-size:25px
 
 }
 @media only screen and (min-width: 950px) {
-  .contCuadros{  flex-wrap:nowrap;}
+  .contCuadros{ flex-wrap:nowrap; }
+  .cuadroIngreso, .cuadroGasto {
+    height: 210px !important;
+    min-width: 220px !important;
+    max-width: 350px !important;
+    width: 350px !important;
+    box-sizing: border-box !important;
+  }
+  /* Centrado del widget completo con el padre */
+  .contCuadros {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
 }
 
 /* Estilos para drag & drop */
