@@ -154,15 +154,18 @@ ImagenP: {
      showBarChart: { type: Boolean, default: true },
      showLiquidityChart: { type: Boolean, default: true },
      showTimeFilter: { type: Boolean, default: true },
+     showPatrimonioChart: { type: Boolean, default: false },
      incomeChartType: { type: String, default: 'line' },
      expenseChartType: { type: String, default: 'line' },
      pieChartType: { type: String, default: 'pie' },
      barChartType: { type: String, default: 'bar' },
      liquidityChartType: { type: String, default: 'line' },
+     patrimonioChartType: { type: String, default: 'line' },
      customColors: {
        income: { type: String, default: '#8cf73a' },
        expense: { type: String, default: '#f1586e' },
        liquidity: { type: String, default: '#00d4aa' },
+       patrimonio: { type: String, default: '#9c27b0' },
        pieColors: { type: [String], default: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'] }
      }
    },

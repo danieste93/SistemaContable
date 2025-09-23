@@ -57,15 +57,18 @@ class admins extends Component {
       showPieChart: true,
       showBarChart: true,
       showLiquidityChart: true, // Nuevo widget de liquidez
+      showPatrimonioChart: false, // Nuevo widget de patrimonio (opcional)
       incomeChartType: 'line', // line, bar, area
       expenseChartType: 'line',
       pieChartType: 'pie', // pie, doughnut
       barChartType: 'bar', // bar, horizontalBar
       liquidityChartType: 'line', // line, area
+      patrimonioChartType: 'line', // line, area
       customColors: {
         income: '#8cf73a',
         expense: '#f1586e',
         liquidity: '#00d4aa', // Color para liquidez
+        patrimonio: '#9c27b0', // Color para patrimonio (púrpura)
         pieColors: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
       }
     }
@@ -283,11 +286,24 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
   }
 
   updateWidgetVisibility = (widgetName, isVisible) => {
-    this.setState({
-      widgetConfig: {
-        ...this.state.widgetConfig,
-        [widgetName]: isVisible
+    this.setState(prevState => {
+      let newWidgetOrder = [...prevState.widgetOrder];
+      
+      if (isVisible && !newWidgetOrder.includes(widgetName)) {
+        // Agregar widget al final del orden
+        newWidgetOrder.push(widgetName);
+      } else if (!isVisible && newWidgetOrder.includes(widgetName)) {
+        // Remover widget del orden
+        newWidgetOrder = newWidgetOrder.filter(widget => widget !== widgetName);
       }
+
+      return {
+        widgetConfig: {
+          ...prevState.widgetConfig,
+          [widgetName]: isVisible
+        },
+        widgetOrder: newWidgetOrder
+      };
     }, () => {
       // Guardar configuración después de actualizar el estado
       this.saveWidgetConfig();
@@ -313,7 +329,6 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
   }
 
   toggleAddWidgetsPanel = () => {
-    console.log('🔴 toggleAddWidgetsPanel called, current state:', this.state.showAddWidgetsPanel);
     this.setState({
       showAddWidgetsPanel: !this.state.showAddWidgetsPanel,
       editMode: false // Salir del modo edición al agregar widgets
@@ -434,6 +449,7 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
         // Manejo de datos cuando están anidados bajo 'widgets'
         if (result.data.widgets) {
           console.log('Usando formato anidado de configuración');
+          
           if (result.data.widgets.widgetConfig) {
             // Migración automática: asegurar que nuevos widgets estén incluidos
             const migratedConfig = {
@@ -442,7 +458,17 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
               // Forzar widgets nuevos si no existen
               showTimeFilter: result.data.widgets.widgetConfig.showTimeFilter !== undefined 
                 ? result.data.widgets.widgetConfig.showTimeFilter 
-                : true
+                : true,
+              showPatrimonioChart: result.data.widgets.widgetConfig.showPatrimonioChart !== undefined 
+                ? result.data.widgets.widgetConfig.showPatrimonioChart 
+                : false,
+              patrimonioChartType: result.data.widgets.widgetConfig.patrimonioChartType || 'line',
+              // Migración de colores
+              customColors: {
+                ...this.state.widgetConfig.customColors,
+                ...result.data.widgets.widgetConfig.customColors,
+                patrimonio: result.data.widgets.widgetConfig.customColors?.patrimonio || '#9c27b0'
+              }
             };
             
             this.setState({
@@ -454,20 +480,41 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
           }
           
           if (result.data.widgets.widgetOrder) {
-            // Migración del orden: asegurar que showTimeFilter esté incluido
+            // Migración del orden: asegurar widgets nuevos
             let migratedOrder = result.data.widgets.widgetOrder;
+            
+            // Asegurar showTimeFilter
             if (!migratedOrder.includes('showTimeFilter')) {
               migratedOrder = ['showTimeFilter', ...migratedOrder];
             }
+            
+            // Agregar showPatrimonioChart si está activo pero no en el orden
+            if (result.data.widgets.widgetConfig && 
+                result.data.widgets.widgetConfig.showPatrimonioChart && 
+                !migratedOrder.includes('showPatrimonioChart')) {
+              migratedOrder.push('showPatrimonioChart');
+            }
+            
             console.log('Cargando orden de widgets migrado:', migratedOrder);
             this.setState({
               widgetOrder: migratedOrder
+            });
+          } else {
+            // Sin orden previo en formato anidado, crear orden predeterminado
+            const defaultOrder = ['showTimeFilter', 'showUtilidadChart', 'showVentasChart', 'showInventarioChart', 'showCostoChart'];
+            
+            // Agregar patrimonio al orden por defecto si está activo
+            if (result.data.widgets.widgetConfig && result.data.widgets.widgetConfig.showPatrimonioChart) {
+              defaultOrder.push('showPatrimonioChart');
+            }
+            
+            this.setState({
+              widgetOrder: defaultOrder
             });
           }
         }
         // Manejo de datos cuando están directamente en data (formato antiguo)
         else {
-          console.log('Usando formato directo de configuración');
           if (result.data.widgetConfig) {
             // Migración automática: asegurar que nuevos widgets estén incluidos
             const migratedConfig = {
@@ -476,7 +523,17 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
               // Forzar widgets nuevos si no existen
               showTimeFilter: result.data.widgetConfig.showTimeFilter !== undefined 
                 ? result.data.widgetConfig.showTimeFilter 
-                : true
+                : true,
+              showPatrimonioChart: result.data.widgetConfig.showPatrimonioChart !== undefined 
+                ? result.data.widgetConfig.showPatrimonioChart 
+                : false,
+              patrimonioChartType: result.data.widgetConfig.patrimonioChartType || 'line',
+              // Migración de colores
+              customColors: {
+                ...this.state.widgetConfig.customColors,
+                ...result.data.widgetConfig.customColors,
+                patrimonio: result.data.widgetConfig.customColors?.patrimonio || '#9c27b0'
+              }
             };
             
             this.setState({
@@ -493,9 +550,27 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
             if (!migratedOrder.includes('showTimeFilter')) {
               migratedOrder = ['showTimeFilter', ...migratedOrder];
             }
+            // Agregar showPatrimonioChart si está activo pero no en el orden
+            if (result.data.widgetConfig && 
+                result.data.widgetConfig.showPatrimonioChart && 
+                !migratedOrder.includes('showPatrimonioChart')) {
+              migratedOrder.push('showPatrimonioChart');
+            }
             console.log('Cargando orden de widgets migrado:', migratedOrder);
             this.setState({
               widgetOrder: migratedOrder
+            });
+          } else {
+            // Sin orden previo, crear orden predeterminado con todos los widgets disponibles
+            const defaultOrder = ['showTimeFilter', 'showUtilidadChart', 'showVentasChart', 'showInventarioChart', 'showCostoChart'];
+            
+            // Agregar patrimonio al orden por defecto si está activo
+            if (result.data.widgetConfig && result.data.widgetConfig.showPatrimonioChart) {
+              defaultOrder.push('showPatrimonioChart');
+            }
+            
+            this.setState({
+              widgetOrder: defaultOrder
             });
           }
         }
@@ -717,6 +792,11 @@ let gastoActive = this.state.pieValue == "gastos"?"gastoActive":""
 // Inicialización de variables de liquidez
 let liquidezLabels = [];
 let liquidezData = [];
+
+// Inicialización de variables de patrimonio
+let patrimonioLabels = [];
+let patrimonioData = [];
+
 let DetallesPorrender = []; // Inicializar array vacío por defecto
 
 if(this.props.state.RegContableReducer.Regs){
@@ -1040,6 +1120,70 @@ if(this.props.state.RegContableReducer.Cuentas){
     liquidezData = periodosOrdenados.map(periodo => liquidezPorPeriodo[periodo].toFixed(2));
   }
 
+  // Cálculo de patrimonio total (todas las cuentas)
+  if (DetallesPorrender.length > 0) {
+    // Calcular patrimonio total actual (todas las cuentas)
+    let patrimonioTotal = 0;
+    if(this.props.state.RegContableReducer.Cuentas){
+      this.props.state.RegContableReducer.Cuentas.forEach(cuenta => {
+        patrimonioTotal += parseFloat(cuenta.DineroActual.$numberDecimal || 0);
+      });
+    }
+    
+    let patrimonioPorPeriodo = {};
+    let acumuladoPatrimonio = patrimonioTotal;
+    
+    // Filtrar transacciones según el tiempo seleccionado
+    let transaccionesFiltradas;
+    if (this.state.tiempoValue === "diario") {
+      transaccionesFiltradas = this.DiaryFilter(DetallesPorrender);
+    } else {
+      transaccionesFiltradas = this.MensualFilter(DetallesPorrender);
+    }
+    
+    // Incluir todas las transacciones que afecten el patrimonio (ingresos, gastos y transferencias)
+    const transaccionesPatrimonio = transaccionesFiltradas
+      .filter(x => x.Accion !== "Trans") // Solo ingresos y gastos (las transferencias no cambian el patrimonio total)
+      .sort((a, b) => b.Tiempo - a.Tiempo);
+    
+    // Agrupar transacciones por periodo y calcular patrimonio
+    transaccionesPatrimonio.forEach(transaccion => {
+      const fecha = new Date(transaccion.Tiempo);
+      let periodo;
+      
+      if (this.state.tiempoValue === "diario") {
+        periodo = fecha.getHours().toString().padStart(2, '0') + ":00";
+      } else {
+        periodo = fecha.getDate().toString();
+      }
+      
+      // Solo almacenar el primer valor para cada periodo (el más reciente)
+      if (!patrimonioPorPeriodo[periodo]) {
+        patrimonioPorPeriodo[periodo] = acumuladoPatrimonio;
+      }
+      
+      // Calcular el impacto en el patrimonio histórico
+      if (transaccion.Accion === "Ingreso") {
+        acumuladoPatrimonio -= transaccion.Importe;
+      } else if (transaccion.Accion === "Gasto") {
+        acumuladoPatrimonio += transaccion.Importe;
+      }
+    });
+    
+    // Ordenar periodos y crear arrays para el gráfico
+    const periodosOrdenadosPatrimonio = Object.keys(patrimonioPorPeriodo).sort((a, b) => {
+      if (this.state.tiempoValue === "diario") {
+        // Para horas, ordenar numéricamente
+        return parseInt(a.split(':')[0]) - parseInt(b.split(':')[0]);
+      }
+      // Para días, ordenar numéricamente
+      return parseInt(a) - parseInt(b);
+    });
+    
+    patrimonioLabels = periodosOrdenadosPatrimonio;
+    patrimonioData = periodosOrdenadosPatrimonio.map(periodo => patrimonioPorPeriodo[periodo].toFixed(2));
+  }
+
   // Construir datos para el gráfico de barras según la selección
   let cuentasFiltradas;
   if (this.state.barValue === "liquidez") {
@@ -1127,6 +1271,24 @@ if(this.props.state.RegContableReducer.Cuentas){
           tension: 0.4,
           borderWidth: 3,
           pointBackgroundColor: this.state.widgetConfig.customColors.liquidity,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 5
+        }]
+      };
+
+      // Dataset para el widget de patrimonio
+      let superdataPatrimonio = {
+        labels: patrimonioLabels,
+        datasets: [{
+          label: 'Evolución de Patrimonio',
+          data: patrimonioData,
+          borderColor: this.state.widgetConfig.customColors.patrimonio,
+          backgroundColor: this.state.widgetConfig.customColors.patrimonio + '20',
+          fill: false, // Siempre mostrar como línea
+          tension: 0.4,
+          borderWidth: 3,
+          pointBackgroundColor: this.state.widgetConfig.customColors.patrimonio,
           pointBorderColor: '#fff',
           pointBorderWidth: 2,
           pointRadius: 5
@@ -1368,6 +1530,19 @@ const Alert=(props)=> {
                 />
               </Grid>
 
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={this.state.widgetConfig.showPatrimonioChart}
+                      onChange={(e) => this.updateWidgetVisibility('showPatrimonioChart', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Evolución de Patrimonio"
+                />
+              </Grid>
+
               {/* Sección de Tipos de Gráficos */}
               <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom style={{ color: '#004a9b', marginTop: 16, marginBottom: 16 }}>
@@ -1517,6 +1692,14 @@ const Alert=(props)=> {
           icon: '💧',
           color: '#00d4aa',
           preview: 'Gráfico de área mostrando evolución de liquidez'
+        },
+        { 
+          key: 'showPatrimonioChart', 
+          name: 'Evolución de Patrimonio', 
+          description: 'Seguimiento del patrimonio total (todas las cuentas)', 
+          icon: '💎',
+          color: '#9c27b0',
+          preview: 'Gráfico mostrando evolución del patrimonio total'
         }
       ];
 
@@ -1617,6 +1800,23 @@ const Alert=(props)=> {
                 <path 
                   d="M 10,40 Q 30,20 50,30 T 90,25 L 90,50 L 10,50 Z" 
                   fill="url(#liquidityGradient)"
+                  stroke={widget.color}
+                  strokeWidth="2"
+                />
+              </svg>
+            )}
+
+            {widget.key === 'showPatrimonioChart' && (
+              <svg width="100" height="60" style={{ opacity: 0.7 }}>
+                <defs>
+                  <linearGradient id="patrimonioGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={widget.color} stopOpacity="0.8"/>
+                    <stop offset="100%" stopColor={widget.color} stopOpacity="0.1"/>
+                  </linearGradient>
+                </defs>
+                <path 
+                  d="M 10,45 Q 25,25 40,35 Q 55,15 70,20 Q 85,30 90,15 L 90,50 L 10,50 Z" 
+                  fill="url(#patrimonioGradient)"
                   stroke={widget.color}
                   strokeWidth="2"
                 />
@@ -2486,6 +2686,103 @@ const Alert=(props)=> {
       );
     }
 
+    // Widget de Patrimonio Chart
+    if (widgetName === 'showPatrimonioChart' && this.state.widgetConfig.showPatrimonioChart) {
+      return (
+        <div key="patrimonio" className='glassStyle custonPatrimonio widgetResponsive' style={{ order: index }}>
+          <div 
+            style={{ position: 'relative' }}
+            data-widget-name="showPatrimonioChart"
+            draggable={this.state.editMode}
+            onDragStart={(e) => this.handleDragStart(e, 'showPatrimonioChart')}
+            onDragOver={this.handleDragOver}
+            onDrop={(e) => this.handleDrop(e, 'showPatrimonioChart')}
+            onDragEnd={this.handleDragEnd}
+            onTouchStart={(e) => this.handleTouchStart(e, 'showPatrimonioChart')}
+          >
+            {/* Botón de eliminación estilo Apple */}
+            {this.state.editMode && (
+              <IconButton
+                onClick={() => this.removeWidget('showPatrimonioChart')}
+                style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  right: '-8px',
+                  backgroundColor: '#ff4444',
+                  color: 'white',
+                  zIndex: 1001,
+                  padding: '4px',
+                  '&:hover': {
+                    backgroundColor: '#d50000'
+                  }
+                }}
+                size="small"
+              >
+                <CloseIcon style={{ fontSize: '16px' }} />
+              </IconButton>
+            )}
+
+            {/* Indicador de arrastre en modo edición */}
+            {this.state.editMode && (
+              <DragIndicatorIcon 
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  left: '8px',
+                  color: '#666',
+                  opacity: 0.7
+                }}
+              />
+            )}
+
+            <div className='contPatrimonioChart' style={{height:'85%'}}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                marginBottom: '12px',
+                padding: '0 15px'
+              }}>
+                <h3 style={{ 
+                  color: 'white', 
+                  fontSize: '18px', 
+                  fontWeight: 600,
+                  margin: 0 
+                }}>
+                  Evolución de Patrimonio
+                </h3>
+              </div>
+              <div style={{
+                height: 'calc(100% - 60px)', // Altura disponible menos el espacio del header
+                padding: '0 15px'
+              }}>
+                <Line data={superdataPatrimonio} options={{
+                  maintainAspectRatio: false,
+                  responsive: true,
+                  plugins: {
+                    legend: {
+                      labels: { fontColor: "white" },
+                      position: 'top',
+                    }
+                  },
+                  scales: {
+                    yAxes: {
+                      grid: { drawBorder: true, color: '#FFFFFF' },
+                      ticks: { beginAtZero: true, color: 'white', fontSize: 12 }
+                    },
+                    xAxes: {
+                      grid: { drawBorder: true, color: '#FFFFFF' },
+                      ticks: { beginAtZero: true, color: 'white', fontSize: 12 }
+                    }
+                  }
+                }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return null; // Para widgets no reconocidos o deshabilitados
   })}
 </div>
@@ -2923,6 +3220,17 @@ font-size:25px
 
 .contLiquidezChart{
   height: 85%;
+}
+
+.custonPatrimonio{
+  width: 100%;
+  max-width: 600px;
+  height: 350px;
+}
+
+.contPatrimonioChart{
+  height: 85%;
+  padding: 10px 15px;
 }
  
   .adminitemConts{
