@@ -285,6 +285,16 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
     });
   }
 
+  // Limpieza al desmontar componente
+  componentWillUnmount() {
+    // Restaurar scroll por seguridad
+    this.restorePageScroll();
+    
+    // Remover listeners globales si existen
+    document.removeEventListener('touchmove', this.handleTouchMoveGlobal);
+    document.removeEventListener('touchend', this.handleTouchEndGlobal);
+  }
+
   updateWidgetVisibility = (widgetName, isVisible) => {
     this.setState(prevState => {
       let newWidgetOrder = [...prevState.widgetOrder];
@@ -320,14 +330,6 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
   }
 
   // Funciones para modo de edición estilo Apple
-  toggleEditMode = () => {
-    this.setState({
-      editMode: !this.state.editMode,
-      showAddWidgetsPanel: false // Cerrar panel de agregar si está abierto
-      // Mantener showWidgetMenu abierto para seguir usando opciones
-    });
-  }
-
   toggleAddWidgetsPanel = () => {
     this.setState({
       showAddWidgetsPanel: !this.state.showAddWidgetsPanel,
@@ -356,6 +358,19 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
     });
   }
 
+  // Función para manejar eliminación de widgets con soporte móvil
+  handleRemoveWidgetClick = (e, widgetName) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.removeWidget(widgetName);
+  }
+
+  handleRemoveWidgetTouch = (e, widgetName) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.removeWidget(widgetName);
+  }
+
   addWidget = (widgetName) => {
     this.setState({
       widgetConfig: {
@@ -366,6 +381,36 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
     }, () => {
       // Guardar configuración después de actualizar el estado
       this.saveWidgetConfig();
+    });
+  }
+
+  // Función de emergencia para restaurar scroll si algo falla
+  restorePageScroll = () => {
+    // Restaurar estilos del body
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.height = '';
+    document.body.style.top = '';
+    
+    // Restaurar posición del scroll si se guardó
+    if (this.scrollPosition !== undefined) {
+      window.scrollTo(0, this.scrollPosition);
+      this.scrollPosition = undefined; // Limpiar después de usar
+    }
+  }
+
+  // Limpiar al salir del modo edición
+  toggleEditMode = () => {
+    // Si se está saliendo del modo edición, restaurar scroll por seguridad
+    if (this.state.editMode) {
+      this.restorePageScroll();
+    }
+    
+    this.setState({
+      editMode: !this.state.editMode,
+      showAddWidgetsPanel: false // Cerrar panel de agregar si está abierto
+      // Mantener showWidgetMenu abierto para seguir usando opciones
     });
   }
 
@@ -632,7 +677,15 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
   handleTouchStart = (e, widgetName) => {
     if (!this.state.editMode) return;
     
-    // Prevenir comportamiento por defecto inmediatamente
+    // SOLO PREVENIR SI ES EL ÍCONO DE ARRASTRE - Si no, permitir scroll normal
+    const isDragIcon = e.target.closest('.drag-handle') || e.target.classList.contains('drag-handle');
+    
+    if (!isDragIcon) {
+      // Si no es el ícono de arrastre, permitir comportamiento normal (scroll)
+      return;
+    }
+    
+    // Solo si ES el ícono de arrastre, prevenir y bloquear scroll
     e.preventDefault();
     e.stopPropagation();
     
@@ -644,10 +697,48 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
       touchStartTime: Date.now()
     });
     
-    console.log('🟡 Touch start en widget:', widgetName);
+    console.log('🟡 Touch start en ícono de arrastre:', widgetName);
+    
+    // BLOQUEAR SCROLL DE LA PÁGINA COMPLETAMENTE (solo para ícono de arrastre)
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
     
     // Agregar clase visual
-    e.currentTarget.classList.add('dragging');
+    e.currentTarget.closest('[data-widget-name]').classList.add('dragging');
+    
+    // Agregar listeners globales para capturar movimiento fuera del elemento
+    document.addEventListener('touchmove', this.handleTouchMoveGlobal, { passive: false });
+    document.addEventListener('touchend', this.handleTouchEndGlobal, { passive: false });
+  }
+
+  // Nueva función específica para manejar touch en el ícono de arrastre
+  handleDragIconTouchStart = (e, widgetName) => {
+    if (!this.state.editMode) return;
+    
+    // NO prevenir el evento aquí - solo guardamos la información
+    // e.preventDefault(); // ❌ Esto causaba el scroll inmediato
+    // e.stopPropagation(); // ❌ Esto también
+    
+    const touch = e.touches[0];
+    this.setState({ 
+      draggedWidget: widgetName,
+      touchStartPos: { x: touch.clientX, y: touch.clientY },
+      isDragging: false,
+      touchStartTime: Date.now()
+    });
+    
+    console.log('🟡 Touch start en ícono de arrastre:', widgetName);
+    
+    // NO bloquear scroll aquí - solo cuando realmente se detecte arrastre
+    // El bloqueo se hará en handleTouchMoveGlobal cuando se detecte movimiento
+    
+    // Agregar clase visual
+    const widgetElement = e.target.closest('[data-widget-name]');
+    if (widgetElement) {
+      widgetElement.classList.add('dragging');
+    }
     
     // Agregar listeners globales para capturar movimiento fuera del elemento
     document.addEventListener('touchmove', this.handleTouchMoveGlobal, { passive: false });
@@ -676,7 +767,20 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
     // Considerar drag si se mueve más de 15px
     if (totalDelta > 15) {
       if (!this.state.isDragging) {
-        console.log('🔵 Iniciando drag');
+        console.log('🔵 Iniciando drag - AHORA SÍ bloquear scroll');
+        
+        // GUARDAR posición actual del scroll antes de bloquear
+        const scrollY = window.scrollY;
+        
+        // AHORA SÍ bloquear scroll cuando realmente se detecta arrastre
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+        document.body.style.top = `-${scrollY}px`; // Mantener posición visual
+        
+        // Guardar la posición para restaurarla después
+        this.scrollPosition = scrollY;
+        
         this.setState({ isDragging: true });
       }
       
@@ -725,8 +829,11 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
     
     console.log('🔴 Touch end - Dragged:', draggedWidget, 'Target:', targetWidget, 'IsDragging:', this.state.isDragging);
     
+    // Determinar si hubo reordenamiento exitoso
+    const wasReordered = this.state.isDragging && targetWidget && draggedWidget !== targetWidget && timeDiff > 200;
+    
     // Solo reordenar si realmente se arrastró, hay un target válido y no fue un tap rápido
-    if (this.state.isDragging && targetWidget && draggedWidget !== targetWidget && timeDiff > 200) {
+    if (wasReordered) {
       const currentOrder = [...this.state.widgetOrder];
       const draggedIndex = currentOrder.indexOf(draggedWidget);
       const targetIndex = currentOrder.indexOf(targetWidget);
@@ -742,8 +849,25 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
           widgetOrder: currentOrder
         }, () => {
           this.saveWidgetConfig();
+          
+          // 🎯 RESTAURAR SCROLL PERO LUEGO IR AL WIDGET REORDENADO
+          this.restorePageScroll();
+          
+          setTimeout(() => {
+            const movedWidgetElement = document.querySelector(`[data-widget-name="${draggedWidget}"]`);
+            if (movedWidgetElement) {
+              movedWidgetElement.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' // Centrar el widget en la pantalla
+              });
+              console.log('📍 Scroll a widget reordenado:', draggedWidget);
+            }
+          }, 100); // Delay corto para que termine el restore
         });
       }
+    } else {
+      // Si NO hubo reordenamiento, simplemente restaurar a la posición original
+      this.restorePageScroll();
     }
     
     // Limpiar todos los estilos temporales
@@ -2021,39 +2145,66 @@ const Alert=(props)=> {
             onDragOver={this.handleDragOver}
             onDrop={(e) => this.handleDrop(e, 'showTimeFilter')}
             onDragEnd={this.handleDragEnd}
-            onTouchStart={(e) => this.handleTouchStart(e, 'showTimeFilter')}
           >
             {/* Botón de eliminación estilo Apple */}
             {this.state.editMode && (
               <IconButton
-                onClick={() => this.removeWidget('showTimeFilter')}
+                onClick={(e) => this.handleRemoveWidgetClick(e, 'showTimeFilter')}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onTouchEnd={(e) => this.handleRemoveWidgetTouch(e, 'showTimeFilter')}
                 style={{
                   position: 'absolute',
-                  top: '-8px',
-                  right: '-8px',
+                  top: '-12px',
+                  right: '-12px',
                   backgroundColor: '#ff4444',
                   color: 'white',
-                  zIndex: 1001,
-                  padding: '4px',
+                  zIndex: 1002,
+                  padding: '8px',
+                  minWidth: '40px',
+                  minHeight: '40px',
                   '&:hover': {
                     backgroundColor: '#d50000'
                   }
                 }}
                 size="small"
               >
-                <CloseIcon style={{ fontSize: '14px' }} />
+                <CloseIcon style={{ fontSize: '18px' }} />
               </IconButton>
             )}
 
             {/* Indicador de arrastre en modo edición */}
             {this.state.editMode && (
               <DragIndicatorIcon 
+                className="drag-handle"
+                onTouchStart={(e) => this.handleDragIconTouchStart(e, 'showTimeFilter')}
                 style={{
                   position: 'absolute',
-                  top: '8px',
-                  left: '8px',
+                  top: '4px',
+                  left: '4px',
                   color: '#666',
-                  opacity: 0.7
+                  opacity: 0.9,
+                  fontSize: '48px', // 🔥 Más grande
+                  cursor: 'grab',
+                  padding: '12px', // 🔥 Más padding para área de toque
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.25)', // 🔥 Más visible
+                  border: '2px solid rgba(255, 255, 255, 0.3)', // 🔥 Borde
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)', // 🔥 Sombra
+                  transition: 'all 0.2s ease',
+                  zIndex: 1010, // 🔥 ADELANTE DE TODO - más alto que la fecha
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                    transform: 'scale(1.05)'
+                  },
+                  // 🔥 Área táctil mínima
+                  minWidth: '64px',
+                  minHeight: '64px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               />
             )}
@@ -2156,39 +2307,66 @@ const Alert=(props)=> {
               onDragOver={this.handleDragOver}
               onDrop={(e) => this.handleDrop(e, 'showIncomeChart')}
               onDragEnd={this.handleDragEnd}
-              onTouchStart={(e) => this.handleTouchStart(e, 'showIncomeChart')}
             >
               {/* Botón de eliminación estilo Apple */}
               {this.state.editMode && (
                 <IconButton
-                  onClick={() => this.removeWidget('showIncomeChart')}
+                  onClick={(e) => this.handleRemoveWidgetClick(e, 'showIncomeChart')}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onTouchEnd={(e) => this.handleRemoveWidgetTouch(e, 'showIncomeChart')}
                   style={{
                     position: 'absolute',
-                    top: '-8px',
-                    right: '-8px',
+                    top: '-12px',
+                    right: '-12px',
                     backgroundColor: '#ff4444',
                     color: 'white',
-                    zIndex: 1001,
-                    padding: '4px',
+                    zIndex: 1002,
+                    padding: '8px',
+                    minWidth: '40px',
+                    minHeight: '40px',
                     '&:hover': {
                       backgroundColor: '#d50000'
                     }
                   }}
                   size="small"
                 >
-                  <CloseIcon style={{ fontSize: '16px' }} />
+                  <CloseIcon style={{ fontSize: '18px' }} />
                 </IconButton>
               )}
 
               {/* Indicador de arrastre en modo edición */}
               {this.state.editMode && (
                 <DragIndicatorIcon 
+                  className="drag-handle"
+                  onTouchStart={(e) => this.handleDragIconTouchStart(e, 'showIncomeChart')}
                   style={{
                     position: 'absolute',
-                    top: '8px',
-                    left: '8px',
+                    top: '4px',
+                    left: '4px',
                     color: '#666',
-                    opacity: 0.7
+                    opacity: 0.9,
+                    fontSize: '48px', // 🔥 Más grande
+                    cursor: 'grab',
+                    padding: '12px', // 🔥 Más padding
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.25)', // 🔥 Más visible
+                    border: '2px solid rgba(255, 255, 255, 0.3)', // 🔥 Borde
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)', // 🔥 Sombra
+                    transition: 'all 0.2s ease',
+                    zIndex: 1010, // 🔥 ADELANTE DE TODO
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                      transform: 'scale(1.05)'
+                    },
+                    // 🔥 Área táctil mínima
+                    minWidth: '64px',
+                    minHeight: '64px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                 />
               )}
@@ -2244,39 +2422,66 @@ const Alert=(props)=> {
               onDragOver={this.handleDragOver}
               onDrop={(e) => this.handleDrop(e, 'showExpenseChart')}
               onDragEnd={this.handleDragEnd}
-              onTouchStart={(e) => this.handleTouchStart(e, 'showExpenseChart')}
             >
               {/* Botón de eliminación estilo Apple */}
               {this.state.editMode && (
                 <IconButton
-                  onClick={() => this.removeWidget('showExpenseChart')}
+                  onClick={(e) => this.handleRemoveWidgetClick(e, 'showExpenseChart')}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onTouchEnd={(e) => this.handleRemoveWidgetTouch(e, 'showExpenseChart')}
                   style={{
                     position: 'absolute',
-                    top: '-8px',
-                    right: '-8px',
+                    top: '-12px',
+                    right: '-12px',
                     backgroundColor: '#ff4444',
                     color: 'white',
-                    zIndex: 1001,
-                    padding: '4px',
+                    zIndex: 1002,
+                    padding: '8px',
+                    minWidth: '40px',
+                    minHeight: '40px',
                     '&:hover': {
                       backgroundColor: '#d50000'
                     }
                   }}
                   size="small"
                 >
-                  <CloseIcon style={{ fontSize: '16px' }} />
+                  <CloseIcon style={{ fontSize: '18px' }} />
                 </IconButton>
               )}
 
               {/* Indicador de arrastre en modo edición */}
               {this.state.editMode && (
                 <DragIndicatorIcon 
+                  className="drag-handle"
+                  onTouchStart={(e) => this.handleDragIconTouchStart(e, 'showExpenseChart')}
                   style={{
                     position: 'absolute',
-                    top: '8px',
-                    left: '8px',
+                    top: '4px',
+                    left: '4px',
                     color: '#666',
-                    opacity: 0.7
+                    opacity: 0.9,
+                    fontSize: '48px', // 🔥 Más grande
+                    cursor: 'grab',
+                    padding: '12px', // 🔥 Más padding
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.25)', // 🔥 Más visible
+                    border: '2px solid rgba(255, 255, 255, 0.3)', // 🔥 Borde
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)', // 🔥 Sombra
+                    transition: 'all 0.2s ease',
+                    zIndex: 1010, // 🔥 ADELANTE DE TODO
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                      transform: 'scale(1.05)'
+                    },
+                    // 🔥 Área táctil mínima
+                    minWidth: '64px',
+                    minHeight: '64px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                 />
               )}
@@ -2330,39 +2535,66 @@ const Alert=(props)=> {
             onDragOver={this.handleDragOver}
             onDrop={(e) => this.handleDrop(e, 'showPieChart')}
             onDragEnd={this.handleDragEnd}
-            onTouchStart={(e) => this.handleTouchStart(e, 'showPieChart')}
           >
             {/* Botón de eliminación estilo Apple */}
             {this.state.editMode && (
               <IconButton
-                onClick={() => this.removeWidget('showPieChart')}
+                onClick={(e) => this.handleRemoveWidgetClick(e, 'showPieChart')}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onTouchEnd={(e) => this.handleRemoveWidgetTouch(e, 'showPieChart')}
                 style={{
                   position: 'absolute',
-                  top: '-8px',
-                  right: '-8px',
+                  top: '-12px',
+                  right: '-12px',
                   backgroundColor: '#ff4444',
                   color: 'white',
-                  zIndex: 1001,
-                  padding: '4px',
+                  zIndex: 1002,
+                  padding: '8px',
+                  minWidth: '40px',
+                  minHeight: '40px',
                   '&:hover': {
                     backgroundColor: '#d50000'
                   }
                 }}
                 size="small"
               >
-                <CloseIcon style={{ fontSize: '16px' }} />
+                <CloseIcon style={{ fontSize: '18px' }} />
               </IconButton>
             )}
 
             {/* Indicador de arrastre en modo edición */}
             {this.state.editMode && (
               <DragIndicatorIcon 
+                className="drag-handle"
+                onTouchStart={(e) => this.handleDragIconTouchStart(e, 'showPieChart')}
                 style={{
                   position: 'absolute',
-                  top: '8px',
-                  left: '8px',
+                  top: '4px',
+                  left: '4px',
                   color: '#666',
-                  opacity: 0.7
+                  opacity: 0.9,
+                  fontSize: '48px', // 🔥 Más grande
+                  cursor: 'grab',
+                  padding: '12px', // 🔥 Más padding
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.25)', // 🔥 Más visible
+                  border: '2px solid rgba(255, 255, 255, 0.3)', // 🔥 Borde
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)', // 🔥 Sombra
+                  transition: 'all 0.2s ease',
+                  zIndex: 1010, // 🔥 ADELANTE DE TODO
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                    transform: 'scale(1.05)'
+                  },
+                  // 🔥 Área táctil mínima
+                  minWidth: '64px',
+                  minHeight: '64px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               />
             )}
@@ -2481,39 +2713,66 @@ const Alert=(props)=> {
             onDragOver={this.handleDragOver}
             onDrop={(e) => this.handleDrop(e, 'showBarChart')}
             onDragEnd={this.handleDragEnd}
-            onTouchStart={(e) => this.handleTouchStart(e, 'showBarChart')}
           >
             {/* Botón de eliminación estilo Apple */}
             {this.state.editMode && (
               <IconButton
-                onClick={() => this.removeWidget('showBarChart')}
+                onClick={(e) => this.handleRemoveWidgetClick(e, 'showBarChart')}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onTouchEnd={(e) => this.handleRemoveWidgetTouch(e, 'showBarChart')}
                 style={{
                   position: 'absolute',
-                  top: '-8px',
-                  right: '-8px',
+                  top: '-12px',
+                  right: '-12px',
                   backgroundColor: '#ff4444',
                   color: 'white',
-                  zIndex: 1001,
-                  padding: '4px',
+                  zIndex: 1002,
+                  padding: '8px',
+                  minWidth: '40px',
+                  minHeight: '40px',
                   '&:hover': {
                     backgroundColor: '#d50000'
                   }
                 }}
                 size="small"
               >
-                <CloseIcon style={{ fontSize: '16px' }} />
+                <CloseIcon style={{ fontSize: '18px' }} />
               </IconButton>
             )}
 
             {/* Indicador de arrastre en modo edición */}
             {this.state.editMode && (
               <DragIndicatorIcon 
+                className="drag-handle"
+                onTouchStart={(e) => this.handleDragIconTouchStart(e, 'showBarChart')}
                 style={{
                   position: 'absolute',
-                  top: '8px',
-                  left: '8px',
+                  top: '4px',
+                  left: '4px',
                   color: '#666',
-                  opacity: 0.7
+                  opacity: 0.9,
+                  fontSize: '48px', // 🔥 Más grande
+                  cursor: 'grab',
+                  padding: '12px', // 🔥 Más padding
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.25)', // 🔥 Más visible
+                  border: '2px solid rgba(255, 255, 255, 0.3)', // 🔥 Borde
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)', // 🔥 Sombra
+                  transition: 'all 0.2s ease',
+                  zIndex: 1010, // 🔥 ADELANTE DE TODO
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                    transform: 'scale(1.05)'
+                  },
+                  // 🔥 Área táctil mínima
+                  minWidth: '64px',
+                  minHeight: '64px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               />
             )}
@@ -2622,39 +2881,66 @@ const Alert=(props)=> {
             onDragOver={this.handleDragOver}
             onDrop={(e) => this.handleDrop(e, 'showLiquidityChart')}
             onDragEnd={this.handleDragEnd}
-            onTouchStart={(e) => this.handleTouchStart(e, 'showLiquidityChart')}
           >
             {/* Botón de eliminación estilo Apple */}
             {this.state.editMode && (
               <IconButton
-                onClick={() => this.removeWidget('showLiquidityChart')}
+                onClick={(e) => this.handleRemoveWidgetClick(e, 'showLiquidityChart')}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onTouchEnd={(e) => this.handleRemoveWidgetTouch(e, 'showLiquidityChart')}
                 style={{
                   position: 'absolute',
-                  top: '-8px',
-                  right: '-8px',
+                  top: '-12px',
+                  right: '-12px',
                   backgroundColor: '#ff4444',
                   color: 'white',
-                  zIndex: 1001,
-                  padding: '4px',
+                  zIndex: 1002,
+                  padding: '8px',
+                  minWidth: '40px',
+                  minHeight: '40px',
                   '&:hover': {
                     backgroundColor: '#d50000'
                   }
                 }}
                 size="small"
               >
-                <CloseIcon style={{ fontSize: '16px' }} />
+                <CloseIcon style={{ fontSize: '18px' }} />
               </IconButton>
             )}
 
             {/* Indicador de arrastre en modo edición */}
             {this.state.editMode && (
               <DragIndicatorIcon 
+                className="drag-handle"
+                onTouchStart={(e) => this.handleDragIconTouchStart(e, 'showLiquidityChart')}
                 style={{
                   position: 'absolute',
-                  top: '8px',
-                  left: '8px',
+                  top: '4px',
+                  left: '4px',
                   color: '#666',
-                  opacity: 0.7
+                  opacity: 0.9,
+                  fontSize: '48px', // 🔥 Más grande
+                  cursor: 'grab',
+                  padding: '12px', // 🔥 Más padding
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.25)', // 🔥 Más visible
+                  border: '2px solid rgba(255, 255, 255, 0.3)', // 🔥 Borde
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)', // 🔥 Sombra
+                  transition: 'all 0.2s ease',
+                  zIndex: 1010, // 🔥 ADELANTE DE TODO
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                    transform: 'scale(1.05)'
+                  },
+                  // 🔥 Área táctil mínima
+                  minWidth: '64px',
+                  minHeight: '64px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               />
             )}
@@ -2698,39 +2984,66 @@ const Alert=(props)=> {
             onDragOver={this.handleDragOver}
             onDrop={(e) => this.handleDrop(e, 'showPatrimonioChart')}
             onDragEnd={this.handleDragEnd}
-            onTouchStart={(e) => this.handleTouchStart(e, 'showPatrimonioChart')}
           >
             {/* Botón de eliminación estilo Apple */}
             {this.state.editMode && (
               <IconButton
-                onClick={() => this.removeWidget('showPatrimonioChart')}
+                onClick={(e) => this.handleRemoveWidgetClick(e, 'showPatrimonioChart')}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onTouchEnd={(e) => this.handleRemoveWidgetTouch(e, 'showPatrimonioChart')}
                 style={{
                   position: 'absolute',
-                  top: '-8px',
-                  right: '-8px',
+                  top: '-12px',
+                  right: '-12px',
                   backgroundColor: '#ff4444',
                   color: 'white',
-                  zIndex: 1001,
-                  padding: '4px',
+                  zIndex: 1002,
+                  padding: '8px',
+                  minWidth: '40px',
+                  minHeight: '40px',
                   '&:hover': {
                     backgroundColor: '#d50000'
                   }
                 }}
                 size="small"
               >
-                <CloseIcon style={{ fontSize: '16px' }} />
+                <CloseIcon style={{ fontSize: '18px' }} />
               </IconButton>
             )}
 
             {/* Indicador de arrastre en modo edición */}
             {this.state.editMode && (
               <DragIndicatorIcon 
+                className="drag-handle"
+                onTouchStart={(e) => this.handleDragIconTouchStart(e, 'showPatrimonioChart')}
                 style={{
                   position: 'absolute',
-                  top: '8px',
-                  left: '8px',
+                  top: '4px',
+                  left: '4px',
                   color: '#666',
-                  opacity: 0.7
+                  opacity: 0.9,
+                  fontSize: '48px', // 🔥 Más grande (era 32px)
+                  cursor: 'grab',
+                  padding: '12px', // 🔥 Más padding para área de toque
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.25)', // 🔥 Más visible
+                  border: '2px solid rgba(255, 255, 255, 0.3)', // 🔥 Borde para mejor visibilidad
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)', // 🔥 Sombra para destacar
+                  transition: 'all 0.2s ease',
+                  zIndex: 1010, // 🔥 ADELANTE DE TODO
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                    transform: 'scale(1.05)'
+                  },
+                  // 🔥 Asegurar área táctil mínima para móviles
+                  minWidth: '64px',
+                  minHeight: '64px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               />
             )}
@@ -2801,23 +3114,29 @@ const Alert=(props)=> {
           {/* Botón de eliminación estilo Apple */}
           {this.state.editMode && (
             <IconButton
-              onClick={() => this.removeWidget('showBarChart')}
+              onClick={(e) => this.handleRemoveWidgetClick(e, 'showBarChart')}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onTouchEnd={(e) => this.handleRemoveWidgetTouch(e, 'showBarChart')}
               style={{
                 position: 'absolute',
-                top: '-8px',
-                right: '-8px',
-                zIndex: 10,
-                backgroundColor: '#ff1744',
+                top: '-12px',
+                right: '-12px',
+                zIndex: 1002,
+                backgroundColor: '#ff4444',
                 color: 'white',
-                width: '24px',
-                height: '24px',
+                padding: '8px',
+                minWidth: '40px',
+                minHeight: '40px',
                 '&:hover': {
                   backgroundColor: '#d50000'
                 }
               }}
               size="small"
             >
-              <CloseIcon style={{ fontSize: '16px' }} />
+              <CloseIcon style={{ fontSize: '18px' }} />
             </IconButton>
           )}
 
@@ -2828,8 +3147,16 @@ const Alert=(props)=> {
                 position: 'absolute',
                 top: '8px',
                 left: '8px',
-                color: '#666',
-                opacity: 0.7
+                color: '#999',
+                opacity: 0.8,
+                fontSize: '32px',
+                cursor: 'grab',
+                padding: '8px',
+                borderRadius: '4px',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                }
               }}
             />
           )}
@@ -2890,23 +3217,29 @@ plugins: {
           {/* Botón de eliminación estilo Apple */}
           {this.state.editMode && (
             <IconButton
-              onClick={() => this.removeWidget('showLiquidityChart')}
+              onClick={(e) => this.handleRemoveWidgetClick(e, 'showLiquidityChart')}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onTouchEnd={(e) => this.handleRemoveWidgetTouch(e, 'showLiquidityChart')}
               style={{
                 position: 'absolute',
-                top: '-8px',
-                right: '-8px',
-                zIndex: 10,
-                backgroundColor: '#ff1744',
+                top: '-12px',
+                right: '-12px',
+                zIndex: 1002,
+                backgroundColor: '#ff4444',
                 color: 'white',
-                width: '24px',
-                height: '24px',
+                padding: '8px',
+                minWidth: '40px',
+                minHeight: '40px',
                 '&:hover': {
                   backgroundColor: '#d50000'
                 }
               }}
               size="small"
             >
-              <CloseIcon style={{ fontSize: '16px' }} />
+              <CloseIcon style={{ fontSize: '18px' }} />
             </IconButton>
           )}
 
@@ -2917,8 +3250,16 @@ plugins: {
                 position: 'absolute',
                 top: '8px',
                 left: '8px',
-                color: '#666',
-                opacity: 0.7
+                color: '#999',
+                opacity: 0.8,
+                fontSize: '32px',
+                cursor: 'grab',
+                padding: '8px',
+                borderRadius: '4px',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                }
               }}
             />
           )}
