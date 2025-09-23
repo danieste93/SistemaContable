@@ -2275,8 +2275,8 @@ if(cuentasrenderNoPosesion.length > 0){
 </Tabs>
 </div>
     </Animate>
-    <Animate show={this.state.cuentaExpand == "Posesion"}>
-    <div className='contcuentaslista'>
+    <Animate show={this.state.cuentaExpand == "Posesion" && this.state.vistaFormato === "lista" || !this.state.visualtipos && this.state.vistaFormato === "lista"}>
+    <div className="contcuentaslista">
 
 { generadorCuentas(cuentasrenderPosesion,"lista")
  }
@@ -2322,8 +2322,8 @@ if(this.state.cuentaExpand == "NoPosesion"){
 </Tabs>
 </div>
     </Animate>
-    <Animate show={this.state.cuentaExpand == "NoPosesion"}>
-    <div className='contcuentaslista'>
+    <Animate show={this.state.cuentaExpand == "NoPosesion" && this.state.vistaFormato === "lista" || !this.state.visualtipos && this.state.vistaFormato === "lista"}>
+    <div className="contcuentaslista">
 { generadorCuentas(cuentasrenderNoPosesion,"lista")
  }
 </div>
@@ -2366,8 +2366,8 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
 </Tabs>
 </div>
     </Animate>
-    <Animate show={this.state.cuentaExpand == "PosesionSinTotal"}>
-    <div className='contcuentaslista'>
+    <Animate show={this.state.cuentaExpand == "PosesionSinTotal" && this.state.vistaFormato === "lista" || !this.state.visualtipos && this.state.vistaFormato === "lista"}>
+    <div className="contcuentaslista">
 { generadorCuentas(cuentasrenderPosesionsinTotal,"lista")
  }
 </div>
@@ -3329,6 +3329,9 @@ p{
                     justify-content: center;
                     flex-flow: column;
                     padding: 0px 3px;
+                  }
+                  .contcuentaslista.expandido{
+                    display: flex !important;
                   }
                   .confiltroCuentra{
                     background: #7cbaff;
