@@ -2257,7 +2257,7 @@ if(cuentasrenderNoPosesion.length > 0){
 </i>
 </div>
     </div>
-    <Animate show={this.state.cuentaExpand != "Posesion"}>
+    <Animate show={this.state.cuentaExpand != "Posesion" && !(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
     <div className="contcuentas">
 <Tabs
          value={0} // siempre válido
@@ -2304,7 +2304,7 @@ if(this.state.cuentaExpand == "NoPosesion"){
 </i>
 </div>
     </div>
-    <Animate show={this.state.cuentaExpand != "NoPosesion"}>
+    <Animate show={this.state.cuentaExpand != "NoPosesion" && !(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
     <div className="contcuentas">
 <Tabs
          value={0} // siempre válido
@@ -2348,7 +2348,7 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
 </i>
 </div>
     </div>
-    <Animate show={this.state.cuentaExpand != "PosesionSinTotal"}>
+    <Animate show={this.state.cuentaExpand != "PosesionSinTotal" && !(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
     <div className="contcuentas">
 <Tabs
          value={0} // siempre válido
