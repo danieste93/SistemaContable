@@ -1916,6 +1916,20 @@ if(this.props.regC.Cuentas){
     cuentasrenderPosesionsinTotal = this.props.regC.Cuentas.filter(cuentaper =>  cuentaper.CheckedP && cuentaper.CheckedA ==false )
     cuentasrenderNoPosesion = this.props.regC.Cuentas.filter(cuentaper =>  cuentaper.CheckedP == false )   
   
+    // Aplicar filtros de "Cuentas en 0" y "Invisible"
+    if(this.state.cuentas0){
+      cuentasrenderPosesion = cuentasrenderPosesion.filter(x=> x.DineroActual.$numberDecimal != "0" && x.DineroActual.$numberDecimal != "0.00")
+      cuentasrenderPosesionsinTotal = cuentasrenderPosesionsinTotal.filter(x=> x.DineroActual.$numberDecimal != "0" && x.DineroActual.$numberDecimal != "0.00")
+      cuentasrenderNoPosesion = cuentasrenderNoPosesion.filter(x=> x.DineroActual.$numberDecimal != "0" && x.DineroActual.$numberDecimal != "0.00")
+    }
+    
+    // Filtro de visibilidad: si visibility es false, NO mostrar cuentas ocultas (Visibility === false)
+    if(this.state.visibility === false){
+      cuentasrenderPosesion = cuentasrenderPosesion.filter(x=> x.Visibility !== false)
+      cuentasrenderPosesionsinTotal = cuentasrenderPosesionsinTotal.filter(x=> x.Visibility !== false)
+      cuentasrenderNoPosesion = cuentasrenderNoPosesion.filter(x=> x.Visibility !== false)
+    }   
+  
     if(PasivosP.length > 0){
       for(let i = 0; i < PasivosP.length; i++){
               contPasivosP += parseFloat(PasivosP[i].DineroActual.$numberDecimal)
