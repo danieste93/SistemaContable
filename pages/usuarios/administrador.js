@@ -717,9 +717,17 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
   handleDragIconTouchStart = (e, widgetName) => {
     if (!this.state.editMode) return;
     
-    // NO prevenir el evento aquí - solo guardamos la información
-    // e.preventDefault(); // ❌ Esto causaba el scroll inmediato
-    // e.stopPropagation(); // ❌ Esto también
+    // ✅ BLOQUEAR SCROLL INMEDIATAMENTE para evitar el "flash" inicial en móviles reales
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // BLOQUEAR scroll temporalmente (se puede restaurar si no hay drag real)
+    const scrollY = window.scrollY;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.top = `-${scrollY}px`;
+    this.scrollPosition = scrollY;
     
     const touch = e.touches[0];
     this.setState({ 
@@ -729,10 +737,7 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
       touchStartTime: Date.now()
     });
     
-    console.log('🟡 Touch start en ícono de arrastre:', widgetName);
-    
-    // NO bloquear scroll aquí - solo cuando realmente se detecte arrastre
-    // El bloqueo se hará en handleTouchMoveGlobal cuando se detecte movimiento
+    console.log('🟡 Touch start en ícono de arrastre:', widgetName, '- Scroll bloqueado inmediatamente');
     
     // Agregar clase visual
     const widgetElement = e.target.closest('[data-widget-name]');
@@ -767,20 +772,10 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
     // Considerar drag si se mueve más de 15px
     if (totalDelta > 15) {
       if (!this.state.isDragging) {
-        console.log('🔵 Iniciando drag - AHORA SÍ bloquear scroll');
+        console.log('🔵 Confirmando drag real - scroll ya estaba bloqueado');
         
-        // GUARDAR posición actual del scroll antes de bloquear
-        const scrollY = window.scrollY;
-        
-        // AHORA SÍ bloquear scroll cuando realmente se detecta arrastre
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.width = '100%';
-        document.body.style.top = `-${scrollY}px`; // Mantener posición visual
-        
-        // Guardar la posición para restaurarla después
-        this.scrollPosition = scrollY;
-        
+        // ✅ El scroll ya está bloqueado desde handleDragIconTouchStart
+        // Solo marcamos como isDragging = true
         this.setState({ isDragging: true });
       }
       
