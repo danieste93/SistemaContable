@@ -550,13 +550,27 @@ fetch("/cuentas/getcuentas", {
              }
              let cuenEditMode= this.state.cuenEditMode?"cseditmodeactive":"";
              
-             // Lógica mejorada para cuentas ocultas durante búsqueda
-             let esOculta = !cuenta.Visibility && this.state.visibility == false;
+             // Lógica corregida para cuentas ocultas
+             let esOculta = cuenta.Visibility === false && this.state.visibility === true;
              let claseOculta = esOculta ? "cuenta-oculta-visible" : "";
+             
+             // Debug temporal
+             if (cuenta.NombreC === "PayPal") {
+               console.log('🔍 DEBUG PayPal - cuenta.Visibility:', cuenta.Visibility);
+               console.log('🔍 DEBUG PayPal - this.state.visibility:', this.state.visibility);
+               console.log('🔍 DEBUG PayPal - esOculta:', esOculta);
+             }
              
              // Usar el mismo diseño visual que las cuentas normales
              let backgroundSolido = cuenta.Background.Seleccionado=="Solido"?cuenta.Background.colorPicked:""
              let backgroundImagen = cuenta.Background.Seleccionado=="Imagen"?cuenta.Background.urlBackGround:""
+             
+             // Estilo para cuentas ocultas
+             let estilosOculta = esOculta ? {
+               opacity: 0.7,
+               border: '2px dashed #ff9800',
+               position: 'relative'
+             } : {};
              
              return(
                   <div key ={cuenta._id} className={ ` contenedorCuenta ${claseOculta}`}>
@@ -571,25 +585,20 @@ fetch("/cuentas/getcuentas", {
                     style={{
                       backgroundColor:backgroundSolido,
                       backgroundImage: `url(${backgroundImagen})`,
-                      position: 'relative'
+                      position: 'relative',
+                      ...estilosOculta
                     }}
+                    title={esOculta ? "Cuenta Oculta - Visible durante búsqueda" : ""}
                     >
                       <div className='jwFlexEnd'>
-                        {/* Indicador de cuenta oculta durante búsqueda */}
+                        {/* Indicador de cuenta oculta mejorado */}
                         {esOculta && (
-                          <i className="material-icons" style={{
-                            position: 'absolute',
-                            top: '4px',
-                            right: '4px',
-                            fontSize: '16px',
-                            color: '#666',
-                            background: 'rgba(255,255,255,0.8)',
-                            borderRadius: '50%',
-                            padding: '2px',
-                            zIndex: 15
-                          }}>
-                            visibility_off
-                          </i>
+                          <div className="indicador-cuenta-oculta">
+                            <i className="material-icons">
+                              visibility_off
+                            </i>
+                            OCULTA
+                          </div>
                         )}
                         <div className="contIconoCroom">
                           <img  className='iconoCuenta' src={cuenta.urlIcono}/>
@@ -1122,15 +1131,24 @@ return saldofinal.toFixed(2)
       let generadorCuentas = (grupoCuentas,formato)=> grupoCuentas.map((cuenta,i)=>{
         let Actualdata  = 0
         
-        // Lógica mejorada para cuentas ocultas durante búsqueda
+        // Lógica corregida para cuentas ocultas
         let novisible = "";
-        let esOculta = cuenta.Visibility == false && this.state.visibility == false;
+        let esOculta = cuenta.Visibility === false && this.state.visibility === true;
         let hayBusqueda = this.state.cuentasSearcher != "";
         
-        if (esOculta && !hayBusqueda) {
-          novisible = "invisiblex"; // Completamente oculta cuando no hay búsqueda
-        } else if (esOculta && hayBusqueda) {
-          novisible = "cuenta-oculta-visible"; // Visible pero con estilo diferente durante búsqueda
+        // Debug temporal para PayPal
+        if (cuenta.NombreC === "PayPal") {
+          console.log('🔍 GENERADOR PayPal - cuenta.Visibility:', cuenta.Visibility);
+          console.log('🔍 GENERADOR PayPal - this.state.visibility:', this.state.visibility);
+          console.log('🔍 GENERADOR PayPal - esOculta:', esOculta);
+          console.log('🔍 GENERADOR PayPal - formato:', formato);
+        }
+        
+        // La cuenta solo se muestra si:
+        // 1. No es oculta (cuenta.Visibility !== false)
+        // 2. O es oculta pero visibility está activado (this.state.visibility === true)
+        if (cuenta.Visibility === false && this.state.visibility === false) {
+          novisible = "invisiblex"; // Completamente oculta
         }
         
         if(this.props.regC.Regs){
@@ -1188,6 +1206,16 @@ return saldofinal.toFixed(2)
      
         let backgroundSolido = cuenta.Background.Seleccionado=="Solido"?cuenta.Background.colorPicked:""
         let backgroundImagen = cuenta.Background.Seleccionado=="Imagen"?cuenta.Background.urlBackGround:""
+        
+        // Estilo para cuentas ocultas
+        let estilosOcultaLista = esOculta ? {
+          opacity: 0.7,
+          border: '2px dashed #ff9800',
+          backgroundColor: backgroundSolido ? 
+            `${backgroundSolido}AA` : // Añade transparencia al color sólido
+            'rgba(255, 152, 0, 0.1)' // Color de fondo sutil para ocultas
+        } : {};
+        
         return(<div>
           
     { formato == "cuadros" &&   <div key ={cuenta._id} className={ ` contenedorCuenta  ${novisible}`}  {...this.a11yProps(i)} >
@@ -1201,25 +1229,25 @@ return saldofinal.toFixed(2)
         }
         }}
         
-        style={{backgroundColor:backgroundSolido,backgroundImage: `url(${backgroundImagen})`}}
+        style={{
+          backgroundColor:backgroundSolido,
+          backgroundImage: `url(${backgroundImagen})`,
+          position: 'relative',
+          ...estilosOcultaLista
+        }}
+        title={esOculta ? "Cuenta Oculta - Visible durante búsqueda" : ""}
         >
 
      
           <div className='jwFlexEnd'>
-        {/* Indicador de cuenta oculta durante búsqueda */}
-        {esOculta && hayBusqueda && (
-          <i className="material-icons" style={{
-            position: 'absolute',
-            top: '4px',
-            right: '4px',
-            fontSize: '16px',
-            color: '#666',
-            background: 'rgba(255,255,255,0.8)',
-            borderRadius: '50%',
-            padding: '2px'
-          }}>
-            visibility_off
-          </i>
+        {/* Indicador de cuenta oculta mejorado */}
+        {esOculta && (
+          <div className="indicador-cuenta-oculta">
+            <i className="material-icons">
+              visibility_off
+            </i>
+            OCULTA
+          </div>
         )}
         <div className="contIconoCroom">
           <img  className='iconoCuenta' src={cuenta.urlIcono}/>
@@ -1275,22 +1303,22 @@ this.getcuentaRegs(cuenta)
 }
 }}
 
-style={{backgroundColor:backgroundSolido,backgroundImage: `url(${backgroundImagen})`, position: 'relative'}}
+style={{
+  backgroundColor:backgroundSolido,
+  backgroundImage: `url(${backgroundImagen})`, 
+  position: 'relative',
+  ...estilosOcultaLista
+}}
+title={esOculta ? "Cuenta Oculta - Visible durante búsqueda" : ""}
 >
-  {/* Indicador de cuenta oculta durante búsqueda - Lista */}
-  {esOculta && hayBusqueda && (
-    <i className="material-icons" style={{
-      position: 'absolute',
-      top: '4px',
-      right: '4px',
-      fontSize: '16px',
-      color: '#666',
-      background: 'rgba(255,255,255,0.8)',
-      borderRadius: '50%',
-      padding: '2px'
-    }}>
-      visibility_off
-    </i>
+  {/* Indicador de cuenta oculta mejorado - Lista */}
+  {esOculta && (
+    <div className="indicador-cuenta-oculta">
+      <i className="material-icons">
+        visibility_off
+      </i>
+      OCULTA
+    </div>
   )}
 <div className="contIconoCroomLista">
   <img  className='iconoLista' src={cuenta.urlIcono}/>

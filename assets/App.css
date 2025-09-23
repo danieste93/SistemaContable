@@ -127,3 +127,62 @@ body {
     border-radius: 20px;
     box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
 }
+
+/* Estilos para cuentas ocultas */
+.cuenta-oculta-visible {
+    position: relative;
+    animation: pulseOculta 2s infinite;
+}
+
+.cuenta-oculta-visible::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #ff9800, #ffc107, #ff9800, #ffc107);
+    background-size: 400% 400%;
+    border-radius: inherit;
+    z-index: -1;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes pulseOculta {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.indicador-cuenta-oculta {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    border-radius: 12px;
+    padding: 2px 6px;
+    font-size: 10px;
+    color: white;
+    font-weight: bold;
+    z-index: 15;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4);
+    animation: bounce 1s infinite alternate;
+}
+
+@keyframes bounce {
+    0% { transform: translateY(0px); }
+    100% { transform: translateY(-2px); }
+}
+
+.indicador-cuenta-oculta .material-icons {
+    font-size: 14px;
+    margin-right: 2px;
+}
