@@ -155,13 +155,194 @@ modalBalance:false
      this.handleKeyDown = this.handleKeyDown.bind(this);
      document.addEventListener('keypress', this.handleKeyPress);
      document.addEventListener('keydown', this.handleKeyDown);
- 
+
+     // Cargar configuración de cuentas del usuario
+     this.loadCuentasConfig();
    
 
 
 
 
-        }        componentWillUnmount() {
+        }
+
+        // Función para cargar configuración de vista de cuentas
+        loadCuentasConfig = async () => {
+          try {
+            console.log('🔍 [CUENTAS] Cargando configuración de vista de cuentas...');
+            
+            // Verificar si tenemos acceso al usuario desde Redux
+            if (!this.props.state.userReducer?.update?.usuario?.user?._id) {
+              console.log('⚠️ [CUENTAS] No hay usuario en Redux, intentando cargar desde localStorage...');
+              const localConfig = localStorage.getItem('cuentas-vista-config');
+              if (localConfig) {
+                const config = JSON.parse(localConfig);
+                console.log('✅ [CUENTAS] Configuración cargada desde localStorage:', config);
+                this.setState({
+                  visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
+                  visibility: config.visibility !== undefined ? config.visibility : false,
+                  cuentas0: config.cuentas0 !== undefined ? config.cuentas0 : false,
+                  vistaFormato: config.vistaFormato || 'cuadros'
+                });
+              }
+              return;
+            }
+            
+            const userId = this.props.state.userReducer.update.usuario.user._id;
+            console.log('👤 [CUENTAS] Usuario ID desde Redux:', userId);
+            
+            console.log('📡 [CUENTAS] Enviando petición a /users/get-config...');
+            const response = await fetch('/users/get-config', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ 
+                userId: userId,
+                configType: 'cuentas-vista' 
+              })
+            });
+            
+            console.log('📨 [CUENTAS] Respuesta recibida, status:', response.status);
+            
+            if (response.ok) {
+              const result = await response.json();
+              console.log('✅ [CUENTAS] Configuración recibida:', result);
+              
+              if (result.status === "Ok" && result.data && result.data.cuentasVistaConfig) {
+                const config = result.data.cuentasVistaConfig;
+                console.log('🎯 [CUENTAS] Aplicando configuración encontrada:', config);
+                
+                this.setState({
+                  visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
+                  visibility: config.visibility !== undefined ? config.visibility : false,
+                  cuentas0: config.cuentas0 !== undefined ? config.cuentas0 : false,
+                  vistaFormato: config.vistaFormato || 'cuadros'
+                });
+                
+                console.log('✨ [CUENTAS] Estado actualizado con configuración guardada');
+              } else {
+                console.log('⚠️ [CUENTAS] No se encontró configuración guardada, usando valores por defecto');
+                console.log('🔍 [CUENTAS] configData keys:', configData ? Object.keys(configData) : 'configData is null/undefined');
+                console.log('🔍 [CUENTAS] configData completo:', configData);
+              }
+            } else {
+              console.log('❌ [CUENTAS] Error en respuesta:', response.status, response.statusText);
+              // Intentar cargar desde localStorage como fallback
+              const localConfig = localStorage.getItem('cuentas-vista-config');
+              if (localConfig) {
+                const config = JSON.parse(localConfig);
+                console.log('📦 [CUENTAS] Usando configuración de localStorage como fallback:', config);
+                this.setState({
+                  visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
+                  visibility: config.visibility !== undefined ? config.visibility : false,
+                  cuentas0: config.cuentas0 !== undefined ? config.cuentas0 : false,
+                  vistaFormato: config.vistaFormato || 'cuadros'
+                });
+              }
+            }
+          } catch (error) {
+            console.error('💥 [CUENTAS] Error cargando configuración:', error);
+            // Intentar cargar desde localStorage como fallback
+            const localConfig = localStorage.getItem('cuentas-vista-config');
+            if (localConfig) {
+              const config = JSON.parse(localConfig);
+              console.log('📦 [CUENTAS] Usando configuración de localStorage tras error:', config);
+              this.setState({
+                visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
+                visibility: config.visibility !== undefined ? config.visibility : false,
+                cuentas0: config.cuentas0 !== undefined ? config.cuentas0 : false,
+                vistaFormato: config.vistaFormato || 'cuadros'
+              });
+            }
+          }
+        };
+
+        // Función para guardar configuración de vista de cuentas
+        saveCuentasConfig = async () => {
+          try {
+            console.log('💾 [CUENTAS] Guardando configuración de vista de cuentas...');
+            
+            const configData = {
+              visualtipos: this.state.visualtipos,
+              visibility: this.state.visibility,
+              cuentas0: this.state.cuentas0,
+              vistaFormato: this.state.vistaFormato
+            };
+            
+            console.log('� [CUENTAS] Estado actual a guardar:', configData);
+            
+            const token = localStorage.getItem('token');
+            console.log('🔑 [CUENTAS] Token para guardar:', token ? 'Sí' : 'No');
+            
+            // Verificar si tenemos acceso al usuario desde Redux (método preferido)
+            if (this.props.state.userReducer?.update?.usuario?.user?._id) {
+              const userId = this.props.state.userReducer.update.usuario.user._id;
+              console.log('👤 [CUENTAS] Usuario ID desde Redux:', userId);
+              
+              const response = await fetch('/users/save-config', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                  userId: userId,
+                  configType: 'cuentas-vista',
+                  configData: configData
+                })
+              });
+              
+              console.log('📨 [CUENTAS] Respuesta del guardado (Redux), status:', response.status);
+              
+              if (response.ok) {
+                const result = await response.json();
+                console.log('✅ [CUENTAS] Configuración guardada en BD exitosamente (Redux):', result);
+                localStorage.setItem('cuentas-vista-config', JSON.stringify(configData));
+                return;
+              }
+            }
+            
+            if (!token) {
+              console.log('⚠️ [CUENTAS] No hay token ni Redux, guardando en localStorage temporalmente...');
+              localStorage.setItem('cuentas-vista-config', JSON.stringify(configData));
+              console.log('✅ [CUENTAS] Configuración guardada en localStorage');
+              return;
+            }
+            
+            const response = await fetch('/users/save-config', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ 
+                configType: 'cuentas-vista',
+                configData: configData
+              })
+            });
+            
+            console.log('📨 [CUENTAS] Respuesta del guardado, status:', response.status);
+            
+            if (response.ok) {
+              const result = await response.json();
+              console.log('✅ [CUENTAS] Configuración guardada en BD exitosamente:', result);
+              // También guardar en localStorage como backup
+              localStorage.setItem('cuentas-vista-config', JSON.stringify(configData));
+            } else {
+              const errorText = await response.text();
+              console.log('❌ [CUENTAS] Error guardando en BD, guardando en localStorage:', response.status, response.statusText, errorText);
+              localStorage.setItem('cuentas-vista-config', JSON.stringify(configData));
+            }
+          } catch (error) {
+            console.error('💥 [CUENTAS] Error guardando configuración, usando localStorage:', error);
+            const configData = {
+              visualtipos: this.state.visualtipos,
+              visibility: this.state.visibility,
+              cuentas0: this.state.cuentas0,
+              vistaFormato: this.state.vistaFormato
+            };
+            localStorage.setItem('cuentas-vista-config', JSON.stringify(configData));
+          }
+        };        componentWillUnmount() {
           // Remover los listeners cuando el componente se desmonte
           document.removeEventListener('keypress', this.handleKeyPress);
           document.removeEventListener('keydown', this.handleKeyDown);
@@ -1714,7 +1895,7 @@ if(cuentasrenderNoPosesion.length > 0){
                   onClick={()=>{
                     this.setState({
                       vistaFormato: this.state.vistaFormato === "cuadros" ? "lista" : "cuadros"
-                    });
+                    }, () => this.saveCuentasConfig());
                   }}
                   title={`Cambiar a vista ${this.state.vistaFormato === "cuadros" ? "lista" : "cuadros"}`}
           >
@@ -1747,7 +1928,7 @@ if(cuentasrenderNoPosesion.length > 0){
         
 
           <Dropdown.Item>
-          <button className=" btn btn-info btnDropDowm" onClick={()=>{this.setState({visualtipos:!this.state.visualtipos})}}>
+          <button className=" btn btn-info btnDropDowm" onClick={()=>{this.setState({visualtipos:!this.state.visualtipos}, () => this.saveCuentasConfig())}}>
          
          <span className="material-icons">
          account_balance_wallet
@@ -1756,7 +1937,7 @@ if(cuentasrenderNoPosesion.length > 0){
        </button>
           </Dropdown.Item>
           <Dropdown.Item>
-      <button id ="sad"className=" btn btn-dark  jwFull"  onClick={ ()=>{ this.setState({visibility:!this.state.visibility})}} >
+      <button id ="sad"className=" btn btn-dark  jwFull"  onClick={ ()=>{ this.setState({visibility:!this.state.visibility}, () => this.saveCuentasConfig())}} >
         
           {this.state.visibility && 
           <span className='btnDropDowm'><i className="material-icons" >  visibility</i>
@@ -1776,7 +1957,7 @@ if(cuentasrenderNoPosesion.length > 0){
           </button>
       </Dropdown.Item>
       <Dropdown.Item>
-      <button id ="sad"className=" btn btn-danger  jwFull"  onClick={ ()=>{ this.setState({cuentas0:!this.state.cuentas0})}} >
+      <button id ="sad"className=" btn btn-danger  jwFull"  onClick={ ()=>{ this.setState({cuentas0:!this.state.cuentas0}, () => this.saveCuentasConfig())}} >
         
           {this.state.cuentas0 && 
           <span className='btnDropDowm'><i className="material-icons" >  visibility</i>

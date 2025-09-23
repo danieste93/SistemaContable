@@ -295,23 +295,74 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
     });
   }
 
-  saveWidgetConfig = () => {
-    localStorage.setItem('widgetConfig', JSON.stringify(this.state.widgetConfig));
-    this.setState({
-      Alert: {
-        Estado: true,
-        Tipo: "success",
-        Mensaje: "Configuración de widgets guardada exitosamente"
+  saveWidgetConfig = async () => {
+    try {
+      const userId = this.props.state.userReducer.update.usuario.user._id;
+      
+      const response = await fetch("/users/save-config", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: userId,
+          configType: 'widgets',
+          configData: this.state.widgetConfig
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.status === "Ok") {
+        this.setState({
+          Alert: {
+            Estado: true,
+            Tipo: "success",
+            Mensaje: "Configuración de widgets guardada exitosamente"
+          }
+        });
+      } else {
+        throw new Error(result.message);
       }
-    });
+    } catch (error) {
+      console.error('Error guardando configuración:', error);
+      this.setState({
+        Alert: {
+          Estado: true,
+          Tipo: "error",
+          Mensaje: "Error al guardar configuración: " + error.message
+        }
+      });
+    }
   }
 
-  loadWidgetConfig = () => {
-    const savedConfig = localStorage.getItem('widgetConfig');
-    if (savedConfig) {
-      this.setState({
-        widgetConfig: JSON.parse(savedConfig)
+  loadWidgetConfig = async () => {
+    try {
+      const userId = this.props.state.userReducer.update.usuario.user._id;
+      
+      const response = await fetch("/users/get-config", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: userId
+        })
       });
+
+      const result = await response.json();
+      
+      if (result.status === "Ok" && result.data.widgetConfig) {
+        this.setState({
+          widgetConfig: {
+            ...this.state.widgetConfig,
+            ...result.data.widgetConfig
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error cargando configuración:', error);
+      // Si hay error, mantener la configuración por defecto
     }
   }
  render() {

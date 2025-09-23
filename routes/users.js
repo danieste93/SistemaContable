@@ -39,4 +39,9 @@ router.post('/confirmResetPassword',  userController.confirmResetPassword);
 
 router.get('/get-users', userController.getUsers);
 
+// Rutas para configuraciones personalizadas (temporalmente sin auth para debug)
+router.post('/save-config', userController.saveUserConfig);
+router.post('/get-config', userController.getUserConfig);
+router.post('/reset-config', userController.resetUserConfig);
+
 module.exports = router;

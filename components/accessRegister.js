@@ -40,6 +40,9 @@ class RegistroContable extends Component {
     channel4 = null;
     componentDidMount(){
       
+      // Debug: verificar token en accessRegister
+      const token = localStorage.getItem('token');
+      console.log('🔍 [ACCESS-REGISTER] Token disponible:', token ? 'Sí (longitud: ' + token.length + ')' : 'No');
     
       this.channel2 = postal.channel();
       this.channel3 = postal.channel();

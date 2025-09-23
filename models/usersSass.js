@@ -144,6 +144,56 @@ ImagenP: {
   valiteFirma :{  type: Boolean,  default: false},
   publicId :{  type: String,  default: ""},
  },
+ // Campo para guardar configuraciones personalizadas del usuario
+ ConfiguracionPersonalizada: {
+   // Configuración de widgets del dashboard
+   widgetConfig: {
+     showIncomeChart: { type: Boolean, default: true },
+     showExpenseChart: { type: Boolean, default: true },
+     showPieChart: { type: Boolean, default: true },
+     showBarChart: { type: Boolean, default: true },
+     showLiquidityChart: { type: Boolean, default: true },
+     incomeChartType: { type: String, default: 'line' },
+     expenseChartType: { type: String, default: 'line' },
+     pieChartType: { type: String, default: 'pie' },
+     barChartType: { type: String, default: 'bar' },
+     liquidityChartType: { type: String, default: 'line' },
+     customColors: {
+       income: { type: String, default: '#8cf73a' },
+       expense: { type: String, default: '#f1586e' },
+       liquidity: { type: String, default: '#00d4aa' },
+       pieColors: { type: [String], default: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'] }
+     }
+   },
+   // Configuración del registro contable
+   registroContableConfig: {
+     Cuentas: { type: Boolean, default: false },
+     Categorias: { type: Boolean, default: true },
+     Pie: { type: Boolean, default: true },
+     Line: { type: Boolean, default: false },
+     tiempo: { type: String, default: 'mensual' },
+     InvOption: { type: String, default: 'categoria' },
+     allData: { type: Boolean, default: true },
+     tiempoFiltro: { type: String, default: 'mensual' },
+     vistaPreferida: { type: String, default: 'categorias' },
+     categoriasExcluidas: { type: [String], default: [] },
+     ordenPreferido: { type: String, default: 'fecha' },
+     mostrarOcultas: { type: Boolean, default: false }
+   },
+   // Configuración de vista de cuentas (menú de 3 puntos)
+   cuentasVistaConfig: {
+     visualtipos: { type: Boolean, default: true },
+     visibility: { type: Boolean, default: false },
+     cuentas0: { type: Boolean, default: false },
+     vistaFormato: { type: String, default: 'cuadros' }
+   },
+   // Configuraciones generales de UI
+   uiConfig: {
+     tema: { type: String, default: 'default' },
+     idioma: { type: String, default: 'es' },
+     notificaciones: { type: Boolean, default: true }
+   }
+ },
  Vendedores:[]
 });
 // Antes de almacenar la contraseña en la base de datos la encriptamos con Bcrypt, esto es posible gracias al middleware de mongoose

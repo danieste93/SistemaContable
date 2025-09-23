@@ -1174,6 +1174,199 @@ if(bcrypt.compareSync(pass, UsuarioFind[0].Password)) {
                 })
               },
 
+              // Funciones para manejar configuraciones personalizadas
+              saveUserConfig: async function(req, res, next) {
+                console.log('=== SAVE CONFIG CALLED ===');
+                console.log('Request body:', req.body);
+                console.log('🔍 saveUserConfig - Headers:', req.headers);
+                
+                try {
+                  let userId;
+                  
+                  // Método 1: userId directo en body (método dashboard/Redux)
+                  if (req.body.userId) {
+                    userId = req.body.userId;
+                    console.log('👤 Using userId from body:', userId);
+                  } else {
+                    // Método 2: extraer userId del token JWT (método token)
+                    const token = req.headers.authorization?.replace('Bearer ', '');
+                    
+                    if (!token) {
+                      return res.status(401).json({
+                        status: "error",
+                        message: "Token no proporcionado y userId no encontrado"
+                      });
+                    }
+                    
+                    const jwt = require('jsonwebtoken');
+                    
+                    try {
+                      const decoded = jwt.verify(token, req.app.get('secretKey'));
+                      userId = decoded.id;
+                      console.log('🔑 Token decodificado, userId:', userId);
+                    } catch (jwtError) {
+                      console.error('❌ Error decodificando token:', jwtError);
+                      return res.status(401).json({
+                        status: "error",
+                        message: "Token inválido"
+                      });
+                    }
+                  }
+                  
+                  const { configType, configData } = req.body;
+                  
+                  console.log('userId:', userId);
+                  console.log('configType:', configType);
+                  console.log('configData:', configData);
+                  
+                  // Conectar a la base de datos principal
+                  let MainConn = mongoose.connection.useDb("datashop");  
+                  let UserModelSass = MainConn.model('User', UserSchema);
+                  
+                  let updateObject = {};
+                  if (configType === 'widgets') {
+                    updateObject['ConfiguracionPersonalizada.widgetConfig'] = configData;
+                  } else if (configType === 'registro-contable' || configType === 'registroContable') {
+                    updateObject['ConfiguracionPersonalizada.registroContableConfig'] = configData;
+                  } else if (configType === 'cuentas-vista') {
+                    updateObject['ConfiguracionPersonalizada.cuentasVistaConfig'] = configData;
+                  } else if (configType === 'ui') {
+                    updateObject['ConfiguracionPersonalizada.uiConfig'] = configData;
+                  }
+                  
+                  console.log('updateObject:', updateObject);
+                  
+                  const updatedUser = await UserModelSass.findByIdAndUpdate(
+                    userId,
+                    { $set: updateObject },
+                    { new: true, upsert: true }
+                  );
+                  
+                  console.log('User updated successfully');
+                  
+                  res.status(200).json({
+                    status: "Ok",
+                    message: "Configuración guardada exitosamente",
+                    data: updatedUser.ConfiguracionPersonalizada
+                  });
+                  
+                } catch (error) {
+                  console.error('💥 Error guardando configuración:', error);
+                  res.status(500).json({
+                    status: "error",
+                    message: "Error al guardar configuración",
+                    error: error.message
+                  });
+                }
+              },
+
+              getUserConfig: async function(req, res, next) {
+                try {
+                  console.log('🔍 getUserConfig - Headers:', req.headers);
+                  console.log('🔍 getUserConfig - Body:', req.body);
+                  
+                  let userId;
+                  
+                  // Método 1: userId directo en body (método dashboard/Redux)
+                  if (req.body.userId) {
+                    userId = req.body.userId;
+                    console.log('👤 Using userId from body:', userId);
+                  } else {
+                    // Método 2: extraer userId del token JWT (método token)
+                    const token = req.headers.authorization?.replace('Bearer ', '');
+                    
+                    if (!token) {
+                      return res.status(401).json({
+                        status: "error",
+                        message: "Token no proporcionado y userId no encontrado"
+                      });
+                    }
+                    
+                    const jwt = require('jsonwebtoken');
+                    
+                    try {
+                      const decoded = jwt.verify(token, req.app.get('secretKey'));
+                      userId = decoded.id;
+                      console.log('🔑 Token decodificado, userId:', userId);
+                    } catch (jwtError) {
+                      console.error('❌ Error decodificando token:', jwtError);
+                      return res.status(401).json({
+                        status: "error",
+                        message: "Token inválido"
+                      });
+                    }
+                  }
+                  
+                  // Conectar a la base de datos principal
+                  let MainConn = mongoose.connection.useDb("datashop");  
+                  let UserModelSass = MainConn.model('User', UserSchema);
+                  
+                  const user = await UserModelSass.findById(userId);
+                  console.log('👤 Usuario encontrado:', user ? 'Sí' : 'No');
+                  
+                  if (!user) {
+                    return res.status(404).json({
+                      status: "error",
+                      message: "Usuario no encontrado"
+                    });
+                  }
+                  
+                  console.log('✅ Configuración encontrada:', user.ConfiguracionPersonalizada);
+                  console.log('🔍 Estructura completa ConfiguracionPersonalizada:', JSON.stringify(user.ConfiguracionPersonalizada, null, 2));
+                  
+                  res.status(200).json({
+                    status: "Ok",
+                    message: "Configuración obtenida exitosamente",
+                    data: user.ConfiguracionPersonalizada || {}
+                  });
+                  
+                } catch (error) {
+                  console.error('💥 Error obteniendo configuración:', error);
+                  res.status(500).json({
+                    status: "error",
+                    message: "Error al obtener configuración",
+                    error: error.message
+                  });
+                }
+              },
+
+              resetUserConfig: async function(req, res, next) {
+                try {
+                  const { userId, configType } = req.body;
+                  
+                  const UserModelSass = mongoose.model('User', UserSchema);
+                  
+                  let updateObject = {};
+                  if (configType === 'widgets') {
+                    updateObject['ConfiguracionPersonalizada.widgetConfig'] = {};
+                  } else if (configType === 'registroContable') {
+                    updateObject['ConfiguracionPersonalizada.registroContableConfig'] = {};
+                  } else if (configType === 'all') {
+                    updateObject['ConfiguracionPersonalizada'] = {};
+                  }
+                  
+                  const updatedUser = await UserModelSass.findByIdAndUpdate(
+                    userId,
+                    { $unset: updateObject },
+                    { new: true }
+                  );
+                  
+                  res.status(200).json({
+                    status: "Ok",
+                    message: "Configuración restablecida exitosamente",
+                    data: updatedUser.ConfiguracionPersonalizada
+                  });
+                  
+                } catch (error) {
+                  console.error('Error restableciendo configuración:', error);
+                  res.status(500).json({
+                    status: "error",
+                    message: "Error al restablecer configuración",
+                    error: error.message
+                  });
+                }
+              }
+
               
  
 }
