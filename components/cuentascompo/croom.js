@@ -628,30 +628,31 @@ fetch("/cuentas/getcuentas", {
                             {`$ ${parseFloat(cuenta.DineroActual.$numberDecimal).toFixed(2)}` }
                           </p>
                           <Animate show={this.state.cuenEditMode}>
-                            <i className="material-icons" onClick={(e)=>{
-                              e.stopPropagation()
-                              if(cuenta.Tipo== "Inventario" ){
-                                let add = {
-                                  Estado:true,
-                                  Tipo:"Warning",
-                                  Mensaje:"No se puede eliminar cuentas de inventario directamente."
+                            <div style={{display: 'flex', gap: '8px'}}>
+                              <i className="material-icons" onClick={(e)=>{
+                                e.stopPropagation()
+                                if(cuenta.Tipo== "Inventario" ){
+                                  let add = {
+                                    Estado:true,
+                                    Tipo:"Warning",
+                                    Mensaje:"No se puede eliminar cuentas de inventario directamente."
+                                  }
+                                  this.setState({Alert: add})
+                                }else{
+                                  this.setState({ModalDeleteC:true, CuentaPorDel:cuenta})
                                 }
-                                this.setState({Alert: add})
-                              }else{
-                                this.setState({ModalDeleteC:true, CuentaPorDel:cuenta})
-                              }
-                            }}>
-                            delete
-                            </i>
-                            <i className="material-icons" 
-                               style={{marginLeft: '8px'}}
-                               onClick={(e)=>{
-                                 e.stopPropagation()
-                                 this.toggleCuentaVisibility(cuenta)
-                               }}
-                               title={cuenta.Visibility === false ? "Mostrar cuenta" : "Ocultar cuenta"}>
-                            {cuenta.Visibility === false ? 'visibility' : 'visibility_off'}
-                            </i>
+                              }}>
+                              delete
+                              </i>
+                              <i className="material-icons" 
+                                 onClick={(e)=>{
+                                   e.stopPropagation()
+                                   this.toggleCuentaVisibility(cuenta)
+                                 }}
+                                 title={cuenta.Visibility === false ? "Mostrar cuenta" : "Ocultar cuenta"}>
+                              {cuenta.Visibility === false ? 'visibility' : 'visibility_off'}
+                              </i>
+                            </div>
                           </Animate>
                         </div>
                         <p className='textoNombreCuenta' >
@@ -1368,21 +1369,31 @@ return saldofinal.toFixed(2)
         
         </p>
         <Animate show={this.state.cuenEditMode}>
-        <i className="material-icons" onClick={(e)=>{
-        e.stopPropagation()
-        if(cuenta.Tipo== "Inventario" ){
-        let add = {
-        Estado:true,
-        Tipo:"Warning",
-        Mensaje:"No se puede eliminar cuentas de inventario directamente."
-        }
-        this.setState({Alert: add})
-        }else{
-        this.setState({ModalDeleteC:true, CuentaPorDel:cuenta})
-        }
-        }}>
-        delete
-        </i>
+        <div style={{display: 'flex', gap: '8px'}}>
+          <i className="material-icons" onClick={(e)=>{
+          e.stopPropagation()
+          if(cuenta.Tipo== "Inventario" ){
+          let add = {
+          Estado:true,
+          Tipo:"Warning",
+          Mensaje:"No se puede eliminar cuentas de inventario directamente."
+          }
+          this.setState({Alert: add})
+          }else{
+          this.setState({ModalDeleteC:true, CuentaPorDel:cuenta})
+          }
+          }}>
+          delete
+          </i>
+          <i className="material-icons" 
+             onClick={(e)=>{
+               e.stopPropagation()
+               this.toggleCuentaVisibility(cuenta)
+             }}
+             title={cuenta.Visibility === false ? "Mostrar cuenta" : "Ocultar cuenta"}>
+          {cuenta.Visibility === false ? 'visibility' : 'visibility_off'}
+          </i>
+        </div>
         </Animate>
         
         </div>
