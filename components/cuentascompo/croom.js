@@ -181,7 +181,8 @@ modalBalance:false
                   visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
                   visibility: config.visibility !== undefined ? config.visibility : false,
                   cuentas0: config.cuentas0 !== undefined ? config.cuentas0 : false,
-                  vistaFormato: config.vistaFormato || 'cuadros'
+                  vistaFormato: config.vistaFormato || 'cuadros',
+                  ordenCuentas: config.ordenCuentas || {}
                 });
               }
               return;
@@ -216,7 +217,8 @@ modalBalance:false
                   visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
                   visibility: config.visibility !== undefined ? config.visibility : false,
                   cuentas0: config.cuentas0 !== undefined ? config.cuentas0 : false,
-                  vistaFormato: config.vistaFormato || 'cuadros'
+                  vistaFormato: config.vistaFormato || 'cuadros',
+                  ordenCuentas: config.ordenCuentas || {}
                 });
                 
                 console.log('✨ [CUENTAS] Estado actualizado con configuración guardada');
@@ -236,7 +238,8 @@ modalBalance:false
                   visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
                   visibility: config.visibility !== undefined ? config.visibility : false,
                   cuentas0: config.cuentas0 !== undefined ? config.cuentas0 : false,
-                  vistaFormato: config.vistaFormato || 'cuadros'
+                  vistaFormato: config.vistaFormato || 'cuadros',
+                  ordenCuentas: config.ordenCuentas || {}
                 });
               }
             }
@@ -251,7 +254,8 @@ modalBalance:false
                 visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
                 visibility: config.visibility !== undefined ? config.visibility : false,
                 cuentas0: config.cuentas0 !== undefined ? config.cuentas0 : false,
-                vistaFormato: config.vistaFormato || 'cuadros'
+                vistaFormato: config.vistaFormato || 'cuadros',
+                ordenCuentas: config.ordenCuentas || {}
               });
             }
           }
@@ -266,7 +270,8 @@ modalBalance:false
               visualtipos: this.state.visualtipos,
               visibility: this.state.visibility,
               cuentas0: this.state.cuentas0,
-              vistaFormato: this.state.vistaFormato
+              vistaFormato: this.state.vistaFormato,
+              ordenCuentas: this.state.ordenCuentas
             };
             
             console.log('� [CUENTAS] Estado actual a guardar:', configData);
@@ -521,7 +526,7 @@ fetch("/cuentas/getcuentas", {
               ...this.state.ordenCuentas,
               [tipoClicked]: nuevoOrden
             }
-          });
+          }, () => this.saveCuentasConfig());
         }
     
 
@@ -1735,7 +1740,8 @@ ${parseFloat(ResultCuentas).toFixed(2)}
      marginRight: '8px',
      padding: '2px',
      borderRadius: '4px',
-     transition: 'all 0.3s ease'
+     transition: 'all 0.3s ease',
+     position: 'relative'
    }}
    onMouseEnter={(e) => {
      e.target.style.backgroundColor = '#e3f2fd';
@@ -1744,7 +1750,7 @@ ${parseFloat(ResultCuentas).toFixed(2)}
      e.target.style.backgroundColor = 'transparent';
    }}
 >
-  {(this.state.ordenCuentas[item] || 'desc') === 'desc' ? 'arrow_downward' : 'arrow_upward'}
+  {(this.state.ordenCuentas[item] || 'desc') === 'desc' ? 'trending_down' : 'trending_up'}
 </i>
         </div>
 </div>
