@@ -48,8 +48,9 @@ class admins extends Component {
     touchTargetWidget: null,
     isDragging: false,
     touchStartTime: null,
-    widgetOrder: ['showIncomeChart', 'showExpenseChart', 'showPieChart', 'showBarChart', 'showLiquidityChart'], // Orden de widgets
+    widgetOrder: ['showTimeFilter', 'showIncomeChart', 'showExpenseChart', 'showPieChart', 'showBarChart', 'showLiquidityChart'], // Orden de widgets
     widgetConfig: {
+      showTimeFilter: true, // Nuevo widget de filtros de tiempo
       showIncomeChart: true,
       showExpenseChart: true,
       showPieChart: true,
@@ -430,18 +431,30 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
         if (result.data.widgets) {
           console.log('Usando formato anidado de configuración');
           if (result.data.widgets.widgetConfig) {
+            // Migración automática: asegurar que nuevos widgets estén incluidos
+            const migratedConfig = {
+              ...this.state.widgetConfig, // valores por defecto
+              ...result.data.widgets.widgetConfig, // configuración guardada
+              // Forzar widgets nuevos si no existen
+              showTimeFilter: result.data.widgets.widgetConfig.showTimeFilter !== undefined 
+                ? result.data.widgets.widgetConfig.showTimeFilter 
+                : true
+            };
+            
             this.setState({
-              widgetConfig: {
-                ...this.state.widgetConfig,
-                ...result.data.widgets.widgetConfig
-              }
+              widgetConfig: migratedConfig
             });
           }
           
           if (result.data.widgets.widgetOrder) {
-            console.log('Cargando orden de widgets:', result.data.widgets.widgetOrder);
+            // Migración del orden: asegurar que showTimeFilter esté incluido
+            let migratedOrder = result.data.widgets.widgetOrder;
+            if (!migratedOrder.includes('showTimeFilter')) {
+              migratedOrder = ['showTimeFilter', ...migratedOrder];
+            }
+            console.log('Cargando orden de widgets migrado:', migratedOrder);
             this.setState({
-              widgetOrder: result.data.widgets.widgetOrder
+              widgetOrder: migratedOrder
             });
           }
         }
@@ -449,18 +462,30 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
         else {
           console.log('Usando formato directo de configuración');
           if (result.data.widgetConfig) {
+            // Migración automática: asegurar que nuevos widgets estén incluidos
+            const migratedConfig = {
+              ...this.state.widgetConfig, // valores por defecto
+              ...result.data.widgetConfig, // configuración guardada
+              // Forzar widgets nuevos si no existen
+              showTimeFilter: result.data.widgetConfig.showTimeFilter !== undefined 
+                ? result.data.widgetConfig.showTimeFilter 
+                : true
+            };
+            
             this.setState({
-              widgetConfig: {
-                ...this.state.widgetConfig,
-                ...result.data.widgetConfig
-              }
+              widgetConfig: migratedConfig
             });
           }
           
           if (result.data.widgetOrder) {
-            console.log('Cargando orden de widgets:', result.data.widgetOrder);
+            // Migración del orden: asegurar que showTimeFilter esté incluido
+            let migratedOrder = result.data.widgetOrder;
+            if (!migratedOrder.includes('showTimeFilter')) {
+              migratedOrder = ['showTimeFilter', ...migratedOrder];
+            }
+            console.log('Cargando orden de widgets migrado:', migratedOrder);
             this.setState({
-              widgetOrder: result.data.widgetOrder
+              widgetOrder: migratedOrder
             });
           }
         }
@@ -1180,6 +1205,19 @@ const Alert=(props)=> {
                 <FormControlLabel
                   control={
                     <Switch
+                      checked={this.state.widgetConfig.showTimeFilter}
+                      onChange={(e) => this.updateWidgetVisibility('showTimeFilter', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Filtros de Tiempo"
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
                       checked={this.state.widgetConfig.showIncomeChart}
                       onChange={(e) => this.updateWidgetVisibility('showIncomeChart', e.target.checked)}
                       color="primary"
@@ -1344,6 +1382,14 @@ const Alert=(props)=> {
     const AddWidgetsPanel = () => {
       const availableWidgets = [
         { 
+          key: 'showTimeFilter', 
+          name: 'Filtros de Tiempo', 
+          description: 'Controles para filtrar datos por Diario/Mensual', 
+          icon: '📅',
+          color: '#2196f3',
+          preview: 'Pestañas para seleccionar período temporal'
+        },
+        { 
           key: 'showIncomeChart', 
           name: 'Gráfico de Ingresos', 
           description: 'Muestra la evolución de ingresos en el tiempo', 
@@ -1404,6 +1450,15 @@ const Alert=(props)=> {
             }}
           >
             {/* Preview específico para cada tipo de widget */}
+            {widget.key === 'showTimeFilter' && (
+              <svg width="100" height="60" style={{ opacity: 0.7 }}>
+                <rect x="10" y="20" width="30" height="20" fill={widget.color} rx="3" opacity="0.8" />
+                <rect x="50" y="20" width="35" height="20" fill="none" stroke={widget.color} strokeWidth="2" rx="3" />
+                <text x="25" y="32" fill="white" fontSize="8" textAnchor="middle">DIA</text>
+                <text x="67" y="32" fill={widget.color} fontSize="8" textAnchor="middle">MES</text>
+              </svg>
+            )}
+            
             {widget.key === 'showIncomeChart' && (
               <svg width="100" height="60" style={{ opacity: 0.7 }}>
                 <polyline 
@@ -1632,9 +1687,9 @@ const Alert=(props)=> {
 
      </ div>
 
-<div className='glassStyle widgetResponsive'>
+<div className='glassStyle widgetResponsive' style={{ position: 'absolute', top: '-9999px', visibility: 'hidden' }}>
 
-{/* Contenedor para widgets que SÍ necesitan filtros de tiempo (Pie, Bar, Liquidez) */}
+{/* Contenedor para widgets que SÍ necesitan filtros de tiempo - MANTENIDO PARA FUNCIONALIDAD */}
 <div className='contenedorEstadisticas'>
 <div className='contFiltros'>
 <AppBar position="static" color="default">
@@ -1670,6 +1725,85 @@ const Alert=(props)=> {
 }}>
   {/* Renderizar TODOS los widgets en el orden especificado */}
   {this.state.widgetOrder.map((widgetName, index) => {
+    
+    // Widget de Filtros de Tiempo
+    if (widgetName === 'showTimeFilter' && this.state.widgetConfig.showTimeFilter) {
+      return (
+        <div key="timeFilter" className='glassStyle widgetResponsive' style={{ order: index }}>
+          <div 
+            style={{ position: 'relative' }}
+            data-widget-name="showTimeFilter"
+            draggable={this.state.editMode}
+            onDragStart={(e) => this.handleDragStart(e, 'showTimeFilter')}
+            onDragOver={this.handleDragOver}
+            onDrop={(e) => this.handleDrop(e, 'showTimeFilter')}
+            onDragEnd={this.handleDragEnd}
+            onTouchStart={(e) => this.handleTouchStart(e, 'showTimeFilter')}
+          >
+            {/* Botón de eliminación estilo Apple */}
+            {this.state.editMode && (
+              <IconButton
+                onClick={() => this.removeWidget('showTimeFilter')}
+                style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  right: '-8px',
+                  backgroundColor: '#ff4444',
+                  color: 'white',
+                  zIndex: 1001,
+                  padding: '4px',
+                  '&:hover': {
+                    backgroundColor: '#d50000'
+                  }
+                }}
+                size="small"
+              >
+                <CloseIcon style={{ fontSize: '14px' }} />
+              </IconButton>
+            )}
+
+            {/* Indicador de arrastre en modo edición */}
+            {this.state.editMode && (
+              <DragIndicatorIcon 
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  left: '8px',
+                  color: '#666',
+                  opacity: 0.7
+                }}
+              />
+            )}
+
+            {/* Contenido del widget de filtros de tiempo */}
+            <div className='contenedorEstadisticas' style={{ 
+              pointerEvents: this.state.editMode ? 'none' : 'auto'
+            }}>
+              <div className='contFiltros'>
+                <AppBar position="static" color="default" style={{ 
+                  pointerEvents: this.state.editMode ? 'none' : 'auto'
+                }}>
+                  <Tabs
+                    value={this.state.tiempoValue}
+                    onChange={handleChangeIndex}
+                    indicatorColor="primary"
+                    textColor="primary"
+                    variant="fullWidth"
+                    aria-label="full width tabs example"
+                    style={{ 
+                      pointerEvents: this.state.editMode ? 'none' : 'auto'
+                    }}
+                  >
+                    <Tab value={"diario"} label="Diario" {...a11yProps(0)} />
+                    <Tab value={"mensual"} label="Mensual" {...a11yProps(1)} />
+                  </Tabs>
+                </AppBar>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
     
     // Widget de Ingresos
     if (widgetName === 'showIncomeChart' && this.state.widgetConfig.showIncomeChart) {
