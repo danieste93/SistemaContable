@@ -2290,10 +2290,16 @@ if(cuentasrenderNoPosesion.length > 0){
     <Animate show={!this.state.visualtipos}>
     <div className="contTipos">
     <div className="tipoMain">  
-    <div className="contFlexSpaceB">  
-    <div className="tituloPrin">POSESIÓN</div> 
-    <div className={`valorcuentas  `}>${sumatoriaP.toFixed(2)}</div>
-    <div className="confiltroCuentra">
+    <div className="contFlexSpaceB" style={{background: 'linear-gradient(90deg,#00c9a7 60%,#1976d2 100%)', borderRadius: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '12px 0', marginBottom: '10px', alignItems: 'center'}}>  
+      <div style={{display:'flex',alignItems:'center',gap:'8px',marginRight:'12px'}}>
+        <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>attach_money</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>credit_card</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>monetization_on</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>water_drop</span>
+      </div>
+      <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',marginRight:'12px'}}>POSESIÓN</div> 
+      <div className={`valorcuentas  `} style={{color:'#fff',fontWeight:'bold',marginRight:'12px'}}>${sumatoriaP.toFixed(2)}</div>
+      <div className="confiltroCuentra">
     {/* Botón de ordenamiento */}
     <i className="material-icons" 
        onClick={(e)=>{
@@ -2351,10 +2357,16 @@ if(cuentasrenderNoPosesion.length > 0){
     </div>
    
     <div className="tipoMain">  
-    <div className="contFlexSpaceB">  
-    <div className="tituloPrin">NO Posesión</div> 
-    <div className={`valorcuentas  `}>${sumatoriaNP.toFixed(2)}</div>
-    <div className="confiltroCuentra">
+  <div className="contFlexSpaceB" style={{background: 'linear-gradient(90deg,#283593 60%,#8e24aa 100%)', borderRadius: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '12px 0', marginBottom: '10px', alignItems: 'center'}}>  
+  <div style={{display:'flex',alignItems:'center',gap:'8px',marginRight:'12px'}}>
+        <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>home</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>currency_bitcoin</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>ac_unit</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>lock</span>
+      </div>
+      <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',marginRight:'12px'}}>NO POSESIÓN</div> 
+      <div className={`valorcuentas  `} style={{color:'#fff',fontWeight:'bold',marginRight:'12px'}}>${sumatoriaNP.toFixed(2)}</div>
+      <div className="confiltroCuentra">
     {/* Botón de ordenamiento */}
     <i className="material-icons" 
        onClick={(e)=>{
@@ -2409,10 +2421,16 @@ if(cuentasrenderNoPosesion.length > 0){
 </Animate>
     </div>
     <div className="tipoMain">  
-    <div className="contFlexSpaceB">  
-    <div className="tituloPrin">Posesión SIN TOTAL</div> 
-    <div className={`valorcuentas  `}>${sumatoriaPST.toFixed(2)}</div>
-    <div className="confiltroCuentra">
+    <div className="contFlexSpaceB" style={{background: 'linear-gradient(90deg,#ff9800 60%,#d32f2f 100%)', borderRadius: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '12px 0', marginBottom: '10px', alignItems: 'center'}}>  
+      <div style={{display:'flex',alignItems:'center',gap:'8px',marginRight:'12px'}}>
+        <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>warning</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>lock</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>ac_unit</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>work</span>
+      </div>
+      <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',marginRight:'12px'}}>POSESIÓN SIN TOTAL</div> 
+      <div className={`valorcuentas  `} style={{color:'#fff',fontWeight:'bold',marginRight:'12px'}}>${sumatoriaPST.toFixed(2)}</div>
+      <div className="confiltroCuentra">
     {/* Botón de ordenamiento */}
     <i className="material-icons" 
        onClick={(e)=>{
