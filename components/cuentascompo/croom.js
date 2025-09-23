@@ -2320,21 +2320,9 @@ if(cuentasrenderNoPosesion.length > 0){
     >
       {(this.state.ordenCuentas['Posesion'] || 'desc') === 'desc' ? 'trending_down' : 'trending_up'}
     </i>
-<i className="material-icons" onClick={(e)=>{
-
-  if(this.state.cuentaExpand == "Posesion"){
-    this.setState({cuentaExpand:""})
-  }else{
-    this.setState({cuentaExpand:"Posesion"})
-  }
-  
-
-  }}>
-  {flechaCuentasP}
-</i>
 </div>
     </div>
-    <Animate show={this.state.cuentaExpand != "Posesion" && !(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
+    <Animate show={!(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
     <div className="contcuentas">
 <Tabs
          value={0} // siempre válido
@@ -2352,7 +2340,7 @@ if(cuentasrenderNoPosesion.length > 0){
 </Tabs>
 </div>
     </Animate>
-    <Animate show={this.state.cuentaExpand == "Posesion" && this.state.vistaFormato === "lista" || !this.state.visualtipos && this.state.vistaFormato === "lista"}>
+    <Animate show={!this.state.visualtipos && this.state.vistaFormato === "lista"}>
     <div className="contcuentaslista">
 
 { generadorCuentas(cuentasrenderPosesion,"lista")
@@ -2393,21 +2381,9 @@ if(cuentasrenderNoPosesion.length > 0){
     >
       {(this.state.ordenCuentas['NoPosesion'] || 'desc') === 'desc' ? 'trending_down' : 'trending_up'}
     </i>
-    <i className="material-icons" onClick={(e)=>{
-
-if(this.state.cuentaExpand == "NoPosesion"){
-  this.setState({cuentaExpand:""})
-}else{
-  this.setState({cuentaExpand:"NoPosesion"})
-}
-
-
-}}>
-{flechaCuentasNoP}
-</i>
 </div>
     </div>
-    <Animate show={this.state.cuentaExpand != "NoPosesion" && !(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
+    <Animate show={!(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
     <div className="contcuentas">
 <Tabs
          value={0} // siempre válido
@@ -2425,7 +2401,7 @@ if(this.state.cuentaExpand == "NoPosesion"){
 </Tabs>
 </div>
     </Animate>
-    <Animate show={this.state.cuentaExpand == "NoPosesion" && this.state.vistaFormato === "lista" || !this.state.visualtipos && this.state.vistaFormato === "lista"}>
+    <Animate show={!this.state.visualtipos && this.state.vistaFormato === "lista"}>
     <div className="contcuentaslista">
 { generadorCuentas(cuentasrenderNoPosesion,"lista")
  }
@@ -2463,21 +2439,9 @@ if(this.state.cuentaExpand == "NoPosesion"){
     >
       {(this.state.ordenCuentas['PosesionSinTotal'] || 'desc') === 'desc' ? 'trending_down' : 'trending_up'}
     </i>
-    <i className="material-icons" onClick={(e)=>{
-
-if(this.state.cuentaExpand == "PosesionSinTotal"){
-  this.setState({cuentaExpand:""})
-}else{
-  this.setState({cuentaExpand:"PosesionSinTotal"})
-}
-
-
-}}>
-{flechaCuentasPsinT}
-</i>
 </div>
     </div>
-    <Animate show={this.state.cuentaExpand != "PosesionSinTotal" && !(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
+    <Animate show={!(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
     <div className="contcuentas">
 <Tabs
          value={0} // siempre válido
@@ -2495,7 +2459,7 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
 </Tabs>
 </div>
     </Animate>
-    <Animate show={this.state.cuentaExpand == "PosesionSinTotal" && this.state.vistaFormato === "lista" || !this.state.visualtipos && this.state.vistaFormato === "lista"}>
+    <Animate show={!this.state.visualtipos && this.state.vistaFormato === "lista"}>
     <div className="contcuentaslista">
 { generadorCuentas(cuentasrenderPosesionsinTotal,"lista")
  }
