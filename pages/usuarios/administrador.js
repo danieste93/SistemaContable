@@ -71,7 +71,9 @@ class admins extends Component {
         patrimonio: '#9c27b0', // Color para patrimonio (púrpura)
         pieColors: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
       }
-    }
+    },
+    // Estado para trackear cuentas ocultas en el bar chart
+    hiddenBarChartAccounts: {}
    }
    
    // Referencias para los charts
@@ -2914,60 +2916,105 @@ const Alert=(props)=> {
               overflowX: 'hidden', // 🔥 Sin scroll horizontal
               flexShrink: 0 // 🔥 No se encoge
             }}>
-              {LabelsBar.map((cuenta, index) => (
-                <div
-                  key={cuenta}
-                  onClick={() => {
-                    // Toggle visibilidad de la cuenta específica
-                    const chartInstance = this.chartRefs['barChart-' + this.state.barValue];
-                    if (chartInstance && chartInstance.chart) {
-                      const chart = chartInstance.chart;
-                      
-                      // 🔥 Validar que chart existe y tiene el método getDatasetMeta
-                      if (chart && typeof chart.getDatasetMeta === 'function') {
-                        const meta = chart.getDatasetMeta(0);
-                        
-                        // 🔥 Validar que meta y meta.data existen
-                        if (meta && meta.data && meta.data[index]) {
-                          meta.data[index].hidden = !meta.data[index].hidden;
-                          chart.update();
+              {(() => {
+                // 🔥 Generar lista de cuentas localmente
+                if (!this.props.state.RegContableReducer.Cuentas || 
+                    !Array.isArray(this.props.state.RegContableReducer.Cuentas)) {
+                  return <div style={{color: 'white', fontSize: '10px', textAlign: 'center'}}>
+                    Cargando cuentas...
+                  </div>;
+                }
+                
+                let cuentasFiltradas = [];
+                if (this.state.barValue === "liquidez") {
+                  cuentasFiltradas = this.props.state.RegContableReducer.Cuentas.filter(x=> 
+                    x && x.DineroActual && x.DineroActual.$numberDecimal &&
+                    x.DineroActual.$numberDecimal != "0" && 
+                    x.DineroActual.$numberDecimal != "0.00" && 
+                    x.CheckedP == true && 
+                    x.CheckedA == true &&
+                    x.Tipo != "Inventario" &&
+                    x.NombreC // 🔥 Usar NombreC como en el gráfico
+                  );
+                } else if (this.state.barValue === "noliquidez") {
+                  cuentasFiltradas = this.props.state.RegContableReducer.Cuentas.filter(x=> 
+                    x && x.DineroActual && x.DineroActual.$numberDecimal &&
+                    x.DineroActual.$numberDecimal != "0" && 
+                    x.DineroActual.$numberDecimal != "0.00" && 
+                    (x.CheckedP == false || x.CheckedA == false || x.Tipo == "Inventario") &&
+                    x.NombreC // 🔥 Usar NombreC como en el gráfico
+                  );
+                } else {
+                  cuentasFiltradas = this.props.state.RegContableReducer.Cuentas.filter(x=> 
+                    x && x.DineroActual && x.DineroActual.$numberDecimal &&
+                    x.DineroActual.$numberDecimal != "0" && 
+                    x.DineroActual.$numberDecimal != "0.00" && 
+                    x.CheckedP == true && 
+                    x.CheckedA == true &&
+                    x.Tipo != "Inventario" &&
+                    x.NombreC // 🔥 Usar NombreC como en el gráfico
+                  );
+                }
+                
+                const cuentasTop10 = cuentasFiltradas
+                  .sort((a, b) => parseFloat(b.DineroActual.$numberDecimal) - parseFloat(a.DineroActual.$numberDecimal))
+                  .slice(0,10);
+                
+                return cuentasTop10.map((cuentaObj, index) => (
+                  <div 
+                    key={`cuenta-btn-${index}`}
+                    onClick={() => {
+                      console.log('🔥 Click cuenta:', cuentaObj?.NombreC || 'Sin nombre', 'Hidden state:', 
+                        this.state.hiddenBarChartAccounts[index]);
+                      // Toggle la cuenta específica
+                      this.setState(prevState => ({
+                        hiddenBarChartAccounts: {
+                          ...prevState.hiddenBarChartAccounts,
+                          [index]: !prevState.hiddenBarChartAccounts[index]
                         }
+                      }), () => {
+                        console.log('🔥 Nuevo estado hidden:', this.state.hiddenBarChartAccounts);
+                        // Actualizar el chart después del setState
+                        if (this.chartRefs.barChart) {
+                          try {
+                            this.chartRefs.barChart.update();
+                            console.log('🔥 Chart actualizado');
+                          } catch (error) {
+                            console.error('🔥 Error actualizando chart:', error);
+                          }
+                        }
+                      });
+                    }}
+                    style={{
+                      display: 'inline-block',
+                      backgroundColor: this.state.hiddenBarChartAccounts[index] ? '#888' : '#007BFF',
+                      color: 'white',
+                      padding: '2px 6px',
+                      margin: '1px 2px',
+                      borderRadius: '3px',
+                      fontSize: '9px',
+                      cursor: 'pointer',
+                      textDecoration: this.state.hiddenBarChartAccounts[index] ? 'line-through' : 'none',
+                      opacity: this.state.hiddenBarChartAccounts[index] ? 0.6 : 1,
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!this.state.hiddenBarChartAccounts[index]) {
+                        e.target.style.backgroundColor = '#0056b3';
                       }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = this.state.hiddenBarChartAccounts[index] ? '#888' : '#007BFF';
+                    }}
+                  >
+                    {cuentaObj && cuentaObj.NombreC && cuentaObj.NombreC.length > 15 ? 
+                      cuentaObj.NombreC.substring(0, 12) + '...' : 
+                      (cuentaObj && cuentaObj.NombreC ? cuentaObj.NombreC : 'Sin nombre')
                     }
-                  }}
-                  style={{
-                    display: 'inline-block',
-                    margin: '1px 3px', // 🔥 Márgenes más pequeños
-                    padding: '2px 6px', // 🔥 Padding más compacto
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    borderRadius: '8px', // 🔥 Bordes más pequeños
-                    fontSize: '10px', // 🔥 Texto más pequeño
-                    color: 'white',
-                    cursor: 'pointer',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    transition: 'all 0.2s',
-                    whiteSpace: 'nowrap', // 🔥 No romper texto
-                    textDecoration: (() => {
-                      const chartInstance = this.chartRefs['barChart-' + this.state.barValue];
-                      if (chartInstance && chartInstance.chart && typeof chartInstance.chart.getDatasetMeta === 'function') {
-                        const meta = chartInstance.chart.getDatasetMeta(0);
-                        return (meta && meta.data && meta.data[index] && meta.data[index].hidden) ? 'line-through' : 'none';
-                      }
-                      return 'none';
-                    })(),
-                    opacity: (() => {
-                      const chartInstance = this.chartRefs['barChart-' + this.state.barValue];
-                      if (chartInstance && chartInstance.chart && typeof chartInstance.chart.getDatasetMeta === 'function') {
-                        const meta = chartInstance.chart.getDatasetMeta(0);
-                        return (meta && meta.data && meta.data[index] && meta.data[index].hidden) ? 0.5 : 1;
-                      }
-                      return 1;
-                    })()
-                  }}
-                >
-                  {cuenta}
-                </div>
-              ))}
+                  </div>
+                ));
+              })()}
             </div>
             </div>
           </div>
@@ -3154,7 +3201,10 @@ const Alert=(props)=> {
               />
             )}
 
-            <div className='contPatrimonioChart' style={{height:'85%'}}>
+            <div className='contPatrimonioChart' style={{
+              height: window.innerWidth >= 1200 ? '82%' : 
+                     window.innerWidth >= 768 ? '80%' : '80%' // 🔥 Reducido en móvil también
+            }}>
               <div style={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
@@ -3172,8 +3222,10 @@ const Alert=(props)=> {
                 </h3>
               </div>
               <div style={{
-                height: 'calc(100% - 60px)', // Altura disponible menos el espacio del header
-                padding: '0 15px'
+                height: window.innerWidth >= 768 ? 'calc(100% - 70px)' : 'calc(100% - 65px)', // 🔥 Menos espacio en móvil
+                padding: '0 15px',
+                paddingBottom: window.innerWidth >= 768 ? '15px' : '12px', // 🔥 Padding específico por tamaño
+                minHeight: window.innerWidth >= 768 ? '240px' : '180px' // 🔥 Altura mínima menor en móvil
               }}>
                 <Line data={superdataPatrimonio} options={{
                   maintainAspectRatio: false,
