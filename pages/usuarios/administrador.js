@@ -1716,13 +1716,7 @@ const Alert=(props)=> {
 </div>
 
 {/* Contenedor unificado para TODOS los widgets - se pueden reordenar entre todos */}
-<div className='contenedorWidgetsUnificado' style={{ 
-  display: 'flex', 
-  flexDirection: 'column', 
-  gap: '15px',
-  maxWidth: '100%',
-  margin: '0 auto'
-}}>
+<div className='contenedorWidgetsUnificado'>
   {/* Renderizar TODOS los widgets en el orden especificado */}
   {this.state.widgetOrder.map((widgetName, index) => {
     
@@ -2875,24 +2869,25 @@ font-size:25px
 
 @media only screen and (min-width: 1025px) {
   .widgetResponsive {
-    flex: 1 1 calc(50% - 15px);
-    min-width: 0;
-    max-width: calc(50% - 15px);
-    width: calc(50% - 15px);
-    margin: 0;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    min-height: 300px !important;
   }
   
   .contenedorWidgetsUnificado {
-    max-width: 1000px;
-    justify-content: flex-start;
-    align-items: flex-start;
-    flex-direction: row;
-    padding: 0 20px;
-    gap: 20px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-gap: 20px;
+    max-width: 1200px !important;
+    padding: 20px !important;
+    margin: 0 auto !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    grid-template-rows: auto auto !important;
+    gap: 20px !important;
+    flex-direction: unset !important;
+    flex-wrap: unset !important;
+    justify-content: unset !important;
+    align-items: unset !important;
   }
 }
 
