@@ -1792,6 +1792,60 @@ const Alert=(props)=> {
                     <Tab value={"mensual"} label="Mensual" {...a11yProps(1)} />
                   </Tabs>
                 </AppBar>
+                
+                {/* Indicador de fecha animado */}
+                <div style={{
+                  padding: '15px 20px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  textAlign: 'center',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transform: this.state.tiempoValue === 'diario' ? 'translateY(0)' : 'translateY(0)',
+                  opacity: 1
+                }}>
+                  {this.state.tiempoValue === 'diario' ? (
+                    <div style={{
+                      animation: 'fadeInScale 0.6s ease-out',
+                    }}>
+                      <div style={{
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        marginBottom: '5px',
+                        textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                      }}>
+                        {new Date().getDate()}
+                      </div>
+                      <div style={{
+                        fontSize: '14px',
+                        opacity: 0.9,
+                        letterSpacing: '1px',
+                        textTransform: 'uppercase'
+                      }}>
+                        {new Date().toLocaleDateString('es-ES', { weekday: 'long' })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{
+                      animation: 'fadeInScale 0.6s ease-out',
+                    }}>
+                      <div style={{
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        marginBottom: '5px',
+                        textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                      }}>
+                        {new Date().toLocaleDateString('es-ES', { month: 'long' })}
+                      </div>
+                      <div style={{
+                        fontSize: '16px',
+                        opacity: 0.9,
+                        letterSpacing: '1px'
+                      }}>
+                        {new Date().getFullYear()}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -2903,6 +2957,21 @@ font-size:25px
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 
