@@ -3098,27 +3098,54 @@ const Alert=(props)=> {
               />
             )}
 
-            <div className='contLiquidityChart'>
-              <Line data={superdataLiquidez} options={{
-                maintainAspectRatio: false,
-                responsive: true,
-                plugins: {
-                  legend: {
-                    labels: { fontColor: "white" },
-                    position: 'top',
-                  }
-                },
-                scales: {
-                  yAxes: {
-                    grid: { drawBorder: true, color: '#FFFFFF' },
-                    ticks: { beginAtZero: true, color: 'white', fontSize: 12 }
+            <div className='contLiquidityChart' style={{
+              height: window.innerWidth >= 1200 ? '87%' : // 🔥 Más alto en desktop 
+                     window.innerWidth >= 768 ? '85%' : '80%' // 🔥 Más alto en tablet también
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                marginBottom: '12px',
+                padding: '0 15px'
+              }}>
+                <h3 style={{ 
+                  color: 'white', 
+                  fontSize: '18px', 
+                  fontWeight: 600,
+                  margin: 0 
+                }}>
+                  Evolución de Liquidez
+                </h3>
+              </div>
+              <div style={{
+                height: window.innerWidth >= 1200 ? 'calc(100% - 65px)' : // 🔥 Menos espacio arriba en desktop
+                       window.innerWidth >= 768 ? 'calc(100% - 70px)' : 'calc(100% - 65px)',
+                padding: '0 15px',
+                paddingBottom: window.innerWidth >= 768 ? '12px' : '12px', // 🔥 Menos padding en desktop
+                minHeight: window.innerWidth >= 768 ? '260px' : '180px' // 🔥 Altura mínima mayor en desktop
+              }}>
+                <Line data={superdataLiquidez} options={{
+                  maintainAspectRatio: false,
+                  responsive: true,
+                  plugins: {
+                    legend: {
+                      labels: { fontColor: "white" },
+                      position: 'top',
+                    }
                   },
-                  xAxes: {
-                    grid: { drawBorder: true, color: '#FFFFFF' },
-                    ticks: { beginAtZero: true, color: 'white', fontSize: 12 }
+                  scales: {
+                    yAxes: {
+                      grid: { drawBorder: true, color: '#FFFFFF' },
+                      ticks: { beginAtZero: true, color: 'white', fontSize: 12 }
+                    },
+                    xAxes: {
+                      grid: { drawBorder: true, color: '#FFFFFF' },
+                      ticks: { beginAtZero: true, color: 'white', fontSize: 12 }
+                    }
                   }
-                }
-              }} />
+                }} />
+              </div>
             </div>
           </div>
         </div>
