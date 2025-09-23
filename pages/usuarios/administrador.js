@@ -18,8 +18,13 @@ import { Pie, Line, Bar } from 'react-chartjs-2';
 import {Chart} from"chart.js"
 import 'chart.js/auto';
 import AddCero from '../../components/funciones/addcero';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Switch, FormControlLabel, Select, MenuItem, FormControl, InputLabel, Fab, Grid, Typography, Box } from '@material-ui/core';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Switch, FormControlLabel, Select, MenuItem, FormControl, InputLabel, Fab, Grid, Typography, Box, IconButton } from '@material-ui/core';
 import SettingsIcon from '@material-ui/icons/Settings';
+import EditIcon from '@material-ui/icons/Edit';
+import AddIcon from '@material-ui/icons/Add';
+import CloseIcon from '@material-ui/icons/Close';
+import DoneIcon from '@material-ui/icons/Done';
+import DragIndicatorIcon from '@material-ui/icons/DragIndicator';
 
 
 
@@ -32,8 +37,12 @@ class admins extends Component {
     Alert:{Estado:false},
     tiempoValue:"diario",
     
-    // Estados para personalización de widgets
+    // Estados para personalización de widgets estilo Apple
+    editMode: false, // Modo de edición de widgets
+    showAddWidgetsPanel: false, // Panel para agregar widgets
     showCustomizationPanel: false,
+    draggedWidget: null, // Widget que se está arrastrando
+    widgetOrder: ['showIncomeChart', 'showExpenseChart', 'showPieChart', 'showBarChart', 'showLiquidityChart'], // Orden de widgets
     widgetConfig: {
       showIncomeChart: true,
       showExpenseChart: true,
@@ -271,6 +280,9 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
         ...this.state.widgetConfig,
         [widgetName]: isVisible
       }
+    }, () => {
+      // Guardar configuración después de actualizar el estado
+      this.saveWidgetConfig();
     });
   }
 
@@ -280,6 +292,46 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
         ...this.state.widgetConfig,
         [chartName]: newType
       }
+    });
+  }
+
+  // Funciones para modo de edición estilo Apple
+  toggleEditMode = () => {
+    this.setState({
+      editMode: !this.state.editMode,
+      showAddWidgetsPanel: false // Cerrar panel de agregar si está abierto
+    });
+  }
+
+  toggleAddWidgetsPanel = () => {
+    this.setState({
+      showAddWidgetsPanel: !this.state.showAddWidgetsPanel,
+      editMode: false // Salir del modo edición al agregar widgets
+    });
+  }
+
+  removeWidget = (widgetName) => {
+    this.setState({
+      widgetConfig: {
+        ...this.state.widgetConfig,
+        [widgetName]: false
+      }
+    }, () => {
+      // Guardar configuración después de actualizar el estado
+      this.saveWidgetConfig();
+    });
+  }
+
+  addWidget = (widgetName) => {
+    this.setState({
+      widgetConfig: {
+        ...this.state.widgetConfig,
+        [widgetName]: true
+      },
+      showAddWidgetsPanel: false
+    }, () => {
+      // Guardar configuración después de actualizar el estado
+      this.saveWidgetConfig();
     });
   }
 
@@ -299,6 +351,13 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
     try {
       const userId = this.props.state.userReducer.update.usuario.user._id;
       
+      const configData = {
+        widgetConfig: this.state.widgetConfig,
+        widgetOrder: this.state.widgetOrder
+      };
+      
+      console.log('Guardando configuración:', configData);
+      
       const response = await fetch("/users/save-config", {
         method: 'POST',
         headers: {
@@ -307,20 +366,15 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
         body: JSON.stringify({
           userId: userId,
           configType: 'widgets',
-          configData: this.state.widgetConfig
+          configData: configData
         })
       });
 
       const result = await response.json();
+      console.log('Respuesta del servidor:', result);
       
       if (result.status === "Ok") {
-        this.setState({
-          Alert: {
-            Estado: true,
-            Tipo: "success",
-            Mensaje: "Configuración de widgets guardada exitosamente"
-          }
-        });
+        console.log('Configuración de widgets guardada exitosamente');
       } else {
         throw new Error(result.message);
       }
@@ -339,6 +393,7 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
   loadWidgetConfig = async () => {
     try {
       const userId = this.props.state.userReducer.update.usuario.user._id;
+      console.log('Cargando configuración para usuario:', userId);
       
       const response = await fetch("/users/get-config", {
         method: 'POST',
@@ -351,20 +406,101 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
       });
 
       const result = await response.json();
+      console.log('Configuración cargada desde servidor:', result);
       
-      if (result.status === "Ok" && result.data.widgetConfig) {
-        this.setState({
-          widgetConfig: {
-            ...this.state.widgetConfig,
-            ...result.data.widgetConfig
+      if (result.status === "Ok" && result.data) {
+        // Manejo de datos cuando están anidados bajo 'widgets'
+        if (result.data.widgets) {
+          console.log('Usando formato anidado de configuración');
+          if (result.data.widgets.widgetConfig) {
+            this.setState({
+              widgetConfig: {
+                ...this.state.widgetConfig,
+                ...result.data.widgets.widgetConfig
+              }
+            });
           }
-        });
+          
+          if (result.data.widgets.widgetOrder) {
+            console.log('Cargando orden de widgets:', result.data.widgets.widgetOrder);
+            this.setState({
+              widgetOrder: result.data.widgets.widgetOrder
+            });
+          }
+        }
+        // Manejo de datos cuando están directamente en data (formato antiguo)
+        else {
+          console.log('Usando formato directo de configuración');
+          if (result.data.widgetConfig) {
+            this.setState({
+              widgetConfig: {
+                ...this.state.widgetConfig,
+                ...result.data.widgetConfig
+              }
+            });
+          }
+          
+          if (result.data.widgetOrder) {
+            console.log('Cargando orden de widgets:', result.data.widgetOrder);
+            this.setState({
+              widgetOrder: result.data.widgetOrder
+            });
+          }
+        }
       }
     } catch (error) {
       console.error('Error cargando configuración:', error);
       // Si hay error, mantener la configuración por defecto
     }
   }
+
+  // Funciones para drag & drop de widgets
+  handleDragStart = (e, widgetName) => {
+    this.setState({ draggedWidget: widgetName });
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target);
+    
+    // Agregar clase visual de arrastre
+    e.target.classList.add('dragging');
+  }
+
+  handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  handleDrop = (e, targetWidget) => {
+    e.preventDefault();
+    const draggedWidget = this.state.draggedWidget;
+    
+    if (draggedWidget && draggedWidget !== targetWidget) {
+      const currentOrder = [...this.state.widgetOrder];
+      const draggedIndex = currentOrder.indexOf(draggedWidget);
+      const targetIndex = currentOrder.indexOf(targetWidget);
+      
+      // Reordenar el array
+      currentOrder.splice(draggedIndex, 1);
+      currentOrder.splice(targetIndex, 0, draggedWidget);
+      
+      this.setState({ 
+        widgetOrder: currentOrder,
+        draggedWidget: null 
+      }, () => {
+        this.saveWidgetConfig();
+      });
+    }
+    
+    // Remover clase visual de arrastre
+    e.target.classList.remove('dragging');
+  }
+
+  handleDragEnd = (e) => {
+    this.setState({ draggedWidget: null });
+    
+    // Remover clase visual de arrastre
+    e.target.classList.remove('dragging');
+  }
+
  render() {
   let nameUser = this.props.state.userReducer !=""? this.props.state.userReducer.update.usuario.user.Usuario:""
   const defaultLegendClickHandler = Chart.defaults.plugins.legend.onClick;
@@ -1052,6 +1188,90 @@ const Alert=(props)=> {
       );
     };
 
+    // Panel para Agregar Widgets estilo Apple
+    const AddWidgetsPanel = () => {
+      const availableWidgets = [
+        { key: 'showIncomeChart', name: 'Gráfico de Ingresos', description: 'Muestra la evolución de ingresos', icon: '📈' },
+        { key: 'showExpenseChart', name: 'Gráfico de Gastos', description: 'Muestra la evolución de gastos', icon: '📉' },
+        { key: 'showPieChart', name: 'Gráfico Circular', description: 'Distribución por categorías', icon: '🥧' },
+        { key: 'showBarChart', name: 'Gráfico de Barras', description: 'Comparación de periodos', icon: '📊' },
+        { key: 'showLiquidityChart', name: 'Evolución de Liquidez', description: 'Seguimiento de liquidez', icon: '💧' }
+      ];
+
+      const hiddenWidgets = availableWidgets.filter(widget => !this.state.widgetConfig[widget.key]);
+
+      return (
+        <Dialog 
+          open={this.state.showAddWidgetsPanel} 
+          onClose={this.toggleAddWidgetsPanel}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            <Box display="flex" alignItems="center">
+              <AddIcon style={{ marginRight: 8 }} />
+              <Typography variant="h6">Agregar Widgets</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            {hiddenWidgets.length === 0 ? (
+              <Box textAlign="center" py={3}>
+                <Typography variant="body1" color="textSecondary">
+                  Todos los widgets están actualmente visibles
+                </Typography>
+              </Box>
+            ) : (
+              <Grid container spacing={2}>
+                {hiddenWidgets.map((widget) => (
+                  <Grid item xs={12} key={widget.key}>
+                    <Box 
+                      onClick={() => this.addWidget(widget.key)}
+                      style={{
+                        padding: '16px',
+                        border: '2px solid #e0e0e0',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.borderColor = '#004a9b';
+                        e.target.style.backgroundColor = '#f5f7ff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.borderColor = '#e0e0e0';
+                        e.target.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <Box style={{ fontSize: '24px' }}>{widget.icon}</Box>
+                      <Box>
+                        <Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>
+                          {widget.name}
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {widget.description}
+                        </Typography>
+                      </Box>
+                      <Box style={{ marginLeft: 'auto' }}>
+                        <AddIcon style={{ color: '#004a9b' }} />
+                      </Box>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.toggleAddWidgetsPanel} color="primary">
+              Cerrar
+            </Button>
+          </DialogActions>
+        </Dialog>
+      );
+    };
+
   return(
  
   <div className='fondoAdmin'> 
@@ -1104,7 +1324,52 @@ const Alert=(props)=> {
       </div>
       <div className='contCuadros'>
         {this.state.widgetConfig.showIncomeChart && (
-        <div className={`cuadroPlantilla cuadroIngreso ${ingresoActive}`}>
+        <div 
+          className={`cuadroPlantilla cuadroIngreso ${ingresoActive}`} 
+          style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showIncomeChart') }}
+          draggable={this.state.editMode}
+          onDragStart={(e) => this.handleDragStart(e, 'showIncomeChart')}
+          onDragOver={this.handleDragOver}
+          onDrop={(e) => this.handleDrop(e, 'showIncomeChart')}
+          onDragEnd={this.handleDragEnd}
+        >
+          
+          {/* Botón de eliminación estilo Apple */}
+          {this.state.editMode && (
+            <IconButton
+              onClick={() => this.removeWidget('showIncomeChart')}
+              style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-8px',
+                zIndex: 10,
+                backgroundColor: '#ff1744',
+                color: 'white',
+                width: '24px',
+                height: '24px',
+                '&:hover': {
+                  backgroundColor: '#d50000'
+                }
+              }}
+              size="small"
+            >
+              <CloseIcon style={{ fontSize: '16px' }} />
+            </IconButton>
+          )}
+
+          {/* Indicador de arrastre en modo edición */}
+          {this.state.editMode && (
+            <DragIndicatorIcon 
+              style={{
+                position: 'absolute',
+                top: '8px',
+                left: '8px',
+                color: '#666',
+                opacity: 0.7
+              }}
+            />
+          )}
+
           <div className='contTextoscuadro'>
             <div className='jwFlex tituloCard'>
             <i className="material-icons ">
@@ -1206,7 +1471,52 @@ const Alert=(props)=> {
         )}
        
         {this.state.widgetConfig.showExpenseChart && (
-          <div className={`cuadroPlantilla cuadroGasto ${gastoActive}`}>
+          <div 
+            className={`cuadroPlantilla cuadroGasto ${gastoActive}`} 
+            style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showExpenseChart') }}
+            draggable={this.state.editMode}
+            onDragStart={(e) => this.handleDragStart(e, 'showExpenseChart')}
+            onDragOver={this.handleDragOver}
+            onDrop={(e) => this.handleDrop(e, 'showExpenseChart')}
+            onDragEnd={this.handleDragEnd}
+          >
+          
+          {/* Botón de eliminación estilo Apple */}
+          {this.state.editMode && (
+            <IconButton
+              onClick={() => this.removeWidget('showExpenseChart')}
+              style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-8px',
+                zIndex: 10,
+                backgroundColor: '#ff1744',
+                color: 'white',
+                width: '24px',
+                height: '24px',
+                '&:hover': {
+                  backgroundColor: '#d50000'
+                }
+              }}
+              size="small"
+            >
+              <CloseIcon style={{ fontSize: '16px' }} />
+            </IconButton>
+          )}
+
+          {/* Indicador de arrastre en modo edición */}
+          {this.state.editMode && (
+            <DragIndicatorIcon 
+              style={{
+                position: 'absolute',
+                top: '8px',
+                left: '8px',
+                color: '#666',
+                opacity: 0.7
+              }}
+            />
+          )}
+
           <div className='contTextoscuadro'>
           <div className='jwFlex tituloCard'>
             <i className="material-icons ">
@@ -1309,7 +1619,51 @@ const Alert=(props)=> {
 
 </div>
 {this.state.widgetConfig.showPieChart && (
-<div className='glassStyle custonPieCont'>
+<div 
+          className='glassStyle custonPieCont' 
+          style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showPieChart') }}
+          draggable={this.state.editMode}
+          onDragStart={(e) => this.handleDragStart(e, 'showPieChart')}
+          onDragOver={this.handleDragOver}
+          onDrop={(e) => this.handleDrop(e, 'showPieChart')}
+          onDragEnd={this.handleDragEnd}
+        >
+
+          {/* Botón de eliminación estilo Apple */}
+          {this.state.editMode && (
+            <IconButton
+              onClick={() => this.removeWidget('showPieChart')}
+              style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-8px',
+                zIndex: 10,
+                backgroundColor: '#ff1744',
+                color: 'white',
+                width: '24px',
+                height: '24px',
+                '&:hover': {
+                  backgroundColor: '#d50000'
+                }
+              }}
+              size="small"
+            >
+              <CloseIcon style={{ fontSize: '16px' }} />
+            </IconButton>
+          )}
+
+          {/* Indicador de arrastre en modo edición */}
+          {this.state.editMode && (
+            <DragIndicatorIcon 
+              style={{
+                position: 'absolute',
+                top: '8px',
+                left: '8px',
+                color: '#666',
+                opacity: 0.7
+              }}
+            />
+          )}
 
       <div className='contPie'>
 <Pie data={superdataPie} plugins={[ChartDataLabels]}  options={{
@@ -1373,7 +1727,52 @@ const Alert=(props)=> {
 </div>
 )}
 {this.state.widgetConfig.showBarChart && (
-<div className='glassStyle custonBarrasCuentas'>
+<div 
+          className='glassStyle custonBarrasCuentas' 
+          style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showBarChart') }}
+          draggable={this.state.editMode}
+          onDragStart={(e) => this.handleDragStart(e, 'showBarChart')}
+          onDragOver={this.handleDragOver}
+          onDrop={(e) => this.handleDrop(e, 'showBarChart')}
+          onDragEnd={this.handleDragEnd}
+        >
+
+          {/* Botón de eliminación estilo Apple */}
+          {this.state.editMode && (
+            <IconButton
+              onClick={() => this.removeWidget('showBarChart')}
+              style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-8px',
+                zIndex: 10,
+                backgroundColor: '#ff1744',
+                color: 'white',
+                width: '24px',
+                height: '24px',
+                '&:hover': {
+                  backgroundColor: '#d50000'
+                }
+              }}
+              size="small"
+            >
+              <CloseIcon style={{ fontSize: '16px' }} />
+            </IconButton>
+          )}
+
+          {/* Indicador de arrastre en modo edición */}
+          {this.state.editMode && (
+            <DragIndicatorIcon 
+              style={{
+                position: 'absolute',
+                top: '8px',
+                left: '8px',
+                color: '#666',
+                opacity: 0.7
+              }}
+            />
+          )}
+
 <Bar data={superdatabar}   options={{
   responsive: true,
   maintainAspectRatio: false,
@@ -1416,7 +1815,52 @@ plugins: {
 
 {/* Widget de Liquidez */}
 {this.state.widgetConfig.showLiquidityChart && (
-<div className='glassStyle custonLiquidezCont'>
+<div 
+          className='glassStyle custonLiquidezCont' 
+          style={{ position: 'relative', order: this.state.widgetOrder.indexOf('showLiquidityChart') }}
+          draggable={this.state.editMode}
+          onDragStart={(e) => this.handleDragStart(e, 'showLiquidityChart')}
+          onDragOver={this.handleDragOver}
+          onDrop={(e) => this.handleDrop(e, 'showLiquidityChart')}
+          onDragEnd={this.handleDragEnd}
+        >
+
+          {/* Botón de eliminación estilo Apple */}
+          {this.state.editMode && (
+            <IconButton
+              onClick={() => this.removeWidget('showLiquidityChart')}
+              style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-8px',
+                zIndex: 10,
+                backgroundColor: '#ff1744',
+                color: 'white',
+                width: '24px',
+                height: '24px',
+                '&:hover': {
+                  backgroundColor: '#d50000'
+                }
+              }}
+              size="small"
+            >
+              <CloseIcon style={{ fontSize: '16px' }} />
+            </IconButton>
+          )}
+
+          {/* Indicador de arrastre en modo edición */}
+          {this.state.editMode && (
+            <DragIndicatorIcon 
+              style={{
+                position: 'absolute',
+                top: '8px',
+                left: '8px',
+                color: '#666',
+                opacity: 0.7
+              }}
+            />
+          )}
+
   <div className='contLiquidez'>
     <div className='headerLiquidez'>
       <div className='jwFlex tituloCard'>
@@ -1488,22 +1932,63 @@ plugins: {
   {/* Panel de Personalización */}
   <CustomizationPanel />
   
-  {/* Botón Flotante para Personalización */}
-  <Fab 
-    color="primary" 
-    aria-label="personalizar" 
-    onClick={this.toggleCustomizationPanel}
-    style={{
-      position: 'fixed',
-      bottom: 20,
-      right: 20,
-      zIndex: 1000,
-      background: 'linear-gradient(45deg, #004a9b 30%, #0066cc 90%)',
-      color: 'white'
-    }}
-  >
-    <SettingsIcon />
-  </Fab>
+  {/* Botones Flotantes estilo Apple */}
+  <div style={{
+    position: 'fixed',
+    bottom: 20,
+    right: 20,
+    zIndex: 1000,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  }}>
+    
+    {/* Botón Editar */}
+    <Fab 
+      color={this.state.editMode ? "secondary" : "primary"}
+      aria-label={this.state.editMode ? "terminar edición" : "editar widgets"}
+      onClick={this.toggleEditMode}
+      style={{
+        background: this.state.editMode 
+          ? 'linear-gradient(45deg, #ff6b35 30%, #ff8c42 90%)' 
+          : 'linear-gradient(45deg, #004a9b 30%, #0066cc 90%)',
+        color: 'white',
+        transition: 'all 0.3s ease'
+      }}
+    >
+      {this.state.editMode ? <DoneIcon /> : <EditIcon />}
+    </Fab>
+
+    {/* Botón Agregar Widgets */}
+    <Fab 
+      color="primary"
+      aria-label="agregar widgets"
+      onClick={this.toggleAddWidgetsPanel}
+      style={{
+        background: this.state.showAddWidgetsPanel 
+          ? 'linear-gradient(45deg, #2e7d32 30%, #43a047 90%)'
+          : 'linear-gradient(45deg, #004a9b 30%, #0066cc 90%)',
+        color: 'white',
+        transition: 'all 0.3s ease'
+      }}
+    >
+      <AddIcon />
+    </Fab>
+
+    {/* Botón Configuración Avanzada */}
+    <Fab 
+      size="small"
+      color="primary"
+      aria-label="configuración avanzada"
+      onClick={this.toggleCustomizationPanel}
+      style={{
+        background: 'linear-gradient(45deg, #6a1b9a 30%, #8e24aa 90%)',
+        color: 'white'
+      }}
+    >
+      <SettingsIcon />
+    </Fab>
+  </div>
 
    <Snackbar open={this.state.Alert.Estado} autoHideDuration={5000} onClose={handleClose}>
     <Alert onClose={handleClose} severity={this.state.Alert.Tipo}>
@@ -1668,7 +2153,31 @@ font-size:25px
 }
 @media only screen and (min-width: 950px) {
   .contCuadros{  flex-wrap:nowrap;}
+}
 
+/* Estilos para drag & drop */
+.cuadroPlantilla[draggable="true"] {
+  cursor: move;
+}
+
+.cuadroPlantilla[draggable="true"]:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+
+.glassStyle[draggable="true"] {
+  cursor: move;
+}
+
+.glassStyle[draggable="true"]:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+
+.cuadroPlantilla.dragging,
+.glassStyle.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
 }
 
   `

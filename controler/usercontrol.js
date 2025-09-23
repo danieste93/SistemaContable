@@ -1225,7 +1225,14 @@ if(bcrypt.compareSync(pass, UsuarioFind[0].Password)) {
                   
                   let updateObject = {};
                   if (configType === 'widgets') {
-                    updateObject['ConfiguracionPersonalizada.widgetConfig'] = configData;
+                    // Si configData contiene tanto widgetConfig como widgetOrder
+                    if (configData.widgetConfig && configData.widgetOrder) {
+                      updateObject['ConfiguracionPersonalizada.widgetConfig'] = configData.widgetConfig;
+                      updateObject['ConfiguracionPersonalizada.widgetOrder'] = configData.widgetOrder;
+                    } else {
+                      // Compatibilidad con formato anterior
+                      updateObject['ConfiguracionPersonalizada.widgetConfig'] = configData;
+                    }
                   } else if (configType === 'registro-contable' || configType === 'registroContable') {
                     updateObject['ConfiguracionPersonalizada.registroContableConfig'] = configData;
                   } else if (configType === 'cuentas-vista') {

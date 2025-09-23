@@ -165,6 +165,11 @@ ImagenP: {
        pieColors: { type: [String], default: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'] }
      }
    },
+   // Orden de los widgets en el dashboard
+   widgetOrder: { 
+     type: [String], 
+     default: ['showIncomeChart', 'showExpenseChart', 'showPieChart', 'showBarChart', 'showLiquidityChart'] 
+   },
    // Configuración del registro contable
    registroContableConfig: {
      Cuentas: { type: Boolean, default: false },
