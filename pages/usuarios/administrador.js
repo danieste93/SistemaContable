@@ -933,10 +933,22 @@ if(this.props.state.RegContableReducer.Cuentas){
 
       balanceTotal = capitalTotal + deberTotal 
 
+  // Cálculo específico de liquidez solo con cuentas de posesión
+  let balanceLiquidez = capitalTotal + deberTotal; // Solo cuentas de posesión (CheckedP && CheckedA)
+
   // Cálculo simplificado de liquidez para el widget usando las variables ya inicializadas
   if (DetallesPorrender.length > 0) {
+    // Obtener IDs de cuentas de posesión y no posesión
+    const cuentasPosesionIds = this.props.state.RegContableReducer.Cuentas
+      .filter(cuenta => cuenta.CheckedP && cuenta.CheckedA)
+      .map(cuenta => cuenta._id);
+      
+    const cuentasNoPosesionIds = this.props.state.RegContableReducer.Cuentas
+      .filter(cuenta => !cuenta.CheckedP || !cuenta.CheckedA)
+      .map(cuenta => cuenta._id);
+    
     let liquidezPorPeriodo = {};
-    let acumuladoLiquidez = balanceTotal;
+    let acumuladoLiquidez = balanceLiquidez; // Usar balance de liquidez (solo cuentas de posesión)
     
     // Filtrar transacciones según el tiempo seleccionado
     let transaccionesFiltradas;
@@ -946,9 +958,32 @@ if(this.props.state.RegContableReducer.Cuentas){
       transaccionesFiltradas = this.MensualFilter(DetallesPorrender);
     }
     
-    // Solo ingresos y gastos, ordenados cronológicamente (más reciente primero)
-    const transaccionesOrdenadas = transaccionesFiltradas
-      .filter(x => x.Accion !== "Trans")
+    // Incluir transacciones que afecten la liquidez:
+    // 1. Ingresos y gastos en cuentas de posesión
+    // 2. Transferencias entre cuentas de posesión y no posesión
+    const transaccionesLiquidez = transaccionesFiltradas.filter(x => {
+      // Ingresos y gastos en cuentas de posesión
+      if (x.Accion !== "Trans" && x.CuentaSelec && cuentasPosesionIds.includes(x.CuentaSelec.idCuenta)) {
+        return true;
+      }
+      
+      // Transferencias que afectan la liquidez
+      if (x.Accion === "Trans" && x.CuentaSelec && x.CuentaSelec2) {
+        const cuentaOrigenEsPosesion = cuentasPosesionIds.includes(x.CuentaSelec.idCuenta);
+        const cuentaDestinoEsPosesion = cuentasPosesionIds.includes(x.CuentaSelec2.idCuenta);
+        
+        // Solo incluir transferencias que cambien la liquidez:
+        // - De No posesión a Posesión (aumenta liquidez)
+        // - De Posesión a No posesión (disminuye liquidez)
+        return (!cuentaOrigenEsPosesion && cuentaDestinoEsPosesion) || 
+               (cuentaOrigenEsPosesion && !cuentaDestinoEsPosesion);
+      }
+      
+      return false;
+    });
+                   
+    // Ordenar cronológicamente (más reciente primero)
+    const transaccionesOrdenadas = transaccionesLiquidez
       .sort((a, b) => b.Tiempo - a.Tiempo);
     
     // Agrupar transacciones por periodo y calcular liquidez
@@ -967,11 +1002,23 @@ if(this.props.state.RegContableReducer.Cuentas){
         liquidezPorPeriodo[periodo] = acumuladoLiquidez;
       }
       
-      // Restar del acumulado para obtener liquidez histórica
+      // Calcular el impacto en la liquidez según el tipo de transacción
       if (transaccion.Accion === "Ingreso") {
         acumuladoLiquidez -= transaccion.Importe;
       } else if (transaccion.Accion === "Gasto") {
         acumuladoLiquidez += transaccion.Importe;
+      } else if (transaccion.Accion === "Trans") {
+        // Para transferencias, determinar si aumenta o disminuye la liquidez
+        const cuentaOrigenEsPosesion = cuentasPosesionIds.includes(transaccion.CuentaSelec.idCuenta);
+        const cuentaDestinoEsPosesion = cuentasPosesionIds.includes(transaccion.CuentaSelec2.idCuenta);
+        
+        if (!cuentaOrigenEsPosesion && cuentaDestinoEsPosesion) {
+          // De No posesión a Posesión: aumenta liquidez (restar del acumulado histórico)
+          acumuladoLiquidez -= transaccion.Importe;
+        } else if (cuentaOrigenEsPosesion && !cuentaDestinoEsPosesion) {
+          // De Posesión a No posesión: disminuye liquidez (sumar al acumulado histórico)
+          acumuladoLiquidez += transaccion.Importe;
+        }
       }
     });
     
