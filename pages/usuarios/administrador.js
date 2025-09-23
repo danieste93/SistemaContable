@@ -2215,10 +2215,13 @@ const Alert=(props)=> {
               height: '100%',
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'center', // 🔥 Siempre centrado
-              padding: '15px 0' // 🔥 Padding intermedio
+              justifyContent: 'center',
+              padding: '15px 0'
             }}>
-              <div className='contFiltros'>
+              <div className='contFiltros' style={{
+                margin: '0 auto', // 🔥 Solo centrar el contenido existente
+                textAlign: 'center' // 🔥 Centrar texto para PC
+              }}>
                 <AppBar position="static" color="default" style={{ 
                   pointerEvents: this.state.editMode ? 'none' : 'auto'
                 }}>
