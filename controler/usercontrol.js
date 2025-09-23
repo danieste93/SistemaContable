@@ -1229,6 +1229,14 @@ if(bcrypt.compareSync(pass, UsuarioFind[0].Password)) {
                     if (configData.widgetConfig && configData.widgetOrder) {
                       updateObject['ConfiguracionPersonalizada.widgetConfig'] = configData.widgetConfig;
                       updateObject['ConfiguracionPersonalizada.widgetOrder'] = configData.widgetOrder;
+                      
+                      // Guardar también tiempoValue y pieValue si están presentes
+                      if (configData.tiempoValue !== undefined) {
+                        updateObject['ConfiguracionPersonalizada.tiempoValue'] = configData.tiempoValue;
+                      }
+                      if (configData.pieValue !== undefined) {
+                        updateObject['ConfiguracionPersonalizada.pieValue'] = configData.pieValue;
+                      }
                     } else {
                       // Compatibilidad con formato anterior
                       updateObject['ConfiguracionPersonalizada.widgetConfig'] = configData;

@@ -371,7 +371,9 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
       
       const configData = {
         widgetConfig: this.state.widgetConfig,
-        widgetOrder: this.state.widgetOrder
+        widgetOrder: this.state.widgetOrder,
+        tiempoValue: this.state.tiempoValue,
+        pieValue: this.state.pieValue
       };
       
       console.log('Guardando configuración:', configData);
@@ -442,7 +444,9 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
             };
             
             this.setState({
-              widgetConfig: migratedConfig
+              widgetConfig: migratedConfig,
+              tiempoValue: result.data.widgets.tiempoValue || this.state.tiempoValue,
+              pieValue: result.data.widgets.pieValue || this.state.pieValue
             });
           }
           
@@ -473,7 +477,9 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
             };
             
             this.setState({
-              widgetConfig: migratedConfig
+              widgetConfig: migratedConfig,
+              tiempoValue: result.data.tiempoValue || this.state.tiempoValue,
+              pieValue: result.data.pieValue || this.state.pieValue
             });
           }
           
@@ -1168,12 +1174,16 @@ const Alert=(props)=> {
 
     const handleChangeIndex = (index, data) => {
      
-     this.setState({tiempoValue:data})
+     this.setState({tiempoValue:data}, () => {
+       this.saveWidgetConfig();
+     });
     };
 
     const handleChangeIndexPie = (index, data) => {
      
-      this.setState({pieValue:data})
+      this.setState({pieValue:data}, () => {
+        this.saveWidgetConfig();
+      });
      };
 
     // Componente del Panel de Personalización de Widgets

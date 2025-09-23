@@ -153,6 +153,7 @@ ImagenP: {
      showPieChart: { type: Boolean, default: true },
      showBarChart: { type: Boolean, default: true },
      showLiquidityChart: { type: Boolean, default: true },
+     showTimeFilter: { type: Boolean, default: true },
      incomeChartType: { type: String, default: 'line' },
      expenseChartType: { type: String, default: 'line' },
      pieChartType: { type: String, default: 'pie' },
@@ -165,10 +166,13 @@ ImagenP: {
        pieColors: { type: [String], default: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'] }
      }
    },
+   // Valores de filtros de tiempo para widgets
+   tiempoValue: { type: String, default: 'diario' },
+   pieValue: { type: String, default: 'diario' },
    // Orden de los widgets en el dashboard
    widgetOrder: { 
      type: [String], 
-     default: ['showIncomeChart', 'showExpenseChart', 'showPieChart', 'showBarChart', 'showLiquidityChart'] 
+     default: ['showTimeFilter', 'showIncomeChart', 'showExpenseChart', 'showPieChart', 'showBarChart', 'showLiquidityChart'] 
    },
    // Configuración del registro contable
    registroContableConfig: {
