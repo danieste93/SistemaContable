@@ -169,6 +169,7 @@ ImagenP: {
    // Valores de filtros de tiempo para widgets
    tiempoValue: { type: String, default: 'diario' },
    pieValue: { type: String, default: 'gastos' },
+   barValue: { type: String, default: 'liquidez' },
    // Orden de los widgets en el dashboard
    widgetOrder: { 
      type: [String], 

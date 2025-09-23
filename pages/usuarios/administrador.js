@@ -33,6 +33,7 @@ class admins extends Component {
     modalagregador:false,
    
     pieValue:"gastos",
+    barValue:"liquidez", // liquidez (posesión) o noliquidez (no posesión)
     cuentaToAdd:{},
     Alert:{Estado:false},
     tiempoValue:"diario",
@@ -373,7 +374,8 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
         widgetConfig: this.state.widgetConfig,
         widgetOrder: this.state.widgetOrder,
         tiempoValue: this.state.tiempoValue,
-        pieValue: this.state.pieValue
+        pieValue: this.state.pieValue,
+        barValue: this.state.barValue
       };
       
       console.log('Guardando configuración:', configData);
@@ -446,7 +448,8 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
             this.setState({
               widgetConfig: migratedConfig,
               tiempoValue: result.data.widgets.tiempoValue || this.state.tiempoValue,
-              pieValue: result.data.widgets.pieValue || this.state.pieValue
+              pieValue: result.data.widgets.pieValue || this.state.pieValue,
+              barValue: result.data.widgets.barValue || this.state.barValue
             });
           }
           
@@ -479,7 +482,8 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
             this.setState({
               widgetConfig: migratedConfig,
               tiempoValue: result.data.tiempoValue || this.state.tiempoValue,
-              pieValue: result.data.pieValue || this.state.pieValue
+              pieValue: result.data.pieValue || this.state.pieValue,
+              barValue: result.data.barValue || this.state.barValue
             });
           }
           
@@ -1036,15 +1040,43 @@ if(this.props.state.RegContableReducer.Cuentas){
     liquidezData = periodosOrdenados.map(periodo => liquidezPorPeriodo[periodo].toFixed(2));
   }
 
-  this.props.state.RegContableReducer.Cuentas.filter(x=> x.DineroActual.$numberDecimal != "0" && x.DineroActual.$numberDecimal != "0.00" && x.CheckedP == true && x.Tipo != "Inventario" ).sort((a, b) =>parseFloat(b.DineroActual.$numberDecimal)  - parseFloat(a.DineroActual.$numberDecimal)).slice(0,10)
-  .forEach(x=>{
-
-    LabelsBar.push(x.NombreC)
-    dataBar.push(x.DineroActual.$numberDecimal)
-
-    
-
-  })
+  // Construir datos para el gráfico de barras según la selección
+  let cuentasFiltradas;
+  if (this.state.barValue === "liquidez") {
+    // Cuentas con liquidez (posesión)
+    cuentasFiltradas = this.props.state.RegContableReducer.Cuentas.filter(x=> 
+      x.DineroActual.$numberDecimal != "0" && 
+      x.DineroActual.$numberDecimal != "0.00" && 
+      x.CheckedP == true && 
+      x.CheckedA == true &&
+      x.Tipo != "Inventario" 
+    );
+  } else if (this.state.barValue === "noliquidez") {
+    // Cuentas sin liquidez (no posesión)
+    cuentasFiltradas = this.props.state.RegContableReducer.Cuentas.filter(x=> 
+      x.DineroActual.$numberDecimal != "0" && 
+      x.DineroActual.$numberDecimal != "0.00" && 
+      (x.CheckedP == false || x.CheckedA == false) &&
+      x.Tipo != "Inventario" 
+    );
+  } else {
+    // Por defecto, mostrar cuentas con liquidez
+    cuentasFiltradas = this.props.state.RegContableReducer.Cuentas.filter(x=> 
+      x.DineroActual.$numberDecimal != "0" && 
+      x.DineroActual.$numberDecimal != "0.00" && 
+      x.CheckedP == true && 
+      x.CheckedA == true &&
+      x.Tipo != "Inventario" 
+    );
+  }
+  
+  cuentasFiltradas
+    .sort((a, b) => parseFloat(b.DineroActual.$numberDecimal) - parseFloat(a.DineroActual.$numberDecimal))
+    .slice(0,10)
+    .forEach(x=>{
+      LabelsBar.push(x.NombreC)
+      dataBar.push(x.DineroActual.$numberDecimal)
+    });
 }
 
 
@@ -1473,10 +1505,10 @@ const Alert=(props)=> {
         { 
           key: 'showBarChart', 
           name: 'Gráfico de Barras', 
-          description: 'Comparación de ingresos vs gastos por período', 
+          description: 'Comparación de cuentas con/sin liquidez', 
           icon: '📊',
           color: '#FFCE56',
-          preview: 'Barras comparativas de diferentes períodos'
+          preview: 'Barras mostrando top 10 cuentas por tipo'
         },
         { 
           key: 'showLiquidityChart', 
@@ -2285,6 +2317,61 @@ const Alert=(props)=> {
                 }}
               />
             )}
+
+            {/* Título dinámico del widget */}
+            <div style={{ 
+              textAlign: 'center', 
+              marginBottom: '10px', 
+              fontSize: '16px', 
+              fontWeight: 'bold', 
+              color: '#333' 
+            }}>
+              {this.state.barValue === "liquidez" 
+                ? "Cuentas con liquidez (Top 10)" 
+                : "Cuentas sin liquidez (Top 10)"}
+            </div>
+
+            {/* Controles para alternar entre liquidez y no liquidez */}
+            <div style={{ 
+              textAlign: 'center', 
+              marginBottom: '15px',
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '10px'
+            }}>
+              <button
+                onClick={() => this.setState({barValue: "liquidez"}, () => this.saveWidgetConfig())}
+                style={{
+                  padding: '5px 15px',
+                  border: 'none',
+                  borderRadius: '20px',
+                  backgroundColor: this.state.barValue === "liquidez" ? '#4CAF50' : '#e0e0e0',
+                  color: this.state.barValue === "liquidez" ? 'white' : '#666',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Con Liquidez
+              </button>
+              <button
+                onClick={() => this.setState({barValue: "noliquidez"}, () => this.saveWidgetConfig())}
+                style={{
+                  padding: '5px 15px',
+                  border: 'none',
+                  borderRadius: '20px',
+                  backgroundColor: this.state.barValue === "noliquidez" ? '#FF9800' : '#e0e0e0',
+                  color: this.state.barValue === "noliquidez" ? 'white' : '#666',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Sin Liquidez
+              </button>
+            </div>
 
             <div className='contBarChart'>
               <Bar data={superdatabar} options={{
