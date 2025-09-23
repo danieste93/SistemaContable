@@ -111,26 +111,21 @@ this.startData()
           .then(response => {  
               console.log(response,"maindata")
               if(response.status == 'error'){
-            
                 if(response.message == "error al decodificar el token"){
                   this.props.dispatch(logOut());
                   this.props.dispatch(cleanData());
                   alert("Session expirada, vuelva a iniciar sesion para continuar");
-              
-               
                   Router.push("/ingreso")
-                     
                 }
               }else if(response.status == 'Ok'){
-               
                 this.props.dispatch(addFirstRegs(response.regsHabiles));
-                this.props.dispatch(gettipos(response.tiposHabiles));
+                // Usar tiposDeCuentas si existe, si no usar tiposHabiles
+                const tiposFinal = response.tiposDeCuentas ? response.tiposDeCuentas : response.tiposHabiles;
+                this.props.dispatch(gettipos(tiposFinal));
                 this.props.dispatch(getcats(response.catHabiles)); 
                 this.props.dispatch(getcuentas(response.cuentasHabiles)); 
                 this.props.dispatch(getRepeticiones(response.repsHabiles)); 
                 this.props.dispatch(getCounter(response.contadoresHabiles[0])); 
-
-              
               }
           });
         }  

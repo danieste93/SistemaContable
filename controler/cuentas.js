@@ -1907,7 +1907,26 @@ async function getMainData(req, res){
 let comprasHabiles = await ComprasModelSass.find({})
 let ventasHabiles = await VentaModelSass.find({})
   
-  res.status(200).send({status: "Ok", message: "maindata", comprasHabiles,ventasHabiles,distriHabiles,cuentasHabiles, catHabiles, tiposHabiles,regsHabiles,repsHabiles, contadoresHabiles,articulosHabiles,clientesHabiles,allCuentasHabiles});
+  // Extraer tipos únicos de todas las cuentas del usuario
+  const tiposDeCuentas = [...new Set(allCuentasHabiles.map(c => c.Tipo))];
+
+  res.status(200).send({
+    status: "Ok",
+    message: "maindata",
+    comprasHabiles,
+    ventasHabiles,
+    distriHabiles,
+    cuentasHabiles,
+    catHabiles,
+    tiposHabiles, // lo que ya tienes
+    tiposDeCuentas, // nuevo array con todos los tipos presentes en cuentas
+    regsHabiles,
+    repsHabiles,
+    contadoresHabiles,
+    articulosHabiles,
+    clientesHabiles,
+    allCuentasHabiles
+  });
   }
 
   async function getCuentaslim(req, res){
