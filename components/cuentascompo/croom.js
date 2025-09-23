@@ -14,7 +14,7 @@ import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import ModalDeleteC from "./modal-delete-cuenta";
 import postal from 'postal';
-import {getcuentas,addFirstRegs,addTipo } from "../../reduxstore/actions/regcont";
+import {getcuentas,addFirstRegs,addTipo,updateCuenta } from "../../reduxstore/actions/regcont";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { reorder } from "../reusableComplex/herlperDrag"
 import Tabs from '@material-ui/core/Tabs';
@@ -643,6 +643,15 @@ fetch("/cuentas/getcuentas", {
                             }}>
                             delete
                             </i>
+                            <i className="material-icons" 
+                               style={{marginLeft: '8px'}}
+                               onClick={(e)=>{
+                                 e.stopPropagation()
+                                 this.toggleCuentaVisibility(cuenta)
+                               }}
+                               title={cuenta.Visibility === false ? "Mostrar cuenta" : "Ocultar cuenta"}>
+                            {cuenta.Visibility === false ? 'visibility' : 'visibility_off'}
+                            </i>
                           </Animate>
                         </div>
                         <p className='textoNombreCuenta' >
@@ -954,6 +963,86 @@ editCustomCuenta=(e)=>{
 }
 */
 this.setState({CuentaEditar:e,EditCuenta:true})
+}
+
+toggleCuentaVisibility = (cuenta) => {
+  console.log('🔄 Toggle visibility called for:', cuenta.NombreC, 'Current visibility:', cuenta.Visibility);
+  
+  // Crear los datos como lo hace el modal de editar cuenta
+  let datos = {
+    Permisos: cuenta.Permisos || ["administrador"],
+    valores: {
+      checkedA: cuenta.CheckedA,
+      checkedP: cuenta.CheckedP,
+      visibility: !cuenta.Visibility, // Cambiar el estado de visibilidad
+      Tipo: cuenta.Tipo,
+      NombreC: cuenta.NombreC,
+      Dinero: cuenta.DineroIni,
+      DineroActual: cuenta.DineroActual,
+      DescripC: cuenta.Descrip,
+      idCuenta: cuenta.iDcuenta,
+      idCuentaMongo: cuenta._id,
+      Fpago: cuenta.FormaPago,
+      limiteCredito: cuenta.LimiteCredito,
+      urlIcono: cuenta.urlIcono,
+      fondo: cuenta.Background?.Seleccionado || "",
+      colorCuenta: cuenta.Background?.colorPicked || "",
+      fondoImagen: cuenta.Background?.urlBackGround || "",
+      Vendedor: cuenta.Permisos?.includes("vendedor") || false,
+      Tesorero: cuenta.Permisos?.includes("tesorero") || false,
+      Auxiliar: cuenta.Permisos?.includes("auxiliar") || false
+    },
+    Usuario: {
+      DBname: this.props.state.userReducer.update.usuario.user.DBname,
+      Usuario: this.props.state.userReducer.update.usuario.user.Usuario,
+      _id: this.props.state.userReducer.update.usuario.user._id,
+      Tipo: this.props.state.userReducer.update.usuario.user.Tipo,
+    },
+  };
+
+  console.log('📤 Sending data:', datos);
+
+  let url = "/cuentas/editcount";
+  fetch(url, {
+    method: 'PUT',
+    body: JSON.stringify(datos),
+    headers: {
+      'Content-Type': 'application/json',
+      "x-access-token": this.props.state.userReducer.update.usuario.token
+    }
+  }).then(res => {
+    console.log('📥 Response status:', res.status);
+    return res.json();
+  })
+  .catch(error => {
+    console.error('❌ Error:', error);
+    let alertMessage = {
+      Estado: true,
+      Tipo: "error",
+      Mensaje: "Error al actualizar la visibilidad de la cuenta"
+    };
+    this.setState({Alert: alertMessage});
+  })
+  .then(response => {
+    console.log('📋 Response data:', response);
+    if (response && response.cuenta) {
+      // Actualizar Redux con la cuenta modificada
+      this.props.dispatch(updateCuenta(response.cuenta));
+      
+      // Mostrar mensaje de confirmación
+      let alertMessage = {
+        Estado: true,
+        Tipo: "success",
+        Mensaje: response.cuenta.Visibility ? "Cuenta mostrada exitosamente" : "Cuenta ocultada exitosamente"
+      };
+      this.setState({Alert: alertMessage});
+      
+      // Actualizar los datos localmente
+      this.updateData();
+    } else {
+      console.log('⚠️ No cuenta in response or invalid response');
+    }
+  });
 }
 
 
@@ -1388,6 +1477,15 @@ this.setState({ModalDeleteC:true, CuentaPorDel:cuenta})
 }
 }}>
 delete
+</i>
+<i className="material-icons" 
+   style={{marginLeft: '8px'}}
+   onClick={(e)=>{
+     e.stopPropagation()
+     this.toggleCuentaVisibility(cuenta)
+   }}
+   title={cuenta.Visibility === false ? "Mostrar cuenta" : "Ocultar cuenta"}>
+{cuenta.Visibility === false ? 'visibility' : 'visibility_off'}
 </i>
 </Animate>
 
