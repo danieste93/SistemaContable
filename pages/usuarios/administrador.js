@@ -32,7 +32,7 @@ class admins extends Component {
   state = {
     modalagregador:false,
    
-    pieValue:"ingresos",
+    pieValue:"gastos",
     cuentaToAdd:{},
     Alert:{Estado:false},
     tiempoValue:"diario",
@@ -2134,6 +2134,61 @@ const Alert=(props)=> {
                 }}
               />
             )}
+
+            {/* Título dinámico del widget */}
+            <div style={{ 
+              textAlign: 'center', 
+              marginBottom: '10px', 
+              fontSize: '16px', 
+              fontWeight: 'bold', 
+              color: '#333' 
+            }}>
+              {this.state.pieValue === "ingresos" 
+                ? "Distribución de ingresos por categorías" 
+                : "Distribución de gastos por categorías"}
+            </div>
+
+            {/* Controles para alternar entre ingresos y gastos */}
+            <div style={{ 
+              textAlign: 'center', 
+              marginBottom: '15px',
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '10px'
+            }}>
+              <button
+                onClick={() => this.setState({pieValue: "ingresos"}, () => this.saveWidgetConfig())}
+                style={{
+                  padding: '5px 15px',
+                  border: 'none',
+                  borderRadius: '20px',
+                  backgroundColor: this.state.pieValue === "ingresos" ? '#4CAF50' : '#e0e0e0',
+                  color: this.state.pieValue === "ingresos" ? 'white' : '#666',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Ingresos
+              </button>
+              <button
+                onClick={() => this.setState({pieValue: "gastos"}, () => this.saveWidgetConfig())}
+                style={{
+                  padding: '5px 15px',
+                  border: 'none',
+                  borderRadius: '20px',
+                  backgroundColor: this.state.pieValue === "gastos" ? '#f44336' : '#e0e0e0',
+                  color: this.state.pieValue === "gastos" ? 'white' : '#666',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Gastos
+              </button>
+            </div>
 
             <div className='contPie'>
               <Pie data={superdataPie} plugins={[ChartDataLabels]} options={{
