@@ -49,7 +49,7 @@ class admins extends Component {
     touchTargetWidget: null,
     isDragging: false,
     touchStartTime: null,
-    widgetOrder: ['showTimeFilter', 'showIncomeChart', 'showExpenseChart', 'showPieChart', 'showBarChart', 'showLiquidityChart'], // Orden de widgets
+  widgetOrder: ['showTimeFilter', 'showIncomeChart', 'showExpenseChart', 'showPieChart', 'showBarChart', 'showLiquidityChart', 'showPatrimonioChart'], // Orden de widgets
     widgetConfig: {
       showTimeFilter: true, // Nuevo widget de filtros de tiempo
       showIncomeChart: true,
@@ -57,7 +57,7 @@ class admins extends Component {
       showPieChart: true,
       showBarChart: true,
       showLiquidityChart: true, // Nuevo widget de liquidez
-      showPatrimonioChart: false, // Nuevo widget de patrimonio (opcional)
+  showPatrimonioChart: true, // Nuevo widget de patrimonio (siempre visible)
       incomeChartType: 'line', // line, bar, area
       expenseChartType: 'line',
       pieChartType: 'pie', // pie, doughnut
@@ -2062,9 +2062,55 @@ const Alert=(props)=> {
               onClick={this.toggleAddWidgetsPanel} 
               color="primary"
               variant="outlined"
-              style={{ borderRadius: '8px' }}
+              style={{ borderRadius: '8px', marginRight: '12px' }}
             >
               Cerrar
+            </Button>
+            <Button
+              onClick={() => {
+                // Configuración por defecto de widgets
+                this.setState({
+                  widgetConfig: {
+                    showTimeFilter: true,
+                    showIncomeChart: true,
+                    showExpenseChart: true,
+                    showPieChart: true,
+                    showBarChart: true,
+                    showLiquidityChart: true,
+                    showPatrimonioChart: true,
+                    incomeChartType: 'line',
+                    expenseChartType: 'line',
+                    pieChartType: 'pie',
+                    barChartType: 'bar',
+                    liquidityChartType: 'line',
+                    patrimonioChartType: 'line',
+                    customColors: {
+                      income: '#8cf73a',
+                      expense: '#f1586e',
+                      liquidity: '#00d4aa',
+                      patrimonio: '#9c27b0',
+                      pieColors: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+                    }
+                  },
+                  widgetOrder: [
+                    'showTimeFilter',
+                    'showIncomeChart',
+                    'showExpenseChart',
+                    'showPieChart',
+                    'showBarChart',
+                    'showLiquidityChart',
+                    'showPatrimonioChart'
+                  ]
+                }, () => {
+                  this.saveWidgetConfig();
+                  this.toggleAddWidgetsPanel();
+                });
+              }}
+              color="secondary"
+              variant="contained"
+              style={{ borderRadius: '8px' }}
+            >
+              Restablecer widgets
             </Button>
           </DialogActions>
         </Dialog>
