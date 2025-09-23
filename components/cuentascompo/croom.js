@@ -1565,8 +1565,6 @@ DragableContent = ArrTipos.map((item, index) => (
           }
         }
 
-
-        let flechaCuentas = this.state.cuentaExpand == item?"expand_less":"expand_more" 
        
         let cantidadCuentas = cuentasrender.length 
         visible = cantidadCuentas == 0?"invisiblex":""
@@ -1639,23 +1637,9 @@ ${parseFloat(ResultCuentas).toFixed(2)}
 >
   {(this.state.ordenCuentas[item] || 'desc') === 'desc' ? 'arrow_downward' : 'arrow_upward'}
 </i>
-{this.state.vistaFormato === "cuadros" && (
-<i className="material-icons" onClick={(e)=>{
-
-  if(this.state.cuentaExpand == item){
-    this.setState({cuentaExpand:""})
-  }else{
-    this.setState({cuentaExpand:item})
-  }
-  
-
-  }}>
-  {flechaCuentas}
-</i>
-)}
         </div>
 </div>
-<Animate show={this.state.cuentaExpand != item && this.state.vistaFormato === "cuadros"}>
+<Animate show={this.state.vistaFormato === "cuadros"}>
 <div className="contcuentas">
 <Tabs
          value={0} // siempre válido
