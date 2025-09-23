@@ -39,6 +39,7 @@ class admins extends Component {
     
     // Estados para personalización de widgets estilo Apple
     editMode: false, // Modo de edición de widgets
+    showWidgetMenu: false, // Menú desplegable de widgets
     showAddWidgetsPanel: false, // Panel para agregar widgets
     showCustomizationPanel: false,
     draggedWidget: null, // Widget que se está arrastrando
@@ -305,6 +306,7 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
     this.setState({
       editMode: !this.state.editMode,
       showAddWidgetsPanel: false // Cerrar panel de agregar si está abierto
+      // Mantener showWidgetMenu abierto para seguir usando opciones
     });
   }
 
@@ -313,8 +315,15 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
     this.setState({
       showAddWidgetsPanel: !this.state.showAddWidgetsPanel,
       editMode: false // Salir del modo edición al agregar widgets
+      // Mantener showWidgetMenu abierto para seguir usando opciones
     }, () => {
       console.log('🟢 New showAddWidgetsPanel state:', this.state.showAddWidgetsPanel);
+    });
+  }
+
+  toggleWidgetMenu = () => {
+    this.setState({
+      showWidgetMenu: !this.state.showWidgetMenu
     });
   }
 
@@ -2265,62 +2274,153 @@ plugins: {
   {/* Panel de Agregar Widgets */}
   <AddWidgetsPanel />
   
-  {/* Botones Flotantes estilo Apple */}
+  {/* Botones Flotantes estilo Apple - Contenedor Widgets */}
   <div style={{
     position: 'fixed',
     bottom: 20,
     right: 20,
     zIndex: 1000,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px'
   }}>
     
-    {/* Botón Editar */}
-    <Fab 
-      color={this.state.editMode ? "secondary" : "primary"}
-      aria-label={this.state.editMode ? "terminar edición" : "editar widgets"}
-      onClick={this.toggleEditMode}
-      style={{
-        background: this.state.editMode 
-          ? 'linear-gradient(45deg, #ff6b35 30%, #ff8c42 90%)' 
-          : 'linear-gradient(45deg, #004a9b 30%, #0066cc 90%)',
-        color: 'white',
-        transition: 'all 0.3s ease'
-      }}
-    >
-      {this.state.editMode ? <DoneIcon /> : <EditIcon />}
-    </Fab>
+    {/* Botones desplegables (aparecen hacia arriba) */}
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '12px',
+      marginBottom: '15px',
+      transform: this.state.showWidgetMenu ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.8)',
+      opacity: this.state.showWidgetMenu ? 1 : 0,
+      visibility: this.state.showWidgetMenu ? 'visible' : 'hidden',
+      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      pointerEvents: this.state.showWidgetMenu ? 'auto' : 'none',
+    }}>
+      
+      {/* Botón Editar - Siempre visible cuando el menú está abierto */}
+      <div style={{
+        position: 'relative',
+        transform: this.state.editMode ? 'scale(1.15)' : 'scale(1)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      }}>
+        <Fab 
+          size="small"
+          color={this.state.editMode ? "secondary" : "primary"}
+          aria-label={this.state.editMode ? "terminar edición" : "editar widgets"}
+          onClick={this.toggleEditMode}
+          style={{
+            background: this.state.editMode 
+              ? 'linear-gradient(45deg, #ff6b35 30%, #ff8c42 90%)' 
+              : 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+            color: 'white',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: this.state.editMode 
+              ? '0 6px 20px rgba(255, 107, 53, 0.4)' 
+              : '0 4px 15px rgba(102, 126, 234, 0.3)',
+            border: '2px solid rgba(255,255,255,0.3)',
+            transform: this.state.editMode ? 'rotate(180deg)' : 'rotate(0deg)',
+          }}
+        >
+          {this.state.editMode ? <DoneIcon /> : <EditIcon />}
+        </Fab>
+      </div>
 
-    {/* Botón Agregar Widgets */}
-    <Fab 
-      color="primary"
-      aria-label="agregar widgets"
-      onClick={this.toggleAddWidgetsPanel}
-      style={{
-        background: this.state.showAddWidgetsPanel 
-          ? 'linear-gradient(45deg, #2e7d32 30%, #43a047 90%)'
-          : 'linear-gradient(45deg, #004a9b 30%, #0066cc 90%)',
-        color: 'white',
-        transition: 'all 0.3s ease'
-      }}
-    >
-      <AddIcon />
-    </Fab>
-
-    {/* Botón Configuración Avanzada */}
-    <Fab 
-      size="small"
-      color="primary"
-      aria-label="configuración avanzada"
-      onClick={this.toggleCustomizationPanel}
-      style={{
-        background: 'linear-gradient(45deg, #6a1b9a 30%, #8e24aa 90%)',
-        color: 'white'
-      }}
-    >
-      <SettingsIcon />
-    </Fab>
+      {/* Botón Agregar Widgets - Siempre visible cuando el menú está abierto */}
+      <div style={{
+        position: 'relative',
+        transform: this.state.showAddWidgetsPanel ? 'scale(1.15)' : 'scale(1)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      }}>
+        <Fab 
+          size="small"
+          color="primary"
+          aria-label="agregar widgets"
+          onClick={this.toggleAddWidgetsPanel}
+          style={{
+            background: this.state.showAddWidgetsPanel 
+              ? 'linear-gradient(45deg, #2e7d32 30%, #43a047 90%)'
+              : 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+            color: 'white',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: this.state.showAddWidgetsPanel 
+              ? '0 6px 20px rgba(46, 125, 50, 0.4)' 
+              : '0 4px 15px rgba(102, 126, 234, 0.3)',
+            border: '2px solid rgba(255,255,255,0.3)',
+            transform: this.state.showAddWidgetsPanel ? 'rotate(45deg)' : 'rotate(0deg)',
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      </div>
+      
+    </div>
+    
+    {/* Botón Principal de Widgets */}
+    <div style={{
+      position: 'relative',
+      transform: this.state.showWidgetMenu ? 'scale(1.1) rotate(180deg)' : 'scale(1) rotate(0deg)',
+      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    }}>
+      <Fab 
+        color="primary"
+        aria-label="widgets menu"
+        onClick={this.toggleWidgetMenu}
+        style={{
+          background: this.state.showWidgetMenu
+            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: this.state.showWidgetMenu 
+            ? '0 8px 25px rgba(102, 126, 234, 0.5)' 
+            : '0 6px 20px rgba(102, 126, 234, 0.4)',
+          border: '2px solid rgba(255,255,255,0.3)',
+          width: '60px',
+          height: '60px',
+        }}
+      >
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '10px',
+          fontWeight: '600',
+          letterSpacing: '0.5px',
+        }}>
+          <div style={{
+            fontSize: '18px',
+            marginBottom: '2px',
+            transform: this.state.showWidgetMenu ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.3s ease',
+          }}>
+            ⚙️
+          </div>
+          <div style={{
+            textTransform: 'uppercase',
+            lineHeight: 1,
+          }}>
+            Widgets
+          </div>
+        </div>
+      </Fab>
+      
+      {/* Indicador de estado activo */}
+      {(this.state.editMode || this.state.showAddWidgetsPanel) && (
+        <div style={{
+          position: 'absolute',
+          top: '-3px',
+          right: '-3px',
+          width: '16px',
+          height: '16px',
+          borderRadius: '50%',
+          background: 'linear-gradient(45deg, #4CAF50, #8BC34A)',
+          boxShadow: '0 2px 8px rgba(76, 175, 80, 0.5)',
+          animation: 'pulse 2s infinite',
+          border: '2px solid white',
+        }} />
+      )}
+      
+    </div>
   </div>
 
    <Snackbar open={this.state.Alert.Estado} autoHideDuration={5000} onClose={handleClose}>
@@ -2511,6 +2611,21 @@ font-size:25px
 .glassStyle.dragging {
   opacity: 0.5;
   transform: rotate(2deg);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
   `
