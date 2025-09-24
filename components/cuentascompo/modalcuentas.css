@@ -169,6 +169,19 @@
   gap: 18px;
   align-items: center;
 }
+.conticonos i {
+  font-size: 24px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transition: background 0.3s ease, transform 0.2s ease;
+  cursor: pointer;
+  color: #fff;
+}
+.conticonos i:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
 .cDc2x {
   display: flex;
   flex-direction: column;
