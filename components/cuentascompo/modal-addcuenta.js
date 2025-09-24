@@ -17,6 +17,10 @@ import RadioGroup from '@material-ui/core/RadioGroup';
 import Radio from '@material-ui/core/Radio';
 import { CircularProgress } from '@material-ui/core';
 class ModalAddCuenta extends Component {
+   constructor(props) {
+    super(props);
+    this.nombreInputRef = React.createRef();
+   }
    state={
     Alert:{Estado:false},
     filtrosflecha:false,
@@ -54,6 +58,13 @@ class ModalAddCuenta extends Component {
         document.getElementById('mainaddc').classList.add("entradaaddc")
   
        }, 200);
+
+       // Retraso adicional para el focus del input después de que aparezca el popup
+       setTimeout(() => {
+         if (this.nombreInputRef.current) {
+           this.nombreInputRef.current.focus();
+         }
+       }, 600);
 
       
       }
@@ -230,12 +241,12 @@ const Alert=(props)=> {
   return <MuiAlert elevation={6} variant="filled" {...props} />;
 }
    
-        return ( 
+         return ( 
 
          <div >
 
-<div id="mainaddc"className="maincontacto" >
-            <div className="contcontacto"  >
+    <div id="mainaddc" className={`maincontacto-modalcuentas entrada`} >
+      <div className="contcontacto"  >
         
             <div className="headercontact">
                 <img src="/static/flecharetro.png" alt="" className="flecharetro" 
@@ -286,6 +297,7 @@ const Alert=(props)=> {
                 id="standard-basic"
                  label=""
                  helperText={this.state.helper}
+                 inputRef={this.nombreInputRef}
                  
                  />
             
@@ -398,7 +410,7 @@ const Alert=(props)=> {
       />
             
               </div>
-              </div> 
+        </div>
           <div className="grupoDatos">
         <div className="cDc1x">
               <p style={{fontWeight:"bolder"}}>  Incluir en el total (Capital)   </p>
@@ -604,7 +616,7 @@ const Alert=(props)=> {
 
            }
            .MuiSnackbar-anchorOriginBottomCenter{
-            z-index:999999999
+            z-index:2001;
            }
          .contcheckbox{
           display: flex;
@@ -761,10 +773,12 @@ const Alert=(props)=> {
   }
         
         .maincontacto{
-          z-index: 1302;
+          z-index: 1301;
          width: 100vw;
          height: 100vh;
-         background: #00f1e6;
+         background: rgba(255,255,255,0.45);
+         backdrop-filter: blur(8px);
+         -webkit-backdrop-filter: blur(8px);
          left: -100%;
          position: fixed;
          top: 0px;
@@ -781,6 +795,7 @@ const Alert=(props)=> {
 
 
        .contcontacto{
+        animation: popupSlideDown 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         border-radius: 30px;
         height: 95%;
         width: 96%;
@@ -789,7 +804,23 @@ const Alert=(props)=> {
          overflow: scroll;
          overflow-x: hidden;
          padding-bottom: 40px;
+         will-change: transform, opacity;
        }
+
+@keyframes popupSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.95);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translateY(-8px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
      
    
       
@@ -825,13 +856,75 @@ const Alert=(props)=> {
          
       
         
-             @media only screen and (max-width: 320px) { 
-            
-           
-         .contcontacto{
-          width: 95%;
+             @media only screen and (max-width: 600px) {
+    .contcontacto {
+      width: 98vw;
+      min-width: 0;
+      max-width: 340px;
+      margin: 0 auto;
+      padding: 0 4px 120px 4px;
+      overflow-y: auto;
+      max-height: 100vh;
+      box-sizing: border-box;
+      overscroll-behavior: contain;
+    }
+    .maincontacto {
+      background: rgba(255,255,255,0.45) !important;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      margin: 0 auto !important;
+      width: 100vw !important;
+      height: 100vh !important;
+    }
+    .botoncontact {
+      margin-bottom: 48px !important;
+    }
+    .jwFlex.column.centrar {
+      flex-direction: row !important;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .botoncontact {
+      width: 90vw;
+      max-width: 320px;
+      font-size: 1.1rem;
+      padding: 12px 0;
+      margin: 12px auto 8px auto;
+      display: block;
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+         .botoncontact {
+          margin-bottom: 48px !important;
          }
-          }
+         .botoncontact {
+          margin-bottom: 48px !important;
+         }
+         .jwFlex.column.centrar {
+          flex-direction: row !important;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          margin-bottom: 8px;
+         }
+         .botoncontact {
+          width: 90vw;
+          max-width: 320px;
+          font-size: 1.1rem;
+          padding: 12px 0;
+          margin: 12px auto 8px auto;
+          display: block;
+          position: relative;
+          left: 50%;
+          transform: translateX(-50%);
+         }
+       }
           @media only screen and (min-width: 600px) { 
          
 
