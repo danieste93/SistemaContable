@@ -9,11 +9,16 @@ class Cuentas extends Component {
   componentDidMount() {
     setTimeout(() => {
       document.getElementById('maincuentas').classList.add("entrada");
-      if (this.inputRef.current) {
-        this.inputRef.current.focus();
-      }
+      // if (this.inputRef.current) {
+      //   this.inputRef.current.focus();
+      // }
       // Al abrir, mostrar solo cuentas ocultas
       this.setState({ visibility: true });
+      // Forzar scroll al tope en móvil
+      if (window.innerWidth < 768) {
+        const container = document.querySelector('.contcuentasCx');
+        if (container) container.scrollTop = 0;
+      }
     }, 50);
 
     // Bloquear scroll del fondo
@@ -262,14 +267,12 @@ class Cuentas extends Component {
               <div className="conticonos">
                 <i className={`material-icons ${lapizctive}`} onClick={() => this.setState({ editmode: !this.state.editmode })}>edit</i>
                 <i className="material-icons" onClick={() => this.setState({ AddCuenta: true })}>add</i>
-                <div className="cDc2x">
-                  <Animate show={this.state.visibility}>
-                    <i className="material-icons" onClick={() => this.setState({ visibility: !this.state.visibility })}>visibility_off</i>
-                  </Animate>
-                  <Animate show={!this.state.visibility}>
-                    <i className="material-icons" onClick={() => this.setState({ visibility: !this.state.visibility })}>visibility</i>
-                  </Animate>
-                </div>
+                <Animate show={this.state.visibility}>
+                  <i className="material-icons" onClick={() => this.setState({ visibility: !this.state.visibility })}>visibility_off</i>
+                </Animate>
+                <Animate show={!this.state.visibility}>
+                  <i className="material-icons" onClick={() => this.setState({ visibility: !this.state.visibility })}>visibility</i>
+                </Animate>
                 <i className="material-icons" onClick={() => {
                   setTimeout(() => { this.props.Flecharetro3(); }, 300);
                   document.getElementById('maincuentas').classList.remove("entrada");

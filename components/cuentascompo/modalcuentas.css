@@ -152,10 +152,42 @@
   border-radius: 18px 18px 0 0;
   margin-bottom: 24px;
   display: flex;
-  justify-content: space-evenly;
+  justify-content: space-around;
   align-items: center;
-  padding: 16px 0 16px 0;
+  padding: 16px 32px 16px 32px;
   box-shadow: 0 2px 12px #418fe233;
+}
+@media (min-width: 601px) {
+  .cuentasheader {
+    padding: 16px 60px 16px 60px;
+    justify-content: space-between;
+  }
+  .conticonos {
+    width: 60%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 48px;
+  }
+  .tituloventa {
+    font-size: 2.2rem;
+    max-width: 40vw;
+    text-align: left;
+  }
+  .conticonos .material-icons {
+    font-size: 2rem;
+    margin: 0 8px;
+    vertical-align: middle;
+  }
+  .conticonos .material-icons.add {
+    order: 1;
+    color: #4CAF50;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px #4caf5033;
+    padding: 6px;
+    transition: background 0.2s;
+  }
 }
 .tituloventa {
   font-size: 2.1rem;
@@ -163,11 +195,6 @@
   text-align: center;
   flex: none;
   letter-spacing: 0.03em;
-}
-.conticonos {
-  display: flex;
-  gap: 18px;
-  align-items: center;
 }
 .conticonos i {
   font-size: 24px;
@@ -262,6 +289,20 @@
   top: -50%;
   left: 0;
   width: 100vw;
+@media (max-width: 600px) {
+  .conticonos {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+  }
+  .tituloventa {
+    font-size: 1.4rem !important;
+    max-width: 60vw;
+    text-align: center;
+  }
+}
   height: 50%;
   min-height: 420px;
   background: rgba(0,0,0,0.85);
@@ -445,12 +486,12 @@
     min-height: 70px !important;
   }
   .headercontact.cuentasheader {
-    padding: 10px 0 10px 0;
+    padding: 10px 10px 10px 10px;
     font-size: 1rem;
     border-radius: 12px 12px 0 0;
   }
   .tituloventa {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     padding: 0 4px;
   }
   .react-autosuggest__container {

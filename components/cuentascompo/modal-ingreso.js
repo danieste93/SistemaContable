@@ -1029,7 +1029,7 @@ if(this.props.state.userReducer != ""){
 
        </div>
        <div className="jwContCenter">
-  <button className="botoncontact" style={{backgroundColor:"red"}}onClick={this.Reiniciar}>
+  <button className="botoncontact" style={{background:"linear-gradient(90deg, #2266aa 0%, #00b6e6 100%)"}}onClick={this.Reiniciar}>
    <Animate show={this.state.waiting}>
    <div className="lds-facebook"><div></div><div></div><div></div></div>
      
@@ -1155,7 +1155,7 @@ if(this.props.state.userReducer != ""){
 
        </div>
        <div className="jwContCenter">
-       <button className="botoncontact" style={{backgroundColor:"red"}}onClick={this.ReiniciarTrans}>
+       <button className="botoncontact" style={{background:"linear-gradient(90deg, #2266aa 0%, #00b6e6 100%)"}}onClick={this.ReiniciarTrans}>
    <Animate show={this.state.waitingtrans}>
    <div className="lds-facebook"><div></div><div></div><div></div></div>
      

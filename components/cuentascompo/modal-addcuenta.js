@@ -810,15 +810,15 @@ const Alert=(props)=> {
 @keyframes popupSlideDown {
   0% {
     opacity: 0;
-    transform: translateY(-50px) scale(0.95);
+    transform: scale(0.8);
   }
   60% {
     opacity: 0.8;
-    transform: translateY(-8px) scale(0.98);
+    transform: scale(0.98);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: scale(1);
   }
 }
      
