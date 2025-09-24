@@ -4,6 +4,7 @@ import {connect} from 'react-redux';
 import ModalDeleteCat from "./modal-delete-cat"
 import postal from 'postal';
 import "../../styles/autosugest.css"
+import './modalcuentas.css';
 class Contacto extends Component {
    
   state={
@@ -206,18 +207,14 @@ channel1 = null;
      </div>
         </div>
         <div className="contcuentasCx">
-           <div>
         <Animate show={this.state.Buscador}>
-     <div className="buscadorCuentas">
      <div className="react-autosuggest__container">
     <input autoFocus name="cuentasSearcher" className="react-autosuggest__input" onChange={this.handleChangeSearcher}
     
     placeholder="Busca tus Categorias" /> 
     
       </div>
-     </div>
      </Animate>
-     </div>
 <div className="contcuentas">
 {generadorDeCategorias}
 </div>

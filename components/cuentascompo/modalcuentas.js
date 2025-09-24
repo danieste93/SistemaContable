@@ -277,21 +277,17 @@ class Cuentas extends Component {
               </div>
             </div>
             <div className="contcuentasCx">
-              <div>
-                <div className="buscadorCuentas">
-                  <div className="react-autosuggest__container">
-                    <input
-                      ref={this.inputRef}
-                      autoFocus
-                      name="cuentasSearcher"
-                      className="react-autosuggest__input"
-                      onChange={this.handleChangeSearcher}
-                      placeholder="Busca tus Cuentas"
-                      value={this.state.cuentasSearcher}
-                    />
-                  </div>
+              <div className="react-autosuggest__container">
+                  <input
+                    ref={this.inputRef}
+                    autoFocus
+                    name="cuentasSearcher"
+                    className="react-autosuggest__input"
+                    onChange={this.handleChangeSearcher}
+                    placeholder="Busca tus Cuentas"
+                    value={this.state.cuentasSearcher}
+                  />
                 </div>
-              </div>
               <div className='coninternoCuentas'>
                 {generadorDeCuentas}
               </div>

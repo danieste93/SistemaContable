@@ -72,44 +72,55 @@
     background: rgba(255,255,255,0.45);
   }
 }
-.buscadorCuentas {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 18px;
-}
 .react-autosuggest__container {
   position: relative;
-  border-radius: 10px;
-  border: 2px solid #418fe2;
-  box-shadow: 0 4px 16px #418fe233;
-  margin: 0px 0px 0px 0px;
-  padding: 4px 12px;
-  background: #f8fbff;
+  width: 100%;
+  margin: 0 0 24px;
   display: flex;
   align-items: center;
-  width: 100%;
-  max-width: 420px;
+  background: #ffffff;
+  border: 2px solid #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.react-autosuggest__container:hover {
+  border-color: #ffffff;
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+}
+.react-autosuggest__container::before {
+  content: '\e8b6'; /* search icon */
+  font-family: 'Material Icons';
+  font-size: 20px;
+  color: #999;
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 .react-autosuggest__input {
   width: 100%;
-  padding: 14px 18px;
-  border-radius: 8px;
-  border: 2px solid #00f1e6;
-  font-size: 1.18rem;
-  background: #fff;
-  box-shadow: 0 2px 8px #418fe233;
-  transition: border-color 0.2s;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #ffffff;
+  color: #333;
+  font-weight: 400;
+  text-align: center;
+  outline: none;
+  transition: all 0.3s ease;
+}
+.react-autosuggest__input::placeholder {
+  color: #aaa;
 }
 .react-autosuggest__input:focus {
-  border-color: #418fe2;
-  outline: none;
+  background: rgba(65, 143, 226, 0.05);
 }
-.buscadorCuentas .material-icons {
-  color: #418fe2;
-  font-size: 28px;
-  margin-left: 12px;
-  cursor: pointer;
-  transition: color 0.2s;
+.react-autosuggest__input:focus + .react-autosuggest__container::before {
+  color: #2266aa;
 }
 .buscadorCuentas .material-icons:hover {
   color: #00f1e6;
@@ -240,6 +251,21 @@
   transition: 0.6s;
   overflow: hidden;
 }
+.maincontcat {
+  z-index: 2000;
+  position: fixed;
+  top: -50%;
+  left: 0;
+  width: 100vw;
+  height: 50%;
+  min-height: 420px;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  transition: 0.6s;
+  overflow: hidden;
+}
 
 /* Tamaños más grandes para PC */
 @media (min-width: 1024px) {
@@ -247,8 +273,13 @@
     height: 70%;
     min-height: 600px;
   }
+  .maincontcat {
+    height: 70%;
+    min-height: 600px;
+  }
   .contcontacto {
-    max-width: 900px;
+    width: 100vw !important;
+    max-width: none !important;
     min-height: 550px;
   }
   .coninternoCuentas {
@@ -257,7 +288,7 @@
     padding: 18px;
   }
   .cuentaRender {
-    width: 230px;
+    width: 280px;
     min-height: 115px;
   }
 }
@@ -267,17 +298,22 @@
     height: 75%;
     min-height: 650px;
   }
+  .maincontcat {
+    height: 75%;
+    min-height: 650px;
+  }
   .contcontacto {
-    max-width: 1100px;
+    width: 100vw !important;
+    max-width: none !important;
     min-height: 600px;
   }
   .coninternoCuentas {
-    gap: 20px;
+    gap: 25px;
     max-height: 500px;
-    padding: 20px;
+    padding: 25px;
   }
   .cuentaRender {
-    width: 240px;
+    width: 320px;
     min-height: 120px;
     margin: 8px;
   }
@@ -288,7 +324,7 @@
   border-radius: 24px;
   box-shadow: 0 12px 48px rgba(0,0,0,0.28);
   width: 98vw;
-  max-width: 700px;
+  max-width: 1200px !important;
   min-width: 340px;
   min-height: 480px;
   max-height: 80vh;
@@ -297,13 +333,16 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  border: 1.5px solid #e0e0e0;
+  border: none;
   overflow-y: auto;
   will-change: transform, opacity;
 }
 
 /* Clase para la animación de entrada específica del modal */
 .maincontacto-modalcuentas.entrada {
+  top: 0% !important;
+}
+.maincontcat.entrada {
   top: 0% !important;
 }
 
@@ -320,7 +359,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  border: 1.5px solid #e0e0e0;
+  border: none;
 }
 @media (max-width: 900px) {
   .maincontacto-modalcuentas {
@@ -356,7 +395,11 @@
 }
 @media (max-width: 600px) {
   .maincontacto-modalcuentas {
-    height: 70%;
+    height: 75%;
+    min-height: 350px;
+  }
+  .maincontcat {
+    height: 75%;
     min-height: 350px;
   }
   .contcontacto {
@@ -392,8 +435,16 @@
   }
   .react-autosuggest__container {
     max-width: 96vw;
-    padding: 2px 4px;
+    padding: 0;
     font-size: 0.98rem;
+  }
+  .react-autosuggest__input {
+    padding: 14px 18px 14px 50px;
+    font-size: 1rem;
+  }
+  .react-autosuggest__container::before {
+    font-size: 20px;
+    left: 16px;
   }
   .buscadorCuentas {
     margin-bottom: 10px;
@@ -401,7 +452,7 @@
   .coninternoCuentas {
     gap: 6px;
     min-height: 60px;
-    max-height: 55vh;
+    max-height: 65vh;
     overflow-y: auto;
     display: flex !important;
     flex-direction: row !important;
