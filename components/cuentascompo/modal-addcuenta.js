@@ -82,7 +82,7 @@ this.setState({checkedA:!this.state.checkedA})
       
       getTipeCuentas=()=>{
 
-if(this.props.state.RegContableReducer.Tipos.length  >  0){
+if(this.props.state.RegContableReducer.Tipos && this.props.state.RegContableReducer.Tipos.length > 0){
 
   let gene = this.props.state.RegContableReducer.Tipos.map((tipo,i)=>(<option key={i}>{tipo}</option>))
 

@@ -1,4 +1,3 @@
-
 import React, { Component } from 'react'
 import { Animate } from "react-animate-mount";
 
@@ -560,6 +559,16 @@ if(this.props.state.userReducer != ""){
              
                 </div>   
         )
+    }
+    componentDidUpdate(prevProps, prevState) {
+      // Bloquear scroll cuando se abre el modal agregador
+      if (this.state.modalagregador && !prevState.modalagregador) {
+        document.body.style.overflow = 'hidden';
+      }
+      // Restaurar scroll cuando se cierra el modal agregador
+      if (!this.state.modalagregador && prevState.modalagregador) {
+        document.body.style.overflow = '';
+      }
     }
 }
 const mapStateToProps = state=>  {
