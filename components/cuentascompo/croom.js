@@ -1708,7 +1708,7 @@ DragableContent = ArrTipos.map((item, index) => (
         <div className="tituloPrin">{item.toUpperCase()}</div>
         <div style={{display:'flex',alignItems:'center',gap:'12px',marginLeft:'auto'}}>
           <div className={`valorcuentas ${color}`} style={{minWidth:'120px'}}>
-            {this.state.ValorCuenta ? sumatoria.toFixed(2) : parseFloat(ResultCuentas).toFixed(2)}
+            ${this.state.ValorCuenta ? sumatoria.toFixed(2) : parseFloat(ResultCuentas).toFixed(2)}
           </div>
           <i className="material-icons"
             onClick={(e) => {
@@ -2283,7 +2283,7 @@ if(cuentasrenderNoPosesion.length > 0){
           <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>monetization_on</span>
           <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>water_drop</span>
         </div>
-        <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',minWidth:'120px'}}>POSESIÓN</div>
+  <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',margin:'0 auto'}}>POSESIÓN</div>
         <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
           <div className="valorcuentas" style={{color:'#fff',fontWeight:'bold',minWidth:'330px'}}>${sumatoriaP.toFixed(2)}</div>
           <i className="material-icons"
@@ -2294,7 +2294,7 @@ if(cuentasrenderNoPosesion.length > 0){
             title={`Ordenar de ${(this.state.ordenCuentas['Posesion'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
             style={{
               fontSize: '20px',
-              color: '#1976d2',
+              color: '#fff',
               cursor: 'pointer',
               marginRight: '8px',
               background: 'none',
@@ -2347,9 +2347,9 @@ if(cuentasrenderNoPosesion.length > 0){
         <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>ac_unit</span>
         <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>lock</span>
       </div>
-      <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',minWidth:'120px'}}>NO POSESIÓN</div>
+  <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',margin:'0 auto'}}>NO POSESIÓN</div>
       <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-        <div className="valorcuentas" style={{color:'#fff',fontWeight:'bold',minWidth:'330px'}}>${sumatoriaNP.toFixed(2)}</div>
+  <div className="valorcuentas" style={{color:'#fff',fontWeight:'bold',minWidth:'330px'}}>${sumatoriaNP.toFixed(2)}</div>
         <i
           className="material-icons"
           onClick={(e) => {
@@ -2409,9 +2409,9 @@ if(cuentasrenderNoPosesion.length > 0){
         <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>ac_unit</span>
   <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>description</span>
       </div>
-      <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',minWidth:'120px'}}>POSESIÓN SIN TOTAL</div>
+  <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',margin:'0 auto'}}>POSESIÓN SIN TOTAL</div>
       <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-        <div className="valorcuentas" style={{color:'#fff',fontWeight:'bold',minWidth:'330px'}}>${sumatoriaPST.toFixed(2)}</div>
+  <div className="valorcuentas" style={{color:'#fff',fontWeight:'bold',minWidth:'330px'}}>${sumatoriaPST.toFixed(2)}</div>
         <i
           className="material-icons"
           onClick={(e) => {
@@ -2925,6 +2925,11 @@ if(cuentasrenderNoPosesion.length > 0){
     background: #cfe6ff94;
     width: 157px;
 }
+
+/* Oculta la barra indicator de Material-UI Tabs de forma robusta */
+.MuiTabs-indicator, .PrivateTabIndicator-root {
+  display: none !important;
+}
 .contDropdown{
   margin-top: 5px;
   margin-left: 5px;
@@ -3091,6 +3096,7 @@ margin: 10px 0px;
   font-size: 23px;
   color: inherit;
   margin: 0 12px 0 0; /* solo margen derecho para separación */
+  font-family: Georgia, 'Times New Roman', Times, serif;
 }
 
 .setBlue{
@@ -3334,6 +3340,10 @@ p{
                 .tituloPrin{
                   font-weight: bold;
                   font-size: 20px;
+                  text-align: center;
+                }
+                .contFlexSpaceB .material-icons {
+                  color: #fff !important;
                 }
                   .cuentaContenedor{
             
