@@ -1706,8 +1706,8 @@ DragableContent = ArrTipos.map((item, index) => (
       className={`contFlexSpaceB  customDragbar ${isDragging}`}
      >  
         <div className="tituloPrin">{item.toUpperCase()}</div>
-        <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-          <div className={`valorcuentas ${color}`} style={{minWidth:'330px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'12px',marginLeft:'auto'}}>
+          <div className={`valorcuentas ${color}`} style={{minWidth:'120px'}}>
             {this.state.ValorCuenta ? sumatoria.toFixed(2) : parseFloat(ResultCuentas).toFixed(2)}
           </div>
           <i className="material-icons"
@@ -2276,7 +2276,6 @@ if(cuentasrenderNoPosesion.length > 0){
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        minHeight: '48px'
       }}>
         <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
           <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>payments</span>
@@ -3157,7 +3156,9 @@ margin: 10px 0px;
 
     }
     .contBarraCuenta{
-      display:flex;
+      display: flex;
+      flex-wrap: wrap;
+      min-width: 0;
     }
 .mainText{
   width: 30%;
@@ -3411,19 +3412,21 @@ p{
                   .customDragbar {
                     background: linear-gradient(90deg, #7cbaff 60%, #1976d2 100%);
                     height: 32px;
-                      padding: 10px 24px;
-                      border-radius: 14px 14px 0 0;
-                      display: flex;
-                      justify-content: space-between;
-                      align-items: center;
-                      color: #fff;
-                      width: 98%;
-                      box-shadow: 0 4px 16px rgba(25, 118, 210, 0.10), 0 1.5px 0 #1976d2 inset;
-                      border-bottom: 2px solid #1976d2;
-                      font-size: 1.1rem;
-                      letter-spacing: 0.5px;
-                      gap: 16px;
-                      transition: box-shadow 0.2s, background 0.2s;
+                    padding: 10px 24px;
+                    border-radius: 14px 14px 0 0;
+                    display: flex;
+                    flex-wrap: wrap;
+                    min-width: 0;
+                    justify-content: space-between;
+                    align-items: center;
+                    color: #fff;
+                    width: 98%;
+                    box-shadow: 0 4px 16px rgba(25, 118, 210, 0.10), 0 1.5px 0 #1976d2 inset;
+                    border-bottom: 2px solid #1976d2;
+                    font-size: 1.1rem;
+                    letter-spacing: 0.5px;
+                    gap: 16px;
+                    transition: box-shadow 0.2s, background 0.2s;
                   }
                   .customDragbar:hover {
                       box-shadow: 0 8px 24px rgba(25, 118, 210, 0.18), 0 2px 0 #1976d2 inset;
@@ -3506,15 +3509,20 @@ p{
                 }
                 
                 /* Media queries solo para búsqueda de cuentas */
-                @media (max-width: 768px) {
-                  .contcuentas-search {
-                    justify-content: center;
-                    gap: 8px;
+                @media (max-width: 600px) {
+                  .valorcuentas {
+                    min-width: 60px !important;
+                    font-size: 16px !important;
                   }
-                  .contcuentas-search .contenedorCuenta {
-                    width: calc(100% - 10px);
-                    max-width: 100%;
-                    min-width: 280px;
+                  .contBarraCuenta > div[style*='display:flex'] {
+                    gap: 4px !important;
+                  }
+                  .customDragbar {
+                    gap: 4px !important;
+                    font-size: 0.95rem !important;
+                    padding: 8px 6px !important;
+                  }
+                }
                     margin: 0;
                   }
                 }
