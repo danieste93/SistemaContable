@@ -1702,62 +1702,39 @@ DragableContent = ArrTipos.map((item, index) => (
       >
         <div className='contBarraCuenta'>
      <div 
-   
       {...provided.dragHandleProps}
-     
       className={`contFlexSpaceB  customDragbar ${isDragging}`}
-     
      >  
-<div className="tituloPrin">{item.toUpperCase()}</div> 
-<div className='AnimateCont'>
-<Animate show={this.state.ValorCuenta}>
-<div className={`valorcuentas  ${color} `}>
-${sumatoria.toFixed(2)} 
-
-</div>
-</Animate> 
-<Animate show={!this.state.ValorCuenta}>
-<div className={`valorcuentas  ${color2} `}>
-${parseFloat(ResultCuentas).toFixed(2)} 
-
-</div>
-</Animate> 
-
-
-
-</div>
-
-
-
-</div>
-<div className="confiltroCuentra">
-{/* Botón de ordenamiento */}
-<i className="material-icons" 
-   onClick={(e)=>{
-     e.stopPropagation();
-     this.toggleOrdenCuentas(item);
-   }}
-   title={`Ordenar de ${(this.state.ordenCuentas[item] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
-   style={{
-     fontSize: '20px',
-     color: '#1976d2',
-     cursor: 'pointer',
-     marginRight: '8px',
-     padding: '2px',
-     borderRadius: '4px',
-     transition: 'all 0.3s ease',
-     position: 'relative'
-   }}
-   onMouseEnter={(e) => {
-     e.target.style.backgroundColor = '#e3f2fd';
-   }}
-   onMouseLeave={(e) => {
-     e.target.style.backgroundColor = 'transparent';
-   }}
->
-  {(this.state.ordenCuentas[item] || 'desc') === 'desc' ? 'trending_down' : 'trending_up'}
-</i>
+        <div className="tituloPrin">{item.toUpperCase()}</div>
+        <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+          <div className={`valorcuentas ${color}`} style={{minWidth:'330px'}}>
+            {this.state.ValorCuenta ? sumatoria.toFixed(2) : parseFloat(ResultCuentas).toFixed(2)}
+          </div>
+          <i className="material-icons"
+            onClick={(e) => {
+              e.stopPropagation();
+              this.toggleOrdenCuentas(item);
+            }}
+            title={`Ordenar de ${(this.state.ordenCuentas[item] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
+            style={{
+              fontSize: '20px',
+              color: '#fff',
+              cursor: 'pointer',
+              marginRight: '8px',
+              background: 'none',
+              border: 'none',
+              boxShadow: 'none',
+              padding: 0,
+              borderRadius: 0,
+              transition: 'transform 0.2s',
+              position: 'static',
+              transform: (this.state.ordenCuentas[item] || 'desc') === 'desc' ? 'none' : 'rotate(180deg)'
+            }}
+          >
+            sort
+          </i>
         </div>
+      </div>
 </div>
 <Animate show={this.state.vistaFormato === "cuadros"}>
 <div className="contcuentas">
@@ -2289,45 +2266,52 @@ if(cuentasrenderNoPosesion.length > 0){
     </Animate>
     <Animate show={!this.state.visualtipos}>
     <div className="contTipos">
-    <div className="tipoMain">  
-    <div className="contFlexSpaceB" style={{background: 'linear-gradient(90deg,#00c9a7 60%,#1976d2 100%)', borderRadius: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '12px 0', marginBottom: '10px', alignItems: 'center'}}>  
-      <div style={{display:'flex',alignItems:'center',gap:'8px',marginRight:'12px'}}>
-  <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>payments</span>
-        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>credit_card</span>
-        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>monetization_on</span>
-        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>water_drop</span>
+    <div className="tipoMain">
+      <div className="contBarraCuenta" style={{
+        background: '#00c9a7',
+        borderRadius: '14px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        padding: '12px 0',
+        marginBottom: '10px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        minHeight: '48px'
+      }}>
+        <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+          <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>payments</span>
+          <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>credit_card</span>
+          <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>monetization_on</span>
+          <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>water_drop</span>
+        </div>
+        <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',minWidth:'120px'}}>POSESIÓN</div>
+        <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+          <div className="valorcuentas" style={{color:'#fff',fontWeight:'bold',minWidth:'330px'}}>${sumatoriaP.toFixed(2)}</div>
+          <i className="material-icons"
+            onClick={(e)=>{
+              e.stopPropagation();
+              this.toggleOrdenCuentas('Posesion');
+            }}
+            title={`Ordenar de ${(this.state.ordenCuentas['Posesion'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
+            style={{
+              fontSize: '20px',
+              color: '#1976d2',
+              cursor: 'pointer',
+              marginRight: '8px',
+              background: 'none',
+              border: 'none',
+              boxShadow: 'none',
+              padding: 0,
+              borderRadius: 0,
+              transition: 'transform 0.2s',
+              position: 'static',
+              transform: (this.state.ordenCuentas['Posesion'] || 'desc') === 'desc' ? 'none' : 'rotate(180deg)'
+            }}
+          >
+            sort
+          </i>
+        </div>
       </div>
-      <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',marginRight:'12px'}}>POSESIÓN</div> 
-      <div className={`valorcuentas  `} style={{color:'#fff',fontWeight:'bold',marginRight:'12px'}}>${sumatoriaP.toFixed(2)}</div>
-      <div className="confiltroCuentra">
-    {/* Botón de ordenamiento */}
-    <i className="material-icons" 
-       onClick={(e)=>{
-         e.stopPropagation();
-         this.toggleOrdenCuentas('Posesion');
-       }}
-       title={`Ordenar de ${(this.state.ordenCuentas['Posesion'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
-       style={{
-         fontSize: '20px',
-         color: '#1976d2',
-         cursor: 'pointer',
-         marginRight: '8px',
-         padding: '2px',
-         borderRadius: '4px',
-         transition: 'all 0.3s ease',
-         position: 'relative'
-       }}
-       onMouseEnter={(e) => {
-         e.target.style.backgroundColor = '#e3f2fd';
-       }}
-       onMouseLeave={(e) => {
-         e.target.style.backgroundColor = 'transparent';
-       }}
-    >
-      {(this.state.ordenCuentas['Posesion'] || 'desc') === 'desc' ? 'trending_down' : 'trending_up'}
-    </i>
-</div>
-    </div>
     <Animate show={!(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
     <div className="contcuentas">
 <Tabs
@@ -2357,43 +2341,41 @@ if(cuentasrenderNoPosesion.length > 0){
     </div>
    
     <div className="tipoMain">  
-  <div className="contFlexSpaceB" style={{background: 'linear-gradient(90deg,#283593 60%,#8e24aa 100%)', borderRadius: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '12px 0', marginBottom: '10px', alignItems: 'center'}}>  
+  <div className="contFlexSpaceB" style={{background: '#283593', borderRadius: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '12px 0', marginBottom: '10px', alignItems: 'center'}}>  
   <div style={{display:'flex',alignItems:'center',gap:'8px',marginRight:'12px'}}>
         <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>home</span>
         <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>currency_bitcoin</span>
         <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>ac_unit</span>
         <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>lock</span>
       </div>
-      <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',marginRight:'12px'}}>NO POSESIÓN</div> 
-      <div className={`valorcuentas  `} style={{color:'#fff',fontWeight:'bold',marginRight:'12px'}}>${sumatoriaNP.toFixed(2)}</div>
-      <div className="confiltroCuentra">
-    {/* Botón de ordenamiento */}
-    <i className="material-icons" 
-       onClick={(e)=>{
-         e.stopPropagation();
-         this.toggleOrdenCuentas('NoPosesion');
-       }}
-       title={`Ordenar de ${(this.state.ordenCuentas['NoPosesion'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
-       style={{
-         fontSize: '20px',
-         color: '#1976d2',
-         cursor: 'pointer',
-         marginRight: '8px',
-         padding: '2px',
-         borderRadius: '4px',
-         transition: 'all 0.3s ease',
-         position: 'relative'
-       }}
-       onMouseEnter={(e) => {
-         e.target.style.backgroundColor = '#e3f2fd';
-       }}
-       onMouseLeave={(e) => {
-         e.target.style.backgroundColor = 'transparent';
-       }}
-    >
-      {(this.state.ordenCuentas['NoPosesion'] || 'desc') === 'desc' ? 'trending_down' : 'trending_up'}
-    </i>
-</div>
+      <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',minWidth:'120px'}}>NO POSESIÓN</div>
+      <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+        <div className="valorcuentas" style={{color:'#fff',fontWeight:'bold',minWidth:'330px'}}>${sumatoriaNP.toFixed(2)}</div>
+        <i
+          className="material-icons"
+          onClick={(e) => {
+            e.stopPropagation();
+            this.toggleOrdenCuentas('NoPosesion');
+          }}
+          title={`Ordenar de ${(this.state.ordenCuentas['NoPosesion'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
+          style={{
+            fontSize: '20px',
+            color: '#1976d2',
+            cursor: 'pointer',
+            marginRight: '8px',
+            background: 'none',
+            border: 'none',
+            boxShadow: 'none',
+            padding: 0,
+            borderRadius: 0,
+            transition: 'transform 0.2s',
+            position: 'static',
+            transform: (this.state.ordenCuentas['NoPosesion'] || 'desc') === 'desc' ? 'none' : 'rotate(180deg)'
+          }}
+        >
+          sort
+        </i>
+      </div>
     </div>
     <Animate show={!(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
     <div className="contcuentas">
@@ -2421,43 +2403,41 @@ if(cuentasrenderNoPosesion.length > 0){
 </Animate>
     </div>
     <div className="tipoMain">  
-    <div className="contFlexSpaceB" style={{background: 'linear-gradient(90deg,#ff9800 60%,#d32f2f 100%)', borderRadius: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '12px 0', marginBottom: '10px', alignItems: 'center'}}>  
+  <div className="contFlexSpaceB" style={{background: '#181a2b', borderRadius: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '12px 0', marginBottom: '10px', alignItems: 'center'}}>  
       <div style={{display:'flex',alignItems:'center',gap:'8px',marginRight:'12px'}}>
         <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>warning</span>
         <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>lock</span>
         <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>ac_unit</span>
-        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>work</span>
+  <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>description</span>
       </div>
-      <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',marginRight:'12px'}}>POSESIÓN SIN TOTAL</div> 
-      <div className={`valorcuentas  `} style={{color:'#fff',fontWeight:'bold',marginRight:'12px'}}>${sumatoriaPST.toFixed(2)}</div>
-      <div className="confiltroCuentra">
-    {/* Botón de ordenamiento */}
-    <i className="material-icons" 
-       onClick={(e)=>{
-         e.stopPropagation();
-         this.toggleOrdenCuentas('PosesionSinTotal');
-       }}
-       title={`Ordenar de ${(this.state.ordenCuentas['PosesionSinTotal'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
-       style={{
-         fontSize: '20px',
-         color: '#1976d2',
-         cursor: 'pointer',
-         marginRight: '8px',
-         padding: '2px',
-         borderRadius: '4px',
-         transition: 'all 0.3s ease',
-         position: 'relative'
-       }}
-       onMouseEnter={(e) => {
-         e.target.style.backgroundColor = '#e3f2fd';
-       }}
-       onMouseLeave={(e) => {
-         e.target.style.backgroundColor = 'transparent';
-       }}
-    >
-      {(this.state.ordenCuentas['PosesionSinTotal'] || 'desc') === 'desc' ? 'trending_down' : 'trending_up'}
-    </i>
-</div>
+      <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',minWidth:'120px'}}>POSESIÓN SIN TOTAL</div>
+      <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+        <div className="valorcuentas" style={{color:'#fff',fontWeight:'bold',minWidth:'330px'}}>${sumatoriaPST.toFixed(2)}</div>
+        <i
+          className="material-icons"
+          onClick={(e) => {
+            e.stopPropagation();
+            this.toggleOrdenCuentas('PosesionSinTotal');
+          }}
+          title={`Ordenar de ${(this.state.ordenCuentas['PosesionSinTotal'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
+          style={{
+            fontSize: '20px',
+            color: '#1976d2',
+            cursor: 'pointer',
+            marginRight: '8px',
+            background: 'none',
+            border: 'none',
+            boxShadow: 'none',
+            padding: 0,
+            borderRadius: 0,
+            transition: 'transform 0.2s',
+            position: 'static',
+            transform: (this.state.ordenCuentas['PosesionSinTotal'] || 'desc') === 'desc' ? 'none' : 'rotate(180deg)'
+          }}
+        >
+          sort
+        </i>
+      </div>
     </div>
     <Animate show={!(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
     <div className="contcuentas">
@@ -3102,10 +3082,16 @@ margin: 10px 0px;
 
   font-weight: bold;
 }
-.valorcuentas{
-  margin-right: 15px;
+/* Centrado y alineación uniforme del balance en todas las barras */
+.valorcuentas {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 110px; /* ancho fijo para alinear todos los balances */
   font-weight: bold;
   font-size: 23px;
+  color: inherit;
+  margin: 0 12px 0 0; /* solo margen derecho para separación */
 }
 
 .setBlue{
@@ -3422,17 +3408,26 @@ p{
                     margin-left: 13px;
                   }
                   
-                  .customDragbar{
-                    background: #7cbaff;
-                    height: 50px;
-                    padding: 5px;
-                    border-radius: 10px 0px 0px 0px;
-                    display: flex;
-                    justify-content: space-around;
-                    border-bottom: 3px solid black;
-                    align-items: center;
-                    color: white;
-                    width: 99%;
+                  .customDragbar {
+                    background: linear-gradient(90deg, #7cbaff 60%, #1976d2 100%);
+                    height: 32px;
+                      padding: 10px 24px;
+                      border-radius: 14px 14px 0 0;
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      color: #fff;
+                      width: 98%;
+                      box-shadow: 0 4px 16px rgba(25, 118, 210, 0.10), 0 1.5px 0 #1976d2 inset;
+                      border-bottom: 2px solid #1976d2;
+                      font-size: 1.1rem;
+                      letter-spacing: 0.5px;
+                      gap: 16px;
+                      transition: box-shadow 0.2s, background 0.2s;
+                  }
+                  .customDragbar:hover {
+                      box-shadow: 0 8px 24px rgba(25, 118, 210, 0.18), 0 2px 0 #1976d2 inset;
+                      background: linear-gradient(90deg, #64b5f6 60%, #1565c0 100%);
                   }
                   .contcuentaslista{
                  
@@ -3444,16 +3439,7 @@ p{
                   .contcuentaslista.expandido{
                     display: flex !important;
                   }
-                  .confiltroCuentra{
-                    background: #7cbaff;
-                    border-radius: 0px 10px 0px 0px;
-                    color: white;
-                    justify-content: center;
-                    border-bottom: 3px solid black;
-                    display: flex;
-                    align-items: center;
-                    cursor: pointer;
-                  }
+
 
                 .tipoMain{
                   box-shadow: 0px 4px 3px #708ec7;
