@@ -2930,6 +2930,31 @@ if(cuentasrenderNoPosesion.length > 0){
 .MuiTabs-indicator, .PrivateTabIndicator-root {
   display: none !important;
 }
+/* En móvil, durante búsqueda, cada cuenta ocupa todo el ancho y el contenedor no usa flex */
+@media (max-width: 600px) {
+  .contcuentas-search {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100vw !important;
+  }
+  .contcuentas-search .contenedorCuenta,
+  .contcuentas-search .cuentaContenedor {
+    width: 100vw !important;
+    min-width: 100vw !important;
+    max-width: 100vw !important;
+    margin: 0 0 10px calc(-1 * (100vw - 100%) / 2) !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: unset !important;
+    max-height: unset !important;
+    box-sizing: border-box !important;
+    border-radius: 0 !important;
+  }
+}
+}
+}
+}
 .contDropdown{
   margin-top: 5px;
   margin-left: 5px;
