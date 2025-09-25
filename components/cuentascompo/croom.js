@@ -3420,7 +3420,7 @@ p{
                   }
                   
                   .customDragbar {
-                    background: linear-gradient(90deg, #7cbaff 60%, #1976d2 100%);
+                    background: linear-gradient(90deg, #7cbaff 60%, #7cbaff 100%);
                     height: 32px;
                     padding: 10px 24px;
                     border-radius: 14px 14px 0 0;
