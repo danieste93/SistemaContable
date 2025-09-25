@@ -3755,7 +3755,7 @@ align-items: center;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: sans-serif;
+  /* font-family: sans-serif; */
       text-transform: capitalize;
       transform: translateX(calc(-0.15em * 3 - 0.08em * 2));
       transition: 0.3s;
