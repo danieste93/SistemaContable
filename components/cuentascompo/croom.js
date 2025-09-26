@@ -86,8 +86,8 @@ InventarioVal:0,
     modalPatrimonio: false,
         patrimonioTimeline: [],
         patrimonioPeriod: {
-          start: moment().startOf('year').toDate(),
-          end: moment().endOf('month').toDate(),
+          start: moment().startOf('month').toDate(),
+          end: moment().endOf('day').toDate(),
         },
         patrimonioLoading: false,
     }
@@ -126,13 +126,8 @@ InventarioVal:0,
           this.setState({ patrimonioLoading: false });
           alert("Error al obtener registros de patrimonio");
         } else {
-          // Unir con los registros actuales para evitar duplicados
-          let misarrs = (this.props.regC.Regs || []).slice();
-          let finalars = misarrs.concat(response.regsHabiles || []);
-          let sinRepetidosObjeto = finalars.filter((value, index, self) => (
-            index === self.findIndex((t) => (t._id === value._id))
-          ));
-          this.reconstruirPatrimonio(sinRepetidosObjeto);
+          // Usar solo los registros descargados para el cálculo
+          this.reconstruirPatrimonio(response.regsHabiles || []);
         }
       })
       .catch(() => this.setState({ patrimonioLoading: false }));
@@ -146,38 +141,40 @@ InventarioVal:0,
   reconstruirPatrimonio = (regs) => {
     const cuentas = this.props.regC?.Cuentas || [];
     const { patrimonioPeriod } = this.state;
-    let start = moment(patrimonioPeriod.start).startOf('day');
-    let end = moment(patrimonioPeriod.end).endOf('day');
-    let diffMonths = end.diff(start, 'months', true);
-    let granularity = 'month';
-    if (diffMonths < 1.5) granularity = 'day';
-    else if (diffMonths > 24) granularity = 'year';
     // 1. Calcular patrimonio total actual (todas las cuentas)
     let patrimonioTotal = 0;
     cuentas.forEach(cuenta => {
-      patrimonioTotal += parseFloat((cuenta.DineroActual && cuenta.DineroActual.$numberDecimal) || cuenta.DineroActual || cuenta.DineroIni || 0);
+      patrimonioTotal += parseFloat(cuenta.DineroActual && cuenta.DineroActual.$numberDecimal || 0);
     });
+
     // 2. Filtrar solo ingresos y gastos (las transferencias no cambian el patrimonio total)
     let movimientos = regs.filter(x => x.Accion !== 'Trans');
-    // 3. Filtrar movimientos por rango de fechas
-    movimientos = movimientos.filter(x => {
-      let fecha = moment(x.TiempoEjecucion || x.fecha || x.createdAt);
-      return fecha.isBetween(start, end, null, '[]');
-    });
+
+    // 3. Filtrar movimientos por rango usando el campo Tiempo
+    let start = moment(patrimonioPeriod.start).startOf('day').valueOf();
+    let end = moment(patrimonioPeriod.end).endOf('day').valueOf();
+    let diffDays = moment(end).diff(moment(start), 'days');
+    let diffMonths = moment(end).diff(moment(start), 'months');
+    let granularity = 'day';
+    if (diffDays <= 1) granularity = 'hour';
+    else if (diffDays > 31) granularity = 'month';
+
+    let movimientosFiltrados = movimientos.filter(x => x.Tiempo >= start && x.Tiempo <= end);
     // 4. Ordenar movimientos de más reciente a más antiguo
-    movimientos = movimientos.sort((a, b) => b.TiempoEjecucion - a.TiempoEjecucion);
-    // 5. Agrupar por periodo (día, mes, año)
+    movimientosFiltrados = movimientosFiltrados.sort((a, b) => b.Tiempo - a.Tiempo);
+
+    // 5. Agrupar por periodo y calcular patrimonio
     let patrimonioPorPeriodo = {};
     let acumuladoPatrimonio = patrimonioTotal;
-    movimientos.forEach(mov => {
-      let fecha = moment(mov.TiempoEjecucion || mov.fecha || mov.createdAt);
+    movimientosFiltrados.forEach(mov => {
+      const fecha = new Date(mov.Tiempo);
       let periodo;
-      if (granularity === 'day') {
-        periodo = fecha.format('DD MMM YYYY');
-      } else if (granularity === 'year') {
-        periodo = fecha.format('YYYY');
+      if (granularity === 'hour') {
+        periodo = fecha.getHours().toString().padStart(2, '0') + ':00';
+      } else if (granularity === 'month') {
+        periodo = (fecha.getMonth() + 1).toString().padStart(2, '0') + '-' + fecha.getFullYear();
       } else {
-        periodo = fecha.format('MMM YYYY');
+        periodo = fecha.getDate().toString().padStart(2, '0') + '-' + (fecha.getMonth() + 1).toString().padStart(2, '0');
       }
       // Solo almacenar el primer valor para cada periodo (el más reciente)
       if (!patrimonioPorPeriodo[periodo]) {
@@ -190,125 +187,33 @@ InventarioVal:0,
         acumuladoPatrimonio += mov.Importe;
       }
     });
-    // Asegurar que el primer periodo (más antiguo) tenga valor
-    let allPeriods = [];
-    let cursor = start.clone();
-    if (granularity === 'day') {
-      while (cursor.isSameOrBefore(end, 'day')) {
-        allPeriods.push(cursor.format('DD MMM YYYY'));
-        cursor.add(1, 'day');
+
+    // Ordenar periodos y crear arrays para el gráfico
+    const periodosOrdenados = Object.keys(patrimonioPorPeriodo).sort((a, b) => {
+      if (granularity === 'hour') {
+        return parseInt(a.split(':')[0]) - parseInt(b.split(':')[0]);
+      } else if (granularity === 'month') {
+        // MM-YYYY
+        const [ma, ya] = a.split('-').map(Number);
+        const [mb, yb] = b.split('-').map(Number);
+        return ya !== yb ? ya - yb : ma - mb;
+      } else {
+        // DD-MM
+        const [da, ma] = a.split('-').map(Number);
+        const [db, mb] = b.split('-').map(Number);
+        return ma !== mb ? ma - mb : da - db;
       }
-    } else if (granularity === 'year') {
-      while (cursor.isSameOrBefore(end, 'year')) {
-        allPeriods.push(cursor.format('YYYY'));
-        cursor.add(1, 'year');
-      }
-    } else {
-      while (cursor.isSameOrBefore(end, 'month')) {
-        allPeriods.push(cursor.format('MMM YYYY'));
-        cursor.add(1, 'month');
-      }
-    }
-    // Construir timeline en orden cronológico
-    let timeline = allPeriods.map(periodo => {
-      let value = patrimonioPorPeriodo[periodo];
-      // Si no hay valor para el periodo, usar el último acumulado calculado
-      if (value === undefined) {
-        // Buscar el valor más reciente anterior
-        let idx = allPeriods.indexOf(periodo);
-        for (let i = idx - 1; i >= 0; i--) {
-          if (patrimonioPorPeriodo[allPeriods[i]] !== undefined) {
-            value = patrimonioPorPeriodo[allPeriods[i]];
-            break;
-          }
-        }
-        // Si sigue sin valor, usar el acumulado final
-        if (value === undefined) value = acumuladoPatrimonio;
-      }
-      return {
-        label: periodo,
-        value: value,
-      };
     });
+
+    let timeline = periodosOrdenados.map(periodo => ({
+      label: periodo,
+      value: patrimonioPorPeriodo[periodo],
+    }));
     this.setState({ patrimonioTimeline: timeline, patrimonioLoading: false, patrimonioGranularity: granularity });
   };
 
   closePatrimonioModal = () => {
     this.setState({ modalPatrimonio: false });
-  };
-
-  handlePatrimonioPeriodChange = (period) => {
-    this.setState({ patrimonioPeriod: period }, this.loadPatrimonioTimeline);
-  };
-
-  loadPatrimonioTimeline = () => {
-    this.setState({ patrimonioLoading: true });
-    const { patrimonioPeriod } = this.state;
-    const cuentas = this.props.regC?.Cuentas || [];
-    const regs = this.props.regC?.Regs || [];
-    let start = moment(patrimonioPeriod.start).startOf('day');
-    let end = moment(patrimonioPeriod.end).endOf('day');
-    let diffMonths = end.diff(start, 'months', true);
-    let diffDays = end.diff(start, 'days', true);
-    let diffYears = end.diff(start, 'years', true);
-    let granularity = 'month';
-    if (diffMonths < 1.5) granularity = 'day';
-    else if (diffMonths > 24) granularity = 'year';
-    // Generar los puntos de la línea de tiempo según granularidad
-    let points = [];
-    if (granularity === 'day') {
-      let cursor = start.clone();
-      while (cursor.isSameOrBefore(end, 'day')) {
-        points.push(cursor.clone());
-        cursor.add(1, 'day');
-      }
-    } else if (granularity === 'year') {
-      let cursor = start.clone().startOf('year');
-      while (cursor.isSameOrBefore(end, 'year')) {
-        points.push(cursor.clone());
-        cursor.add(1, 'year');
-      }
-    } else {
-      let cursor = start.clone().startOf('month');
-      while (cursor.isSameOrBefore(end, 'month')) {
-        points.push(cursor.clone());
-        cursor.add(1, 'month');
-      }
-    }
-    // Para cada punto, sumar el patrimonio (DineroIni + movimientos hasta ese punto) de todas las cuentas
-    let timeline = points.map((p) => {
-      let patrimonio = 0;
-      cuentas.forEach(cuenta => {
-        let saldo = parseFloat(cuenta.DineroIni || 0);
-        regs.forEach(r => {
-          let fecha = moment(r.TiempoEjecucion || r.fecha || r.createdAt);
-          let isBefore = false;
-          if (granularity === 'day') isBefore = fecha.isSameOrBefore(p.clone().endOf('day'));
-          else if (granularity === 'year') isBefore = fecha.isSameOrBefore(p.clone().endOf('year'));
-          else isBefore = fecha.isSameOrBefore(p.clone().endOf('month'));
-          if (isBefore) {
-            if (r.CuentaSelec && r.CuentaSelec.idCuenta === cuenta._id) {
-              if (r.Accion === 'Ingreso') saldo += r.Importe;
-              if (r.Accion === 'Gasto') saldo -= r.Importe;
-              if (r.Accion === 'Trans') {
-                if (r.CuentaSelec2 && r.CuentaSelec2.idCuenta === cuenta._id) {
-                  saldo += r.Importe;
-                } else {
-                  saldo -= r.Importe;
-                }
-              }
-            }
-          }
-        });
-        patrimonio += saldo;
-      });
-      let label = p.format(granularity === 'day' ? 'DD MMM YYYY' : granularity === 'year' ? 'YYYY' : 'MMM YYYY');
-      return {
-        label,
-        value: patrimonio,
-      };
-    });
-    this.setState({ patrimonioTimeline: timeline, patrimonioLoading: false, patrimonioGranularity: granularity });
   };
 
     channel1 = null;

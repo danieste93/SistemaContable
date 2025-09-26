@@ -10,19 +10,27 @@ import moment from 'moment';
 export default function PatrimonioTimelineModal({ open, onClose, patrimonioData, onPeriodChange, period, loading, granularity }) {
   const [startDate, setStartDate] = useState(period.start);
   const [endDate, setEndDate] = useState(period.end);
+  const [pendingStart, setPendingStart] = useState(period.start);
+  const [pendingEnd, setPendingEnd] = useState(period.end);
 
   useEffect(() => {
     setStartDate(period.start);
     setEndDate(period.end);
+    setPendingStart(period.start);
+    setPendingEnd(period.end);
   }, [period]);
 
   const handleStartChange = (date) => {
-    setStartDate(date);
-    onPeriodChange({ start: date, end: endDate });
+    setPendingStart(date);
   };
   const handleEndChange = (date) => {
-    setEndDate(date);
-    onPeriodChange({ start: startDate, end: date });
+    setPendingEnd(date);
+  };
+
+  const handleBuscar = () => {
+    setStartDate(pendingStart);
+    setEndDate(pendingEnd);
+    onPeriodChange({ start: pendingStart, end: pendingEnd });
   };
 
   let xLabel = 'Mes';
@@ -76,9 +84,9 @@ export default function PatrimonioTimelineModal({ open, onClose, patrimonioData,
                 label="Desde"
                 format="MM/YYYY"
                 views={["year", "month"]}
-                value={startDate}
+                value={pendingStart}
                 onChange={handleStartChange}
-                maxDate={endDate}
+                maxDate={pendingEnd}
                 style={{ width: 120 }}
               />
               <KeyboardDatePicker
@@ -87,12 +95,29 @@ export default function PatrimonioTimelineModal({ open, onClose, patrimonioData,
                 label="Hasta"
                 format="MM/YYYY"
                 views={["year", "month"]}
-                value={endDate}
+                value={pendingEnd}
                 onChange={handleEndChange}
-                minDate={startDate}
+                minDate={pendingStart}
                 style={{ width: 120 }}
               />
             </MuiPickersUtilsProvider>
+            <button
+              onClick={handleBuscar}
+              disabled={loading}
+              style={{
+                marginLeft: 12,
+                padding: '8px 18px',
+                background: loading ? '#90caf9' : '#1976d2',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1
+              }}
+            >
+              {loading ? 'Buscando...' : 'Buscar'}
+            </button>
           </div>
           {loading ? (
             <div style={{ textAlign: 'center', padding: 32 }}>Cargando...</div>
