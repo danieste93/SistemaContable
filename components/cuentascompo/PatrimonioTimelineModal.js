@@ -91,7 +91,19 @@ export default function PatrimonioTimelineModal({ open, onClose, patrimonioData,
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1300 }}
     >
       <Fade in={open}>
-        <div style={{ background: '#f8fafc', borderRadius: 18, padding: 0, minWidth: 340, maxWidth: 420, boxShadow: '0 6px 32px rgba(0,0,0,0.13)', overflow: 'hidden', fontFamily: 'Inter, sans-serif' }}>
+        <div
+          style={{
+            background: '#f8fafc',
+            borderRadius: 18,
+            padding: 0,
+            minWidth: 340,
+            maxWidth: 600,
+            width: '100%',
+            boxShadow: '0 6px 32px rgba(0,0,0,0.13)',
+            overflow: 'hidden',
+            fontFamily: 'Inter, sans-serif',
+          }}
+        >
           {/* Header minimalista */}
           <div style={{ background: '#1976d2', color: '#fff', display: 'flex', alignItems: 'center', gap: 10, padding: '18px 28px 10px 22px', borderBottom: '1px solid #e3e8ee' }}>
             <TimelineIcon style={{ fontSize: 28, opacity: 0.92 }} />
