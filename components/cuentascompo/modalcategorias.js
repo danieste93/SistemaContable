@@ -23,11 +23,9 @@ class Contacto extends Component {
 channel1 = null;
   async  componentDidMount(){
 
-     setTimeout(()=>{ 
-        
-        this.setState({Buscador:true})
-
-       }, 800);
+    setTimeout(()=>{ 
+      this.setState({Buscador:true})
+     }, 50);
   
     this.channel1 = postal.channel();
     this.channel1.subscribe('desdeingreso', (data) => {

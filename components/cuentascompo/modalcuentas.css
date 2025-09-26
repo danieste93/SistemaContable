@@ -342,10 +342,10 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  transition: 0.6s;
+  transition: top 0.3s ease-in-out, opacity 0.3s ease-in-out;
   overflow: hidden;
 }
-.maincontcat {
+ .maincontcat {
   z-index: 2000;
   position: fixed;
   top: -50%;
@@ -357,7 +357,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  transition: 0.6s;
+  transition: 0.3s;
   overflow: hidden;
 }
 
@@ -437,10 +437,11 @@
  .maincontacto-modalcuentas.entrada {
   top: 0% !important;
   z-index: 9999 !important;
-  transition: top 0.6s ease-in-out, opacity 0.6s ease-in-out;
+  transition: top 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
  .maincontcat.entrada {
   top: 0% !important;
+  transition: top 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
 
 .contcontacto {
