@@ -266,19 +266,21 @@
 .cuentaRender {
   background: #f7f7f7;
   box-shadow: 1px 0px 4px #0002;
-  border-radius: 14px;
-  width: 220px;
-  min-height: 110px;
+  border-radius: 10px;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  height: auto;
   text-align: center;
-  margin: 12px 6px;
-  transition: box-shadow 0.2s, background 0.2s;
+  max-width: 200px;
+  min-width: 180px;
+  margin: 12px 8px;
+  padding: 18px 8px 38px 8px;
+  transition: 0.5s;
+  justify-content: center;
   cursor: pointer;
-  opacity: 1;
-  background-blend-mode: normal;
-  border: 2px solid #e0e0e0;
+  min-height: 140px;
+  position: relative;
 }
 .cuentaRender[style*="background-image"] {
   background: #fff;
@@ -306,13 +308,19 @@
   background: #0061f1;
   color: #fff;
   border-radius: 0 0 11px 11px;
-  padding: 2px 0;
-  margin-top: 4px;
-  width: 100% !important;
-  min-width: 100% !important;
-  max-width: 100% !important;
-  display: block;
-  overflow: visible !important;
+  padding: 6px 0 4px 0;
+  width: 100%;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  overflow: hidden;
+  margin: 0;
+  z-index: 2;
 }
 .tipom {
   font-size: 0.95rem;
@@ -320,9 +328,14 @@
   margin: 0 !important;
   padding: 0 !important;
   width: 100% !important;
-  min-width: 100% !important;
+  min-width: 0 !important;
   max-width: 100% !important;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  overflow: hidden !important;
   overflow: visible !important;
 }
 /* Popup modal más grande y profesional - Animación estilo categorías */
