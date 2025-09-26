@@ -1,5 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import logo1 from '../../assets/logo1.png';
 import Modal from '@material-ui/core/Modal';
 import Backdrop from '@material-ui/core/Backdrop';
 import Fade from '@material-ui/core/Fade';
@@ -11,6 +14,74 @@ import TimelineIcon from '@material-ui/icons/Timeline';
 
 
 export default function PatrimonioTimelineModal({ open, onClose, patrimonioData, onPeriodChange, period, loading, granularity }) {
+  // Generar PDF
+  const handleDownloadPDF = async () => {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+    // Logo seguro (import local)
+    try {
+      const img = new window.Image();
+      img.src = logo1;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      // Convertir a base64 si es necesario
+      let logoData = logo1;
+      if (!logo1.startsWith('data:')) {
+        // Si es ruta, convertir a base64
+        const response = await fetch(logo1);
+        const blob = await response.blob();
+        logoData = await new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+      }
+      doc.addImage(logoData, 'PNG', 40, 28, 90, 38);
+    } catch (e) {
+      // Si falla, solo sigue sin logo
+    }
+    // Título
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor('#1976d2');
+    doc.text('Reporte de Patrimonio', 145, 55);
+    doc.setFontSize(13);
+    doc.setTextColor('#444');
+    doc.text(`Periodo: ${moment(startDate).format('MM/YYYY')} - ${moment(endDate).format('MM/YYYY')}`, 40, 90);
+    doc.setFontSize(12);
+    doc.setTextColor('#1976d2');
+    doc.text(`Patrimonio final: $${patrimonioFinal.toLocaleString('es-EC', {minimumFractionDigits:2})}`, 40, 110);
+    doc.setTextColor(variacion >= 0 ? '#43a047' : '#e53935');
+    doc.text(`Variación: ${variacion >= 0 ? '+' : ''}${variacion.toLocaleString('es-EC', {minimumFractionDigits:2})}`, 40, 128);
+
+    // Gráfica como imagen
+    const chartNode = document.querySelector('#patrimonio-chart-pdf');
+    if (chartNode) {
+      const canvas = await html2canvas(chartNode, { backgroundColor: null, scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      doc.addImage(imgData, 'PNG', 40, 145, 500, 180);
+    }
+
+    // Tabla de datos
+    let y = 340;
+    doc.setFontSize(11);
+    doc.setTextColor('#1976d2');
+    doc.text('Fecha', 40, y);
+    doc.text('Valor', 140, y);
+    y += 14;
+    doc.setTextColor('#444');
+    patrimonioData.forEach(d => {
+      doc.text(String(d.label), 40, y);
+      doc.text(`$${d.value.toLocaleString('es-EC', {minimumFractionDigits:2})}`, 140, y);
+      y += 14;
+      if (y > 770) {
+        doc.addPage();
+        y = 40;
+      }
+    });
+    doc.save('patrimonio_timeline.pdf');
+  };
   const [startDate, setStartDate] = useState(period.start);
   const [endDate, setEndDate] = useState(period.end);
   const [pendingStart, setPendingStart] = useState(period.start);
@@ -81,6 +152,7 @@ export default function PatrimonioTimelineModal({ open, onClose, patrimonioData,
     },
   };
 
+  // Render
   return (
     <Modal
       open={open}
@@ -170,11 +242,30 @@ export default function PatrimonioTimelineModal({ open, onClose, patrimonioData,
             {loading ? (
               <div style={{ textAlign: 'center', padding: 32, color: '#888', fontSize: 16 }}>Cargando...</div>
             ) : (
-              <Line data={chartData} options={chartOptions} height={210} />
+              <div id="patrimonio-chart-pdf" style={{ background: '#fff', borderRadius: 12, padding: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                <Line data={chartData} options={chartOptions} height={210} />
+              </div>
             )}
           </div>
           {/* Footer */}
-          <div style={{ textAlign: 'right', margin: '18px 18px 12px 0' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, margin: '18px 28px 12px 28px' }}>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={loading || patrimonioData.length === 0}
+              style={{
+                padding: '7px 14px',
+                background: '#fff',
+                color: '#1976d2',
+                border: '1px solid #1976d2',
+                borderRadius: 7,
+                fontWeight: 600,
+                fontSize: 15,
+                cursor: loading || patrimonioData.length === 0 ? 'not-allowed' : 'pointer',
+                opacity: loading || patrimonioData.length === 0 ? 0.6 : 1,
+                marginBottom: 0,
+                marginLeft: 8
+              }}
+            >Descargar PDF</button>
             <button
               onClick={onClose}
               style={{
@@ -187,6 +278,7 @@ export default function PatrimonioTimelineModal({ open, onClose, patrimonioData,
                 borderRadius: 7,
                 cursor: 'pointer',
                 transition: 'background 0.2s',
+                marginRight: 8
               }}
               onMouseOver={e => e.currentTarget.style.background = '#e3e8ee'}
               onMouseOut={e => e.currentTarget.style.background = 'none'}
