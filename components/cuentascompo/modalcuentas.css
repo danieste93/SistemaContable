@@ -1,3 +1,15 @@
+.subcatCont.subCatActive {
+  position: fixed !important;
+  z-index: 10000 !important;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.01); /* transparente pero permite click */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
 /* Overlay para modal cuentas: siempre debajo del modal */
 .modalcuentas-overlay {
   position: fixed;
