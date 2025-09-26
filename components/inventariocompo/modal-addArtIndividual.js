@@ -220,9 +220,6 @@ this.setState({CuentasInv:response.cuentasHabiles})
       this.setState({editFormaPago:true, SelectFormaPago:e})
   }
   
-  
-    
-  
     editFormaPagoState=(e)=>{
          
       let testFind =  this.state.Fpago.find(x => x.Id == e.Id) 
@@ -618,136 +615,107 @@ if(datillos[0]=="Caduca"||datillos[0]=="Iva"){
   return(
     <div key={i} className="contdetalleAIaddindi">
          <div className="boxp">
-   <p >
-     {datillos[0]}
-     </p>
-      <FormControlLabel
-        control={
-          <Switch
-       
-          onChange={this.handleChangeSwitch}
-            name={datillos[0]}
-            color="primary"
-          checked={datillos[1]}
-          />
-        }
-        label=""
-      />
-      </div>
-</div>
+           <p >
+             {datillos[0]}
+           </p>
+           <FormControlLabel
+             control={
+               <Switch
+                 onChange={this.handleChangeSwitch}
+                 name={datillos[0]}
+                 color="primary"
+                 checked={datillos[1]}
+               />
+             }
+             label=""
+           />
+         </div>
+       </div>
   )
 }
-else if(datillos[0]=="Categoria"){
-  console.log(datillos[1].requerido)
+else if(datillos[0]=="Codigo_de_Barras"){
   return(
-    <div key={i} className="contdetalleAIaddindi">
- 
- <TextValidator
-    label={datillos[0]}
-     onClick={()=>{ this.setState({categoriaModal:true})}}
-     name={datillos[0]}
-     type={datillos[1].Tipo}
-  value={this.state[datillos[0]]}
-  validators={requerido }
-  errorMessages={errmessage }
-  InputProps={{
-    disableUnderline: true, // Elimina el subrayado del input
-    style: {
-      pointerEvents: "none", // Bloquea la interacción del input, evita el cursor de escritura
-    },
-  }}
-  style= {{
-    cursor: "pointer",
-    backgroundColor: "rgb(39 98 255 / 10%)",
-    padding:"2px",
-    borderRadius: "5px",
-    borderBottom:"1px solid black"
-  } }
- /> 
-                <style >{`  
-             .boxp{
-              display: flex;
-              justify-content: space-between;
-              margin: 10px;
-              width: 80%;
-              align-items: center;
-            }
-           
-                    .contdetalleAIaddindi {
-                      display: flex;
-                      flex-wrap: wrap;
-                      justify-content: center;
-                      margin: 25px;
-                      padding: 5px;
-                      border-radius: 9px;
-                      box-shadow: 0px 1px 0px black;
-                      width: 50%;
-                      max-width: 225px;
-                      min-width: 225px;
-                      background: azure;
+    <div key={i} className="contdetalleAIaddindi2">
+      <label style={{fontWeight:600, marginBottom:4, width:'100%'}}>Código de Barras</label>
+      <TextValidator
+        label=""
+        name={datillos[0]}
+        type={datillos[1].Tipo}
+        value={this.state[datillos[0]]}
+        onChange={this.handleInput}
+        validators={ requerido }
+        errorMessages={errmessage }
+      />
+      <div className='xbutton' onClick={()=>{
+        this.setState({Codigo_de_Barras:"", Barcode:""})
+      }}>x</div>
+      <style>{`
+        .xbutton{
+          background: red;
+          display: flex;
+          height: 16px;
+          padding: 1px;
+          border-radius: 10px;
+          width: 16px;
+          text-align: center;
+          justify-content: center;
+          color: white;
+          font-size: 11px;
+          font-family: system-ui;
+          cursor: pointer;
+          border-bottom: 1px solid black;
         }
-   
-      
-  
-                    
-                     `}</style>
-                </div>)
+      `}</style>
+    </div>
+  )
 }
 else if(datillos[0]=="SubCategoria"){
-  return(
-    <div key={i} className="contdetalleAIaddindi">
- 
- <TextValidator
-    label={datillos[0]}
-    onClick={()=>{ this.setState({categoriaModal:true})}}
-     name={datillos[0]}
-     type={datillos[1].Tipo}
-  value={this.state.subCatSelect}
-    
-     validators={ requerido }
-     errorMessages={errmessage }
-     InputProps={{
-      disableUnderline: true, // Elimina el subrayado del input
-      style: {
-        pointerEvents: "none", // Bloquea la interacción del input, evita el cursor de escritura
-      },
-    }}
-    style= {{
-      cursor: "pointer",
-      backgroundColor: "rgb(39 98 255 / 10%)",
-      padding:"2px",
-      borderRadius: "5px",
-      borderBottom:"1px solid black"
-    } }
- /> 
-                <style >{`  
-             .boxp{
-              display: flex;
-              justify-content: space-between;
-              margin: 10px;
-              width: 80%;
-              align-items: center;
-            }
-           
-                    .contdetalleAIaddindi {
-                      display: flex;
-                      flex-wrap: wrap;
-                      justify-content: center;
-                      margin: 25px;
-                      padding: 5px;
-                      border-radius: 9px;
-                      box-shadow: 0px 1px 0px black;
-                      width: 50%;
-                      max-width: 225px;
-                      min-width: 225px;
-                      background: azure;
-        }
-   
-      
-  
-                    
-                     `}</style>
-                </div>)
+  // CAMBIO SOLO VISUAL: Botón en vez de input para subcategoría
+  return (
+    <div key={i} className="contdetalleAIaddindi2">
+      <label style={{fontWeight:600, marginBottom:4, width:'100%'}}>Subcategoría</label>
+      <button
+        type="button"
+        style={{
+          width: '100%',
+          padding: '8px',
+          borderRadius: '5px',
+          border: '1px solid #2762ff',
+          background: 'rgb(39 98 255 / 10%)',
+          cursor: 'pointer',
+          fontWeight: 500,
+          marginBottom: 4
+        }}
+        onClick={()=>{ this.setState({categoriaModal:true}) }}
+      >
+        {this.state.subCatSelect ? this.state.subCatSelect : 'Seleccionar Subcategoría'}
+      </button>
+    </div>
+  );
+}
+else if(datillos[0]=="Categoria"){
+  // CAMBIO SOLO VISUAL: Botón en vez de input para categoría
+  return (
+    <div key={i} className="contdetalleAIaddindi2">
+      <label style={{fontWeight:600, marginBottom:4, width:'100%'}}>Categoría</label>
+      <button
+        type="button"
+        style={{
+          width: '100%',
+          padding: '8px',
+          borderRadius: '5px',
+          border: '1px solid #2762ff',
+          background: 'rgb(39 98 255 / 10%)',
+          cursor: 'pointer',
+          fontWeight: 500,
+          marginBottom: 4
+        }}
+        onClick={()=>{ this.setState({categoriaModal:true}) }}
+      >
+        {this.state[datillos[0]] ? this.state[datillos[0]] : 'Seleccionar Categoría'}
+      </button>
+    </div>
+  );
 }
 else if(datillos[0]=="Codigo_de_Barras"){
   return(
@@ -815,54 +783,76 @@ this.setState({Codigo_de_Barras:"", Barcode:""})
                 </div>)
  }
 
-else{
+else if(datillos[0]=="Titulo"){
+  return(
+    <div key={i} className="contdetalleAIaddindi2">
+      <label style={{fontWeight:600, marginBottom:4, width:'100%'}}>Título</label>
+      <TextValidator
+        label=""
+        onChange={this.handleInput}
+        name={datillos[0]}
+        type={datillos[1].Tipo}
+        value={this.state[datillos[0]]}
+        validators={ requerido }
+        errorMessages={errmessage }
+      />
+    </div>
+  )
+} else if(datillos[0]=="Cantidad"){
+  return(
+    <div key={i} className="contdetalleAIaddindi2">
+      <label style={{fontWeight:600, marginBottom:4, width:'100%'}}>Cantidad</label>
+      <TextValidator
+        label=""
+        onChange={this.handleChangeValor}
+        name="valCantidad"
+        type="number"
+        placeholder={0}
+        value={this.state.Cantidad}
+        validators={['requerido']}
+        errorMessages={['Ingresa un valor']}
+        onWheel={(e) => e.target.blur()}
+      />
+    </div>
+  )
+} else {
   return(
     <div key={i} className="contdetalleAIaddindi">
- 
- <TextValidator
-    label={datillos[0]}
-     onChange={this.handleInput}
-     name={datillos[0]}
-     type={datillos[1].Tipo}
-  value={this.state[datillos[0]]}
-
-     validators={ requerido }
-     errorMessages={errmessage }
-    
- /> 
-                <style >{`  
-             .boxp{
-              display: flex;
-              justify-content: space-between;
-              margin: 10px;
-              width: 80%;
-              align-items: center;
-            }
-           
-                    .contdetalleAIaddindi {
-                      display: flex;
-                      flex-wrap: wrap;
-                      justify-content: center;
-                      margin: 25px;
-                      padding: 5px;
-                      border-radius: 9px;
-                      box-shadow: 0px 1px 0px black;
-                      width: 50%;
-                      max-width: 225px;
-                      min-width: 225px;
-                      background: azure;
+      <TextValidator
+        label={datillos[0]}
+        onChange={this.handleInput}
+        name={datillos[0]}
+        type={datillos[1].Tipo}
+        value={this.state[datillos[0]]}
+        validators={ requerido }
+        errorMessages={errmessage }
+      />
+      <style>{`
+        .boxp{
+          display: flex;
+          justify-content: space-between;
+          margin: 10px;
+          width: 80%;
+          align-items: center;
         }
-   
-      
-  
-                    
-                     `}</style>
-                </div>)
+        .contdetalleAIaddindi {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          margin: 25px;
+          padding: 5px;
+          border-radius: 9px;
+          box-shadow: 0px 1px 0px black;
+          width: 50%;
+          max-width: 225px;
+          min-width: 225px;
+          background: azure;
+        }
+      `}</style>
+    </div>
+  )
 }
-
-
-  
-})
+});
 
 let datarender2 = dataArray2.map((datillos,i,)=>{
 
@@ -1090,44 +1080,44 @@ let datarender2 = dataArray2.map((datillos,i,)=>{
     </div>
     </div>
 <Animate show={this.state.Vunitario}>
-<div  className="contdetalleAIaddindi2"> 
-<TextValidator
-    label="Precio Compra Unitario"
-     onChange={this.handleChangeGeneral}
-     name="valUnitario"
-     type="number"
-  value={this.state.valUnitario}
-     placeholder={0}     
-     validators={ ["requerido"]}
-     errorMessages={["requerido"]}
-     onWheel={(e) => e.target.blur()}
- /> 
+<div className="contdetalleAIaddindi2">
+  <label style={{fontWeight:600, marginBottom:4}}>Precio Compra Unitario</label>
+  <TextValidator
+    onChange={this.handleChangeGeneral}
+    name="valUnitario"
+    type="number"
+    value={this.state.valUnitario}
+    placeholder={0}
+    validators={["requerido"]}
+    errorMessages={["requerido"]}
+    onWheel={(e) => e.target.blur()}
+  />
 </div>
-<div  className="contdetalleAIaddindi2"> 
-<TextValidator
-    label="Precio Venta Unitario"
-     onChange={this.handleChangeGeneral}
-     name="Precio_Venta_Unitario"
-     type="number"
-  value={this.state.Precio_Venta_Unitario}
-     placeholder={0}     
-     validators={ ["requerido"]}
-     errorMessages={["Campo requerido "]}
-     onWheel={(e) => e.target.blur()}
- /> 
+<div className="contdetalleAIaddindi2">
+  <label style={{fontWeight:600, marginBottom:4}}>Precio Venta Unitario</label>
+  <TextValidator
+    onChange={this.handleChangeGeneral}
+    name="Precio_Venta_Unitario"
+    type="number"
+    value={this.state.Precio_Venta_Unitario}
+    placeholder={0}
+    validators={["requerido"]}
+    errorMessages={["Campo requerido "]}
+    onWheel={(e) => e.target.blur()}
+  />
 </div>
-<div  className="contdetalleAIaddindi2"> 
-<TextValidator
-    label="Precio Venta Alt Unitario"
-     onChange={this.handleChangeGeneral}
-     name="Precio_VentaAlt_Unitario"
-     type="number"
-  value={this.state.Precio_VentaAlt_Unitario}
-     placeholder={0}     
-     validators={ ["requerido"]}
-     errorMessages={["requerido"]}
-     onWheel={(e) => e.target.blur()}
- /> 
+<div className="contdetalleAIaddindi2">
+  <label style={{fontWeight:600, marginBottom:4}}>Precio Venta Alt Unitario</label>
+  <TextValidator
+    onChange={this.handleChangeGeneral}
+    name="Precio_VentaAlt_Unitario"
+    type="number"
+    value={this.state.Precio_VentaAlt_Unitario}
+    placeholder={0}
+    validators={["requerido"]}
+    errorMessages={["requerido"]}
+    onWheel={(e) => e.target.blur()}
+  />
 </div>
 </Animate>
 

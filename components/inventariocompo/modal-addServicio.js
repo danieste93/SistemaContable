@@ -319,130 +319,115 @@ IVA
       />
       </div>
 </div>
-  <div  className="contdetalleAI"> 
-    <TextValidator
-    label="Categoria"
-    onClick={()=>{ this.setState({categoriaModal:true})}}
-     name="Categoria"
-     type="text"
-  value={this.state.Categoria}
-
-     validators={ ["requerido"] }
-     errorMessages={ ["requerido"]  }
-     InputProps={{
-      disableUnderline: true, // Elimina el subrayado del input
-      style: {
-        pointerEvents: "none", // Bloquea la interacción del input, evita el cursor de escritura
-      },
-    }}
-    style= {{
-      cursor: "pointer",
-      backgroundColor: "rgb(39 98 255 / 10%)",
-      padding:"2px",
-      borderRadius: "5px",
-      borderBottom:"1px solid black"
-    } }
- /> 
+  <div className="contdetalleAI">
+    <div
+      className="categoria-btn"
+      onClick={() => { this.setState({ categoriaModal: true }) }}
+      style={{
+        cursor: 'pointer',
+        background: 'rgb(39 98 255 / 10%)',
+        padding: '8px 12px',
+        borderRadius: '5px',
+        border: '1px solid #1976d2',
+        fontWeight: 600,
+        color: '#1976d2',
+        marginBottom: 6,
+        minWidth: 120,
+        textAlign: 'center',
+        userSelect: 'none',
+      }}
+      title="Seleccionar categoría"
+    >
+      {this.state.Categoria ? this.state.Categoria : 'Seleccionar Categoría'}
     </div>
-    <div  className="contdetalleAI"> 
-    <TextValidator
-    label="Sub Categoria"
-   onClick={()=>{ this.setState({categoriaModal:true})}}
-     name="SubCategoria"
-     type="text"
-  value={this.state.subCatSelect}
-   InputProps={{
-      disableUnderline: true, // Elimina el subrayado del input
-      style: {
-        pointerEvents: "none", // Bloquea la interacción del input, evita el cursor de escritura
-      },
-    }}
-    style= {{
-      cursor: "pointer",
-      backgroundColor: "rgb(39 98 255 / 10%)",
-      padding:"2px",
-      borderRadius: "5px",
-      borderBottom:"1px solid black"
-    } }
- /> 
+  </div>
+  <div className="contdetalleAI">
+    <div
+      className="categoria-btn"
+      onClick={() => { this.setState({ categoriaModal: true }) }}
+      style={{
+        cursor: 'pointer',
+        background: 'rgb(39 98 255 / 10%)',
+        padding: '8px 12px',
+        borderRadius: '5px',
+        border: '1px solid #1976d2',
+        fontWeight: 600,
+        color: '#1976d2',
+        minWidth: 120,
+        textAlign: 'center',
+        userSelect: 'none',
+      }}
+      title="Seleccionar subcategoría"
+    >
+      {this.state.subCatSelect ? this.state.subCatSelect : 'Seleccionar Subcategoría'}
     </div>
+  </div>
         
 
          
-    <div  className="contdetalleAI"> 
-    <TextValidator
-    label="Titulo"
-     onChange={this.handleChangeGeneral}
-     name="TituloServ"
-     type="text"
-  value={this.state.TituloServ}
-
-     validators={ ["requerido"] }
-     errorMessages={ ["requerido"]  }
-    
- /> 
+    <div className="contdetalleAI">
+      <label style={{fontWeight:600, marginBottom:4}}>Título</label>
+      <TextValidator
+        onChange={this.handleChangeGeneral}
+        name="TituloServ"
+        type="text"
+        value={this.state.TituloServ}
+        validators={["requerido"]}
+        errorMessages={["requerido"]}
+      />
     </div>
-    <div  className="contdetalleAI"> 
-    <TextValidator
-    label="Precio Compra"
-     onChange={this.handleChangeGeneral}
-     name="PrecioCompraServ" 
-     type="number"
-  value={this.state.PrecioCompraServ}
+    <div className="contdetalleAI">
+      <label style={{fontWeight:600, marginBottom:4}}>Precio Compra</label>
+      <TextValidator
+        onChange={this.handleChangeGeneral}
+        name="PrecioCompraServ"
+        type="number"
+        value={this.state.PrecioCompraServ}
         placeHolder="0"
-  
-    
- /> 
+      />
     </div>
-    <div  className="contdetalleAI"> 
-      
-      <div className="boxp">
-
-   <TextValidator
-    label="Tiempo Requerido"
-     onChange={this.handleChangeGeneral}
-     name="Timereq"
-     type="number"
-     placeholder={0}
-  value={this.state.Timereq}
-     validators={['requerido']}
-     errorMessages={['Ingresa un valor'] }
-    
- /> 
-     
-     <select name ="TimeMesuare" value={this.state.TimeMesuare} onChange={this.handleChangeGeneral}>
-    
-     <option  value="Horas">Horas</option>
-     <option  value="Libras">Minutos</option>
-  
-     </select>
-     </div>
+    <div className="contdetalleAI">
+      <label style={{fontWeight:600, marginBottom:4}}>Tiempo Requerido</label>
+      <div className="boxp" style={{width:'100%',padding:0,margin:0,alignItems:'center'}}>
+        <TextValidator
+          onChange={this.handleChangeGeneral}
+          name="Timereq"
+          type="number"
+          placeholder={0}
+          value={this.state.Timereq}
+          validators={['requerido']}
+          errorMessages={['Ingresa un valor']}
+          style={{flex:1,minWidth:0}}
+        />
+        <select name="TimeMesuare" value={this.state.TimeMesuare} onChange={this.handleChangeGeneral} style={{marginLeft:8}}>
+          <option value="Horas">Horas</option>
+          <option value="Libras">Minutos</option>
+        </select>
+      </div>
     </div>
-    <div  className="contdetalleAI"> 
-    <TextValidator
-    label="Valor"
-     onChange={this.handleChangeGeneral}
-     name="PrecioServ"
-     type="number"
-  value={this.state.PrecioServ}
+    <div className="contdetalleAI">
+      <label style={{fontWeight:600, marginBottom:4}}>Valor</label>
+      <TextValidator
+        onChange={this.handleChangeGeneral}
+        name="PrecioServ"
+        type="number"
+        value={this.state.PrecioServ}
         placeholder={1}
-     validators={ ["requerido"] }
-     errorMessages={ ["requerido"]  }
-    
- /> 
+        validators={["requerido"]}
+        errorMessages={["requerido"]}
+      />
     </div>
-    <div  className="contdetalleAI"> 
-    <TextValidator
-    label="Valor Alternativo"
-     onChange={this.handleChangeGeneral}
-     name="PrecioServAlt"
-     type="number"
-  value={this.state.PrecioServAlt}
-  placeholder={1}
-     validators={ ["requerido"] }
-     errorMessages={ ["requerido"]  }
-    
- /> 
+    <div className="contdetalleAI">
+      <label style={{fontWeight:600, marginBottom:4}}>Valor Alternativo</label>
+      <TextValidator
+        onChange={this.handleChangeGeneral}
+        name="PrecioServAlt"
+        type="number"
+        value={this.state.PrecioServAlt}
+        placeholder={1}
+        validators={["requerido"]}
+        errorMessages={["requerido"]}
+      />
     </div>
 
            </div>
@@ -503,101 +488,118 @@ add
                         </Animate>     
            <style jsx>{`
            .datarenderCont{
-        
             width: 100%;
             display: flex;
-            flex-flow: row;
-            flex-wrap: wrap;
+            flex-flow: row wrap;
             justify-content: space-around;
-            align-items: center;
-            
+            align-items: flex-start;
+            gap: 0 18px;
           }
-           
-          
-            
+          .contdetalleAI {
+            width: 100%;
+            min-width: 220px;
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          .contdetalleAI input,
+          .contdetalleAI .MuiInputBase-root {
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 0;
+            box-sizing: border-box;
+          }
+          @media (min-width: 900px) {
+            .datarenderCont {
+              flex-direction: row;
+              flex-wrap: wrap;
+              gap: 24px;
+            }
+            .contdetalleAI {
+              width: 45%;
+              min-width: 260px;
+            }
+          }
           .proveedorInput{
             border-radius: 20px;
             text-align: center;
            }
-               .totalcont{
-                display: flex;
-                background: #ffc903;
-                align-items: center;
-                border-radius: 12px;
-                padding: 5px;
-                border-bottom: 5px solid black;
-                margin: 10px;
-                max-width: 600px;
-                width: 100%;
-                height: 35px;
-              }
-              .contTitulos2{
-                display:flex;
-               
-                font-size: 15px;
-                font-weight: bolder;
-                justify-content: space-around;
-              
-                width: 100%;
-            }
-            .titulocont{
-              font-size: 20px;
-    font-weight: bold;
-    text-align: center;
-            }
-            .contImagenes{
-              border-radius: 20px;
-    padding: 5px;
-    border:1px solid;
-    width: 80%;
-            }
-            .contDataScroll{
-              height: 78vh;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    display: flex;
-    flex-flow: column;
-    justify-content: flex-start;
-    align-items: center;
-            }
-            .contBotonPago{
-              margin-top:30px;
-              display: flex;
-      justify-content: center;
-      margin-bottom: 24px;
+          .totalcont{
+            display: flex;
+            background: #ffc903;
+            align-items: center;
+            border-radius: 12px;
+            padding: 5px;
+            border-bottom: 5px solid black;
+            margin: 10px;
+            max-width: 600px;
+            width: 100%;
+            height: 35px;
           }
-            .Artic100Fpago{
-              width: 18%;  
-              min-width:80px;
-              max-width:100px;
-              align-items: center;
-              text-align:center;
+          .contTitulos2{
+            display:flex;
+            font-size: 15px;
+            font-weight: bolder;
+            justify-content: space-around;
+            width: 100%;
           }
-             
-    
-      .contContado{
-        padding: 5px 10px;
-        margin-top: 20px;
-        border: 2px solid black;
-        border-radius: 10px;
-        background: aliceblue;
-        max-width: 600px;
-        width: 100%;
-       }
-       .contForm{
-        width: 80%;
-        padding-bottom: 25px;
-        display: flex;
-        flex-flow: column;
-        justify-content: center;
-        align-items: center;
-       }
-       .totalp{
-        text-align: center;
-        font-size: 28px;
-        font-weight: bolder;
-        margin-bottom: 0px;
-    }
+          .titulocont{
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+          }
+          .contImagenes{
+            border-radius: 20px;
+            padding: 5px;
+            border:1px solid;
+            width: 80%;
+          }
+          .contDataScroll{
+            height: 78vh;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            display: flex;
+            flex-flow: column;
+            justify-content: flex-start;
+            align-items: center;
+          }
+          .contBotonPago{
+            margin-top:30px;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+          }
+          .Artic100Fpago{
+            width: 18%;  
+            min-width:80px;
+            max-width:100px;
+            align-items: center;
+            text-align:center;
+          }
+          .contContado{
+            padding: 5px 10px;
+            margin-top: 20px;
+            border: 2px solid black;
+            border-radius: 10px;
+            background: aliceblue;
+            max-width: 600px;
+            width: 100%;
+          }
+          .contForm{
+            width: 80%;
+            padding-bottom: 25px;
+            display: flex;
+            flex-flow: column;
+            justify-content: center;
+            align-items: center;
+          }
+          .totalp{
+            text-align: center;
+            font-size: 28px;
+            font-weight: bolder;
+            margin-bottom: 0px;
+          }
            
     .boxp{
       display: flex;
