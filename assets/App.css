@@ -1,3 +1,19 @@
+.iconoCuenta.material-icons {
+    display: inline-block !important;
+    font-size: 28px !important;
+    color: #1976d2 !important;
+    background: #fff !important;
+    border-radius: 50% !important;
+    box-shadow: 0 2px 8px #1976d233 !important;
+    padding: 2px !important;
+    cursor: pointer !important;
+    vertical-align: middle !important;
+    user-select: none !important;
+}
+@keyframes fadeInPopup {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 .MuiIconButton-root, .MuiSvgIcon-root, svg, .MuiButtonBase-root, button {
     background: #ff0000 !important;
     width: 22px !important;

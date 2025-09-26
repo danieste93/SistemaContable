@@ -21,9 +21,11 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
+
 import ReactToPrint from "react-to-print";
-import ModalBalance from "./SubCompos/modal-balance"
+import ModalBalance from "./SubCompos/modal-balance";
 import Dropdown from 'react-bootstrap/Dropdown';
+import PatrimonioTimelineModal from './PatrimonioTimelineModal';
 
 
 class Croom extends Component {
@@ -80,8 +82,234 @@ cuentascla:false,
 ModalDeleteC:false,
 CuentaPorDel:"",
 InventarioVal:0,
-modalBalance:false
+    modalBalance:false,
+    modalPatrimonio: false,
+        patrimonioTimeline: [],
+        patrimonioPeriod: {
+          start: moment().startOf('year').toDate(),
+          end: moment().endOf('month').toDate(),
+        },
+        patrimonioLoading: false,
     }
+  // --- Patrimonio Timeline Logic ---
+
+  openPatrimonioModal = () => {
+    this.setState({ modalPatrimonio: true }, this.fetchPatrimonioRegs);
+  };
+
+  fetchPatrimonioRegs = () => {
+    this.setState({ patrimonioLoading: true });
+    const { patrimonioPeriod } = this.state;
+    const user = this.props.state.userReducer.update.usuario.user;
+    const token = this.props.state.userReducer.update.usuario.token;
+    const datos = {
+      User: { DBname: user.DBname },
+      mensual: false,
+      diario: false,
+      periodo: true,
+      tiempoperiodoini: patrimonioPeriod.start,
+      tiempoperiodofin: patrimonioPeriod.end,
+      tiempo: patrimonioPeriod.start,
+      tiempomensual: patrimonioPeriod.start
+    };
+    fetch("/cuentas/getregstime", {
+      method: 'POST',
+      body: JSON.stringify(datos),
+      headers: {
+        'Content-Type': 'application/json',
+        "x-access-token": token
+      }
+    })
+      .then(res => res.json())
+      .then(response => {
+        if (response.status === 'error') {
+          this.setState({ patrimonioLoading: false });
+          alert("Error al obtener registros de patrimonio");
+        } else {
+          // Unir con los registros actuales para evitar duplicados
+          let misarrs = (this.props.regC.Regs || []).slice();
+          let finalars = misarrs.concat(response.regsHabiles || []);
+          let sinRepetidosObjeto = finalars.filter((value, index, self) => (
+            index === self.findIndex((t) => (t._id === value._id))
+          ));
+          this.reconstruirPatrimonio(sinRepetidosObjeto);
+        }
+      })
+      .catch(() => this.setState({ patrimonioLoading: false }));
+  };
+
+  handlePatrimonioPeriodChange = (period) => {
+    this.setState({ patrimonioPeriod: period }, this.fetchPatrimonioRegs);
+  };
+
+  // Reconstruir patrimonio histórico igual que liquidez pero sumando todas las cuentas
+  reconstruirPatrimonio = (regs) => {
+    const cuentas = this.props.regC?.Cuentas || [];
+    const { patrimonioPeriod } = this.state;
+    let start = moment(patrimonioPeriod.start).startOf('day');
+    let end = moment(patrimonioPeriod.end).endOf('day');
+    let diffMonths = end.diff(start, 'months', true);
+    let granularity = 'month';
+    if (diffMonths < 1.5) granularity = 'day';
+    else if (diffMonths > 24) granularity = 'year';
+    // 1. Calcular patrimonio total actual (todas las cuentas)
+    let patrimonioTotal = 0;
+    cuentas.forEach(cuenta => {
+      patrimonioTotal += parseFloat((cuenta.DineroActual && cuenta.DineroActual.$numberDecimal) || cuenta.DineroActual || cuenta.DineroIni || 0);
+    });
+    // 2. Filtrar solo ingresos y gastos (las transferencias no cambian el patrimonio total)
+    let movimientos = regs.filter(x => x.Accion !== 'Trans');
+    // 3. Filtrar movimientos por rango de fechas
+    movimientos = movimientos.filter(x => {
+      let fecha = moment(x.TiempoEjecucion || x.fecha || x.createdAt);
+      return fecha.isBetween(start, end, null, '[]');
+    });
+    // 4. Ordenar movimientos de más reciente a más antiguo
+    movimientos = movimientos.sort((a, b) => b.TiempoEjecucion - a.TiempoEjecucion);
+    // 5. Agrupar por periodo (día, mes, año)
+    let patrimonioPorPeriodo = {};
+    let acumuladoPatrimonio = patrimonioTotal;
+    movimientos.forEach(mov => {
+      let fecha = moment(mov.TiempoEjecucion || mov.fecha || mov.createdAt);
+      let periodo;
+      if (granularity === 'day') {
+        periodo = fecha.format('DD MMM YYYY');
+      } else if (granularity === 'year') {
+        periodo = fecha.format('YYYY');
+      } else {
+        periodo = fecha.format('MMM YYYY');
+      }
+      // Solo almacenar el primer valor para cada periodo (el más reciente)
+      if (!patrimonioPorPeriodo[periodo]) {
+        patrimonioPorPeriodo[periodo] = acumuladoPatrimonio;
+      }
+      // Deshacer el movimiento
+      if (mov.Accion === 'Ingreso') {
+        acumuladoPatrimonio -= mov.Importe;
+      } else if (mov.Accion === 'Gasto') {
+        acumuladoPatrimonio += mov.Importe;
+      }
+    });
+    // Asegurar que el primer periodo (más antiguo) tenga valor
+    let allPeriods = [];
+    let cursor = start.clone();
+    if (granularity === 'day') {
+      while (cursor.isSameOrBefore(end, 'day')) {
+        allPeriods.push(cursor.format('DD MMM YYYY'));
+        cursor.add(1, 'day');
+      }
+    } else if (granularity === 'year') {
+      while (cursor.isSameOrBefore(end, 'year')) {
+        allPeriods.push(cursor.format('YYYY'));
+        cursor.add(1, 'year');
+      }
+    } else {
+      while (cursor.isSameOrBefore(end, 'month')) {
+        allPeriods.push(cursor.format('MMM YYYY'));
+        cursor.add(1, 'month');
+      }
+    }
+    // Construir timeline en orden cronológico
+    let timeline = allPeriods.map(periodo => {
+      let value = patrimonioPorPeriodo[periodo];
+      // Si no hay valor para el periodo, usar el último acumulado calculado
+      if (value === undefined) {
+        // Buscar el valor más reciente anterior
+        let idx = allPeriods.indexOf(periodo);
+        for (let i = idx - 1; i >= 0; i--) {
+          if (patrimonioPorPeriodo[allPeriods[i]] !== undefined) {
+            value = patrimonioPorPeriodo[allPeriods[i]];
+            break;
+          }
+        }
+        // Si sigue sin valor, usar el acumulado final
+        if (value === undefined) value = acumuladoPatrimonio;
+      }
+      return {
+        label: periodo,
+        value: value,
+      };
+    });
+    this.setState({ patrimonioTimeline: timeline, patrimonioLoading: false, patrimonioGranularity: granularity });
+  };
+
+  closePatrimonioModal = () => {
+    this.setState({ modalPatrimonio: false });
+  };
+
+  handlePatrimonioPeriodChange = (period) => {
+    this.setState({ patrimonioPeriod: period }, this.loadPatrimonioTimeline);
+  };
+
+  loadPatrimonioTimeline = () => {
+    this.setState({ patrimonioLoading: true });
+    const { patrimonioPeriod } = this.state;
+    const cuentas = this.props.regC?.Cuentas || [];
+    const regs = this.props.regC?.Regs || [];
+    let start = moment(patrimonioPeriod.start).startOf('day');
+    let end = moment(patrimonioPeriod.end).endOf('day');
+    let diffMonths = end.diff(start, 'months', true);
+    let diffDays = end.diff(start, 'days', true);
+    let diffYears = end.diff(start, 'years', true);
+    let granularity = 'month';
+    if (diffMonths < 1.5) granularity = 'day';
+    else if (diffMonths > 24) granularity = 'year';
+    // Generar los puntos de la línea de tiempo según granularidad
+    let points = [];
+    if (granularity === 'day') {
+      let cursor = start.clone();
+      while (cursor.isSameOrBefore(end, 'day')) {
+        points.push(cursor.clone());
+        cursor.add(1, 'day');
+      }
+    } else if (granularity === 'year') {
+      let cursor = start.clone().startOf('year');
+      while (cursor.isSameOrBefore(end, 'year')) {
+        points.push(cursor.clone());
+        cursor.add(1, 'year');
+      }
+    } else {
+      let cursor = start.clone().startOf('month');
+      while (cursor.isSameOrBefore(end, 'month')) {
+        points.push(cursor.clone());
+        cursor.add(1, 'month');
+      }
+    }
+    // Para cada punto, sumar el patrimonio (DineroIni + movimientos hasta ese punto) de todas las cuentas
+    let timeline = points.map((p) => {
+      let patrimonio = 0;
+      cuentas.forEach(cuenta => {
+        let saldo = parseFloat(cuenta.DineroIni || 0);
+        regs.forEach(r => {
+          let fecha = moment(r.TiempoEjecucion || r.fecha || r.createdAt);
+          let isBefore = false;
+          if (granularity === 'day') isBefore = fecha.isSameOrBefore(p.clone().endOf('day'));
+          else if (granularity === 'year') isBefore = fecha.isSameOrBefore(p.clone().endOf('year'));
+          else isBefore = fecha.isSameOrBefore(p.clone().endOf('month'));
+          if (isBefore) {
+            if (r.CuentaSelec && r.CuentaSelec.idCuenta === cuenta._id) {
+              if (r.Accion === 'Ingreso') saldo += r.Importe;
+              if (r.Accion === 'Gasto') saldo -= r.Importe;
+              if (r.Accion === 'Trans') {
+                if (r.CuentaSelec2 && r.CuentaSelec2.idCuenta === cuenta._id) {
+                  saldo += r.Importe;
+                } else {
+                  saldo -= r.Importe;
+                }
+              }
+            }
+          }
+        });
+        patrimonio += saldo;
+      });
+      let label = p.format(granularity === 'day' ? 'DD MMM YYYY' : granularity === 'year' ? 'YYYY' : 'MMM YYYY');
+      return {
+        label,
+        value: patrimonio,
+      };
+    });
+    this.setState({ patrimonioTimeline: timeline, patrimonioLoading: false, patrimonioGranularity: granularity });
+  };
 
     channel1 = null;
     channelCroom = null;
@@ -2539,10 +2767,19 @@ if(cuentasrenderNoPosesion.length > 0){
     </div>
     
     <div className="conttotalesCrom">
-        <div className="conttitulo">
-            <div className="titulo">Patrimonio</div>
-            <div className="valor valor_activos">${superBalance.toFixed(2)}</div>
-        </div>
+            <div className="conttitulo">
+                <div className="titulo" style={{cursor:'pointer',textDecoration:'underline'}} onClick={this.openPatrimonioModal} title="Ver patrimonio en línea de tiempo">Patrimonio</div>
+                <div className="valor valor_activos" style={{cursor:'pointer'}} onClick={this.openPatrimonioModal} title="Ver patrimonio en línea de tiempo">${superBalance.toFixed(2)}</div>
+            </div>
+            <PatrimonioTimelineModal
+              open={this.state.modalPatrimonio}
+              onClose={this.closePatrimonioModal}
+              patrimonioData={this.state.patrimonioTimeline}
+              onPeriodChange={this.handlePatrimonioPeriodChange}
+              period={this.state.patrimonioPeriod}
+              loading={this.state.patrimonioLoading}
+              granularity={this.state.patrimonioGranularity || 'month'}
+            />
     </div>
     
       </div>
