@@ -1,7 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Typewriter from './maquinaEscribir';
+import { useDispatch } from 'react-redux';
+import { updateUser, logOut } from '../../reduxstore/actions/myact';
+import { cleanData, addFirstRegs, addFirstRegsDelete, getcats, getcuentas, getArts, getClients, getCompras, getVentas, getDistribuidor } from '../../reduxstore/actions/regcont';
+import { useGoogleOneTapLogin } from '@react-oauth/google';
+
+function decodeJwt(token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+}
 
 const PantallaPrincipal = () => {
+    const dispatch = useDispatch();
     const [isVisibleLeft, setIsVisibleLeft] = useState(false);
     const [isVisibleRight, setIsVisibleRight] = useState(false);
 
@@ -29,6 +47,178 @@ const PantallaPrincipal = () => {
             if (rightRef.current) observer.unobserve(rightRef.current);
         };
     }, []);
+
+    useGoogleOneTapLogin({
+        onSuccess: async (credentialResponse) => {
+            const decoded = decodeJwt(credentialResponse.credential);
+            if(decoded){
+                // Login/registro en backend
+                const googledata = await fetch('/users/googleLogin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(decoded),
+                });
+                const sendData = await googledata.json();
+                handleBackendLogin(sendData);
+            }
+        },
+        onError: () => console.log('One Tap Login Failed'),
+        disabled: false
+    });
+
+    const handleBackendLogin = async (loginData) => {
+        if (loginData.status === "Ok") {
+            const { user, decodificado, token } = loginData.data;
+            const usuarioPayload = { user, decodificado, token };
+            let localstate = { userReducer: { update: { usuario: usuarioPayload } } };
+            localStorage.setItem("state", JSON.stringify(localstate));
+            localStorage.setItem("jwt_token", token);
+            dispatch(cleanData());
+            dispatch(logOut());
+            dispatch(updateUser({ usuario: usuarioPayload }));
+            // --- CARGA DE DATOS ---
+            try {
+                // Registros contables
+                const montRegsRes = await fetch("/cuentas/getmontregs", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-access-token": token
+                    },
+                    body: JSON.stringify({
+                        User: { DBname: user.DBname, Tipo: user.Tipo },
+                        tiempo: new Date().getTime()
+                    })
+                });
+                const montRegsData = await montRegsRes.json();
+                if (montRegsData.status !== "error") {
+                    dispatch(addFirstRegs(montRegsData.regsHabiles));
+                    dispatch(addFirstRegsDelete(montRegsData.regsHabilesDelete));
+                }
+            } catch (err) { console.error("Error getmontregs", err); }
+            try {
+                // Registros ejecutados
+                const exeRegsRes = await fetch("/cuentas/exeregs", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-access-token": token
+                    },
+                    body: JSON.stringify({
+                        User: { DBname: user.DBname, Tipo: user.Tipo, tiempo: new Date().getTime() }
+                    })
+                });
+                const exeRegsData = await exeRegsRes.json();
+                if (exeRegsData.status !== "error" && exeRegsData.registrosUpdate && exeRegsData.registrosUpdate.length > 0) {
+                    dispatch(require('../../reduxstore/actions/regcont').updateRegs(exeRegsData.registrosUpdate));
+                }
+            } catch (err) { console.error("Error exeregs", err); }
+            try {
+                // Cuentas y categorías
+                const cuentasCatsRes = await fetch("/cuentas/getCuentasyCats", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-access-token": token
+                    },
+                    body: JSON.stringify({
+                        User: { DBname: user.DBname, Tipo: user.Tipo }
+                    })
+                });
+                const cuentasCatsData = await cuentasCatsRes.json();
+                if (cuentasCatsData.status === "Ok") {
+                    dispatch(getcats(cuentasCatsData.catHabiles));
+                    dispatch(getcuentas(cuentasCatsData.cuentasHabiles));
+                }
+            } catch (err) { console.error("Error getCuentasyCats", err); }
+            try {
+                // Artículos
+                const artsRes = await fetch("/public/engine/art", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-access-token": token
+                    },
+                    body: JSON.stringify({
+                        User: { DBname: user.DBname, Tipo: user.Tipo }
+                    })
+                });
+                const artsData = await artsRes.json();
+                if (artsData.status === "Ok") {
+                    dispatch(getArts(artsData.articulosHabiles));
+                }
+            } catch (err) { console.error("Error getArts", err); }
+            try {
+                // Clientes
+                const clientsRes = await fetch("/cuentas/getClients", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-access-token": token
+                    },
+                    body: JSON.stringify({
+                        User: { DBname: user.DBname, Tipo: user.Tipo }
+                    })
+                });
+                const clientsData = await clientsRes.json();
+                if (clientsData.status === "Ok") {
+                    dispatch(getClients(clientsData.clientesHabiles));
+                }
+            } catch (err) { console.error("Error getClients", err); }
+            try {
+                // Compras
+                const comprasRes = await fetch("/cuentas/getCompras", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-access-token": token
+                    },
+                    body: JSON.stringify({
+                        User: { DBname: user.DBname, Tipo: user.Tipo }
+                    })
+                });
+                const comprasData = await comprasRes.json();
+                if (comprasData.status === "Ok") {
+                    dispatch(getCompras(comprasData.comprasHabiles));
+                }
+            } catch (err) { console.error("Error getCompras", err); }
+            try {
+                // Ventas
+                const ventasRes = await fetch("/cuentas/getVentas", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-access-token": token
+                    },
+                    body: JSON.stringify({
+                        User: { DBname: user.DBname, Tipo: user.Tipo }
+                    })
+                });
+                const ventasData = await ventasRes.json();
+                if (ventasData.status === "Ok") {
+                    dispatch(getVentas(ventasData.ventasHabiles));
+                }
+            } catch (err) { console.error("Error getVentas", err); }
+            try {
+                // Distribuidores
+                const distRes = await fetch("/cuentas/getarmoextradata", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-access-token": token
+                    },
+                    body: JSON.stringify({
+                        User: { DBname: user.DBname, Tipo: user.Tipo }
+                    })
+                });
+                const distData = await distRes.json();
+                if (distData.status === "Ok") {
+                    dispatch(getDistribuidor(distData.distriHabiles));
+                    dispatch(getcuentas(distData.allCuentasHabiles));
+                }
+            } catch (err) { console.error("Error getDistribuidor", err); }
+        }
+    };
 
     return (
         <section className="contPrincipal">
