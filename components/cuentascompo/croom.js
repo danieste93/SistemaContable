@@ -1704,10 +1704,34 @@ DragableContent = ArrTipos.map((item, index) => (
      <div 
       {...provided.dragHandleProps}
       className={`contFlexSpaceB  customDragbar ${isDragging}`}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'nowrap',
+        gap: 0,
+        minWidth: 0,
+      }}
      >  
-        <div className="tituloPrin">{item.toUpperCase()}</div>
-        <div style={{display:'flex',alignItems:'center',gap:'12px',marginLeft:'auto'}}>
-          <div className={`valorcuentas ${color}`} style={{minWidth:'120px'}}>
+        <div 
+          className="tituloPrin"
+          style={{
+            fontWeight: 'bold',
+            margin: 0,
+            flex: '1 1 0',
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontSize: '1.1rem',
+            paddingRight: 8
+          }}
+          title={item}
+        >
+          {item.toUpperCase()}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:'8px',marginLeft:'auto',flexShrink:0}}>
+          <div className={`valorcuentas ${color}`} style={{minWidth:'80px',maxWidth:'120px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontWeight:'bold',textAlign:'right'}}>
             ${this.state.ValorCuenta ? sumatoria.toFixed(2) : parseFloat(ResultCuentas).toFixed(2)}
           </div>
           <i className="material-icons"
@@ -1718,9 +1742,9 @@ DragableContent = ArrTipos.map((item, index) => (
             title={`Ordenar de ${(this.state.ordenCuentas[item] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
             style={{
               fontSize: '20px',
-              color: '#fff',
+              color: undefined,
               cursor: 'pointer',
-              marginRight: '8px',
+              marginRight: '4px',
               background: 'none',
               border: 'none',
               boxShadow: 'none',
