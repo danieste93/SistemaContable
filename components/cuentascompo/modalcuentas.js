@@ -101,13 +101,42 @@ class Cuentas extends Component {
           let backgroundSolido = cuenta.Background?.Seleccionado === "Solido" ? cuenta.Background?.colorPicked : undefined;
           let backgroundImagen = cuenta.Background?.Seleccionado === "Imagen" ? cuenta.Background?.urlBackGround : undefined;
           let style = {};
+          let textColor = undefined;
+          let nombreShadow = {};
+          // Función para determinar si un color es oscuro
+          function isDark(color) {
+            if (!color) return false;
+            let c = color.trim();
+            if (c.startsWith('#')) {
+              c = c.substring(1);
+              if (c.length === 3) c = c.split('').map(x => x + x).join('');
+              if (c.length !== 6) return false;
+              const r = parseInt(c.substring(0, 2), 16);
+              const g = parseInt(c.substring(2, 4), 16);
+              const b = parseInt(c.substring(4, 6), 16);
+              // Luminancia
+              return (0.299 * r + 0.587 * g + 0.114 * b) < 128;
+            }
+            if (c.startsWith('rgb')) {
+              const vals = c.match(/\d+/g);
+              if (!vals || vals.length < 3) return false;
+              const r = parseInt(vals[0]);
+              const g = parseInt(vals[1]);
+              const b = parseInt(vals[2]);
+              return (0.299 * r + 0.587 * g + 0.114 * b) < 128;
+            }
+            return false;
+          }
           if (backgroundSolido) {
             style.background = backgroundSolido;
+            if (isDark(backgroundSolido)) textColor = '#fff';
           }
           if (backgroundImagen) {
             style.backgroundImage = `url(${backgroundImagen})`;
             style.backgroundSize = 'cover';
             style.backgroundPosition = 'center';
+            textColor = '#fff'; // Siempre blanco sobre imagen
+            nombreShadow = { textShadow: '0 2px 12px rgba(0,0,0,0.95), 0 0px 2px #000, 0 0px 24px #000' };
           }
           style.borderRadius = '10px';
           style.boxShadow = '1px 0px 4px #0002';
@@ -157,10 +186,10 @@ class Cuentas extends Component {
                 {cuenta.urlIcono && (
                   <img src={cuenta.urlIcono} alt="icono" style={{ width: 32, height: 32, marginBottom: 4, opacity: cuenta.Visibility === false ? 0.8 : 1 }} />
                 )}
-                <p className="nombrem">{cuenta.NombreC}</p>
-                <p className="">(${cuenta.DineroActual?.$numberDecimal})</p>
-                <div className="tipomcont">
-                  <p className="tipom">{cuenta.Tipo}</p>
+                <p className="nombrem" style={Object.assign({}, textColor ? { color: textColor } : {}, nombreShadow)}>{cuenta.NombreC}</p>
+                <p className="" style={Object.assign({}, textColor ? { color: textColor } : {}, nombreShadow)}>${cuenta.DineroActual?.$numberDecimal}</p>
+                <div className="tipomcont" style={textColor ? { color: textColor } : {}}>
+                  <p className="tipom" style={textColor ? { color: textColor } : {}}>{cuenta.Tipo}</p>
                 </div>
               </div>
             </div>
@@ -252,8 +281,6 @@ class Cuentas extends Component {
 
     return (
       <div>
-        {/* Overlay bloqueador */}
-        <div className="modalcuentas-overlay" />
         <div id="maincuentas" className="maincontacto-modalcuentas">
           <div className="contcontacto">
             <div className="headercontact cuentasheader">
