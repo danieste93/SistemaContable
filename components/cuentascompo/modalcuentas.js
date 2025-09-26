@@ -8,10 +8,12 @@ import Addcuenta from './modal-addcuenta';
 class Cuentas extends Component {
   componentDidMount() {
     setTimeout(() => {
-      document.getElementById('maincuentas').classList.add("entrada");
-      // if (this.inputRef.current) {
-      //   this.inputRef.current.focus();
-      // }
+      const mainCuentas = document.getElementById('maincuentas');
+      mainCuentas.classList.add("entrada");
+      // Si es PC, elimina el top forzado por JS (corrige bug de centrado)
+      if (window.innerWidth >= 1024) {
+        mainCuentas.style.top = '';
+      }
       // Al abrir, mostrar solo cuentas ocultas
       this.setState({ visibility: true });
       // Forzar scroll al tope en móvil
@@ -69,7 +71,10 @@ class Cuentas extends Component {
 
   componentDidMount() {
     setTimeout(() => {
-      document.getElementById('maincuentas').classList.add("entrada");
+      const mainCuentas = document.getElementById('maincuentas');
+      if (mainCuentas) {
+        mainCuentas.classList.add("entrada");
+      }
       if (this.inputRef.current) {
         this.inputRef.current.focus();
       }

@@ -274,7 +274,7 @@ this.setState({subcatCont:false})
            }
          
            .cuentasheader{
-            margin-bottom: 16px;
+            margin-bottom: 1px;
             background: #00f1e6;
             color: #1f0707;
             border-radius: 10px 10px 0px 0px;
