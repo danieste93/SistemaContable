@@ -29,14 +29,14 @@ const LoginGoogle = ({ onResult, onClick, getError }) => {
         onResult(sendData);
 
       } catch (err) {
-        getError(err);
+        getError && getError(err);
         console.error('❌ Error obteniendo datos del usuario', err);
       }
     },
 
     onError: (err) => {
       clearTimeout(timeoutRef.current); // ✔️ Cancelar timeout
-      getError(err);
+      getError && getError(err);
       console.error('❌ Error al iniciar sesión con Google', err);
     },
 
@@ -46,11 +46,11 @@ const LoginGoogle = ({ onResult, onClick, getError }) => {
   const handleClick = () => {
     // ✔️ Inicia el timeout de 10 segundos
     timeoutRef.current = setTimeout(() => {
-      getError(new Error('⏳ El usuario no completó el login o cerró la ventana'));
+      getError && getError(new Error('⏳ El usuario no completó el login o cerró la ventana'));
     }, 10000);
 
     login();
-    onClick();
+    if (onClick) onClick();
   };
 
   return (

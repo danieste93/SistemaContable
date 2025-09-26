@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { updateUser, logOut } from '../../reduxstore/actions/myact';
 import { cleanData, addFirstRegs, addFirstRegsDelete, getcats, getcuentas, getArts, getClients, getCompras, getVentas, getDistribuidor } from '../../reduxstore/actions/regcont';
 import { useGoogleOneTapLogin } from '@react-oauth/google';
+import LoginGoogle from '../loginGoogle';
 
 function decodeJwt(token) {
     try {
@@ -22,6 +23,14 @@ const PantallaPrincipal = () => {
     const dispatch = useDispatch();
     const [isVisibleLeft, setIsVisibleLeft] = useState(false);
     const [isVisibleRight, setIsVisibleRight] = useState(false);
+    // Detectar si es móvil
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        setIsMobile(window.innerWidth < 768);
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const leftRef = useRef();
     const rightRef = useRef();
@@ -63,7 +72,8 @@ const PantallaPrincipal = () => {
             }
         },
         onError: () => console.log('One Tap Login Failed'),
-        disabled: false
+        disabled: false, // Activo en todos los dispositivos
+        position: 'bottom-right',
     });
 
     const handleBackendLogin = async (loginData) => {
@@ -220,6 +230,23 @@ const PantallaPrincipal = () => {
         }
     };
 
+    useEffect(() => {
+        // Forzar el popup de Google One Tap a estar por encima de todo y permitir clics
+        const interval = setInterval(() => {
+            const oneTap = document.querySelector('iframe[title*="google"]');
+            if (oneTap) {
+                oneTap.style.zIndex = '99999';
+                oneTap.style.pointerEvents = 'auto';
+            }
+            const oneTapSheet = document.querySelector('div[style*="z-index"]');
+            if (oneTapSheet && oneTapSheet.innerHTML.includes('Continuar')) {
+                oneTapSheet.style.zIndex = '99999';
+                oneTapSheet.style.pointerEvents = 'auto';
+            }
+        }, 500);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <section className="contPrincipal">
             <svg className="backgroundLines" viewBox="0 0 1440 900" preserveAspectRatio="none">
@@ -250,6 +277,9 @@ const PantallaPrincipal = () => {
                     <div className="buttonGroup">
                         <button className="btnPrimary">Empieza</button>
                         <button className="btnSecondary">Pruébalo gratis</button>
+                        <div className="google-login-wrapper">
+                          <LoginGoogle onResult={handleBackendLogin} />
+                        </div>
                     </div>
                     <div className="stars">
                         ⭐⭐⭐⭐⭐ <span>Calidad al más alto nivel  </span>
@@ -377,6 +407,12 @@ const PantallaPrincipal = () => {
                     margin-top: 40px;
                 }
 
+                .google-login-wrapper {
+                  display: flex;
+                  align-items: center;
+                  margin-left: 8px;
+                }
+
                 @media (max-width: 768px) {
                     .rightSection {
                         margin-top: 0px;
@@ -393,7 +429,10 @@ const PantallaPrincipal = () => {
                     }
                     .buttonGroup {
                         justify-content: center;
-                    }
+                        flex-direction: column;
+                        gap: 0.5rem;
+                        align-items: center;
+                      }
 
                     .title {
                         font-size: 2.5rem;
