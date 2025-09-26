@@ -258,12 +258,14 @@ class Cuentas extends Component {
               <div className="conticonos">
                 <i className={`material-icons ${lapizctive}`} onClick={() => this.setState({ editmode: !this.state.editmode })}>edit</i>
                 <i className="material-icons" onClick={() => this.setState({ AddCuenta: true })}>add</i>
-                <Animate show={this.state.visibility}>
-                  <i className="material-icons" onClick={() => this.setState({ visibility: !this.state.visibility })}>visibility_off</i>
-                </Animate>
-                <Animate show={!this.state.visibility}>
-                  <i className="material-icons" onClick={() => this.setState({ visibility: !this.state.visibility })}>visibility</i>
-                </Animate>
+                <i
+                  className="material-icons"
+                  title={this.state.visibility ? 'Ocultar cuentas' : 'Mostrar cuentas'}
+                  onClick={() => this.setState({ visibility: !this.state.visibility })}
+                  style={{ transition: 'color 0.2s, transform 0.2s' }}
+                >
+                  {this.state.visibility ? 'visibility_off' : 'visibility'}
+                </i>
                 <i className="material-icons" onClick={() => {
                   setTimeout(() => { this.props.Flecharetro3(); }, 300);
                   document.getElementById('maincuentas').classList.remove("entrada");
