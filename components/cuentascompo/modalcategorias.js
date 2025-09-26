@@ -337,9 +337,26 @@ this.setState({subcatCont:false})
 }
            .conticonos{
             display: flex;
-            width: 60%;
-            justify-content: space-around;
+            flex-wrap: nowrap;
+            gap: 6px;
+            width: auto;
+            justify-content: flex-end;
             align-items: center;
+            flex-shrink: 1;
+            min-width: 0;
+            /* revertido: sin límites extra de ancho */
+           }
+           @media (min-width: 601px) {
+             .conticonos {
+               max-width: 100%;
+               overflow: hidden;
+               word-break: break-word;
+               width: 60%;
+               display: flex;
+               justify-content: space-around;
+               align-items: center;
+               gap: 8px;
+             }
            }
              
              .contPfinal{
@@ -389,10 +406,11 @@ this.setState({subcatCont:false})
 
 
            .headercontact {
-
-            display:flex;
-            justify-content: space-between
-
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 8px;
            }
 
 
@@ -489,10 +507,13 @@ this.setState({subcatCont:false})
        .tituloventa{
          display: flex;
          align-items: center;
-         font-size: 25px;
+         font-size: 1.2rem;
          font-weight: bolder;
          text-align: center;
-         justify-content: space-around;
+         justify-content: flex-start;
+         min-width: 120px;
+         max-width: 60vw;
+         white-space: nowrap;
        }
        .tituloventa p{
          margin-top:5px;

@@ -246,9 +246,14 @@
 }
 @media (max-width: 600px) {
   .headercontact.cuentasheader {
-    padding: 4px 10px !important;
-    font-size: 1rem !important;
-    border-radius: 12px 12px 0 0 !important;
+  padding: 4px 10px !important;
+  font-size: 1rem !important;
+  border-radius: 12px 12px 0 0 !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   }
 }
 @media (min-width: 601px) {
@@ -257,6 +262,9 @@
     justify-content: space-between;
   }
   .conticonos {
+  max-width: 100%;
+  overflow: hidden;
+  word-break: break-word;
     width: 60%;
     display: flex;
     justify-content: space-around;
@@ -269,6 +277,9 @@
     text-align: left;
   }
   .conticonos .material-icons {
+  max-width: 32px;
+  box-sizing: border-box;
+  overflow: hidden;
     font-size: 2rem;
     margin: 0 8px;
     vertical-align: middle;
@@ -291,6 +302,13 @@
   letter-spacing: 0.03em;
 }
 .conticonos i {
+  border-radius: 50%;
+  aspect-ratio: 1/1;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 24px;
   padding: 8px;
   background: rgba(255, 255, 255, 0.4);
@@ -411,16 +429,21 @@
   width: 100vw;
 @media (max-width: 600px) {
   .conticonos {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 16px;
+  width: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
   }
   .tituloventa {
-    font-size: 1.4rem !important;
-    max-width: 60vw;
-    text-align: center;
+  font-size: 1.4rem !important;
+  max-width: 60vw;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
   }
 }
   /* height: 50%; */
