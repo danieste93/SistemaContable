@@ -248,17 +248,8 @@ class Cuentas extends Component {
     return (
       <div>
         {/* Overlay bloqueador */}
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.5)',
-          zIndex: 1999,
-          pointerEvents: 'auto',
-        }} />
-        <div id="maincuentas" className="maincontacto-modalcuentas" style={{zIndex: 2000}}>
+        <div className="modalcuentas-overlay" />
+        <div id="maincuentas" className="maincontacto-modalcuentas">
           <div className="contcontacto">
             <div className="headercontact cuentasheader">
               <div className="tituloventa">

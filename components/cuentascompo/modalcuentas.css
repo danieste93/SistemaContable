@@ -1,6 +1,17 @@
+/* Overlay para modal cuentas: siempre debajo del modal */
+.modalcuentas-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.5);
+  z-index: 9998 !important;
+  pointer-events: auto;
+}
 /* Estilo moderno para el modal de Agregar Nueva Cuenta */enta-titulo {
-  font-size: 2rem;
-  font-weight: 600;
+  font-size: 24px;
+  padding: 4px;
   color: #1a3a5d;
   text-align: center;
   margin-top: 28px;
@@ -18,10 +29,10 @@
 }
 .contcontacto input, .contcontacto select, .contcontacto textarea {
   border-radius: 8px;
-  border: 1.5px solid #b0c4de;
+  border: 0px solid #b0c4de;
   font-size: 1rem;
-  padding: 9px 12px;
-  margin-bottom: 14px;
+  padding: 1px;
+  margin-bottom: 0px;
   background: #f7fafd;
   box-shadow: 0 1px 4px #b0c4de22;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -104,13 +115,15 @@
 }
 .react-autosuggest__input {
   width: 100%;
-  padding: 14px 20px;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
+  height: 30px;
+  padding: 0px 20px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  font-family: Helvetica, sans-serif;
+  font-weight: 300;
+  font-size: 16px;
   background: #ffffff;
   color: #333;
-  font-weight: 400;
   text-align: center;
   outline: none;
   transition: all 0.3s ease;
@@ -150,12 +163,19 @@
   background: linear-gradient(90deg, #00f1e6 0%, #418fe2 100%);
   color: #1f0707;
   border-radius: 18px 18px 0 0;
-  margin-bottom: 24px;
+  margin-bottom: 1px;
   display: flex;
   justify-content: space-around;
   align-items: center;
   padding: 16px 32px 16px 32px;
   box-shadow: 0 2px 12px #418fe233;
+}
+@media (max-width: 600px) {
+  .headercontact.cuentasheader {
+    padding: 4px 10px !important;
+    font-size: 1rem !important;
+    border-radius: 12px 12px 0 0 !important;
+  }
 }
 @media (min-width: 601px) {
   .cuentasheader {
@@ -274,19 +294,32 @@
   background: #0061f1;
   color: #fff;
   border-radius: 0 0 11px 11px;
-  padding: 2px 8px;
+  padding: 2px 0;
   margin-top: 4px;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  display: block;
+  overflow: visible !important;
 }
 .tipom {
   font-size: 0.95rem;
   font-style: italic;
-  margin-bottom: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  text-align: center;
+  overflow: visible !important;
 }
 /* Popup modal más grande y profesional - Animación estilo categorías */
+/* Modal principal: siempre encima del overlay */
+/* Modal principal: siempre encima del overlay */
 .maincontacto-modalcuentas {
-  z-index: 2000;
+  z-index: 9999 !important;
   position: fixed;
-  top: -50%;
+  top: -100%;
   left: 0;
   width: 100vw;
 @media (max-width: 600px) {
@@ -400,10 +433,13 @@
 }
 
 /* Clase para la animación de entrada específica del modal */
-.maincontacto-modalcuentas.entrada {
+/* Animación de entrada: modal baja desde fuera del viewport */
+ .maincontacto-modalcuentas.entrada {
   top: 0% !important;
+  z-index: 9999 !important;
+  transition: top 0.6s ease-in-out, opacity 0.6s ease-in-out;
 }
-.maincontcat.entrada {
+ .maincontcat.entrada {
   top: 0% !important;
 }
 
