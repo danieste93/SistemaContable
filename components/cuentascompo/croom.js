@@ -3220,7 +3220,7 @@ cDc2x p{
   border-radius: 15px;
   padding: 5px;
   position: fixed;
-  z-index: 10;
+  z-index: 1000;
 }
   .cont-Prin {
     display: flex;
