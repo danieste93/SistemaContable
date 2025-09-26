@@ -64,9 +64,13 @@ class Cuentas extends Component {
       const cuentas = this.props.regC?.Cuentas || [];
       const lapizctive = this.state.editmode ? 'lapizctive' : '';
       let generadorDeCuentas;
-      let cuentasFiltradas = cuentas.filter(cuenta =>
-        cuenta.NombreC?.toLowerCase().includes(this.state.cuentasSearcher.toLowerCase())
-      );
+      let cuentasFiltradas = cuentas.filter(cuenta => {
+        const search = this.state.cuentasSearcher.toLowerCase();
+        return (
+          cuenta.NombreC?.toLowerCase().includes(search) ||
+          cuenta.Tipo?.toLowerCase().includes(search)
+        );
+      });
       let cuentasAMostrar;
       if (this.state.visibility) {
         // Mostrar solo cuentas visibles (Visibility !== false)
