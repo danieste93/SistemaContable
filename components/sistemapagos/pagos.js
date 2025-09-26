@@ -45,6 +45,12 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
   const [facturacionError, setFacturacionError] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+  // Importar acciones para dispatch dinámico si window no las tiene
+  if (!window.addFirstRegs) window.addFirstRegs = require('../../reduxstore/actions/regcont').addFirstRegs;
+  if (!window.addFirstRegsDelete) window.addFirstRegsDelete = require('../../reduxstore/actions/regcont').addFirstRegsDelete;
+  if (!window.updateRegs) window.updateRegs = require('../../reduxstore/actions/regcont').updateRegs;
+  if (!window.getcats) window.getcats = require('../../reduxstore/actions/regcont').getcats;
+  if (!window.getcuentas) window.getcuentas = require('../../reduxstore/actions/regcont').getcuentas;
   const loggedInUser = useSelector(state => state.userReducer.update?.usuario?.user);
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [duration, setDuration] = useState(initialPlan?.duration?.toLowerCase() || 'anual');
@@ -101,6 +107,65 @@ export default function Pagos({ initialPlan, plansData, onPlanConfirmed, onClose
     dispatch(logOut());
     dispatch(updateUser({ usuario: usuarioPayload }));
     postal.channel().publish('setTokenTimer', { message: decodificado });
+
+    // --- CARGA DE DATOS COMO EN ADMINISTRADOR ---
+    // 1. MontRegs
+    try {
+      const montRegsRes = await fetch("/cuentas/getmontregs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-access-token": token
+        },
+        body: JSON.stringify({
+          User: { DBname: user.DBname, Tipo: user.Tipo },
+          tiempo: new Date().getTime()
+        })
+      });
+      const montRegsData = await montRegsRes.json();
+      if (montRegsData.status !== "error") {
+        dispatch(window.addFirstRegs(montRegsData.regsHabiles));
+        dispatch(window.addFirstRegsDelete(montRegsData.regsHabilesDelete));
+      }
+    } catch (err) { console.error("Error getmontregs", err); }
+
+    // 2. ExeRegs
+    try {
+      const exeRegsRes = await fetch("/cuentas/exeregs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-access-token": token
+        },
+        body: JSON.stringify({
+          User: { DBname: user.DBname, Tipo: user.Tipo, tiempo: new Date().getTime() }
+        })
+      });
+      const exeRegsData = await exeRegsRes.json();
+      if (exeRegsData.status !== "error" && exeRegsData.registrosUpdate && exeRegsData.registrosUpdate.length > 0) {
+        dispatch(window.updateRegs(exeRegsData.registrosUpdate));
+      }
+    } catch (err) { console.error("Error exeregs", err); }
+
+    // 3. Cuentas y Categorías
+    try {
+      const cuentasCatsRes = await fetch("/cuentas/getCuentasyCats", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-access-token": token
+        },
+        body: JSON.stringify({
+          User: { DBname: user.DBname, Tipo: user.Tipo }
+        })
+      });
+      const cuentasCatsData = await cuentasCatsRes.json();
+      if (cuentasCatsData.status === "Ok") {
+        dispatch(window.getcats(cuentasCatsData.catHabiles));
+        dispatch(window.getcuentas(cuentasCatsData.cuentasHabiles));
+      }
+    } catch (err) { console.error("Error getCuentasyCats", err); }
+
     // Forzar paso a selección de plan tras login automático
     setTimeout(() => setStep("planSelection"), 100);
   } else {

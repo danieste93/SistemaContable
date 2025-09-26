@@ -1,9 +1,11 @@
 // 1) Imports
 import React, { useEffect, useState } from "react";
+import { useDispatch } from 'react-redux';
 import useUserRedux from '../components/useUserRedux';
 import WhatsappButton from "../components/WhatsappButton";
 import Head from "next/head";
 import Pagos from "../components/sistemapagos/pagos";
+import { updateUser } from '../reduxstore/actions/myact';
 
 const plansData = {
   anual: [
@@ -21,6 +23,7 @@ const plansData = {
 };
 
 export default function Precios() {
+  const dispatch = useDispatch();
   const user = useUserRedux();
   // 2) Estado de tema y toggles
   // Sincronizar scroll horizontal de ambas tablas en móvil
@@ -139,6 +142,45 @@ export default function Precios() {
   function handleCotizarClick(plan) {
     window.open('https://api.whatsapp.com/send/?phone=%2B593962124673&text=Hola%2C+quiero+m%C3%A1s+informaci%C3%B3n+sobre+las+membres%C3%ADas+de+Activos.ec&type=phone_number&app_absent=0', '_blank');
   }
+
+  useEffect(() => {
+    // Si el usuario no está en Redux, intenta cargarlo desde localStorage o API
+    if (!user) {
+      const userLocal = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+      if (userLocal) {
+        try {
+          const userObj = JSON.parse(userLocal);
+          dispatch(updateUser(userObj));
+        } catch (e) {}
+      }
+      // Si tienes una API, aquí podrías hacer la petición y luego dispatch(updateUser(apiUser))
+    }
+
+    // Si el usuario existe y tiene token, refresca datos desde API y actualiza Redux
+    if (user && user.token) {
+      const datos = {
+        User: {
+          DBname: user.DBname,
+          Tipo: user.Tipo
+        }
+      };
+      fetch('/api/refresh-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': user.token
+        },
+        body: JSON.stringify(datos)
+      })
+        .then(res => res.json())
+        .then(response => {
+          if (response && response.user) {
+            dispatch(updateUser(response.user));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user, dispatch]);
 
   return (
     <>
