@@ -217,17 +217,17 @@ usercont=(e)=>{
   const {route} = this.props.router;
 
   const links = [
-    { name: 'Inicio', icon: 'home' },
-    { name: 'Servicios', icon: 'build' },
-    { name: 'Productos', icon: 'shopping_cart' },
-    { name: 'Contacto', icon: 'contact_mail' },
+  { name: 'Inicio', icon: 'home' },
+  { name: 'Precios', icon: 'build', href: '/precios' },
+  { name: 'Firma electrónica', icon: 'shopping_cart' },
+  { name: 'Contacto', icon: 'contact_mail' },
   ];
   if(this.props.usuario !== ""  ){
     const ruta = `/`
 
   
-    return ( 
-    <Dropdown>
+  return ( 
+  <Dropdown>
       <Dropdown.Toggle variant="info" className="userCont" id="dropdown-basic" style={{marginRight:"15px"}}>
       {this.props.usuario.update.usuario.user.Usuario.substring(0,1).toUpperCase()}
       </Dropdown.Toggle>
@@ -294,10 +294,13 @@ logout
     <div className='contBotonera'>
 <div className="links-desktop">
           {links.map((link) => (
-            <a key={link.name} href={`#${link.name.toLowerCase()}`} className="nav-link">
-              
-              {link.name}
-            </a>
+            link.name === 'Precios' ? (
+              <a key={link.name} href={link.href} className="nav-link">{link.name}</a>
+            ) : link.name === 'Firma electrónica' ? (
+              <a key={link.name} href="/firma-electronica" className="nav-link">{link.name}</a>
+            ) : (
+              <a key={link.name} href={`#${link.name.toLowerCase()}`} className="nav-link">{link.name}</a>
+            )
           ))}
         </div>
         <Link href="/ingreso">
@@ -324,12 +327,12 @@ logout
   render() {
     const {route} = this.props.router;
     let genrouter = route == "/ingreso"?"/":"/ingreso"
-const links = [
-    { name: 'Inicio', icon: 'home' },
-    { name: 'Servicios', icon: 'build' },
-    { name: 'Productos', icon: 'shopping_cart' },
-    { name: 'Contacto', icon: 'contact_mail' },
-  ];
+    const links = [
+      { name: 'Inicio', icon: 'home' },
+      { name: 'Precios', icon: 'build', href: '/precios' },
+      { name: 'Firma electrónica', icon: 'shopping_cart' },
+      { name: 'Contacto', icon: 'contact_mail' },
+    ];
      let estilosnav = this.state.isscroll?"botonClickactive":"botonClick";
 
 
@@ -389,15 +392,37 @@ const links = [
           </div>
           <nav className="sidebar-links">
             {links.map((link) => (
-              <a
-                key={link.name}
-                href={`#${link.name.toLowerCase()}`}
-                className="sidebar-link"
-                onClick={() =>  this.setState({setSidebarOpen:true})}
-              >
-                <span className="material-icons sidebar-icon">{link.icon}</span>
-                {link.name}
-              </a>
+              link.name === 'Precios' ? (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="sidebar-link"
+                  onClick={() =>  this.setState({setSidebarOpen:true})}
+                >
+                  <span className="material-icons sidebar-icon">{link.icon}</span>
+                  {link.name}
+                </a>
+              ) : link.name === 'Firma electrónica' ? (
+                <a
+                  key={link.name}
+                  href="/firma-electronica"
+                  className="sidebar-link"
+                  onClick={() =>  this.setState({setSidebarOpen:true})}
+                >
+                  <span className="material-icons sidebar-icon">{link.icon}</span>
+                  {link.name}
+                </a>
+              ) : (
+                <a
+                  key={link.name}
+                  href={`#${link.name.toLowerCase()}`}
+                  className="sidebar-link"
+                  onClick={() =>  this.setState({setSidebarOpen:true})}
+                >
+                  <span className="material-icons sidebar-icon">{link.icon}</span>
+                  {link.name}
+                </a>
+              )
             ))}
           </nav>
         </div>
