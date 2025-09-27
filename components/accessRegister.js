@@ -362,8 +362,8 @@ if(this.props.state.userReducer != ""){
 <Modaldelete DeleteReg={this.state.DeleteReg} Flecharetro={()=>{this.setState({modaldelete:false})}}/>
 
     </Animate>
-<div className="contbarra">
 
+<div className="contbarra">
 
 <div className='barraSubcont'> 
   <div className='cont2Buttons'>
