@@ -173,7 +173,15 @@ class Cuentas extends Component {
               <div
                 key={i}
                 className={`cuentaRender jwPointer${cuenta.Visibility === false ? ' cuenta-oculta' : ''}`}
-                style={style}
+                style={{
+                  ...style,
+                  border: isWhite(backgroundSolido)
+                    ? '2.5px solid rgba(30,30,30,0.18)'
+                    : style.border,
+                  boxShadow: isWhite(backgroundSolido)
+                    ? '0 2px 12px rgba(30,30,30,0.10)'
+                    : style.boxShadow
+                }}
               >
                 {this.state.editmode && (
                   <i
