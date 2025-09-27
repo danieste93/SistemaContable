@@ -111,7 +111,17 @@ class Cuentas extends Component {
             let style = {};
             let textColor = undefined;
             let nombreShadow = {};
-            // Función para determinar si un color es oscuro
+            function isWhite(color) {
+              if (!color) return false;
+              let c = color.trim().toLowerCase();
+              if (c === '#fff' || c === '#ffffff') return true;
+              if (c.startsWith('rgb')) {
+                const vals = c.match(/\d+/g);
+                if (!vals || vals.length < 3) return false;
+                return vals[0] === '255' && vals[1] === '255' && vals[2] === '255';
+              }
+              return false;
+            }
             function isDark(color) {
               if (!color) return false;
               let c = color.trim();
@@ -122,7 +132,6 @@ class Cuentas extends Component {
                 const r = parseInt(c.substring(0, 2), 16);
                 const g = parseInt(c.substring(2, 4), 16);
                 const b = parseInt(c.substring(4, 6), 16);
-                // Luminancia
                 return (0.299 * r + 0.587 * g + 0.114 * b) < 128;
               }
               if (c.startsWith('rgb')) {
@@ -137,16 +146,14 @@ class Cuentas extends Component {
             }
             if (backgroundSolido) {
               style.background = backgroundSolido;
-              // Aplica color de texto blanco si fondo oscuro, incluso si la cuenta está oculta
               if (isDark(backgroundSolido)) textColor = '#fff';
-              // Si la cuenta está oculta, fuerza el color blanco para mejor legibilidad
               if (cuenta.Visibility === false) textColor = '#fff';
             }
             if (backgroundImagen) {
               style.backgroundImage = `url(${backgroundImagen})`;
               style.backgroundSize = 'cover';
               style.backgroundPosition = 'center';
-              textColor = '#fff'; // Siempre blanco sobre imagen
+              textColor = '#fff';
               nombreShadow = { textShadow: '0 2px 12px rgba(0,0,0,0.95), 0 0px 2px #000, 0 0px 24px #000' };
             }
             style.borderRadius = '10px';
@@ -160,11 +167,12 @@ class Cuentas extends Component {
             style.margin = '8px 4px';
             style.transition = 'box-shadow 0.2s, background 0.2s';
             style.cursor = 'pointer';
-            style.opacity = 1;
+            style.opacity = cuenta.Visibility === false ? 0.55 : 1;
+            style.border = cuenta.Visibility === false ? '2px dashed #343a40' : undefined;
             return (
               <div
                 key={i}
-                className={`cuentaRender jwPointer`}
+                className={`cuentaRender jwPointer${cuenta.Visibility === false ? ' cuenta-oculta' : ''}`}
                 style={style}
               >
                 {this.state.editmode && (
@@ -198,10 +206,58 @@ class Cuentas extends Component {
                   }
                 }}>
                   {cuenta.urlIcono && (
-                    <img src={cuenta.urlIcono} alt="icono" style={{ width: 32, height: 32, marginBottom: 4, opacity: cuenta.Visibility === false ? 0.8 : 1 }} />
+                    <img 
+                      src={cuenta.urlIcono} 
+                      alt="icono" 
+                      style={{ 
+                        width: 32, 
+                        height: 32, 
+                        marginBottom: 4, 
+                        opacity: cuenta.Visibility === false ? 0.8 : 1,
+                        border: isWhite(backgroundSolido) ? '2px solid rgba(30,30,30,0.45)' : undefined,
+                        borderRadius: '50%',
+                        boxShadow: isWhite(backgroundSolido) ? '0 2px 8px rgba(30,30,30,0.12)' : undefined,
+                        objectFit: 'cover'
+                      }} 
+                    />
                   )}
-                  <p className="nombrem" style={Object.assign({}, textColor ? { color: textColor } : {}, nombreShadow)}>{cuenta.NombreC}</p>
-                  <p className="" style={Object.assign({}, textColor ? { color: textColor } : {}, nombreShadow)}>${cuenta.DineroActual?.$numberDecimal}</p>
+                  {/* Barra blanca para fondo personalizado, barra negra para fondo blanco */}
+                  {(backgroundSolido || backgroundImagen) ? (
+                    isWhite(backgroundSolido) ? (
+                      <div style={{
+                        width: '90%',
+                        margin: '0 auto 4px auto',
+                        borderRadius: '7px',
+                        background: 'rgba(30,30,30,0.82)',
+                        padding: '2px 8px',
+                        display: 'inline-block',
+                        position: 'relative',
+                        zIndex: 1
+                      }}>
+                        <p className="nombrem" style={{ color: '#fff', fontWeight: 700, marginBottom: 2, textAlign: 'center' }}>{cuenta.NombreC}</p>
+                        <p className="" style={{ color: '#fff', fontWeight: 500, marginBottom: 2, textAlign: 'center' }}>${cuenta.DineroActual?.$numberDecimal}</p>
+                      </div>
+                    ) : (
+                      <div style={{
+                        width: '90%',
+                        margin: '0 auto 4px auto',
+                        borderRadius: '7px',
+                        background: 'rgba(255,255,255,0.85)',
+                        padding: '2px 8px',
+                        display: 'inline-block',
+                        position: 'relative',
+                        zIndex: 1
+                      }}>
+                        <p className="nombrem" style={{ color: '#222', fontWeight: 700, marginBottom: 2, textAlign: 'center' }}>{cuenta.NombreC}</p>
+                        <p className="" style={{ color: '#222', fontWeight: 500, marginBottom: 2, textAlign: 'center' }}>${cuenta.DineroActual?.$numberDecimal}</p>
+                      </div>
+                    )
+                  ) : (
+                    <>
+                      <p className="nombrem" style={Object.assign({}, textColor ? { color: textColor } : {}, nombreShadow)}>{cuenta.NombreC}</p>
+                      <p className="" style={Object.assign({}, textColor ? { color: textColor } : {}, nombreShadow)}>${cuenta.DineroActual?.$numberDecimal}</p>
+                    </>
+                  )}
                   <div className="tipomcont" style={textColor ? { color: textColor } : {}}>
                     <p className="tipom" style={textColor ? { color: textColor } : {}}>{cuenta.Tipo}</p>
                   </div>
