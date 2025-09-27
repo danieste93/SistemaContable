@@ -93,6 +93,10 @@ ImagenP: {
   required: false,
   default: "sindb"
  },
+ ConfiguracionPersonalizada: {
+  type: Schema.Types.Mixed,
+  default: {}
+ },
 });
 // Antes de almacenar la contraseña en la base de datos la encriptamos con Bcrypt, esto es posible gracias al middleware de mongoose
 UserSchema.pre('save', function(next){

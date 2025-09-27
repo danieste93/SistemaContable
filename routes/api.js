@@ -9,6 +9,10 @@ router.post('/validar-correo', apiController.validarCorreo);
 router.post('/validar-usuario', apiController.validarUsuario);
 router.post('/actualizar-facturacion', apiController.actualizarFacturacion);
 router.post('/subir-comprobante-mem', apiController.subirComprobanteMeM);
+
+// Consulta comprobante SRI
+router.post('/sri-consulta', apiController.sriConsultaComprobante);
+
 router.post('/activar-membresia-paypal', apiController.activarMembresiaPaypal);
 
 module.exports = router;

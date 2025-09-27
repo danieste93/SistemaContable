@@ -1029,7 +1029,7 @@ if(this.props.state.userReducer != ""){
 
        </div>
        <div className="jwContCenter">
-  <button className="botoncontact" style={{backgroundColor:"red"}}onClick={this.Reiniciar}>
+  <button className="botoncontact" style={{background:"linear-gradient(90deg, #2266aa 0%, #00b6e6 100%)"}}onClick={this.Reiniciar}>
    <Animate show={this.state.waiting}>
    <div className="lds-facebook"><div></div><div></div><div></div></div>
      
@@ -1155,7 +1155,7 @@ if(this.props.state.userReducer != ""){
 
        </div>
        <div className="jwContCenter">
-       <button className="botoncontact" style={{backgroundColor:"red"}}onClick={this.ReiniciarTrans}>
+       <button className="botoncontact" style={{background:"linear-gradient(90deg, #2266aa 0%, #00b6e6 100%)"}}onClick={this.ReiniciarTrans}>
    <Animate show={this.state.waitingtrans}>
    <div className="lds-facebook"><div></div><div></div><div></div></div>
      
@@ -1233,61 +1233,92 @@ let nombreto = cat.estado.catSelect.nombreCat + "  //  " + cat.subcat
         </Animate>
 
         <Animate show={this.state.cuentasmodal}>
-       < Cuentas 
-    
-       cuentacaller={this.state.CuentaCaller }
-       cuentaEnviada={this.state.cuentaEnviada }
-       sendCuentaSelect={(cuenta)=>{
-    this.setState({cuentaEnviada:cuenta,cuentaSelect:cuenta, CuentaRender:cuenta.NombreC,cuentasmodal:false,})
-       } }  
-       sendCuentaSelectT1={(cuenta)=>{
-    
-        if(cuenta._id == this.state.cuentaSelectT2._id){
-          let add = {
-            Estado:true,
-            Tipo:"error",
-            Mensaje:"Cuenta ya seleccionada"
-        }
-        this.setState({Alert: add, cuentasmodal:false, cuentaSelectT1:"",CuentaRenderT1:""}) 
-     
-        }else{
-          this.setState({cuentaEnviada:cuenta,cuentaSelectT1:cuenta, CuentaRenderT1:cuenta.NombreC,cuentasmodal:false,})
-        
-        }
-
-           } }  
-           sendCuentaSelectT2={(cuenta)=>{
-
-            if(cuenta._id == this.state.cuentaSelectT1._id){
-              let add = {
-                Estado:true,
-                Tipo:"error",
-                Mensaje:"Cuenta ya seleccionada"
-            }
-            this.setState({Alert: add, cuentasmodal:false, cuentaSelectT2:"",CuentaRenderT2:""}) 
-         
-            }else{
-              this.setState({cuentaEnviada:cuenta,cuentaSelectT2:cuenta, CuentaRenderT2:cuenta.NombreC,cuentasmodal:false,})
-            
-            }
-
-
-                } }  
-       
-       Flecharetro3={
-        ()=>{
-          if(this.state.CuentaCaller ==="inggas"){
-            this.setState({cuentaEnviada:{_id:""},cuentasmodal:false,  CuentaRender:"",cuentaSelect:"", normal:false })
-          }else if(this.state.CuentaCaller ==="trans1"){
-            this.setState({cuentaEnviada:{_id:""},cuentasmodal:false,  CuentaRenderT1:"",cuentaSelectT1:"",trans1:false})
-          }else if(this.state.CuentaCaller ==="trans2"){
-            this.setState({cuentaEnviada:{_id:""},cuentasmodal:false, CuentaRenderT2:"",cuentaSelectT2:"",trans2:false})
-          }
-        }
-       } 
-     
-      />
-        </Animate >
+          <div style={{width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+            <Cuentas
+              cuentacaller={this.state.CuentaCaller}
+              cuentaEnviada={this.state.cuentaEnviada}
+              sendCuentaSelect={(cuenta) => {
+                this.setState({
+                  cuentaEnviada: cuenta,
+                  cuentaSelect: cuenta,
+                  CuentaRender: cuenta.NombreC,
+                  cuentasmodal: false,
+                });
+              }}
+              sendCuentaSelectT1={(cuenta) => {
+                if (cuenta._id === this.state.cuentaSelectT2?._id) {
+                  let add = {
+                    Estado: true,
+                    Tipo: "error",
+                    Mensaje: "Cuenta ya seleccionada",
+                  };
+                  this.setState({
+                    Alert: add,
+                    cuentasmodal: false,
+                    cuentaSelectT1: "",
+                    CuentaRenderT1: "",
+                  });
+                } else {
+                  this.setState({
+                    cuentaEnviada: cuenta,
+                    cuentaSelectT1: cuenta,
+                    CuentaRenderT1: cuenta.NombreC,
+                    cuentasmodal: false,
+                  });
+                }
+              }}
+              sendCuentaSelectT2={(cuenta) => {
+                if (cuenta._id === this.state.cuentaSelectT1?._id) {
+                  let add = {
+                    Estado: true,
+                    Tipo: "error",
+                    Mensaje: "Cuenta ya seleccionada",
+                  };
+                  this.setState({
+                    Alert: add,
+                    cuentasmodal: false,
+                    cuentaSelectT2: "",
+                    CuentaRenderT2: "",
+                  });
+                } else {
+                  this.setState({
+                    cuentaEnviada: cuenta,
+                    cuentaSelectT2: cuenta,
+                    CuentaRenderT2: cuenta.NombreC,
+                    cuentasmodal: false,
+                  });
+                }
+              }}
+              Flecharetro3={() => {
+                if (this.state.CuentaCaller === "inggas") {
+                  this.setState({
+                    cuentaEnviada: { _id: "" },
+                    cuentasmodal: false,
+                    CuentaRender: "",
+                    cuentaSelect: "",
+                    normal: false,
+                  });
+                } else if (this.state.CuentaCaller === "trans1") {
+                  this.setState({
+                    cuentaEnviada: { _id: "" },
+                    cuentasmodal: false,
+                    CuentaRenderT1: "",
+                    cuentaSelectT1: "",
+                    trans1: false,
+                  });
+                } else if (this.state.CuentaCaller === "trans2") {
+                  this.setState({
+                    cuentaEnviada: { _id: "" },
+                    cuentasmodal: false,
+                    CuentaRenderT2: "",
+                    cuentaSelectT2: "",
+                    trans2: false,
+                  });
+                }
+              }}
+            />
+          </div>
+        </Animate>
 
        
 

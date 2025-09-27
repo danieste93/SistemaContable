@@ -56,9 +56,116 @@ filteredTimeRegs:[],
           install();
           }
   
- 
+         // Cargar configuración del usuario
+         this.loadUserConfig();
         
         }
+
+        // Función para cargar configuración del usuario
+        loadUserConfig = async () => {
+          try {
+            console.log('🔍 Intentando cargar configuración de registro-contable...');
+            
+            // Obtener token del localStorage
+            const token = localStorage.getItem('token');
+            console.log('🔑 Token encontrado:', token ? 'Sí' : 'No');
+            
+            if (!token) {
+              console.log('❌ No hay token, usando configuración por defecto');
+              return;
+            }
+            
+            console.log('📡 Enviando petición a /users/get-config...');
+            const response = await fetch('/users/get-config', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ configType: 'registro-contable' })
+            });
+            
+            console.log('📨 Respuesta recibida, status:', response.status);
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log('✅ Datos de configuración recibidos:', data);
+              
+              if (data.config && data.config.registroContableConfig) {
+                const config = data.config.registroContableConfig;
+                console.log('🎯 Aplicando configuración:', config);
+                
+                this.setState({
+                  Cuentas: config.Cuentas || false,
+                  Categorias: config.Categorias !== undefined ? config.Categorias : true,
+                  Pie: config.Pie !== undefined ? config.Pie : true,
+                  Line: config.Line || false,
+                  tiempo: config.tiempo || 'mensual',
+                  InvOption: config.InvOption || 'categoria',
+                  allData: config.allData !== undefined ? config.allData : true
+                });
+                
+                console.log('✨ Estado actualizado con configuración guardada');
+              } else {
+                console.log('⚠️ No se encontró configuración guardada, usando valores por defecto');
+              }
+            } else {
+              console.log('❌ Error en respuesta:', response.status, response.statusText);
+            }
+          } catch (error) {
+            console.error('💥 Error cargando configuración:', error);
+          }
+        };
+
+        // Función para guardar configuración del usuario
+        saveUserConfig = async () => {
+          try {
+            console.log('💾 Intentando guardar configuración de registro-contable...');
+            
+            const token = localStorage.getItem('token');
+            console.log('🔑 Token para guardar:', token ? 'Sí' : 'No');
+            
+            if (!token) {
+              console.log('❌ No hay token, no se puede guardar');
+              return;
+            }
+            
+            const configData = {
+              Cuentas: this.state.Cuentas,
+              Categorias: this.state.Categorias,
+              Pie: this.state.Pie,
+              Line: this.state.Line,
+              tiempo: this.state.tiempo,
+              InvOption: this.state.InvOption,
+              allData: this.state.allData
+            };
+            
+            console.log('📦 Datos a guardar:', configData);
+            
+            const response = await fetch('/users/save-config', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ 
+                configType: 'registro-contable',
+                configData: configData
+              })
+            });
+            
+            console.log('📨 Respuesta del guardado, status:', response.status);
+            
+            if (response.ok) {
+              const result = await response.json();
+              console.log('✅ Configuración guardada exitosamente:', result);
+            } else {
+              console.log('❌ Error guardando configuración:', response.status, response.statusText);
+            }
+          } catch (error) {
+            console.error('💥 Error guardando configuración:', error);
+          }
+        };
         configData = (event) => {
 console.log(event)
           this.setState({filteredTimeRegs:event})
@@ -86,11 +193,11 @@ this.setState({subCatRegs:getRegs } )
 
          paramTimeData = (event) => {
 
-          this.setState({tiempo:event})
+          this.setState({tiempo:event}, () => this.saveUserConfig())
 
          }
           handleOptionChange = (event) => {
-            this.setState({ InvOption: event.target.value });
+            this.setState({ InvOption: event.target.value }, () => this.saveUserConfig());
           };
            changetime=(event)=>{
 
@@ -157,14 +264,14 @@ let subCuentadata ={
 <div className="contAllStatics">
 <div className="contPieview contdetails">
 <div className="minifilterCont">
-<span className={`base basealt ${pieActive} `} onClick={()=>{this.setState({Pie:true, Line:false, })}}>   <div className="">Pie</div> 
+<span className={`base basealt ${pieActive} `} onClick={()=>{this.setState({Pie:true, Line:false}, () => this.saveUserConfig())}}>   <div className="">Pie</div> 
 <span className="material-icons">
                            pie_chart
                             </span>
 
 </span>
 <span style={{fontSize:"30px"}}>|</span>
-          <span className={`base basealt ${lineActive} `} onClick={()=>{this.setState({Line:true, Pie:false,})}} > <div className="asd">Line</div> 
+          <span className={`base basealt ${lineActive} `} onClick={()=>{this.setState({Line:true, Pie:false}, () => this.saveUserConfig())}} > <div className="asd">Line</div> 
           
           <span className="material-icons">
                            show_chart
@@ -175,10 +282,10 @@ let subCuentadata ={
 
 </div>
 <div className="minifilterCont">
-<span className={`base basealt ${cuentasActive} `} onClick={()=>{this.setState({Cuentas:true, Categorias:false, })}}>   <div className="">Cuentas</div> 
+<span className={`base basealt ${cuentasActive} `} onClick={()=>{this.setState({Cuentas:true, Categorias:false}, () => this.saveUserConfig())}}>   <div className="">Cuentas</div> 
 </span>
 <span style={{fontSize:"30px"}}>|</span>
-          <span className={`base basealt ${categoriasActive} `} onClick={()=>{this.setState({Categorias:true, Cuentas:false,})}} > <div className="asd">Categorias</div>          
+          <span className={`base basealt ${categoriasActive} `} onClick={()=>{this.setState({Categorias:true, Cuentas:false}, () => this.saveUserConfig())}} > <div className="asd">Categorias</div>          
           </span>
 
 

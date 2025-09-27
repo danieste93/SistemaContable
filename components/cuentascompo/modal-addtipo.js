@@ -395,7 +395,7 @@ this.setState({Alert: add, })
   
         
         .maincontacto{
-          z-index: 1302;
+          z-index: 2100;
          width: 100vw;
          height: 100vh;
          background: #00f1e6;

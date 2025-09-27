@@ -14,16 +14,18 @@ import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import ModalDeleteC from "./modal-delete-cuenta";
 import postal from 'postal';
-import {getcuentas,addFirstRegs,addTipo } from "../../reduxstore/actions/regcont";
+import {getcuentas,addFirstRegs,addTipo,updateCuenta } from "../../reduxstore/actions/regcont";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { reorder } from "../reusableComplex/herlperDrag"
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
+
 import ReactToPrint from "react-to-print";
-import ModalBalance from "./SubCompos/modal-balance"
+import ModalBalance from "./SubCompos/modal-balance";
 import Dropdown from 'react-bootstrap/Dropdown';
+import PatrimonioTimelineModal from './PatrimonioTimelineModal';
 
 
 class Croom extends Component {
@@ -38,6 +40,7 @@ class Croom extends Component {
       ValorCuenta:true,
       Alert:{Estado:false},
         Tipos:[],
+        ordenCuentas:{}, // Para manejar el orden individual por tipo de cuenta
         tiempo: new Date(),
         CuentasD:[],
         sequence:"",
@@ -67,6 +70,7 @@ periodo:false,
 AddCuenta:false,
 addmitipo:false, 
 searchMode:false, 
+vistaFormato:"cuadros", // Nuevo estado: "cuadros" o "lista"
 visibility:false,
 
 superTotal:false,
@@ -78,8 +82,139 @@ cuentascla:false,
 ModalDeleteC:false,
 CuentaPorDel:"",
 InventarioVal:0,
-modalBalance:false
+    modalBalance:false,
+    modalPatrimonio: false,
+        patrimonioTimeline: [],
+        patrimonioPeriod: {
+          start: moment().startOf('month').toDate(),
+          end: moment().endOf('day').toDate(),
+        },
+        patrimonioLoading: false,
     }
+  // --- Patrimonio Timeline Logic ---
+
+  openPatrimonioModal = () => {
+    this.setState({ modalPatrimonio: true }, this.fetchPatrimonioRegs);
+  };
+
+  fetchPatrimonioRegs = () => {
+    this.setState({ patrimonioLoading: true });
+    const { patrimonioPeriod } = this.state;
+    const user = this.props.state.userReducer.update.usuario.user;
+    const token = this.props.state.userReducer.update.usuario.token;
+    const datos = {
+      User: { DBname: user.DBname },
+      mensual: false,
+      diario: false,
+      periodo: true,
+      tiempoperiodoini: patrimonioPeriod.start,
+      tiempoperiodofin: patrimonioPeriod.end,
+      tiempo: patrimonioPeriod.start,
+      tiempomensual: patrimonioPeriod.start
+    };
+    fetch("/cuentas/getregstime", {
+      method: 'POST',
+      body: JSON.stringify(datos),
+      headers: {
+        'Content-Type': 'application/json',
+        "x-access-token": token
+      }
+    })
+      .then(res => res.json())
+      .then(response => {
+        if (response.status === 'error') {
+          this.setState({ patrimonioLoading: false });
+          alert("Error al obtener registros de patrimonio");
+        } else {
+          // Usar solo los registros descargados para el cálculo
+          this.reconstruirPatrimonio(response.regsHabiles || []);
+        }
+      })
+      .catch(() => this.setState({ patrimonioLoading: false }));
+  };
+
+  handlePatrimonioPeriodChange = (period) => {
+    this.setState({ patrimonioPeriod: period }, this.fetchPatrimonioRegs);
+  };
+
+  // Reconstruir patrimonio histórico igual que liquidez pero sumando todas las cuentas
+  reconstruirPatrimonio = (regs) => {
+    const cuentas = this.props.regC?.Cuentas || [];
+    const { patrimonioPeriod } = this.state;
+    // 1. Calcular patrimonio total actual (todas las cuentas)
+    let patrimonioTotal = 0;
+    cuentas.forEach(cuenta => {
+      patrimonioTotal += parseFloat(cuenta.DineroActual && cuenta.DineroActual.$numberDecimal || 0);
+    });
+
+    // 2. Filtrar solo ingresos y gastos (las transferencias no cambian el patrimonio total)
+    let movimientos = regs.filter(x => x.Accion !== 'Trans');
+
+    // 3. Filtrar movimientos por rango usando el campo Tiempo
+    let start = moment(patrimonioPeriod.start).startOf('day').valueOf();
+    let end = moment(patrimonioPeriod.end).endOf('day').valueOf();
+    let diffDays = moment(end).diff(moment(start), 'days');
+    let diffMonths = moment(end).diff(moment(start), 'months');
+    let granularity = 'day';
+    if (diffDays <= 1) granularity = 'hour';
+    else if (diffDays > 31) granularity = 'month';
+
+    let movimientosFiltrados = movimientos.filter(x => x.Tiempo >= start && x.Tiempo <= end);
+    // 4. Ordenar movimientos de más reciente a más antiguo
+    movimientosFiltrados = movimientosFiltrados.sort((a, b) => b.Tiempo - a.Tiempo);
+
+    // 5. Agrupar por periodo y calcular patrimonio
+    let patrimonioPorPeriodo = {};
+    let acumuladoPatrimonio = patrimonioTotal;
+    movimientosFiltrados.forEach(mov => {
+      const fecha = new Date(mov.Tiempo);
+      let periodo;
+      if (granularity === 'hour') {
+        periodo = fecha.getHours().toString().padStart(2, '0') + ':00';
+      } else if (granularity === 'month') {
+        periodo = (fecha.getMonth() + 1).toString().padStart(2, '0') + '-' + fecha.getFullYear();
+      } else {
+        periodo = fecha.getDate().toString().padStart(2, '0') + '-' + (fecha.getMonth() + 1).toString().padStart(2, '0');
+      }
+      // Solo almacenar el primer valor para cada periodo (el más reciente)
+      if (!patrimonioPorPeriodo[periodo]) {
+        patrimonioPorPeriodo[periodo] = acumuladoPatrimonio;
+      }
+      // Deshacer el movimiento
+      if (mov.Accion === 'Ingreso') {
+        acumuladoPatrimonio -= mov.Importe;
+      } else if (mov.Accion === 'Gasto') {
+        acumuladoPatrimonio += mov.Importe;
+      }
+    });
+
+    // Ordenar periodos y crear arrays para el gráfico
+    const periodosOrdenados = Object.keys(patrimonioPorPeriodo).sort((a, b) => {
+      if (granularity === 'hour') {
+        return parseInt(a.split(':')[0]) - parseInt(b.split(':')[0]);
+      } else if (granularity === 'month') {
+        // MM-YYYY
+        const [ma, ya] = a.split('-').map(Number);
+        const [mb, yb] = b.split('-').map(Number);
+        return ya !== yb ? ya - yb : ma - mb;
+      } else {
+        // DD-MM
+        const [da, ma] = a.split('-').map(Number);
+        const [db, mb] = b.split('-').map(Number);
+        return ma !== mb ? ma - mb : da - db;
+      }
+    });
+
+    let timeline = periodosOrdenados.map(periodo => ({
+      label: periodo,
+      value: patrimonioPorPeriodo[periodo],
+    }));
+    this.setState({ patrimonioTimeline: timeline, patrimonioLoading: false, patrimonioGranularity: granularity });
+  };
+
+  closePatrimonioModal = () => {
+    this.setState({ modalPatrimonio: false });
+  };
 
     channel1 = null;
     channelCroom = null;
@@ -120,7 +255,7 @@ modalBalance:false
  
   }
 
-componentDidMount(){
+        componentDidMount(){
   this.channelCroom = postal.channel();
   this.channelCroom.subscribe('UpdateCount', (data) => {
  
@@ -147,13 +282,260 @@ componentDidMount(){
 
 
      this.channel1 = postal.channel();
- 
+     
+     // Agregar listeners para activar búsqueda con cualquier tecla de letra y ESC para salir
+     this.handleKeyPress = this.handleKeyPress.bind(this);
+     this.handleKeyDown = this.handleKeyDown.bind(this);
+     document.addEventListener('keypress', this.handleKeyPress);
+     document.addEventListener('keydown', this.handleKeyDown);
+
+     // Cargar configuración de cuentas del usuario
+     this.loadCuentasConfig();
    
 
 
 
 
         }
+
+        // Función para cargar configuración de vista de cuentas
+        loadCuentasConfig = async () => {
+          try {
+            console.log('� [CUENTAS] *** INICIANDO CARGA DE CONFIGURACIÓN ***');
+            console.log('⚡ [CUENTAS] Estado actual de ordenCuentas antes de cargar:', this.state.ordenCuentas);
+            console.log('�🔍 [CUENTAS] Cargando configuración de vista de cuentas...');
+            
+            // Verificar si tenemos acceso al usuario desde Redux
+            if (!this.props.state.userReducer?.update?.usuario?.user?._id) {
+              console.log('⚠️ [CUENTAS] No hay usuario en Redux, intentando cargar desde localStorage...');
+              const localConfig = localStorage.getItem('cuentas-vista-config');
+              if (localConfig) {
+                const config = JSON.parse(localConfig);
+                console.log('✅ [CUENTAS] Configuración cargada desde localStorage:', config);
+                this.setState({
+                  visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
+                  visibility: config.visibility !== undefined ? config.visibility : false,
+                  cuentas0: config.cuentas0 !== undefined ? config.cuentas0 : false,
+                  vistaFormato: config.vistaFormato || 'cuadros',
+                  ordenCuentas: config.ordenCuentas || {}
+                });
+              }
+              return;
+            }
+            
+            const userId = this.props.state.userReducer.update.usuario.user._id;
+            console.log('👤 [CUENTAS] Usuario ID desde Redux:', userId);
+            
+            console.log('📡 [CUENTAS] Enviando petición a /users/get-config...');
+            const response = await fetch('/users/get-config', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ 
+                userId: userId,
+                configType: 'cuentas-vista' 
+              })
+            });
+            
+            console.log('📨 [CUENTAS] Respuesta recibida, status:', response.status);
+            
+            if (response.ok) {
+              const result = await response.json();
+              console.log('✅ [CUENTAS] Configuración recibida:', result);
+              
+              if (result.status === "Ok" && result.data && result.data.cuentasVistaConfig) {
+                const config = result.data.cuentasVistaConfig;
+                console.log('🎯 [CUENTAS] Aplicando configuración encontrada:', config);
+                console.log('🔧 [CUENTAS] OrdenCuentas recibido:', config.ordenCuentas);
+                
+                this.setState({
+                  visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
+                  visibility: config.visibility !== undefined ? config.visibility : false,
+                  cuentas0: config.cuentas0 !== undefined ? config.cuentas0 : false,
+                  vistaFormato: config.vistaFormato || 'cuadros',
+                  ordenCuentas: config.ordenCuentas || {}
+                });
+                
+                console.log('✨ [CUENTAS] Estado actualizado con configuración guardada');
+              } else {
+                console.log('⚠️ [CUENTAS] No se encontró configuración guardada, usando valores por defecto');
+                console.log('🔍 [CUENTAS] configData keys:', configData ? Object.keys(configData) : 'configData is null/undefined');
+                console.log('🔍 [CUENTAS] configData completo:', configData);
+              }
+            } else {
+              console.log('❌ [CUENTAS] Error en respuesta:', response.status, response.statusText);
+              // Intentar cargar desde localStorage como fallback
+              const localConfig = localStorage.getItem('cuentas-vista-config');
+              if (localConfig) {
+                const config = JSON.parse(localConfig);
+                console.log('📦 [CUENTAS] Usando configuración de localStorage como fallback:', config);
+                this.setState({
+                  visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
+                  visibility: config.visibility !== undefined ? config.visibility : false,
+                  cuentas0: config.cuentas0 !== undefined ? config.cuentas0 : false,
+                  vistaFormato: config.vistaFormato || 'cuadros',
+                  ordenCuentas: config.ordenCuentas || {}
+                });
+              }
+            }
+          } catch (error) {
+            console.error('💥 [CUENTAS] Error cargando configuración:', error);
+            // Intentar cargar desde localStorage como fallback
+            const localConfig = localStorage.getItem('cuentas-vista-config');
+            if (localConfig) {
+              const config = JSON.parse(localConfig);
+              console.log('📦 [CUENTAS] Usando configuración de localStorage tras error:', config);
+              this.setState({
+                visualtipos: config.visualtipos !== undefined ? config.visualtipos : true,
+                visibility: config.visibility !== undefined ? config.visibility : false,
+                cuentas0: config.cuentas0 !== undefined ? config.cuentas0 : false,
+                vistaFormato: config.vistaFormato || 'cuadros',
+                ordenCuentas: config.ordenCuentas || {}
+              });
+            }
+          }
+          
+          console.log('🏁 [CUENTAS] *** CARGA DE CONFIGURACIÓN COMPLETADA ***');
+          console.log('🎯 [CUENTAS] Estado final de ordenCuentas:', this.state.ordenCuentas);
+        };
+
+        // Función para guardar configuración de vista de cuentas
+        saveCuentasConfig = async () => {
+          try {
+            console.log('💾 [CUENTAS] Guardando configuración de vista de cuentas...');
+            
+            const configData = {
+              visualtipos: this.state.visualtipos,
+              visibility: this.state.visibility,
+              cuentas0: this.state.cuentas0,
+              vistaFormato: this.state.vistaFormato,
+              ordenCuentas: this.state.ordenCuentas
+            };
+            
+            console.log('� [CUENTAS] Estado actual a guardar:', configData);
+            
+            const token = localStorage.getItem('token');
+            console.log('🔑 [CUENTAS] Token para guardar:', token ? 'Sí' : 'No');
+            
+            // Verificar si tenemos acceso al usuario desde Redux (método preferido)
+            if (this.props.state.userReducer?.update?.usuario?.user?._id) {
+              const userId = this.props.state.userReducer.update.usuario.user._id;
+              console.log('👤 [CUENTAS] Usuario ID desde Redux:', userId);
+              
+              const response = await fetch('/users/save-config', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                  userId: userId,
+                  configType: 'cuentas-vista',
+                  configData: configData
+                })
+              });
+              
+              console.log('📨 [CUENTAS] Respuesta del guardado (Redux), status:', response.status);
+              
+              if (response.ok) {
+                const result = await response.json();
+                console.log('✅ [CUENTAS] Configuración guardada en BD exitosamente (Redux):', result);
+                localStorage.setItem('cuentas-vista-config', JSON.stringify(configData));
+                return;
+              }
+            }
+            
+            if (!token) {
+              console.log('⚠️ [CUENTAS] No hay token ni Redux, guardando en localStorage temporalmente...');
+              localStorage.setItem('cuentas-vista-config', JSON.stringify(configData));
+              console.log('✅ [CUENTAS] Configuración guardada en localStorage');
+              return;
+            }
+            
+            const response = await fetch('/users/save-config', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ 
+                configType: 'cuentas-vista',
+                configData: configData
+              })
+            });
+            
+            console.log('📨 [CUENTAS] Respuesta del guardado, status:', response.status);
+            
+            if (response.ok) {
+              const result = await response.json();
+              console.log('✅ [CUENTAS] Configuración guardada en BD exitosamente:', result);
+              // También guardar en localStorage como backup
+              localStorage.setItem('cuentas-vista-config', JSON.stringify(configData));
+            } else {
+              const errorText = await response.text();
+              console.log('❌ [CUENTAS] Error guardando en BD, guardando en localStorage:', response.status, response.statusText, errorText);
+              localStorage.setItem('cuentas-vista-config', JSON.stringify(configData));
+            }
+          } catch (error) {
+            console.error('💥 [CUENTAS] Error guardando configuración, usando localStorage:', error);
+            const configData = {
+              visualtipos: this.state.visualtipos,
+              visibility: this.state.visibility,
+              cuentas0: this.state.cuentas0,
+              vistaFormato: this.state.vistaFormato
+            };
+            localStorage.setItem('cuentas-vista-config', JSON.stringify(configData));
+          }
+        };        componentWillUnmount() {
+          // Remover los listeners cuando el componente se desmonte
+          document.removeEventListener('keypress', this.handleKeyPress);
+          document.removeEventListener('keydown', this.handleKeyDown);
+        }
+        
+        handleKeyDown = (event) => {
+          // Detectar tecla ESC para salir del modo búsqueda
+          if (event.key === 'Escape' && this.state.searchMode) {
+            this.setState({
+              searchMode: false,
+              cuentasSearcher: ""
+            });
+          }
+        }
+        
+        handleKeyPress = (event) => {
+          // Solo activar si estamos en la vista principal de cuentas (no en detalles ni modales)
+          // Y si el foco NO está en un input (para evitar duplicar teclas)
+          const isInputFocused = document.activeElement && document.activeElement.tagName === 'INPUT';
+          
+          if (this.state.allcuentas && !this.state.searchMode && !isInputFocused) {
+            // Verificar que sea una letra (a-z, A-Z) y no una tecla especial
+            const isLetter = /^[a-zA-Z]$/.test(event.key);
+            
+            if (isLetter) {
+              // Prevenir que el evento se propague al input
+              event.preventDefault();
+              event.stopPropagation();
+              
+              // Activar modo búsqueda y enfocar el input
+              this.setState({ 
+                searchMode: true,
+                cuentasSearcher: event.key // Comenzar con la letra presionada
+              }, () => {
+                // Scroll hacia arriba y enfocar el input después de que se active
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  const input = document.querySelector('input[name="cuentasSearcher"]');
+                  if (input) {
+                    input.focus();
+                    // Posicionar el cursor al final
+                    input.setSelectionRange(input.value.length, input.value.length);
+                  }
+                }, 100);
+              });
+            }
+          }
+        }
+        
         printEstado=()=>{
           this.setState({titleToPrint:true})
           setTimeout(()=>{
@@ -272,7 +654,19 @@ fetch("/cuentas/getcuentas", {
           
 
         };
-    
+
+        // Método para alternar el orden de las cuentas por tipo
+        toggleOrdenCuentas = (tipoClicked) => {
+          const ordenActual = this.state.ordenCuentas[tipoClicked] || 'desc';
+          const nuevoOrden = ordenActual === 'desc' ? 'asc' : 'desc';
+          
+          this.setState({
+            ordenCuentas: {
+              ...this.state.ordenCuentas,
+              [tipoClicked]: nuevoOrden
+            }
+          }, () => this.saveCuentasConfig());
+        }
 
         displayCuentas=()=>{
           let cuentas = this.props.regC.Cuentas
@@ -298,28 +692,118 @@ fetch("/cuentas/getcuentas", {
               else{ return "" }
              }
              let cuenEditMode= this.state.cuenEditMode?"cseditmodeactive":"";
-             let oculta= cuenta.Visibility?"":"hiddenCustom"
+             
+             // Lógica corregida para cuentas ocultas
+             let esOculta = cuenta.Visibility === false && this.state.visibility === true;
+             let claseOculta = esOculta ? "cuenta-oculta-visible" : "";
+             
+             // Debug temporal
+             if (cuenta.NombreC === "PayPal") {
+               console.log('🔍 DEBUG PayPal - cuenta.Visibility:', cuenta.Visibility);
+               console.log('🔍 DEBUG PayPal - this.state.visibility:', this.state.visibility);
+               console.log('🔍 DEBUG PayPal - esOculta:', esOculta);
+             }
+             
+             // Usar el mismo diseño visual que las cuentas normales
+             let backgroundSolido = cuenta.Background.Seleccionado=="Solido"?cuenta.Background.colorPicked:""
+             let backgroundImagen = cuenta.Background.Seleccionado=="Imagen"?cuenta.Background.urlBackGround:""
+             
+             // Estilo para cuentas ocultas
+             let estilosOculta = esOculta ? {
+               opacity: 0.7,
+               border: '2px dashed #ff9800',
+               position: 'relative'
+             } : {};
+             
              return(
-                  <div key ={i}className={ `  cuentanameSearch jwPointer ${cuenEditMode} ${oculta}`} onClick={()=>{
-
-                  if(this.state.cuenEditMode){
-                    this.editCustomCuenta(cuenta)
-                  }else{
-                    this.getcuentaRegs(cuenta)
-                  }
-                  }}>
-                    <div className="boxp">
-                  <p >
-                  {cuenta.NombreC}
-                  </p>
-                  <p className={tintura()}>
-                  {`$ ${parseFloat(cuenta.DineroActual.$numberDecimal).toFixed(2)}` }
-                  </p>
-                  </div>
-                  <div className="boxs">
-                  {cuenta.Tipo.toUpperCase()}
-                  </div>
+                  <div key ={cuenta._id} className={ ` contenedorCuenta ${claseOculta}`}>
+                    <div className={ `  cuentaContenedor jwPointer  ${cuenEditMode}`} 
+                    onClick={()=>{
+                      if(this.state.cuenEditMode){
+                        this.editCustomCuenta(cuenta)
+                      }else{
+                        this.getcuentaRegs(cuenta)
+                      }
+                    }}
+                    style={{
+                      backgroundColor:backgroundSolido,
+                      backgroundImage: `url(${backgroundImagen})`,
+                      position: 'relative',
+                      ...estilosOculta
+                    }}
+                    title={esOculta ? "Cuenta Oculta - Visible durante búsqueda" : ""}
+                    >
+                      <div className='jwFlexEnd'>
+                        {/* Indicador de cuenta oculta mejorado */}
+                        {esOculta && (
+                          <div className="indicador-cuenta-oculta">
+                            <i className="material-icons">
+                              visibility_off
+                            </i>
+                            OCULTA
+                          </div>
+                        )}
+                        <div className="contIconoCroom">
+                          <img  className='iconoCuenta' src={cuenta.urlIcono}/>
+                        </div>
+                        {/* Etiqueta de tipo de cuenta */}
+                        <div style={{
+                          position: 'absolute',
+                          top: '5px',
+                          left: '5px',
+                          backgroundColor: '#1976d2',
+                          color: 'white',
+                          fontSize: '11px',
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          fontWeight: '700',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          zIndex: 10,
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                        }}>
+                          {cuenta.Tipo}
+                        </div>
                       </div>
+                      <div className="contDataCuenta">
+                        <div className="conteliminal">
+                          <p className={tintura()}>
+                            {`$ ${parseFloat(cuenta.DineroActual.$numberDecimal).toFixed(2)}` }
+                          </p>
+                          <Animate show={this.state.cuenEditMode}>
+                            <div style={{display: 'flex', gap: '8px'}}>
+                              <i className="material-icons" onClick={(e)=>{
+                                e.stopPropagation()
+                                if(cuenta.Tipo== "Inventario" ){
+                                  let add = {
+                                    Estado:true,
+                                    Tipo:"Warning",
+                                    Mensaje:"No se puede eliminar cuentas de inventario directamente."
+                                  }
+                                  this.setState({Alert: add})
+                                }else{
+                                  this.setState({ModalDeleteC:true, CuentaPorDel:cuenta})
+                                }
+                              }}>
+                              delete
+                              </i>
+                              <i className="material-icons" 
+                                 onClick={(e)=>{
+                                   e.stopPropagation()
+                                   this.toggleCuentaVisibility(cuenta)
+                                 }}
+                                 title={cuenta.Visibility === false ? "Mostrar cuenta" : "Ocultar cuenta"}>
+                              {cuenta.Visibility === false ? 'visibility' : 'visibility_off'}
+                              </i>
+                            </div>
+                          </Animate>
+                        </div>
+                        <p className='textoNombreCuenta' >
+                          {cuenta.NombreC}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
              )
 
@@ -625,6 +1109,86 @@ editCustomCuenta=(e)=>{
 this.setState({CuentaEditar:e,EditCuenta:true})
 }
 
+toggleCuentaVisibility = (cuenta) => {
+  console.log('🔄 Toggle visibility called for:', cuenta.NombreC, 'Current visibility:', cuenta.Visibility);
+  
+  // Crear los datos como lo hace el modal de editar cuenta
+  let datos = {
+    Permisos: cuenta.Permisos || ["administrador"],
+    valores: {
+      checkedA: cuenta.CheckedA,
+      checkedP: cuenta.CheckedP,
+      visibility: !cuenta.Visibility, // Cambiar el estado de visibilidad
+      Tipo: cuenta.Tipo,
+      NombreC: cuenta.NombreC,
+      Dinero: cuenta.DineroIni,
+      DineroActual: cuenta.DineroActual,
+      DescripC: cuenta.Descrip,
+      idCuenta: cuenta.iDcuenta,
+      idCuentaMongo: cuenta._id,
+      Fpago: cuenta.FormaPago,
+      limiteCredito: cuenta.LimiteCredito,
+      urlIcono: cuenta.urlIcono,
+      fondo: cuenta.Background?.Seleccionado || "",
+      colorCuenta: cuenta.Background?.colorPicked || "",
+      fondoImagen: cuenta.Background?.urlBackGround || "",
+      Vendedor: cuenta.Permisos?.includes("vendedor") || false,
+      Tesorero: cuenta.Permisos?.includes("tesorero") || false,
+      Auxiliar: cuenta.Permisos?.includes("auxiliar") || false
+    },
+    Usuario: {
+      DBname: this.props.state.userReducer.update.usuario.user.DBname,
+      Usuario: this.props.state.userReducer.update.usuario.user.Usuario,
+      _id: this.props.state.userReducer.update.usuario.user._id,
+      Tipo: this.props.state.userReducer.update.usuario.user.Tipo,
+    },
+  };
+
+  console.log('📤 Sending data:', datos);
+
+  let url = "/cuentas/editcount";
+  fetch(url, {
+    method: 'PUT',
+    body: JSON.stringify(datos),
+    headers: {
+      'Content-Type': 'application/json',
+      "x-access-token": this.props.state.userReducer.update.usuario.token
+    }
+  }).then(res => {
+    console.log('📥 Response status:', res.status);
+    return res.json();
+  })
+  .catch(error => {
+    console.error('❌ Error:', error);
+    let alertMessage = {
+      Estado: true,
+      Tipo: "error",
+      Mensaje: "Error al actualizar la visibilidad de la cuenta"
+    };
+    this.setState({Alert: alertMessage});
+  })
+  .then(response => {
+    console.log('📋 Response data:', response);
+    if (response && response.cuenta) {
+      // Actualizar Redux con la cuenta modificada
+      this.props.dispatch(updateCuenta(response.cuenta));
+      
+      // Mostrar mensaje de confirmación
+      let alertMessage = {
+        Estado: true,
+        Tipo: "success",
+        Mensaje: response.cuenta.Visibility ? "Cuenta mostrada exitosamente" : "Cuenta ocultada exitosamente"
+      };
+      this.setState({Alert: alertMessage});
+      
+      // Actualizar los datos localmente
+      this.updateData();
+    } else {
+      console.log('⚠️ No cuenta in response or invalid response');
+    }
+  });
+}
+
 
 
 genRegs=(detallesrender)=>{ 
@@ -799,7 +1363,27 @@ return saldofinal.toFixed(2)
       let flechaCuentasPsinT = this.state.cuentaExpand == "PosesionSinTotal"?"expand_less":"expand_more" 
       let generadorCuentas = (grupoCuentas,formato)=> grupoCuentas.map((cuenta,i)=>{
         let Actualdata  = 0
-        let novisible = cuenta.Visibility == false && this.state.visibility == false?"invisiblex":""
+        
+        // Lógica corregida para cuentas ocultas
+        let novisible = "";
+        let esOculta = cuenta.Visibility === false && this.state.visibility === true;
+        let hayBusqueda = this.state.cuentasSearcher != "";
+        
+        // Debug temporal para PayPal
+        if (cuenta.NombreC === "PayPal") {
+          console.log('🔍 GENERADOR PayPal - cuenta.Visibility:', cuenta.Visibility);
+          console.log('🔍 GENERADOR PayPal - this.state.visibility:', this.state.visibility);
+          console.log('🔍 GENERADOR PayPal - esOculta:', esOculta);
+          console.log('🔍 GENERADOR PayPal - formato:', formato);
+        }
+        
+        // La cuenta solo se muestra si:
+        // 1. No es oculta (cuenta.Visibility !== false)
+        // 2. O es oculta pero visibility está activado (this.state.visibility === true)
+        if (cuenta.Visibility === false && this.state.visibility === false) {
+          novisible = "invisiblex"; // Completamente oculta
+        }
+        
         if(this.props.regC.Regs){
         let registros  = this.props.regC.Regs.filter(x => x.CuentaSelec.idCuenta === cuenta._id   )
         let transregister  = this.props.regC.Regs.filter(x => x.Accion === "Trans" )
@@ -855,6 +1439,16 @@ return saldofinal.toFixed(2)
      
         let backgroundSolido = cuenta.Background.Seleccionado=="Solido"?cuenta.Background.colorPicked:""
         let backgroundImagen = cuenta.Background.Seleccionado=="Imagen"?cuenta.Background.urlBackGround:""
+        
+        // Estilo para cuentas ocultas
+        let estilosOcultaLista = esOculta ? {
+          opacity: 0.7,
+          border: '2px dashed #ff9800',
+          backgroundColor: backgroundSolido ? 
+            `${backgroundSolido}AA` : // Añade transparencia al color sólido
+            'rgba(255, 152, 0, 0.1)' // Color de fondo sutil para ocultas
+        } : {};
+        
         return(<div>
           
     { formato == "cuadros" &&   <div key ={cuenta._id} className={ ` contenedorCuenta  ${novisible}`}  {...this.a11yProps(i)} >
@@ -868,7 +1462,13 @@ return saldofinal.toFixed(2)
         }
         }}
         
-        style={{backgroundColor:backgroundSolido,backgroundImage: `url(${backgroundImagen})`}}
+        style={{
+          backgroundColor:backgroundSolido,
+          backgroundImage: `url(${backgroundImagen})`,
+          position: 'relative',
+          ...estilosOcultaLista
+        }}
+        title={esOculta ? "Cuenta Oculta - Visible durante búsqueda" : ""}
         >
 
      
@@ -877,6 +1477,29 @@ return saldofinal.toFixed(2)
           <img  className='iconoCuenta' src={cuenta.urlIcono}/>
         </div>
         </div>
+        {/* Indicador OCULTA para cuentas ocultas en formato cuadros */}
+        {esOculta && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            right: '50%',
+            transform: 'translate(50%, -50%)',
+            background: 'rgba(255, 0, 0, 0.8)',
+            color: 'white',
+            padding: '2px 6px',
+            borderRadius: '8px',
+            fontSize: '10px',
+            fontWeight: 'bold',
+            zIndex: 15,
+            display: 'inline-flex',
+            alignItems: 'center'
+          }}>
+            <i className="material-icons" style={{ fontSize: '12px', marginRight: '2px' }}>
+              visibility_off
+            </i>
+            OCULTA
+          </div>
+        )}
         <div className="contDataCuenta">
         <div className="conteliminal">
         <p className={tintura()}>
@@ -889,21 +1512,31 @@ return saldofinal.toFixed(2)
         
         </p>
         <Animate show={this.state.cuenEditMode}>
-        <i className="material-icons" onClick={(e)=>{
-        e.stopPropagation()
-        if(cuenta.Tipo== "Inventario" ){
-        let add = {
-        Estado:true,
-        Tipo:"Warning",
-        Mensaje:"No se puede eliminar cuentas de inventario directamente."
-        }
-        this.setState({Alert: add})
-        }else{
-        this.setState({ModalDeleteC:true, CuentaPorDel:cuenta})
-        }
-        }}>
-        delete
-        </i>
+        <div style={{display: 'flex', gap: '8px'}}>
+          <i className="material-icons" onClick={(e)=>{
+          e.stopPropagation()
+          if(cuenta.Tipo== "Inventario" ){
+          let add = {
+          Estado:true,
+          Tipo:"Warning",
+          Mensaje:"No se puede eliminar cuentas de inventario directamente."
+          }
+          this.setState({Alert: add})
+          }else{
+          this.setState({ModalDeleteC:true, CuentaPorDel:cuenta})
+          }
+          }}>
+          delete
+          </i>
+          <i className="material-icons" 
+             onClick={(e)=>{
+               e.stopPropagation()
+               this.toggleCuentaVisibility(cuenta)
+             }}
+             title={cuenta.Visibility === false ? "Mostrar cuenta" : "Ocultar cuenta"}>
+          {cuenta.Visibility === false ? 'visibility' : 'visibility_off'}
+          </i>
+        </div>
         </Animate>
         
         </div>
@@ -927,15 +1560,50 @@ this.getcuentaRegs(cuenta)
 }
 }}
 
-style={{backgroundColor:backgroundSolido,backgroundImage: `url(${backgroundImagen})`}}
+style={{
+  backgroundColor:backgroundSolido,
+  backgroundImage: `url(${backgroundImagen})`, 
+  position: 'relative',
+  ...estilosOcultaLista
+}}
+title={esOculta ? "Cuenta Oculta - Visible durante búsqueda" : ""}
 >
-  
 <div className="contIconoCroomLista">
   <img  className='iconoLista' src={cuenta.urlIcono}/>
-  <p className='jwbolder' >
-{cuenta.NombreC}
-</p>
+  {/* Para cuentas ocultas: mostrar "OCULTA" en lugar del nombre */}
+  {esOculta ? (
+    <p className='jwbolder'>
+      {cuenta.NombreC}
+    </p>
+  ) : (
+    <p className='jwbolder'>
+      {cuenta.NombreC}
+    </p>
+  )}
 </div>
+{/* Indicador OCULTA para cuentas ocultas */}
+{esOculta && (
+  <div style={{
+    position: 'absolute',
+    top: '50%',
+    right: '50%',
+    transform: 'translate(50%, -50%)',
+    background: 'rgba(255, 0, 0, 0.8)',
+    color: 'white',
+    padding: '2px 6px',
+    borderRadius: '8px',
+    fontSize: '10px',
+    fontWeight: 'bold',
+    zIndex: 15,
+    display: 'inline-flex',
+    alignItems: 'center'
+  }}>
+    <i className="material-icons" style={{ fontSize: '12px', marginRight: '2px' }}>
+      visibility_off
+    </i>
+    OCULTA
+  </div>
+)}
 <div className='contValoreslista'> 
 <p className={tintura()}>
 <Animate show={this.state.ValorCuenta}>
@@ -963,6 +1631,15 @@ this.setState({ModalDeleteC:true, CuentaPorDel:cuenta})
 }
 }}>
 delete
+</i>
+<i className="material-icons" 
+   style={{marginLeft: '8px'}}
+   onClick={(e)=>{
+     e.stopPropagation()
+     this.toggleCuentaVisibility(cuenta)
+   }}
+   title={cuenta.Visibility === false ? "Mostrar cuenta" : "Ocultar cuenta"}>
+{cuenta.Visibility === false ? 'visibility' : 'visibility_off'}
 </i>
 </Animate>
 
@@ -1105,7 +1782,15 @@ DragableContent = ArrTipos.map((item, index) => (
           if(this.props.regC.Cuentas.length > 0){
       
       
-    let cuentasfiltradas = this.props.regC.Cuentas.filter(cuentaper => cuentaper.Tipo === item  ).sort((a, b) =>parseFloat(b.DineroActual.$numberDecimal)  - parseFloat(a.DineroActual.$numberDecimal))
+    // Obtener el orden actual para este tipo de cuenta (por defecto: descendente)
+    const ordenActual = this.state.ordenCuentas[item] || 'desc';
+    
+    let cuentasfiltradas;
+    if (ordenActual === 'desc') {
+      cuentasfiltradas = this.props.regC.Cuentas.filter(cuentaper => cuentaper.Tipo === item).sort((a, b) => parseFloat(b.DineroActual.$numberDecimal) - parseFloat(a.DineroActual.$numberDecimal));
+    } else {
+      cuentasfiltradas = this.props.regC.Cuentas.filter(cuentaper => cuentaper.Tipo === item).sort((a, b) => parseFloat(a.DineroActual.$numberDecimal) - parseFloat(b.DineroActual.$numberDecimal));
+    }
      
     if(this.state.cuentas0){
       cuentasrender = cuentasfiltradas.filter(x=> x.DineroActual.$numberDecimal != "0" && x.DineroActual.$numberDecimal != "0.00")
@@ -1132,8 +1817,6 @@ DragableContent = ArrTipos.map((item, index) => (
           }
         }
 
-
-        let flechaCuentas = this.state.cuentaExpand == item?"expand_less":"expand_more" 
        
         let cantidadCuentas = cuentasrender.length 
         visible = cantidadCuentas == 0?"invisiblex":""
@@ -1152,50 +1835,65 @@ DragableContent = ArrTipos.map((item, index) => (
       >
         <div className='contBarraCuenta'>
      <div 
-   
       {...provided.dragHandleProps}
-     
       className={`contFlexSpaceB  customDragbar ${isDragging}`}
-     
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'nowrap',
+        gap: 0,
+        minWidth: 0,
+      }}
      >  
-<div className="tituloPrin">{item.toUpperCase()}</div> 
-<div className='AnimateCont'>
-<Animate show={this.state.ValorCuenta}>
-<div className={`valorcuentas  ${color} `}>
-${sumatoria.toFixed(2)} 
-
+        <div 
+          className="tituloPrin"
+          style={{
+            fontWeight: 'bold',
+            margin: 0,
+            flex: '1 1 0',
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontSize: '1.1rem',
+            paddingRight: 8
+          }}
+          title={item}
+        >
+          {item.toUpperCase()}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:'8px',marginLeft:'auto',flexShrink:0}}>
+          <div className={`valorcuentas ${color}`} style={{minWidth:'80px',maxWidth:'120px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontWeight:'bold',textAlign:'right'}}>
+            ${this.state.ValorCuenta ? sumatoria.toFixed(2) : parseFloat(ResultCuentas).toFixed(2)}
+          </div>
+          <i className="material-icons"
+            onClick={(e) => {
+              e.stopPropagation();
+              this.toggleOrdenCuentas(item);
+            }}
+            title={`Ordenar de ${(this.state.ordenCuentas[item] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
+            style={{
+              fontSize: '20px',
+              color: undefined,
+              cursor: 'pointer',
+              marginRight: '4px',
+              background: 'none',
+              border: 'none',
+              boxShadow: 'none',
+              padding: 0,
+              borderRadius: 0,
+              transition: 'transform 0.2s',
+              position: 'static',
+              transform: (this.state.ordenCuentas[item] || 'desc') === 'desc' ? 'none' : 'rotate(180deg)'
+            }}
+          >
+            sort
+          </i>
+        </div>
+      </div>
 </div>
-</Animate> 
-<Animate show={!this.state.ValorCuenta}>
-<div className={`valorcuentas  ${color2} `}>
-${parseFloat(ResultCuentas).toFixed(2)} 
-
-</div>
-</Animate> 
-
-
-
-</div>
-
-
-
-</div>
-<div className="confiltroCuentra">
-<i className="material-icons" onClick={(e)=>{
-
-  if(this.state.cuentaExpand == item){
-    this.setState({cuentaExpand:""})
-  }else{
-    this.setState({cuentaExpand:item})
-  }
-  
-
-  }}>
-  {flechaCuentas}
-</i>
-</div>
-</div>
-<Animate show={this.state.cuentaExpand != item}>
+<Animate show={this.state.vistaFormato === "cuadros"}>
 <div className="contcuentas">
 <Tabs
          value={0} // siempre válido
@@ -1206,19 +1904,17 @@ ${parseFloat(ResultCuentas).toFixed(2)}
           aria-label="scrollable auto tabs example"
         >
        
-{ generadorCuentas(cuentasrender,"cuadros")
+{ generadorCuentas(cuentasrender, "cuadros")
  }
 
 
 </Tabs>
 </div></Animate>
-<Animate show={this.state.cuentaExpand == item}>
+<Animate show={this.state.vistaFormato === "lista"}>
 <div className='contcuentaslista'>
 
 { generadorCuentas(cuentasrender,"lista")
- }
-
-</div>
+ }</div>
 </Animate>
       </div>
     )}}
@@ -1365,6 +2061,46 @@ if(this.props.regC.Cuentas){
     cuentasrenderPosesionsinTotal = this.props.regC.Cuentas.filter(cuentaper =>  cuentaper.CheckedP && cuentaper.CheckedA ==false )
     cuentasrenderNoPosesion = this.props.regC.Cuentas.filter(cuentaper =>  cuentaper.CheckedP == false )   
   
+    // Aplicar filtros de "Cuentas en 0" y "Invisible"
+    if(this.state.cuentas0){
+      cuentasrenderPosesion = cuentasrenderPosesion.filter(x=> x.DineroActual.$numberDecimal != "0" && x.DineroActual.$numberDecimal != "0.00")
+      cuentasrenderPosesionsinTotal = cuentasrenderPosesionsinTotal.filter(x=> x.DineroActual.$numberDecimal != "0" && x.DineroActual.$numberDecimal != "0.00")
+      cuentasrenderNoPosesion = cuentasrenderNoPosesion.filter(x=> x.DineroActual.$numberDecimal != "0" && x.DineroActual.$numberDecimal != "0.00")
+    }
+    
+    // Filtro de visibilidad: si visibility es false, NO mostrar cuentas ocultas (Visibility === false)
+    if(this.state.visibility === false){
+      cuentasrenderPosesion = cuentasrenderPosesion.filter(x=> x.Visibility !== false)
+      cuentasrenderPosesionsinTotal = cuentasrenderPosesionsinTotal.filter(x=> x.Visibility !== false)
+      cuentasrenderNoPosesion = cuentasrenderNoPosesion.filter(x=> x.Visibility !== false)
+    }   
+
+    // Aplicar ordenamiento a las cuentas de Posesiones
+    const ordenPosesion = this.state.ordenCuentas['Posesion'] || 'desc';
+    const ordenNoPosesion = this.state.ordenCuentas['NoPosesion'] || 'desc';
+    const ordenPosesionSinTotal = this.state.ordenCuentas['PosesionSinTotal'] || 'desc';
+
+    // Ordenar cuentasrenderPosesion
+    cuentasrenderPosesion = cuentasrenderPosesion.sort((a, b) => {
+      const valorA = parseFloat(a.DineroActual.$numberDecimal);
+      const valorB = parseFloat(b.DineroActual.$numberDecimal);
+      return ordenPosesion === 'desc' ? valorB - valorA : valorA - valorB;
+    });
+
+    // Ordenar cuentasrenderNoPosesion
+    cuentasrenderNoPosesion = cuentasrenderNoPosesion.sort((a, b) => {
+      const valorA = parseFloat(a.DineroActual.$numberDecimal);
+      const valorB = parseFloat(b.DineroActual.$numberDecimal);
+      return ordenNoPosesion === 'desc' ? valorB - valorA : valorA - valorB;
+    });
+
+    // Ordenar cuentasrenderPosesionsinTotal
+    cuentasrenderPosesionsinTotal = cuentasrenderPosesionsinTotal.sort((a, b) => {
+      const valorA = parseFloat(a.DineroActual.$numberDecimal);
+      const valorB = parseFloat(b.DineroActual.$numberDecimal);
+      return ordenPosesionSinTotal === 'desc' ? valorB - valorA : valorA - valorB;
+    });
+  
     if(PasivosP.length > 0){
       for(let i = 0; i < PasivosP.length; i++){
               contPasivosP += parseFloat(PasivosP[i].DineroActual.$numberDecimal)
@@ -1474,6 +2210,40 @@ if(cuentasrenderNoPosesion.length > 0){
           edit
           </span>
           </button>
+          <button className={`btn ${this.state.searchMode ? 'btn-success' : 'btn-secondary'} botonAddCrom`} onClick={()=>{
+            const newSearchMode = !this.state.searchMode;
+            this.setState({
+              searchMode: newSearchMode,
+              cuentasSearcher: newSearchMode ? this.state.cuentasSearcher : "" // Limpiar búsqueda si se desactiva
+            });
+            // Si se está activando el modo búsqueda, hacer scroll hacia arriba y enfocar input
+            if (newSearchMode) {
+              setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Enfocar automáticamente el input para abrir el teclado en móviles
+                const input = document.querySelector('input[name="cuentasSearcher"]');
+                if (input) {
+                  input.focus();
+                }
+              }, 150); // Pequeño delay para asegurar que el input esté renderizado
+            }
+          }}>
+            <span className="material-icons">
+              {this.state.searchMode ? 'view_list' : 'search'}
+            </span>
+          </button>
+          <button className="btn btn-info botonAddCrom" 
+                  onClick={()=>{
+                    this.setState({
+                      vistaFormato: this.state.vistaFormato === "cuadros" ? "lista" : "cuadros"
+                    }, () => this.saveCuentasConfig());
+                  }}
+                  title={`Cambiar a vista ${this.state.vistaFormato === "cuadros" ? "lista" : "cuadros"}`}
+          >
+            <span className="material-icons">
+              {this.state.vistaFormato === "cuadros" ? 'view_list' : 'view_module'}
+            </span>
+          </button>
        
           <Dropdown>
         
@@ -1486,14 +2256,6 @@ if(cuentasrenderNoPosesion.length > 0){
        <Dropdown.Menu>
        
    
-       <Dropdown.Item>
-       <button className=" btn btn-secondary btnDropDowm" onClick={()=>{this.setState({searchMode:!this.state.searchMode})}}>
-            <span className="material-icons">
-          search
-          </span>
-          <p>Buscar</p>
-          </button>
-          </Dropdown.Item>
           <Dropdown.Item>
           <button className=" btn btn-warning btnDropDowm" onClick={this.updateData}>
          
@@ -1507,16 +2269,16 @@ if(cuentasrenderNoPosesion.length > 0){
         
 
           <Dropdown.Item>
-          <button className=" btn btn-info btnDropDowm" onClick={()=>{this.setState({visualtipos:!this.state.visualtipos})}}>
+          <button className=" btn btn-info btnDropDowm" onClick={()=>{this.setState({visualtipos:!this.state.visualtipos}, () => this.saveCuentasConfig())}}>
          
          <span className="material-icons">
          account_balance_wallet
        </span>
-       <p>Posesiones</p>
+       <p>{this.state.visualtipos ? 'Liquidez' : 'Tipos'}</p>
        </button>
           </Dropdown.Item>
           <Dropdown.Item>
-      <button id ="sad"className=" btn btn-dark  jwFull"  onClick={ ()=>{ this.setState({visibility:!this.state.visibility})}} >
+      <button id ="sad"className=" btn btn-dark  jwFull"  onClick={ ()=>{ this.setState({visibility:!this.state.visibility}, () => this.saveCuentasConfig())}} >
         
           {this.state.visibility && 
           <span className='btnDropDowm'><i className="material-icons" >  visibility</i>
@@ -1536,7 +2298,7 @@ if(cuentasrenderNoPosesion.length > 0){
           </button>
       </Dropdown.Item>
       <Dropdown.Item>
-      <button id ="sad"className=" btn btn-danger  jwFull"  onClick={ ()=>{ this.setState({cuentas0:!this.state.cuentas0})}} >
+      <button id ="sad"className=" btn btn-danger  jwFull"  onClick={ ()=>{ this.setState({cuentas0:!this.state.cuentas0}, () => this.saveCuentasConfig())}} >
         
           {this.state.cuentas0 && 
           <span className='btnDropDowm'><i className="material-icons" >  visibility</i>
@@ -1661,26 +2423,52 @@ if(cuentasrenderNoPosesion.length > 0){
     </Animate>
     <Animate show={!this.state.visualtipos}>
     <div className="contTipos">
-    <div className="tipoMain">  
-    <div className="contFlexSpaceB">  
-    <div className="tituloPrin">POSESIÓN</div> 
-    <div className={`valorcuentas  `}>${sumatoriaP.toFixed(2)}</div>
-    <div className="confiltroCuentra">
-<i className="material-icons" onClick={(e)=>{
-
-  if(this.state.cuentaExpand == "Posesion"){
-    this.setState({cuentaExpand:""})
-  }else{
-    this.setState({cuentaExpand:"Posesion"})
-  }
-  
-
-  }}>
-  {flechaCuentasP}
-</i>
-</div>
-    </div>
-    <Animate show={this.state.cuentaExpand != "Posesion"}>
+    <div className="tipoMain">
+      <div className="contBarraCuenta" style={{
+        background: '#00c9a7',
+        borderRadius: '14px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        padding: '12px 0',
+        marginBottom: '10px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+          <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>payments</span>
+          <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>credit_card</span>
+          <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>monetization_on</span>
+          <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>water_drop</span>
+        </div>
+  <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',margin:'0 auto'}}>POSESIÓN</div>
+        <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+          <div className="valorcuentas" style={{color:'#fff',fontWeight:'bold',minWidth:'330px'}}>${sumatoriaP.toFixed(2)}</div>
+          <i className="material-icons"
+            onClick={(e)=>{
+              e.stopPropagation();
+              this.toggleOrdenCuentas('Posesion');
+            }}
+            title={`Ordenar de ${(this.state.ordenCuentas['Posesion'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
+            style={{
+              fontSize: '20px',
+              color: '#fff',
+              cursor: 'pointer',
+              marginRight: '8px',
+              background: 'none',
+              border: 'none',
+              boxShadow: 'none',
+              padding: 0,
+              borderRadius: 0,
+              transition: 'transform 0.2s',
+              position: 'static',
+              transform: (this.state.ordenCuentas['Posesion'] || 'desc') === 'desc' ? 'none' : 'rotate(180deg)'
+            }}
+          >
+            sort
+          </i>
+        </div>
+      </div>
+    <Animate show={!(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
     <div className="contcuentas">
 <Tabs
          value={0} // siempre válido
@@ -1698,8 +2486,8 @@ if(cuentasrenderNoPosesion.length > 0){
 </Tabs>
 </div>
     </Animate>
-    <Animate show={this.state.cuentaExpand == "Posesion"}>
-    <div className='contcuentaslista'>
+    <Animate show={!this.state.visualtipos && this.state.vistaFormato === "lista"}>
+    <div className="contcuentaslista">
 
 { generadorCuentas(cuentasrenderPosesion,"lista")
  }
@@ -1709,25 +2497,43 @@ if(cuentasrenderNoPosesion.length > 0){
     </div>
    
     <div className="tipoMain">  
-    <div className="contFlexSpaceB">  
-    <div className="tituloPrin">NO Posesión</div> 
-    <div className={`valorcuentas  `}>${sumatoriaNP.toFixed(2)}</div>
-    <div className="confiltroCuentra">
-    <i className="material-icons" onClick={(e)=>{
-
-if(this.state.cuentaExpand == "NoPosesion"){
-  this.setState({cuentaExpand:""})
-}else{
-  this.setState({cuentaExpand:"NoPosesion"})
-}
-
-
-}}>
-{flechaCuentasNoP}
-</i>
-</div>
+  <div className="contFlexSpaceB" style={{background: '#283593', borderRadius: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '12px 0', marginBottom: '10px', alignItems: 'center'}}>  
+  <div style={{display:'flex',alignItems:'center',gap:'8px',marginRight:'12px'}}>
+        <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>home</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>currency_bitcoin</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>ac_unit</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>lock</span>
+      </div>
+  <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',margin:'0 auto'}}>NO POSESIÓN</div>
+      <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+  <div className="valorcuentas" style={{color:'#fff',fontWeight:'bold',minWidth:'330px'}}>${sumatoriaNP.toFixed(2)}</div>
+        <i
+          className="material-icons"
+          onClick={(e) => {
+            e.stopPropagation();
+            this.toggleOrdenCuentas('NoPosesion');
+          }}
+          title={`Ordenar de ${(this.state.ordenCuentas['NoPosesion'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
+          style={{
+            fontSize: '20px',
+            color: '#1976d2',
+            cursor: 'pointer',
+            marginRight: '8px',
+            background: 'none',
+            border: 'none',
+            boxShadow: 'none',
+            padding: 0,
+            borderRadius: 0,
+            transition: 'transform 0.2s',
+            position: 'static',
+            transform: (this.state.ordenCuentas['NoPosesion'] || 'desc') === 'desc' ? 'none' : 'rotate(180deg)'
+          }}
+        >
+          sort
+        </i>
+      </div>
     </div>
-    <Animate show={this.state.cuentaExpand != "NoPosesion"}>
+    <Animate show={!(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
     <div className="contcuentas">
 <Tabs
          value={0} // siempre válido
@@ -1745,33 +2551,51 @@ if(this.state.cuentaExpand == "NoPosesion"){
 </Tabs>
 </div>
     </Animate>
-    <Animate show={this.state.cuentaExpand == "NoPosesion"}>
-    <div className='contcuentaslista'>
+    <Animate show={!this.state.visualtipos && this.state.vistaFormato === "lista"}>
+    <div className="contcuentaslista">
 { generadorCuentas(cuentasrenderNoPosesion,"lista")
  }
 </div>
 </Animate>
     </div>
     <div className="tipoMain">  
-    <div className="contFlexSpaceB">  
-    <div className="tituloPrin">Posesión SIN TOTAL</div> 
-    <div className={`valorcuentas  `}>${sumatoriaPST.toFixed(2)}</div>
-    <div className="confiltroCuentra">
-    <i className="material-icons" onClick={(e)=>{
-
-if(this.state.cuentaExpand == "PosesionSinTotal"){
-  this.setState({cuentaExpand:""})
-}else{
-  this.setState({cuentaExpand:"PosesionSinTotal"})
-}
-
-
-}}>
-{flechaCuentasPsinT}
-</i>
-</div>
+  <div className="contFlexSpaceB" style={{background: '#181a2b', borderRadius: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '12px 0', marginBottom: '10px', alignItems: 'center'}}>  
+      <div style={{display:'flex',alignItems:'center',gap:'8px',marginRight:'12px'}}>
+        <span className="material-icons" style={{fontSize:'26px',color:'#fff'}}>warning</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>lock</span>
+        <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>ac_unit</span>
+  <span className="material-icons" style={{fontSize:'22px',color:'#fff'}}>description</span>
+      </div>
+  <div className="tituloPrin" style={{color:'#fff',fontWeight:'bold',margin:'0 auto'}}>POSESIÓN SIN TOTAL</div>
+      <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+  <div className="valorcuentas" style={{color:'#fff',fontWeight:'bold',minWidth:'330px'}}>${sumatoriaPST.toFixed(2)}</div>
+        <i
+          className="material-icons"
+          onClick={(e) => {
+            e.stopPropagation();
+            this.toggleOrdenCuentas('PosesionSinTotal');
+          }}
+          title={`Ordenar de ${(this.state.ordenCuentas['PosesionSinTotal'] || 'desc') === 'desc' ? 'menor a mayor' : 'mayor a menor'}`}
+          style={{
+            fontSize: '20px',
+            color: '#1976d2',
+            cursor: 'pointer',
+            marginRight: '8px',
+            background: 'none',
+            border: 'none',
+            boxShadow: 'none',
+            padding: 0,
+            borderRadius: 0,
+            transition: 'transform 0.2s',
+            position: 'static',
+            transform: (this.state.ordenCuentas['PosesionSinTotal'] || 'desc') === 'desc' ? 'none' : 'rotate(180deg)'
+          }}
+        >
+          sort
+        </i>
+      </div>
     </div>
-    <Animate show={this.state.cuentaExpand != "PosesionSinTotal"}>
+    <Animate show={!(this.state.vistaFormato === "lista" && !this.state.visualtipos)}>
     <div className="contcuentas">
 <Tabs
          value={0} // siempre válido
@@ -1789,8 +2613,8 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
 </Tabs>
 </div>
     </Animate>
-    <Animate show={this.state.cuentaExpand == "PosesionSinTotal"}>
-    <div className='contcuentaslista'>
+    <Animate show={!this.state.visualtipos && this.state.vistaFormato === "lista"}>
+    <div className="contcuentaslista">
 { generadorCuentas(cuentasrenderPosesionsinTotal,"lista")
  }
 </div>
@@ -1848,10 +2672,19 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
     </div>
     
     <div className="conttotalesCrom">
-        <div className="conttitulo">
-            <div className="titulo">Patrimonio</div>
-            <div className="valor valor_activos">${superBalance.toFixed(2)}</div>
-        </div>
+            <div className="conttitulo">
+                <div className="titulo" style={{cursor:'pointer',textDecoration:'underline'}} onClick={this.openPatrimonioModal} title="Ver patrimonio en línea de tiempo">Patrimonio</div>
+                <div className="valor valor_activos" style={{cursor:'pointer'}} onClick={this.openPatrimonioModal} title="Ver patrimonio en línea de tiempo">${superBalance.toFixed(2)}</div>
+            </div>
+            <PatrimonioTimelineModal
+              open={this.state.modalPatrimonio}
+              onClose={this.closePatrimonioModal}
+              patrimonioData={this.state.patrimonioTimeline}
+              onPeriodChange={this.handlePatrimonioPeriodChange}
+              period={this.state.patrimonioPeriod}
+              loading={this.state.patrimonioLoading}
+              granularity={this.state.patrimonioGranularity || 'month'}
+            />
     </div>
     
       </div>
@@ -1863,14 +2696,60 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
     <div className="contFull100">
     <Animate show={this.state.searchMode}>
     <div className="contCentrado">
-    <div className="contSuggester">
+    <div className="contSuggester" style={{
+      position: 'sticky',
+      top: '80px',
+      backgroundColor: '#ffffff',
+      zIndex: 50,
+      padding: '10px 0',
+      borderRadius: '8px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+    }}>
     
-      <div className="react-autosuggest__container">
-    <input name="cuentasSearcher" className="react-autosuggest__input" onChange={this.handleChangeGeneral} placeholder="Busca tus Cuentas" /> 
-    
+      <div className="react-autosuggest__container" style={{position: 'relative', display: 'flex', alignItems: 'center'}}>
+    <input 
+      name="cuentasSearcher" 
+      className="react-autosuggest__input" 
+      onChange={this.handleChangeGeneral} 
+      placeholder="Busca tus Cuentas"
+      value={this.state.cuentasSearcher}
+      style={{paddingRight: '40px'}}
+      autoFocus={this.state.searchMode}
+      autoComplete="off"
+      inputMode="text"
+    /> 
+    {this.state.cuentasSearcher && (
+      <button 
+        onClick={() => {
+          this.setState({
+            cuentasSearcher: "",
+            searchMode: false
+          });
+        }}
+        style={{
+          position: 'absolute',
+          right: '10px',
+          background: 'none',
+          border: 'none',
+          fontSize: '20px',
+          color: '#666',
+          cursor: 'pointer',
+          padding: '0',
+          width: '25px',
+          height: '25px',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+        className="clear-search-btn"
+      >
+        ×
+      </button>
+    )}
       </div>
     </div>
-    <div className="contCuentasSearch">
+    <div className="contcuentas-search">
     {this.displayCuentas()}
     </div>
     </div>
@@ -2212,6 +3091,36 @@ if(this.state.cuentaExpand == "PosesionSinTotal"){
     background: #cfe6ff94;
     width: 157px;
 }
+
+/* Oculta la barra indicator de Material-UI Tabs de forma robusta */
+.MuiTabs-indicator, .PrivateTabIndicator-root {
+  display: none !important;
+}
+/* En móvil, durante búsqueda, cada cuenta ocupa todo el ancho y el contenedor no usa flex */
+@media (max-width: 600px) {
+  .contcuentas-search {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100vw !important;
+  }
+  .contcuentas-search .contenedorCuenta,
+  .contcuentas-search .cuentaContenedor {
+    width: 100vw !important;
+    min-width: 100vw !important;
+    max-width: 100vw !important;
+    margin: 0 0 10px calc(-1 * (100vw - 100%) / 2) !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: unset !important;
+    max-height: unset !important;
+    box-sizing: border-box !important;
+    border-radius: 0 !important;
+  }
+}
+}
+}
+}
 .contDropdown{
   margin-top: 5px;
   margin-left: 5px;
@@ -2311,7 +3220,7 @@ cDc2x p{
   border-radius: 15px;
   padding: 5px;
   position: fixed;
-  z-index: 10;
+  z-index: 900;
 }
   .cont-Prin {
     display: flex;
@@ -2368,10 +3277,17 @@ margin: 10px 0px;
 
   font-weight: bold;
 }
-.valorcuentas{
-  margin-right: 15px;
+/* Centrado y alineación uniforme del balance en todas las barras */
+.valorcuentas {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 110px; /* ancho fijo para alinear todos los balances */
   font-weight: bold;
   font-size: 23px;
+  color: inherit;
+  margin: 0 12px 0 0; /* solo margen derecho para separación */
+  font-family: Georgia, 'Times New Roman', Times, serif;
 }
 
 .setBlue{
@@ -2405,6 +3321,11 @@ margin: 10px 0px;
 .invisiblex{
   display: none;
 }
+.cuenta-oculta-visible {
+  opacity: 0.6;
+  filter: grayscale(20%);
+  border: 1px dashed #ccc !important;
+}
 .headercroom{
   display:flex;
 }
@@ -2432,7 +3353,9 @@ margin: 10px 0px;
 
     }
     .contBarraCuenta{
-      display:flex;
+      display: flex;
+      flex-wrap: wrap;
+      min-width: 0;
     }
 .mainText{
   width: 30%;
@@ -2608,6 +3531,10 @@ p{
                 .tituloPrin{
                   font-weight: bold;
                   font-size: 20px;
+                  text-align: center;
+                }
+                .contFlexSpaceB .material-icons {
+                  color: #fff !important;
                 }
                   .cuentaContenedor{
             
@@ -2683,17 +3610,28 @@ p{
                     margin-left: 13px;
                   }
                   
-                  .customDragbar{
-                    background: #7cbaff;
-                    height: 50px;
-                    padding: 5px;
-                    border-radius: 10px 0px 0px 0px;
+                  .customDragbar {
+                    background: linear-gradient(90deg, #7cbaff 60%, #7cbaff 100%);
+                    height: 32px;
+                    padding: 10px 24px;
+                    border-radius: 14px 14px 0 0;
                     display: flex;
-                    justify-content: space-around;
-                    border-bottom: 3px solid black;
+                    flex-wrap: wrap;
+                    min-width: 0;
+                    justify-content: space-between;
                     align-items: center;
-                    color: white;
-                    width: 99%;
+                    color: #fff;
+                    width: 98%;
+                    box-shadow: 0 4px 16px rgba(25, 118, 210, 0.10), 0 1.5px 0 #1976d2 inset;
+                    border-bottom: 2px solid #1976d2;
+                    font-size: 1.1rem;
+                    letter-spacing: 0.5px;
+                    gap: 16px;
+                    transition: box-shadow 0.2s, background 0.2s;
+                  }
+                  .customDragbar:hover {
+                      box-shadow: 0 8px 24px rgba(25, 118, 210, 0.18), 0 2px 0 #1976d2 inset;
+                      background: linear-gradient(90deg, #64b5f6 60%, #1565c0 100%);
                   }
                   .contcuentaslista{
                  
@@ -2702,16 +3640,10 @@ p{
                     flex-flow: column;
                     padding: 0px 3px;
                   }
-                  .confiltroCuentra{
-                    background: #7cbaff;
-                    border-radius: 0px 10px 0px 0px;
-                    color: white;
-                    justify-content: center;
-                    border-bottom: 3px solid black;
-                    display: flex;
-                    align-items: center;
-                    cursor: pointer;
+                  .contcuentaslista.expandido{
+                    display: flex !important;
                   }
+
 
                 .tipoMain{
                   box-shadow: 0px 4px 3px #708ec7;
@@ -2762,6 +3694,76 @@ p{
                   width: 99vw;
                   max-width: 800px;
                 
+                }
+                
+                /* Estilos específicos para el grid de búsqueda de cuentas */
+                .contcuentas-search {
+                  padding: 5px;
+                  display: flex;
+                  flex-wrap: wrap;
+                  justify-content: flex-start;
+                  align-items: flex-start;
+                  gap: 10px;
+                  min-height: 140px;
+                  position: relative;
+                  z-index: 1;
+                }
+                
+                /* Media queries solo para búsqueda de cuentas */
+                @media (max-width: 600px) {
+                  .valorcuentas {
+                    min-width: 60px !important;
+                    font-size: 16px !important;
+                  }
+                  .contBarraCuenta > div[style*='display:flex'] {
+                    gap: 4px !important;
+                  }
+                  .customDragbar {
+                    gap: 4px !important;
+                    font-size: 0.95rem !important;
+                    padding: 8px 6px !important;
+                  }
+                }
+                    margin: 0;
+                  }
+                }
+                
+                @media (min-width: 769px) and (max-width: 1024px) {
+                  .contcuentas-search {
+                    justify-content: flex-start;
+                    gap: 10px;
+                  }
+                  .contcuentas-search .contenedorCuenta {
+                    width: calc(50% - 5px);
+                    min-width: 200px;
+                    max-width: 300px;
+                    margin: 0;
+                  }
+                }
+                
+                @media (min-width: 1025px) {
+                  .contcuentas-search {
+                    justify-content: flex-start;
+                    gap: 15px;
+                  }
+                  .contcuentas-search .contenedorCuenta {
+                    width: calc(33.333% - 10px);
+                    min-width: 220px;
+                    max-width: 280px;
+                    margin: 0;
+                  }
+                }
+                
+                @media (min-width: 1400px) {
+                  .contcuentas-search .contenedorCuenta {
+                    width: calc(25% - 12px);
+                  }
+                }
+                
+                /* Estilo para el botón de limpiar búsqueda */
+                .clear-search-btn:hover {
+                  background-color: #f0f0f0 !important;
+                  color: #333 !important;
                 }
        
   .minigen{
@@ -2954,7 +3956,7 @@ align-items: center;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: sans-serif;
+  /* font-family: sans-serif; */
       text-transform: capitalize;
       transform: translateX(calc(-0.15em * 3 - 0.08em * 2));
       transition: 0.3s;

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test de Autenticación</title>
+</head>
+<body>
+    <h1>Test de Token</h1>
+    <button onclick="testToken()">Probar Token Actual</button>
+    <button onclick="clearAll()">Limpiar localStorage</button>
+    <div id="result"></div>
+
+    <script>
+        async function testToken() {
+            const token = localStorage.getItem('token');
+            const resultDiv = document.getElementById('result');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<p style="color: red;">❌ No hay token en localStorage</p>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>🔍 Probando token...</p>';
+            
+            try {
+                const response = await fetch('/users/get-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ configType: 'widgets' })
+                });
+                
+                const data = await response.text();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p style="color: green;">✅ Token válido</p>
+                        <p><strong>Respuesta:</strong> ${data}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p style="color: red;">❌ Token inválido</p>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Respuesta:</strong> ${data}</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p style="color: red;">💥 Error:</p>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        function clearAll() {
+            localStorage.clear();
+            document.getElementById('result').innerHTML = '<p>🗑️ localStorage limpiado</p>';
+        }
+    </script>
+</body>
+</html>

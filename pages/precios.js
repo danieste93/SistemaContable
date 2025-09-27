@@ -1,9 +1,11 @@
 // 1) Imports
 import React, { useEffect, useState } from "react";
+import { useDispatch } from 'react-redux';
 import useUserRedux from '../components/useUserRedux';
 import WhatsappButton from "../components/WhatsappButton";
 import Head from "next/head";
 import Pagos from "../components/sistemapagos/pagos";
+import { updateUser } from '../reduxstore/actions/myact';
 
 const plansData = {
   anual: [
@@ -21,6 +23,18 @@ const plansData = {
 };
 
 export default function Precios() {
+  const [backBtnTransparent, setBackBtnTransparent] = useState(false);
+  const [firmaTransparent, setFirmaTransparent] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setBackBtnTransparent(window.scrollY > 100);
+      setFirmaTransparent(window.scrollY > 100);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  const dispatch = useDispatch();
   const user = useUserRedux();
   // 2) Estado de tema y toggles
   // Sincronizar scroll horizontal de ambas tablas en móvil
@@ -101,12 +115,20 @@ export default function Precios() {
         setMembresiaMsg(
           <div style={{textAlign:'center',padding:'32px 18px',maxWidth:400,margin:'0 auto'}}>
             <img src="https://contaluxestaging-b86e9da05a14.herokuapp.com/static/logo1.png" alt="Logo Contaluxe" style={{width:80,marginBottom:18,borderRadius:12,boxShadow:'0 2px 8px #6366f144'}} />
+            <div style={{display:'flex',justifyContent:'center',marginBottom:12}}>
+              <button onClick={()=>window.location.href='/'} style={{background:'none',border:'none',cursor:'pointer',padding:0}} title="Volver al inicio">
+                <i className="fas fa-arrow-left" style={{fontSize:'2em',color:'#6366f1'}}></i>
+              </button>
+            </div>
             <h2 style={{color:'#6366f1',fontWeight:700,fontSize:'1.3em',marginBottom:12}}>¡Ya tienes una membresía activa!</h2>
             <p style={{fontSize:'1.08em',color:'#232323',marginBottom:10}}>
               Tu membresía <b style={{color:'#6366f1'}}>{user.Membresia}</b> está activa y caduca el <b style={{color:'#6366f1'}}>{expiraDate.toLocaleDateString()}</b>.<br/>
               Si deseas hacer un <b>upgrade</b> de tu membresía, comunícate con <a href="https://api.whatsapp.com/send/?phone=%2B593962124673&text=Hola%2C+quiero+consultar+por+upgrade+de+membresía&type=phone_number&app_absent=0" target="_blank" style={{color:'#6366f1',textDecoration:'underline'}}>soporte</a>.
             </p>
-            <button onClick={()=>setShowMembresiaModal(false)} style={{background:'#6366f1',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontWeight:600,marginTop:18,cursor:'pointer',boxShadow:'0 2px 8px #6366f144'}}>Cerrar</button>
+            <div style={{display:'flex',justifyContent:'center',gap:12,marginTop:18}}>
+              <button onClick={()=>setShowMembresiaModal(false)} style={{background:'#6366f1',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontWeight:600,cursor:'pointer',boxShadow:'0 2px 8px #6366f144'}}>Cerrar</button>
+              <button onClick={()=>window.location.href='/usuarios/administrador'} style={{background:'#10b981',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontWeight:600,cursor:'pointer',boxShadow:'0 2px 8px #10b98144'}}>Ir al Dashboard</button>
+            </div>
           </div>
         );
         setShowMembresiaModal(true);
@@ -140,6 +162,45 @@ export default function Precios() {
     window.open('https://api.whatsapp.com/send/?phone=%2B593962124673&text=Hola%2C+quiero+m%C3%A1s+informaci%C3%B3n+sobre+las+membres%C3%ADas+de+Activos.ec&type=phone_number&app_absent=0', '_blank');
   }
 
+  useEffect(() => {
+    // Si el usuario no está en Redux, intenta cargarlo desde localStorage o API
+    if (!user) {
+      const userLocal = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+      if (userLocal) {
+        try {
+          const userObj = JSON.parse(userLocal);
+          dispatch(updateUser(userObj));
+        } catch (e) {}
+      }
+      // Si tienes una API, aquí podrías hacer la petición y luego dispatch(updateUser(apiUser))
+    }
+
+    // Si el usuario existe y tiene token, refresca datos desde API y actualiza Redux
+    if (user && user.token) {
+      const datos = {
+        User: {
+          DBname: user.DBname,
+          Tipo: user.Tipo
+        }
+      };
+      fetch('/api/refresh-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': user.token
+        },
+        body: JSON.stringify(datos)
+      })
+        .then(res => res.json())
+        .then(response => {
+          if (response && response.user) {
+            dispatch(updateUser(response.user));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user, dispatch]);
+
   return (
     <>
       <Head>
@@ -149,6 +210,42 @@ export default function Precios() {
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
       </Head>
       <main>
+        {/* Botón modo claro/oscuro alineado a la derecha */}
+        {showDarkToggle && (
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', margin: '0 0 12px 0' }}>
+            <button className="dark-toggle" onClick={alternarModoOscuro} title="Cambiar modo claro/oscuro">
+              <i className={`fas ${isDark ? 'fa-moon' : 'fa-sun'}`}></i>
+            </button>
+          </div>
+        )}
+        {/* Botón retroceso justificado al centro */}
+        <button
+          onClick={()=>window.location.href='/'}
+          style={{
+            position: 'fixed',
+            top: '420px',
+            left: '0px',
+            zIndex: 9999,
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+            color: 'white',
+            border: '2px solid rgba(255,255,255,0.2)',
+            width: '50px',
+            height: '50px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: '20px',
+            boxShadow: '0 4px 16px rgba(139, 92, 246, 0.3)',
+            transition: 'all 0.3s ease',
+            padding: 0,
+            opacity: backBtnTransparent ? 0.55 : 1
+          }}
+          title="Volver al inicio"
+        >
+          <i className="fas fa-arrow-left" style={{fontSize:'2em',color:'#fff'}}></i>
+        </button>
         {/* Modal membresía activa */}
         {showMembresiaModal && (
           <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.18)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -157,21 +254,12 @@ export default function Precios() {
             </div>
           </div>
         )}
-        <div className="container" style={{ marginTop: 80 }}>
-          {/* 4.1) Encabezado y botón tema */}
-          <h1 className="titulo-minimalista">Elige tu Membresía</h1>
-          <h2 className="subtitulo-precios">Descubre todas las funciones disponibles en cada plan</h2>
+        {/* 4.1) Encabezado */}
+        <h1 style={{textAlign: 'center', fontSize: '2em', fontWeight: 700, margin: '80px 0 12px 0', lineHeight: 1.15}}>Elige tu Membresía</h1>
+        <h2 style={{textAlign: 'center', fontSize: '1.15em', fontWeight: 500, margin: '0 0 28px 0', color: '#6366f1', lineHeight: 1.18}}>Descubre todas las funciones disponibles en cada plan</h2>
 
-          {showDarkToggle && (
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', margin: '0 0 12px 0' }}>
-              <button className="dark-toggle" onClick={alternarModoOscuro} title="Cambiar modo claro/oscuro">
-                <i className={`fas ${isDark ? 'fa-moon' : 'fa-sun'}`}></i>
-              </button>
-            </div>
-          )}
-
-          {/* 4.2) Tabla superior de precios (Anual/Mensual) */}
-          <div className="tabla-scroll tabla-sticky" id="stickyPrecios" style={{margin: '32px auto', padding: '0 16px', maxWidth: '900px'}}>
+        {/* 4.2) Tabla superior de precios (Anual/Mensual) */}
+          <div className="tabla-scroll tabla-sticky" id="stickyPrecios" style={{margin: '32px auto 0 auto', padding: '0 16px', maxWidth: '900px'}}>
             <div style={{ minWidth: '600px' }}>
               <table id="tablaPrecios">
                 <thead>
@@ -304,7 +392,7 @@ export default function Precios() {
           </div>
 
           {/* 4.5) Tabla principal de características por sección */}
-          <div className="tabla-scroll main-content" id="mainContent" style={{margin: '32px auto', padding: '0 16px', maxWidth: '900px'}}>
+          <div className="tabla-scroll main-content" id="mainContent" style={{margin: '32px auto 0 auto', padding: '0 16px', maxWidth: '900px'}}>
             <div style={{ minWidth: '600px' }}>
               <table id="tablaPrincipal">
                 <thead>
@@ -484,7 +572,6 @@ export default function Precios() {
               </table>
             </div>
           </div>
-        </div>
         {/* Modal de pagos minimalista */}
         {showPagos && <Pagos
             initialPlan={selectedPlan}
@@ -492,13 +579,12 @@ export default function Precios() {
             onPlanConfirmed={handlePlanConfirmed}
             onClose={() => setShowPagos(false)}
         />}
+        {/* Botón flotante de WhatsApp */}
+        <WhatsappButton phone="+593962124673" message="Hola, quiero más información sobre las membresías de Activos.ec" title="Contáctanos por WhatsApp" />
       </main>
 
-      {/* Botón flotante de WhatsApp */}
-      <WhatsappButton phone="+593962124673" message="Hola, quiero más información sobre las membresías de Activos.ec" title="Contáctanos por WhatsApp" />
-
       {/* Mensaje flotante de firma electrónica */}
-      <div className="firma-flotante">
+  <div className="firma-flotante" style={{opacity: firmaTransparent ? 0.55 : 1, transition: 'opacity 0.3s'}}>
         <span className="icono-certificado">
           <i className="fas fa-certificate"></i>
         </span>
@@ -523,6 +609,13 @@ export default function Precios() {
               text-shadow: 0 2px 12px #6366f188, 0 1px 0 #23232a;
             }
             @media (max-width: 600px) {
+                .container {
+                  max-width: 700px;
+                  padding-left: 12px;
+                  padding-right: 12px;
+                  margin-inline: auto;
+                  box-sizing: border-box;
+                }
               .dark-toggle {
                 top: 54px !important;
                 right: 10px !important;
@@ -540,12 +633,14 @@ export default function Precios() {
               }
             }
             @media (max-width: 600px) {
-              .titulo-minimalista {
-                font-size: 1.25em;
-                padding: 12px 10px 10px 10px;
-                max-width: 98vw;
-                border-radius: 12px;
-              }
+                .titulo-minimalista {
+                  font-size: 1.15em;
+                  padding: 12px 4vw 10px 4vw;
+                  max-width: 90vw;
+                  margin-left: 4vw;
+                  margin-right: 4vw;
+                  border-radius: 12px;
+                }
               .titulo-minimalista::after {
                 height: 6px;
                 opacity: 0.28;
@@ -600,20 +695,24 @@ export default function Precios() {
             }
         .firma-flotante {
           position: fixed;
-          left: 28px;
-          bottom: 28px;
+          left: 16px;
+          bottom: 16px;
           background: linear-gradient(135deg, #8b5cf6 0%, #25d366 100%);
           color: #fff;
-          border-radius: 32px;
+          border-radius: 28px;
           box-shadow: 0 4px 18px rgba(139,92,246,0.18);
-          padding: 12px 22px 12px 18px;
-          font-size: 1.08rem;
+          padding: 10px 14px 10px 12px;
+          font-size: 1.05rem;
           font-weight: 500;
           display: flex;
           align-items: center;
           z-index: 1201;
-          gap: 12px;
+          gap: 10px;
           animation: fadeinFirma 1.2s;
+          max-width: 80vw;
+          min-width: 120px;
+          flex-wrap: wrap;
+          word-break: break-word;
         }
         .icono-certificado {
           font-size: 1.5em;
@@ -632,10 +731,15 @@ export default function Precios() {
         }
         @media (max-width: 600px) {
           .firma-flotante {
-            left: 12px;
-            bottom: 16px;
-            font-size: 0.98rem;
-            padding: 8px 12px 8px 10px;
+            left: 6px;
+            bottom: 10px;
+            font-size: 0.92rem;
+            padding: 7px 7vw 7px 8px;
+            max-width: 50vw;
+            min-width: 80px;
+            border-radius: 18px;
+            flex-wrap: wrap;
+            word-break: break-word;
           }
           .icono-certificado {
             font-size: 1.1em;
@@ -707,16 +811,26 @@ export default function Precios() {
 
         /* Responsive móvil */
         @media screen and (max-width: 600px) {
-          .tabla-scroll {
-            width: 100vw;
-            box-sizing: border-box;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-left: 12px;
-            padding-right: 12px;
-          }
-          .tabla-scroll > div { min-width: 700px; }
-          table { width: 700px !important; min-width: 700px !important; max-width: none !important; font-size: 12px; table-layout: fixed; }
+            .tabla-scroll {
+              width: 100vw;
+              box-sizing: border-box;
+              overflow-x: auto;
+              -webkit-overflow-scrolling: touch;
+              padding-left: 12px;
+              padding-right: 12px;
+            }
+            .tabla-scroll > div {
+              width: 100%;
+              max-width: 700px;
+              min-width: 0;
+            }
+            table {
+              width: 100%;
+              max-width: 700px;
+              min-width: 0;
+              font-size: 12px;
+              table-layout: fixed;
+            }
           th, td { padding: 8px 6px; min-width: 80px; text-align: center; }
           th.detalle, td.detalle { min-width: 160px !important; white-space: normal; padding: 10px; text-align: left; }
           .btn-comprar, .btn-registrate { width: 30px; height: 30px; font-size: 14px; }

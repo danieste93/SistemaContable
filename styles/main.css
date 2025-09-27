@@ -1,6 +1,7 @@
 body{
   
   margin: 0;
+  overflow-y: scroll;
 
 }
 .contreg{
@@ -122,7 +123,7 @@ html {
     font-size: 2vmax;
     padding: 0 16px;
     border-radius: 10px;
-    background-color: #0267ffeb;
+    background-color: #4CAF50;
     box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
       0 2px 2px 0 rgba(0, 0, 0, 0.14),
       0 1px 5px 0 rgba(0, 0, 0, 0.12);
@@ -131,7 +132,7 @@ html {
       box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
   
     line-height: 2.25rem;
-    font-family: Roboto, sans-serif;
+    /* font-family: Roboto, sans-serif; */
    
     font-weight: 500;
     letter-spacing: 0.06em;
@@ -657,12 +658,13 @@ html {
       .fondoAdmin{
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' version='1.1' xmlns:xlink='http://www.w3.org/1999/xlink' xmlns:svgjs='http://svgjs.dev/svgjs' width='2000' height='1484' preserveAspectRatio='none' viewBox='0 0 2000 1484'%3e%3cg mask='url(%26quot%3b%23SvgjsMask1456%26quot%3b)' fill='none'%3e%3crect width='2000' height='1484' x='0' y='0' fill='url(%26quot%3b%23SvgjsLinearGradient1457%26quot%3b)'%3e%3c/rect%3e%3cpath d='M2000 0L1135.78 0L2000 197.02z' fill='rgba(255%2c 255%2c 255%2c .1)'%3e%3c/path%3e%3cpath d='M1135.78 0L2000 197.02L2000 346.24L737.67 0z' fill='rgba(255%2c 255%2c 255%2c .075)'%3e%3c/path%3e%3cpath d='M737.6700000000001 0L2000 346.24L2000 585.26L345.2900000000001 0z' fill='rgba(255%2c 255%2c 255%2c .05)'%3e%3c/path%3e%3cpath d='M345.28999999999996 0L2000 585.26L2000 1086.93L100.99999999999997 0z' fill='rgba(255%2c 255%2c 255%2c .025)'%3e%3c/path%3e%3cpath d='M0 1484L646.49 1484L0 1085.41z' fill='rgba(0%2c 0%2c 0%2c .1)'%3e%3c/path%3e%3cpath d='M0 1085.41L646.49 1484L1139.73 1484L0 714.23z' fill='rgba(0%2c 0%2c 0%2c .075)'%3e%3c/path%3e%3cpath d='M0 714.23L1139.73 1484L1490.42 1484L0 297.39000000000004z' fill='rgba(0%2c 0%2c 0%2c .05)'%3e%3c/path%3e%3cpath d='M0 297.3900000000001L1490.42 1484L1796.77 1484L0 174.7800000000001z' fill='rgba(0%2c 0%2c 0%2c .025)'%3e%3c/path%3e%3c/g%3e%3cdefs%3e%3cmask id='SvgjsMask1456'%3e%3crect width='2000' height='1484' fill='white'%3e%3c/rect%3e%3c/mask%3e%3clinearGradient x1='6.45%25' y1='-8.69%25' x2='93.55%25' y2='108.69%25' gradientUnits='userSpaceOnUse' id='SvgjsLinearGradient1457'%3e%3cstop stop-color='rgba(95%2c 87%2c 162%2c 1)' offset='0'%3e%3c/stop%3e%3cstop stop-color='rgba(0%2c 147%2c 233%2c 1)' offset='1'%3e%3c/stop%3e%3c/linearGradient%3e%3c/defs%3e%3c/svg%3e");
       
-        padding-top: 8vh;
-        display: flex;
-        justify-content: center;
-        background-position-x: center;
-        padding-bottom: 100px;
-            flex-flow: column;
+    min-height: 100vh;
+    padding-top: 8vh;
+    display: flex;
+    justify-content: center;
+    background-position-x: center;
+    padding-bottom: 100px;
+    flex-flow: column;
       }
       .customPrinbar{
         height:100%;
@@ -773,4 +775,13 @@ html {
         .jwMainContainer{
           background-position-x: 0;
         }
+
+.maincuentasVend {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2000;
+}
       }

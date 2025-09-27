@@ -576,15 +576,7 @@ superIng=  sumaing + sumatransing
   
      <Dropdown.Menu>
     
-     <Dropdown.Item>
-        <button className=" btn  btn-primary btnDropDowmRegs" onClick={this.updateData}>
-       
-        <span className="material-icons" style={{width:"45px"}}>
-        search
-     </span>
-     <p>Buscar</p>
-     </button>
-        </Dropdown.Item>
+    {/* Search button removed from Dropdown. */}
         <Dropdown.Item>
         <button className=" btn  btn-info btnDropDowmRegs"
          onClick={()=>{
@@ -665,7 +657,7 @@ superIng=  sumaing + sumatransing
                        {this.getMonthName()}
                      </div>
                    <div className="contmensual " >
-    <div className="flechalateral" onClick={this.menosunmes}> {'<'}</div>
+    <div className="flechalateral" onClick={this.menosunmes}> {'<'} </div>
     <div className="fechacentral">
 <MuiPickersUtilsProvider libInstance={moment} utils={MomentUtils}>
                <KeyboardDatePicker
@@ -687,9 +679,7 @@ superIng=  sumaing + sumatransing
                </div>
                <div className="flechalateral" onClick={this.masunmes}> {'>'}</div>
                </div>
-                     
                    </div>
-
                    </Animate>   
                    <Animate show={this.state.diario}>
                 <div className="contfiltromensual jwContFlexCenter">
@@ -773,6 +763,13 @@ superIng=  sumaing + sumatransing
                    </div>
 
                   </Animate>   
+             {/* Search button always visible below contmensual, above dineroresum2, centered */}
+             <div style={{display:'flex', justifyContent:'center', margin:'18px 0'}}>
+               <button className="btn btn-primary btnDropDowmRegs" onClick={this.updateData}>
+                 <span className="material-icons" style={{width:"45px"}}>search</span>
+                 <p>Buscar</p>
+               </button>
+             </div>
              <div className="contdinerosum ">
                 <div className="dineroresum2 ">
                    <p className="subtituloArt " >{}</p>

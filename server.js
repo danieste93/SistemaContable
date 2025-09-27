@@ -51,6 +51,7 @@ nextApp.prepare().then(() => {
   app.use('/public',  require('./routes/public'))
   
    app.use('/api',  require('./routes/api'))
+  // app.use('/api/sri', require('./routes/sri'));
   app.use('/correo',  require('./routes/correos'))
   //app.use(  require('./routes/webpush'))
 

@@ -1,4 +1,3 @@
-
 import React, { Component } from 'react'
 import { Animate } from "react-animate-mount";
 
@@ -40,6 +39,9 @@ class RegistroContable extends Component {
     channel4 = null;
     componentDidMount(){
       
+      // Debug: verificar token en accessRegister
+      const token = localStorage.getItem('token');
+      console.log('🔍 [ACCESS-REGISTER] Token disponible:', token ? 'Sí (longitud: ' + token.length + ')' : 'No');
     
       this.channel2 = postal.channel();
       this.channel3 = postal.channel();
@@ -108,26 +110,21 @@ this.startData()
           .then(response => {  
               console.log(response,"maindata")
               if(response.status == 'error'){
-            
                 if(response.message == "error al decodificar el token"){
                   this.props.dispatch(logOut());
                   this.props.dispatch(cleanData());
                   alert("Session expirada, vuelva a iniciar sesion para continuar");
-              
-               
                   Router.push("/ingreso")
-                     
                 }
               }else if(response.status == 'Ok'){
-               
                 this.props.dispatch(addFirstRegs(response.regsHabiles));
-                this.props.dispatch(gettipos(response.tiposHabiles));
+                // Usar tiposDeCuentas si existe, si no usar tiposHabiles
+                const tiposFinal = response.tiposDeCuentas ? response.tiposDeCuentas : response.tiposHabiles;
+                this.props.dispatch(gettipos(tiposFinal));
                 this.props.dispatch(getcats(response.catHabiles)); 
                 this.props.dispatch(getcuentas(response.cuentasHabiles)); 
                 this.props.dispatch(getRepeticiones(response.repsHabiles)); 
                 this.props.dispatch(getCounter(response.contadoresHabiles[0])); 
-
-              
               }
           });
         }  
@@ -365,8 +362,8 @@ if(this.props.state.userReducer != ""){
 <Modaldelete DeleteReg={this.state.DeleteReg} Flecharetro={()=>{this.setState({modaldelete:false})}}/>
 
     </Animate>
-<div className="contbarra">
 
+<div className="contbarra">
 
 <div className='barraSubcont'> 
   <div className='cont2Buttons'>
@@ -562,6 +559,16 @@ if(this.props.state.userReducer != ""){
              
                 </div>   
         )
+    }
+    componentDidUpdate(prevProps, prevState) {
+      // Bloquear scroll cuando se abre el modal agregador
+      if (this.state.modalagregador && !prevState.modalagregador) {
+        document.body.style.overflow = 'hidden';
+      }
+      // Restaurar scroll cuando se cierra el modal agregador
+      if (!this.state.modalagregador && prevState.modalagregador) {
+        document.body.style.overflow = '';
+      }
     }
 }
 const mapStateToProps = state=>  {

@@ -25,6 +25,7 @@ const WhatsappButton = ({
         title={title}
         aria-label={title}
       >
+        {/* Icono WhatsApp FontAwesome */}
         <i className="fab fa-whatsapp"></i>
       </a>
       <style jsx>{`
@@ -47,6 +48,15 @@ const WhatsappButton = ({
           border: none;
           text-decoration: none;
         }
+        .whatsapp-fab.static-whatsapp {
+          position: static !important;
+          width: 48px;
+          height: 48px;
+          font-size: 1.45rem;
+          box-shadow: 0 2px 8px rgba(37,211,102,0.18);
+          margin-left: 0;
+          margin-right: 0;
+        }
         .whatsapp-fab:hover {
           background: linear-gradient(135deg, #128c7e 0%, #25d366 100%);
           color: #fff200;
@@ -57,8 +67,13 @@ const WhatsappButton = ({
             width: 48px;
             height: 48px;
             font-size: 1.45rem;
-            bottom: 70px; /* Subir para no tapar el mensaje flotante */
+            bottom: 70px;
             right: 12px;
+          }
+          .whatsapp-fab.static-whatsapp {
+            width: 42px;
+            height: 42px;
+            font-size: 1.2rem;
           }
         }
       `}</style>

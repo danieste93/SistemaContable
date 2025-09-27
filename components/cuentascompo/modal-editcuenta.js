@@ -17,6 +17,10 @@ import { updateCuenta} from "../../reduxstore/actions/regcont"
 import RadioGroup from '@material-ui/core/RadioGroup';
 import Radio from '@material-ui/core/Radio';
 class ModalEditCuenta extends Component {
+   constructor(props) {
+    super(props);
+    this.nombreInputRef = React.createRef();
+   }
    state={
     loading:false,
     filtrosflecha:false,
@@ -86,6 +90,13 @@ if(cuentaX.Permisos.includes("auxiliar")){
   
        }, 200);
 
+       // Retraso adicional para el focus del input después de que aparezca el popup
+       setTimeout(() => {
+         if (this.nombreInputRef.current) {
+           this.nombreInputRef.current.focus();
+         }
+       }, 600);
+
   
 
       
@@ -111,18 +122,15 @@ if(cuentaX.Permisos.includes("auxiliar")){
                   this.setState({Auxiliar:!this.state.Auxiliar})
                 }
                         }
-                        getTipeCuentas=()=>{
-
-                          if(this.props.state.RegContableReducer.Tipos.length  >  0){
-                          
-                            let gene = this.props.state.RegContableReducer.Tipos.map((tipo,i)=>(<option key={i}>{tipo}</option>))
-                          
-                          
-                            return  (gene)
-                          }else{
-                            return  (<option>No existen tipos de cuenta</option>)
-                          }   
-                                }
+                        getTipeCuentas = () => {
+                          const tipos = this.props.state?.RegContableReducer?.Tipos;
+                          if (Array.isArray(tipos) && tipos.length > 0) {
+                            let gene = tipos.map((tipo, i) => (<option key={i}>{tipo}</option>));
+                            return gene;
+                          } else {
+                            return (<option>No existen tipos de cuenta</option>);
+                          }
+                        }
       handleChangeGeneral=(e)=>{
 
         this.setState({
@@ -287,6 +295,7 @@ if(cuentaX.Permisos.includes("auxiliar")){
                 id="standard-basic"
                  label=""
               value={this.state.NombreC}
+              inputRef={this.nombreInputRef}
                  
                  />
             
@@ -389,7 +398,7 @@ if(cuentaX.Permisos.includes("auxiliar")){
           <div className="contDatosX"> 
           <div className="grupoDatos">
         <div className="cDc1x">
-              <p style={{fontWeight:"bolder"}}>  Posesión  </p>
+              <p style={{fontWeight:"bolder"}}>  Posesión (Liquidez)  </p>
             
               </div>
               <div id =""className="cDc2x" >
@@ -410,7 +419,7 @@ if(cuentaX.Permisos.includes("auxiliar")){
               </div>   
           <div className="grupoDatos">
         <div className="cDc1x">
-              <p style={{fontWeight:"bolder"}}>  Incluir en el total   </p>
+              <p style={{fontWeight:"bolder"}}>  Incluir en el total (Capital)   </p>
             
               </div>
               <div id =""className="cDc2x" >
@@ -762,7 +771,9 @@ margin-top: 10px;
 z-index: 1301;
 width: 100vw;
 height: 100vh;
-background: #00f1e6;
+background: rgba(255,255,255,0.45);
+backdrop-filter: blur(8px);
+-webkit-backdrop-filter: blur(8px);
 left: -100%;
 position: fixed;
 top: 0px;
@@ -779,6 +790,7 @@ left: 0%;
 
 
 .contcontacto{
+animation: popupSlideDown 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 border-radius: 30px;
 height: 95%;
 width: 96%;
@@ -787,6 +799,22 @@ padding: 15px;
 overflow: scroll;
 overflow-x: hidden;
 padding-bottom: 40px;
+will-change: transform, opacity;
+}
+
+@keyframes popupSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.95);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translateY(-8px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 
@@ -823,13 +851,40 @@ body {
 
 
 
-   @media only screen and (max-width: 320px) { 
-  
- 
-.contcontacto{
-width: 95%;
-}
-}
+   @media only screen and (max-width: 600px) {
+    .contcontacto {
+      width: 98vw;
+      min-width: 0;
+      max-width: 340px;
+      margin: 0 auto;
+      padding: 0 4px 120px 4px;
+      overflow-y: auto;
+      max-height: 100vh;
+      box-sizing: border-box;
+      overscroll-behavior: contain;
+    }
+    .botoncontact {
+      margin-bottom: 48px !important;
+    }
+    .jwFlex.column.centrar {
+      flex-direction: row !important;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .botoncontact {
+      width: 90vw;
+      max-width: 320px;
+      font-size: 1.1rem;
+      padding: 12px 0;
+      margin: 12px auto 8px auto;
+      display: block;
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+  }
 @media only screen and (min-width: 600px) { 
 
 
