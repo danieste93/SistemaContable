@@ -109,7 +109,10 @@ export default function Precios() {
               Tu membresía <b style={{color:'#6366f1'}}>{user.Membresia}</b> está activa y caduca el <b style={{color:'#6366f1'}}>{expiraDate.toLocaleDateString()}</b>.<br/>
               Si deseas hacer un <b>upgrade</b> de tu membresía, comunícate con <a href="https://api.whatsapp.com/send/?phone=%2B593962124673&text=Hola%2C+quiero+consultar+por+upgrade+de+membresía&type=phone_number&app_absent=0" target="_blank" style={{color:'#6366f1',textDecoration:'underline'}}>soporte</a>.
             </p>
-            <button onClick={()=>setShowMembresiaModal(false)} style={{background:'#6366f1',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontWeight:600,marginTop:18,cursor:'pointer',boxShadow:'0 2px 8px #6366f144'}}>Cerrar</button>
+            <div style={{display:'flex',justifyContent:'center',gap:12,marginTop:18}}>
+              <button onClick={()=>setShowMembresiaModal(false)} style={{background:'#6366f1',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontWeight:600,cursor:'pointer',boxShadow:'0 2px 8px #6366f144'}}>Cerrar</button>
+              <button onClick={()=>window.location.href='/usuarios/administrador'} style={{background:'#10b981',color:'#fff',border:'none',borderRadius:8,padding:'10px 22px',fontWeight:600,cursor:'pointer',boxShadow:'0 2px 8px #10b98144'}}>Ir al Dashboard</button>
+            </div>
           </div>
         );
         setShowMembresiaModal(true);

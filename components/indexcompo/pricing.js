@@ -84,6 +84,7 @@ export default function PricingComponent() {
   const [isYearly, setIsYearly] = useState(false);
   const [inView, setInView] = useState(false);
   const containerRef = useRef(null);
+  const razonableHeaderRef = useRef(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -101,7 +102,7 @@ export default function PricingComponent() {
   return (
     <div className="pricing-wrapper" ref={containerRef}>
       <div className="header">
-        <h2>Obtengo a un <strong>Precio Razonable</strong></h2>
+        <h2 ref={razonableHeaderRef} id="razonable-header">Obtengo a un <strong>Precio Razonable</strong></h2>
         <p>Obtén el mejor servicio en base a Calidad / Precio</p>
         <div className="switcher">
           <span>Mensual</span>

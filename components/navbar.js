@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { logOut } from '../reduxstore/actions/myact'; 
 import { withRouter } from 'next/router';
@@ -295,7 +293,10 @@ logout
 <div className="links-desktop">
           {links.map((link) => (
             link.name === 'Precios' ? (
-              <a key={link.name} href={link.href} className="nav-link">{link.name}</a>
+              <a key={link.name} onClick={() => {
+                const header = document.getElementById('razonable-header');
+                if (header) header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }} className="nav-link" style={{cursor:'pointer'}}>{link.name}</a>
             ) : link.name === 'Firma electrónica' ? (
               <a key={link.name} href="/firma-electronica" className="nav-link">{link.name}</a>
             ) : (

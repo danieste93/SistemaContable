@@ -34,6 +34,7 @@ const PantallaPrincipal = () => {
 
     const leftRef = useRef();
     const rightRef = useRef();
+    // Eliminado razonableRef, ahora usamos id en el header
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -247,6 +248,13 @@ const PantallaPrincipal = () => {
     // window.location.href = "/usuarios/administrador";
     };
 
+        const handleScrollToRazonable = () => {
+            const header = document.getElementById('razonable-header');
+            if (header) {
+                header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        };
+
     useEffect(() => {
         // Forzar el popup de Google One Tap a estar por encima de todo y permitir clics
         const interval = setInterval(() => {
@@ -306,7 +314,7 @@ const PantallaPrincipal = () => {
               
                         <div className="buttonGroup">
                             <button className="btnPrimary">Empieza</button>
-                            <button className="btnSecondary">Pruébalo gratis</button>
+                            <button className="btnSecondary" onClick={handleScrollToRazonable}>Pruébalo gratis</button>
                             <div className="google-login-wrapper">
                               <LoginGoogle onResult={handleBackendLogin} />
                             </div>
@@ -323,6 +331,10 @@ const PantallaPrincipal = () => {
                         <img src="/static/landing/bm1a.png" alt="App Preview" className="heroImage" />
                     </div>
                 </div>
+
+                                <div className="pricing-wrapper">
+                                    {/* Contenido de precios aquí */}
+                                </div>
 
                 <style jsx>{`
                     .contPrincipal {
