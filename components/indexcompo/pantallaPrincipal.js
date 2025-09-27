@@ -227,7 +227,9 @@ const PantallaPrincipal = () => {
                     dispatch(getcuentas(distData.allCuentasHabiles));
                 }
             } catch (err) { console.error("Error getDistribuidor", err); }
-        }
+    }
+    // Redirigir al dashboard después de login exitoso
+    window.location.href = "/usuarios/administrador";
     };
 
     useEffect(() => {
