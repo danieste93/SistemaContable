@@ -25,11 +25,8 @@ const WhatsappButton = ({
         title={title}
         aria-label={title}
       >
-        {/* SVG logo WhatsApp */}
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{display:'block'}}>
-          <circle cx="16" cy="16" r="16" fill="#25D366"/>
-          <path d="M22.1 18.7c-.3-.2-1.7-.8-2-1-.3-.1-.5-.2-.7.1-.2.3-.8 1-.9 1.1-.2.2-.3.2-.6.1-.3-.2-1.2-.4-2.3-1.3-.8-.7-1.3-1.5-1.5-1.8-.2-.3 0-.4.1-.6.1-.1.2-.2.3-.3.1-.1.1-.2.2-.3.1-.1.1-.2.2-.3.1-.2.1-.3 0-.5-.1-.2-.7-1.7-.9-2.3-.2-.6-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.2.2-.7.7-.7 1.7 0 1 .7 2 1.1 2.5.4.5 1.6 2.5 3.9 3.3.5.2.9.3 1.2.4.5.1.9.1 1.2.1.4 0 1.2-.5 1.4-1 .2-.5.2-.9.1-1.1z" fill="#fff"/>
-        </svg>
+        {/* Icono WhatsApp FontAwesome */}
+        <i className="fab fa-whatsapp"></i>
       </a>
       <style jsx>{`
         .whatsapp-fab {
