@@ -212,7 +212,7 @@ export default function Precios() {
         )}
 
         {/* 4.2) Tabla superior de precios (Anual/Mensual) */}
-          <div className="tabla-scroll tabla-sticky" id="stickyPrecios" style={{margin: '32px 12px 0 12px', padding: '0 16px', maxWidth: '900px'}}>
+          <div className="tabla-scroll tabla-sticky" id="stickyPrecios" style={{margin: '32px auto 0 auto', padding: '0 16px', maxWidth: '900px'}}>
             <div style={{ minWidth: '600px' }}>
               <table id="tablaPrecios">
                 <thead>
@@ -345,7 +345,7 @@ export default function Precios() {
           </div>
 
           {/* 4.5) Tabla principal de características por sección */}
-          <div className="tabla-scroll main-content" id="mainContent" style={{margin: '32px 12px 0 12px', padding: '0 16px', maxWidth: '900px'}}>
+          <div className="tabla-scroll main-content" id="mainContent" style={{margin: '32px auto 0 auto', padding: '0 16px', maxWidth: '900px'}}>
             <div style={{ minWidth: '600px' }}>
               <table id="tablaPrincipal">
                 <thead>
