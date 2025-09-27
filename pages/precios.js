@@ -23,6 +23,15 @@ const plansData = {
 };
 
 export default function Precios() {
+  const [backBtnTransparent, setBackBtnTransparent] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setBackBtnTransparent(window.scrollY > 100);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   const dispatch = useDispatch();
   const user = useUserRedux();
   // 2) Estado de tema y toggles
@@ -104,6 +113,11 @@ export default function Precios() {
         setMembresiaMsg(
           <div style={{textAlign:'center',padding:'32px 18px',maxWidth:400,margin:'0 auto'}}>
             <img src="https://contaluxestaging-b86e9da05a14.herokuapp.com/static/logo1.png" alt="Logo Contaluxe" style={{width:80,marginBottom:18,borderRadius:12,boxShadow:'0 2px 8px #6366f144'}} />
+            <div style={{display:'flex',justifyContent:'center',marginBottom:12}}>
+              <button onClick={()=>window.location.href='/'} style={{background:'none',border:'none',cursor:'pointer',padding:0}} title="Volver al inicio">
+                <i className="fas fa-arrow-left" style={{fontSize:'2em',color:'#6366f1'}}></i>
+              </button>
+            </div>
             <h2 style={{color:'#6366f1',fontWeight:700,fontSize:'1.3em',marginBottom:12}}>¡Ya tienes una membresía activa!</h2>
             <p style={{fontSize:'1.08em',color:'#232323',marginBottom:10}}>
               Tu membresía <b style={{color:'#6366f1'}}>{user.Membresia}</b> está activa y caduca el <b style={{color:'#6366f1'}}>{expiraDate.toLocaleDateString()}</b>.<br/>
@@ -194,6 +208,42 @@ export default function Precios() {
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
       </Head>
       <main>
+        {/* Botón modo claro/oscuro alineado a la derecha */}
+        {showDarkToggle && (
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', margin: '0 0 12px 0' }}>
+            <button className="dark-toggle" onClick={alternarModoOscuro} title="Cambiar modo claro/oscuro">
+              <i className={`fas ${isDark ? 'fa-moon' : 'fa-sun'}`}></i>
+            </button>
+          </div>
+        )}
+        {/* Botón retroceso justificado al centro */}
+        <button
+          onClick={()=>window.location.href='/'}
+          style={{
+            position: 'fixed',
+            top: '420px',
+            left: '0px',
+            zIndex: 9999,
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+            color: 'white',
+            border: '2px solid rgba(255,255,255,0.2)',
+            width: '50px',
+            height: '50px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: '20px',
+            boxShadow: '0 4px 16px rgba(139, 92, 246, 0.3)',
+            transition: 'all 0.3s ease',
+            padding: 0,
+            opacity: backBtnTransparent ? 0.55 : 1
+          }}
+          title="Volver al inicio"
+        >
+          <i className="fas fa-arrow-left" style={{fontSize:'2em',color:'#fff'}}></i>
+        </button>
         {/* Modal membresía activa */}
         {showMembresiaModal && (
           <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.18)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -202,17 +252,9 @@ export default function Precios() {
             </div>
           </div>
         )}
-  {/* 4.1) Encabezado y botón tema */}
-  <h1 style={{textAlign: 'center', fontSize: '2em', fontWeight: 700, margin: '80px 0 12px 0', lineHeight: 1.15}}>Elige tu Membresía</h1>
-  <h2 style={{textAlign: 'center', fontSize: '1.15em', fontWeight: 500, margin: '0 0 28px 0', color: '#6366f1', lineHeight: 1.18}}>Descubre todas las funciones disponibles en cada plan</h2>
-
-        {showDarkToggle && (
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', margin: '0 0 12px 0' }}>
-            <button className="dark-toggle" onClick={alternarModoOscuro} title="Cambiar modo claro/oscuro">
-              <i className={`fas ${isDark ? 'fa-moon' : 'fa-sun'}`}></i>
-            </button>
-          </div>
-        )}
+        {/* 4.1) Encabezado */}
+        <h1 style={{textAlign: 'center', fontSize: '2em', fontWeight: 700, margin: '80px 0 12px 0', lineHeight: 1.15}}>Elige tu Membresía</h1>
+        <h2 style={{textAlign: 'center', fontSize: '1.15em', fontWeight: 500, margin: '0 0 28px 0', color: '#6366f1', lineHeight: 1.18}}>Descubre todas las funciones disponibles en cada plan</h2>
 
         {/* 4.2) Tabla superior de precios (Anual/Mensual) */}
           <div className="tabla-scroll tabla-sticky" id="stickyPrecios" style={{margin: '32px auto 0 auto', padding: '0 16px', maxWidth: '900px'}}>
