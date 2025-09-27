@@ -24,10 +24,12 @@ const plansData = {
 
 export default function Precios() {
   const [backBtnTransparent, setBackBtnTransparent] = useState(false);
+  const [firmaTransparent, setFirmaTransparent] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       setBackBtnTransparent(window.scrollY > 100);
+      setFirmaTransparent(window.scrollY > 100);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -582,7 +584,7 @@ export default function Precios() {
       </main>
 
       {/* Mensaje flotante de firma electrónica */}
-      <div className="firma-flotante">
+  <div className="firma-flotante" style={{opacity: firmaTransparent ? 0.55 : 1, transition: 'opacity 0.3s'}}>
         <span className="icono-certificado">
           <i className="fas fa-certificate"></i>
         </span>
