@@ -199,21 +199,20 @@ export default function Precios() {
             </div>
           </div>
         )}
-        <div className="container" style={{ marginTop: 80 }}>
-          {/* 4.1) Encabezado y botón tema */}
-          <h1 className="titulo-minimalista">Elige tu Membresía</h1>
-          <h2 className="subtitulo-precios">Descubre todas las funciones disponibles en cada plan</h2>
+  {/* 4.1) Encabezado y botón tema */}
+  <h1 style={{textAlign: 'center', fontSize: '2em', fontWeight: 700, margin: '80px 0 12px 0', lineHeight: 1.15}}>Elige tu Membresía</h1>
+  <h2 style={{textAlign: 'center', fontSize: '1.15em', fontWeight: 500, margin: '0 0 28px 0', color: '#6366f1', lineHeight: 1.18}}>Descubre todas las funciones disponibles en cada plan</h2>
 
-          {showDarkToggle && (
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', margin: '0 0 12px 0' }}>
-              <button className="dark-toggle" onClick={alternarModoOscuro} title="Cambiar modo claro/oscuro">
-                <i className={`fas ${isDark ? 'fa-moon' : 'fa-sun'}`}></i>
-              </button>
-            </div>
-          )}
+        {showDarkToggle && (
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', margin: '0 0 12px 0' }}>
+            <button className="dark-toggle" onClick={alternarModoOscuro} title="Cambiar modo claro/oscuro">
+              <i className={`fas ${isDark ? 'fa-moon' : 'fa-sun'}`}></i>
+            </button>
+          </div>
+        )}
 
-          {/* 4.2) Tabla superior de precios (Anual/Mensual) */}
-          <div className="tabla-scroll tabla-sticky" id="stickyPrecios" style={{margin: '32px auto', padding: '0 16px', maxWidth: '900px'}}>
+        {/* 4.2) Tabla superior de precios (Anual/Mensual) */}
+          <div className="tabla-scroll tabla-sticky" id="stickyPrecios" style={{margin: '32px 12px 0 12px', padding: '0 16px', maxWidth: '900px'}}>
             <div style={{ minWidth: '600px' }}>
               <table id="tablaPrecios">
                 <thead>
@@ -346,7 +345,7 @@ export default function Precios() {
           </div>
 
           {/* 4.5) Tabla principal de características por sección */}
-          <div className="tabla-scroll main-content" id="mainContent" style={{margin: '32px auto', padding: '0 16px', maxWidth: '900px'}}>
+          <div className="tabla-scroll main-content" id="mainContent" style={{margin: '32px 12px 0 12px', padding: '0 16px', maxWidth: '900px'}}>
             <div style={{ minWidth: '600px' }}>
               <table id="tablaPrincipal">
                 <thead>
@@ -526,7 +525,6 @@ export default function Precios() {
               </table>
             </div>
           </div>
-        </div>
         {/* Modal de pagos minimalista */}
         {showPagos && <Pagos
             initialPlan={selectedPlan}
@@ -534,10 +532,9 @@ export default function Precios() {
             onPlanConfirmed={handlePlanConfirmed}
             onClose={() => setShowPagos(false)}
         />}
+        {/* Botón flotante de WhatsApp */}
+        <WhatsappButton phone="+593962124673" message="Hola, quiero más información sobre las membresías de Activos.ec" title="Contáctanos por WhatsApp" />
       </main>
-
-      {/* Botón flotante de WhatsApp */}
-      <WhatsappButton phone="+593962124673" message="Hola, quiero más información sobre las membresías de Activos.ec" title="Contáctanos por WhatsApp" />
 
       {/* Mensaje flotante de firma electrónica */}
       <div className="firma-flotante">
@@ -565,6 +562,13 @@ export default function Precios() {
               text-shadow: 0 2px 12px #6366f188, 0 1px 0 #23232a;
             }
             @media (max-width: 600px) {
+                .container {
+                  max-width: 700px;
+                  padding-left: 12px;
+                  padding-right: 12px;
+                  margin-inline: auto;
+                  box-sizing: border-box;
+                }
               .dark-toggle {
                 top: 54px !important;
                 right: 10px !important;
@@ -582,12 +586,14 @@ export default function Precios() {
               }
             }
             @media (max-width: 600px) {
-              .titulo-minimalista {
-                font-size: 1.25em;
-                padding: 12px 10px 10px 10px;
-                max-width: 98vw;
-                border-radius: 12px;
-              }
+                .titulo-minimalista {
+                  font-size: 1.15em;
+                  padding: 12px 4vw 10px 4vw;
+                  max-width: 90vw;
+                  margin-left: 4vw;
+                  margin-right: 4vw;
+                  border-radius: 12px;
+                }
               .titulo-minimalista::after {
                 height: 6px;
                 opacity: 0.28;
@@ -642,20 +648,24 @@ export default function Precios() {
             }
         .firma-flotante {
           position: fixed;
-          left: 28px;
-          bottom: 28px;
+          left: 16px;
+          bottom: 16px;
           background: linear-gradient(135deg, #8b5cf6 0%, #25d366 100%);
           color: #fff;
-          border-radius: 32px;
+          border-radius: 28px;
           box-shadow: 0 4px 18px rgba(139,92,246,0.18);
-          padding: 12px 22px 12px 18px;
-          font-size: 1.08rem;
+          padding: 10px 14px 10px 12px;
+          font-size: 1.05rem;
           font-weight: 500;
           display: flex;
           align-items: center;
           z-index: 1201;
-          gap: 12px;
+          gap: 10px;
           animation: fadeinFirma 1.2s;
+          max-width: 80vw;
+          min-width: 120px;
+          flex-wrap: wrap;
+          word-break: break-word;
         }
         .icono-certificado {
           font-size: 1.5em;
@@ -674,10 +684,15 @@ export default function Precios() {
         }
         @media (max-width: 600px) {
           .firma-flotante {
-            left: 12px;
-            bottom: 16px;
-            font-size: 0.98rem;
-            padding: 8px 12px 8px 10px;
+            left: 6px;
+            bottom: 10px;
+            font-size: 0.92rem;
+            padding: 7px 7vw 7px 8px;
+            max-width: 50vw;
+            min-width: 80px;
+            border-radius: 18px;
+            flex-wrap: wrap;
+            word-break: break-word;
           }
           .icono-certificado {
             font-size: 1.1em;
@@ -749,16 +764,26 @@ export default function Precios() {
 
         /* Responsive móvil */
         @media screen and (max-width: 600px) {
-          .tabla-scroll {
-            width: 100vw;
-            box-sizing: border-box;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-left: 12px;
-            padding-right: 12px;
-          }
-          .tabla-scroll > div { min-width: 700px; }
-          table { width: 700px !important; min-width: 700px !important; max-width: none !important; font-size: 12px; table-layout: fixed; }
+            .tabla-scroll {
+              width: 100vw;
+              box-sizing: border-box;
+              overflow-x: auto;
+              -webkit-overflow-scrolling: touch;
+              padding-left: 12px;
+              padding-right: 12px;
+            }
+            .tabla-scroll > div {
+              width: 100%;
+              max-width: 700px;
+              min-width: 0;
+            }
+            table {
+              width: 100%;
+              max-width: 700px;
+              min-width: 0;
+              font-size: 12px;
+              table-layout: fixed;
+            }
           th, td { padding: 8px 6px; min-width: 80px; text-align: center; }
           th.detalle, td.detalle { min-width: 160px !important; white-space: normal; padding: 10px; text-align: left; }
           .btn-comprar, .btn-registrate { width: 30px; height: 30px; font-size: 14px; }
