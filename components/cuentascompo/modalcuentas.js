@@ -137,7 +137,10 @@ class Cuentas extends Component {
             }
             if (backgroundSolido) {
               style.background = backgroundSolido;
+              // Aplica color de texto blanco si fondo oscuro, incluso si la cuenta está oculta
               if (isDark(backgroundSolido)) textColor = '#fff';
+              // Si la cuenta está oculta, fuerza el color blanco para mejor legibilidad
+              if (cuenta.Visibility === false) textColor = '#fff';
             }
             if (backgroundImagen) {
               style.backgroundImage = `url(${backgroundImagen})`;
@@ -214,17 +217,44 @@ class Cuentas extends Component {
         cuentasAMostrar = cuentasFiltradas;
         if (cuentasAMostrar.length > 0) {
           generadorDeCuentas = cuentasAMostrar.map((cuenta, i) => {
-            // ...existing code para renderizar cuentas...
             let backgroundSolido = cuenta.Background?.Seleccionado === "Solido" ? cuenta.Background?.colorPicked : undefined;
             let backgroundImagen = cuenta.Background?.Seleccionado === "Imagen" ? cuenta.Background?.urlBackGround : undefined;
             let style = {};
+            let textColor = undefined;
+            let nombreShadow = {};
+            // Reglas de color de texto y sombra
+            function isDark(color) {
+              if (!color) return false;
+              let c = color.trim();
+              if (c.startsWith('#')) {
+                c = c.substring(1);
+                if (c.length === 3) c = c.split('').map(x => x + x).join('');
+                if (c.length !== 6) return false;
+                const r = parseInt(c.substring(0, 2), 16);
+                const g = parseInt(c.substring(2, 4), 16);
+                const b = parseInt(c.substring(4, 6), 16);
+                return (0.299 * r + 0.587 * g + 0.114 * b) < 128;
+              }
+              if (c.startsWith('rgb')) {
+                const vals = c.match(/\d+/g);
+                if (!vals || vals.length < 3) return false;
+                const r = parseInt(vals[0]);
+                const g = parseInt(vals[1]);
+                const b = parseInt(vals[2]);
+                return (0.299 * r + 0.587 * g + 0.114 * b) < 128;
+              }
+              return false;
+            }
             if (backgroundSolido) {
               style.background = backgroundSolido;
+              if (isDark(backgroundSolido)) textColor = '#fff';
             }
             if (backgroundImagen) {
               style.backgroundImage = `url(${backgroundImagen})`;
               style.backgroundSize = 'cover';
               style.backgroundPosition = 'center';
+              textColor = '#fff';
+              nombreShadow = { textShadow: '0 2px 12px rgba(0,0,0,0.95), 0 0px 2px #000, 0 0px 24px #000' };
             }
             style.borderRadius = '10px';
             style.boxShadow = '1px 0px 4px #0002';
@@ -246,12 +276,15 @@ class Cuentas extends Component {
                 style={style}
               >
                 {this.state.editmode && (
-                  <div className="contx">
-                    <i className="material-icons close" onClick={(e) => {
+                  <i
+                    className="material-icons close cuenta-delete-btn"
+                    style={{ position: 'absolute', top: 6, right: 8, fontSize: 22, color: '#e53935', cursor: 'pointer', zIndex: 2 }}
+                    title="Eliminar cuenta"
+                    onClick={(e) => {
                       e.stopPropagation();
                       this.setState({ ModalDeleteC: true, CuentaPorDel: cuenta });
-                    }}>close</i>
-                  </div>
+                    }}
+                  >close</i>
                 )}
                 <div onClick={() => {
                   if (this.state.editmode) {
@@ -272,14 +305,13 @@ class Cuentas extends Component {
                     }
                   }
                 }}>
-                  {/* Icono personalizado si existe */}
                   {cuenta.urlIcono && (
                     <img src={cuenta.urlIcono} alt="icono" style={{ width: 32, height: 32, marginBottom: 4, opacity: cuenta.Visibility === false ? 0.8 : 1 }} />
                   )}
-                  <p className="nombrem">{cuenta.NombreC}</p>
-                  <p className="">(${cuenta.DineroActual?.$numberDecimal})</p>
-                  <div className="tipomcont">
-                    <p className="tipom">{cuenta.Tipo}</p>
+                  <p className="nombrem" style={Object.assign({}, textColor ? { color: textColor } : {}, nombreShadow)}>{cuenta.NombreC}</p>
+                  <p className="" style={Object.assign({}, textColor ? { color: textColor } : {}, nombreShadow)}>${cuenta.DineroActual?.$numberDecimal}</p>
+                  <div className="tipomcont" style={textColor ? { color: textColor } : {}}>
+                    <p className="tipom" style={Object.assign({}, textColor ? { color: textColor } : {}, nombreShadow)}>{cuenta.Tipo}</p>
                   </div>
                 </div>
               </div>
