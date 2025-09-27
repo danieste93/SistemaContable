@@ -91,13 +91,15 @@ class Cuentas extends Component {
       const cuentas = this.props.regC?.Cuentas || [];
       const lapizctive = this.state.editmode ? 'lapizctive' : '';
       let generadorDeCuentas;
-      let cuentasFiltradas = cuentas.filter(cuenta => {
-        const search = this.state.cuentasSearcher.toLowerCase();
-        return (
-          cuenta.NombreC?.toLowerCase().includes(search) ||
-          cuenta.Tipo?.toLowerCase().includes(search)
-        );
-      });
+      let cuentasFiltradas = cuentas
+        .filter(cuenta => cuenta.Tipo !== 'Inventario')
+        .filter(cuenta => {
+          const search = this.state.cuentasSearcher.toLowerCase();
+          return (
+            cuenta.NombreC?.toLowerCase().includes(search) ||
+            cuenta.Tipo?.toLowerCase().includes(search)
+          );
+        });
       let cuentasAMostrar;
       if (this.state.visibility) {
         // Mostrar solo cuentas visibles (Visibility !== false)
@@ -163,12 +165,15 @@ class Cuentas extends Component {
                 style={style}
               >
                 {this.state.editmode && (
-                  <div className="contx">
-                    <i className="material-icons close" onClick={(e) => {
+                  <i
+                    className="material-icons close cuenta-delete-btn"
+                    style={{ position: 'absolute', top: 6, right: 8, fontSize: 22, color: '#e53935', cursor: 'pointer', zIndex: 2 }}
+                    title="Eliminar cuenta"
+                    onClick={(e) => {
                       e.stopPropagation();
                       this.setState({ ModalDeleteC: true, CuentaPorDel: cuenta });
-                    }}>close</i>
-                  </div>
+                    }}
+                  >close</i>
                 )}
                 <div onClick={() => {
                   if (this.state.editmode) {
