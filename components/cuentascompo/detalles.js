@@ -763,16 +763,16 @@ superIng=  sumaing + sumatransing
                    </div>
 
                   </Animate>   
+             {/* Search button always visible below contmensual, above dineroresum2, centered */}
+             <div style={{display:'flex', justifyContent:'center', margin:'18px 0'}}>
+               <button className="btn btn-primary btnDropDowmRegs" onClick={this.updateData}>
+                 <span className="material-icons" style={{width:"45px"}}>search</span>
+                 <p>Buscar</p>
+               </button>
+             </div>
              <div className="contdinerosum ">
                 <div className="dineroresum2 ">
                    <p className="subtituloArt " >{}</p>
-                   {/* Search button always visible below contmensual, before contsgens */}
-                   <div style={{display:'flex', justifyContent:'center', margin:'18px 0'}}>
-                     <button className="btn btn-primary btnDropDowmRegs" onClick={this.updateData}>
-                       <span className="material-icons" style={{width:"45px"}}>search</span>
-                       <p>Buscar</p>
-                     </button>
-                   </div>
                    <div className="contsgens">
                        <div className="minigen">
                            <div style={{color:"blue"}}>Ingreso</div>
