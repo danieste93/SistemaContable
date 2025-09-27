@@ -1,3 +1,4 @@
+import Head from 'next/head';
 import React, { useEffect, useRef, useState } from 'react';
 import Typewriter from './maquinaEscribir';
 import { useDispatch } from 'react-redux';
@@ -20,6 +21,7 @@ function decodeJwt(token) {
 }
 
 const PantallaPrincipal = () => {
+    // ...existing code...
     const dispatch = useDispatch();
     const [isVisibleLeft, setIsVisibleLeft] = useState(false);
     const [isVisibleRight, setIsVisibleRight] = useState(false);
@@ -274,6 +276,9 @@ const PantallaPrincipal = () => {
 
     return (
         <>
+            <Head>
+                <meta name="theme-color" content="#418fe2" />
+            </Head>
             {showRedirectModal && (
                 <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(24,24,24,0.18)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
                     <div style={{background:'#fff',borderRadius:18,boxShadow:'0 2px 18px #6366f188',padding:'38px 28px',maxWidth:340,width:'90vw',textAlign:'center'}}>
