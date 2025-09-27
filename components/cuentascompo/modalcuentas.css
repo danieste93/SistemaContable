@@ -246,14 +246,33 @@
 }
 @media (max-width: 600px) {
   .headercontact.cuentasheader {
-  padding: 4px 10px !important;
-  font-size: 1rem !important;
-  border-radius: 12px 12px 0 0 !important;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+    padding: 2px 4px !important;
+    font-size: 0.95rem !important;
+    border-radius: 12px 12px 0 0 !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 4px;
+    min-width: 0;
+  }
+  .tituloventa {
+    font-size: 1.1rem !important;
+    max-width: 50vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 4px;
+  }
+  .conticonos {
+    gap: 4px !important;
+    flex-shrink: 1;
+  }
+  .conticonos .material-icons {
+    font-size: 1.3rem !important;
+    margin: 0 2px !important;
+    padding: 2px !important;
+    min-width: 0;
   }
 }
 @media (min-width: 601px) {
@@ -269,7 +288,7 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
-    gap: 48px;
+  gap: 8px;
   }
   .tituloventa {
     font-size: 2.2rem;

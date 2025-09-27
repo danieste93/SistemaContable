@@ -168,20 +168,21 @@ class Cuentas extends Component {
             style.transition = 'box-shadow 0.2s, background 0.2s';
             style.cursor = 'pointer';
             style.opacity = cuenta.Visibility === false ? 0.55 : 1;
-            style.border = cuenta.Visibility === false ? '2px dashed #343a40' : undefined;
+            // Marcar más los bordes si el fondo es blanco o color
+            if (isWhite(backgroundSolido)) {
+              style.border = '1.5px solid rgba(30,30,30,0.18)';
+              style.boxShadow = '0 2px 8px rgba(30,30,30,0.10)';
+            } else if (backgroundSolido) {
+              style.border = '1.2px solid rgba(30,30,30,0.12)';
+              style.boxShadow = '0 2px 6px rgba(30,30,30,0.07)';
+            } else if (cuenta.Visibility === false) {
+              style.border = '1.2px dashed #343a40';
+            }
             return (
               <div
                 key={i}
                 className={`cuentaRender jwPointer${cuenta.Visibility === false ? ' cuenta-oculta' : ''}`}
-                style={{
-                  ...style,
-                  border: isWhite(backgroundSolido)
-                    ? '2.5px solid rgba(30,30,30,0.18)'
-                    : style.border,
-                  boxShadow: isWhite(backgroundSolido)
-                    ? '0 2px 12px rgba(30,30,30,0.10)'
-                    : style.boxShadow
-                }}
+                style={style}
               >
                 {this.state.editmode && (
                   <i
