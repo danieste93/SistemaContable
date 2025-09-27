@@ -1,4 +1,40 @@
 import React, { Component } from 'react'
+import { useGoogleOneTapLogin } from '@react-oauth/google';
+// Función para decodificar JWT de Google (igual que pagos.js)
+function decodeJwt(token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+}
+
+// Componente funcional para Google One Tap
+function GoogleOneTapPopup({ onResult, disabled }) {
+  useGoogleOneTapLogin({
+    onSuccess: async (credentialResponse) => {
+      const decoded = decodeJwt(credentialResponse.credential);
+      if(decoded){
+        const googledata = await fetch('/users/googleLogin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(decoded),
+        });
+        const sendData = await googledata.json();
+        onResult(sendData);
+      }
+    },
+    onError: () => console.log('One Tap Login Failed'),
+    disabled,
+    position: 'bottom-right',
+  });
+  return null;
+}
 import PropTypes from 'prop-types'
 import { ValidatorForm, TextValidator} from 'react-material-ui-form-validator';
 import { Animate } from "react-animate-mount";
@@ -357,8 +393,12 @@ this.setState({loading:false})
          this.setState({snackerror1:false,snackerror2:false,snackerror3:false})
         
     }
-  return(
+    // Detectar si el usuario está logueado
+    const isLoggedIn = this.props.state.userReducer && this.props.state.userReducer.update && this.props.state.userReducer.update.usuario && this.props.state.userReducer.update.usuario.user && this.props.state.userReducer.update.usuario.user.Email;
+    return(
    <div className="jwMainContainer">
+     {/* Google One Tap Popup solo si no está logueado */}
+     {!isLoggedIn && <GoogleOneTapPopup onResult={this.handleGoogleLogin} disabled={isLoggedIn} />}
 
      
 
