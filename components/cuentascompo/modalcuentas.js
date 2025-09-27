@@ -53,9 +53,36 @@ class Cuentas extends Component {
     document.body.style.overflow = '';
   }
 
-  handleDeleteCuenta = () => {
+  handleDeleteCuenta = async () => {
     if (this.state.CuentaPorDel) {
-      this.props.deleteCuenta(this.state.CuentaPorDel);
+      // Obtener token y DBname desde el estado global como en el resto de la app
+      const cuenta = this.state.CuentaPorDel;
+      const token = this.props.userToken;
+      const DBname = this.props.userDBname;
+      const datos = {
+        Usuario: {
+          DBname: DBname
+        },
+        valores: cuenta
+      };
+      try {
+        const response = await fetch("/cuentas/deleteCount", {
+          method: "POST",
+          body: JSON.stringify(datos),
+          headers: {
+            "Content-Type": "application/json",
+            "x-access-token": token || ""
+          }
+        });
+        const result = await response.json();
+        if (result.status === "Ok") {
+          this.props.deleteCuenta(result.Cuenta);
+        } else {
+          alert("Error al eliminar la cuenta: " + (result.message || "Error desconocido"));
+        }
+      } catch (error) {
+        alert("Error de conexión al eliminar la cuenta");
+      }
     }
     this.setState({ ModalDeleteC: false, CuentaPorDel: null });
   }
@@ -342,6 +369,8 @@ class Cuentas extends Component {
 
 const mapStateToProps = state => ({
   regC: state.RegContableReducer,
+  userToken: state.userReducer?.update?.usuario?.token,
+  userDBname: state.userReducer?.update?.usuario?.user?.DBname,
 });
 
 const mapDispatchToProps = {

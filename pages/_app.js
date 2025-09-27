@@ -294,9 +294,9 @@ return <MuiAlert elevation={6} variant="filled" {...props} />;
                 <link rel="icon" type="image/png" sizes="96x96" href="/favicons/favicon-96x96.png"/>
                 <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png"/>
                 <link rel="manifest" href="/manifest.json"/>
-                <meta name="msapplication-TileColor" content="#a259e6"/>
+                <meta name="msapplication-TileColor" content="#418fe2"/>
                 <meta name="msapplication-TileImage" content="/favicons/ms-icon-144x144.png"/>
-                <meta name="theme-color" content="#a259e6"/>
+                <meta name="theme-color" content="#418fe2"/>
             
         </Head>
         <Nav/> 
