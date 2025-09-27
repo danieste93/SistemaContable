@@ -318,11 +318,9 @@ const PantallaPrincipal = () => {
                         </p>
               
                         <div className="buttonGroup">
-                            <button className="btnPrimary">Empieza</button>
+                            <button className="btnPrimary" onClick={() => window.location.href = '/precios'}>Ver más</button>
                             <button className="btnSecondary" onClick={handleScrollToRazonable}>Pruébalo gratis</button>
-                            <div className="google-login-wrapper">
-                              <LoginGoogle onResult={handleBackendLogin} />
-                            </div>
+                                                        {/* Google login button removed as requested */}
                         </div>
                         <div className="stars">
                             ⭐⭐⭐⭐⭐ <span>Calidad al más alto nivel  </span>

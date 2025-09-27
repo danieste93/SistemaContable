@@ -128,7 +128,7 @@ export default function PricingComponent() {
                 <li key={i}><CheckIcon style={{ color: "green" }} /> {feat}</li>
               ))}
             </ul>
-            <button>Empieza</button>
+            <button onClick={() => window.location.href = '/precios'}>Ver más</button>
           </div>
         ))}
       </div>
