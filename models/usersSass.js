@@ -144,6 +144,14 @@ ImagenP: {
   valiteFirma :{  type: Boolean,  default: false},
   publicId :{  type: String,  default: ""},
  },
+ // Campo para guardar el token OAuth2 de Gmail
+ gmailToken: {
+   access_token: { type: String, default: '' },
+   refresh_token: { type: String, default: '' },
+   scope: { type: String, default: '' },
+   token_type: { type: String, default: '' },
+   expiry_date: { type: Number, default: 0 }
+ },
  // Campo para guardar configuraciones personalizadas del usuario
  ConfiguracionPersonalizada: {
    // Configuración de widgets del dashboard

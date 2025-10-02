@@ -21,6 +21,16 @@ import {UPLOAD_USER,UPLOAD_USER2, DELETE_USER, LOG_OUT } from "../actions/myact"
             case LOG_OUT:
               return state ="";
 
+        case 'UPDATE_GMAIL_TOKEN':
+          // Guarda el token en el usuario actual
+          if (state && state.update && state.update.usuario && state.update.usuario.user) {
+            let newState = { ...state };
+            newState.update = { ...state.update };
+            newState.update.usuario = { ...state.update.usuario };
+            newState.update.usuario.user = { ...state.update.usuario.user, gmailToken: action.payload };
+            return newState;
+          }
+          return state;
         default:
             return state ;
     }

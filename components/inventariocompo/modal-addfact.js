@@ -150,66 +150,99 @@ class Contacto extends Component {
   };
 
   handleCorreoButton = async () => {
-    // Verificar configuración de correo con token
-    let token = '';
-    // Intentar obtener el token desde Redux
-    if (this.props.state && this.props.state.userReducer && this.props.state.userReducer.update && this.props.state.userReducer.update.usuario && this.props.state.userReducer.update.usuario.token) {
-      token = this.props.state.userReducer.update.usuario.token;
-    } else {
-      // Fallback: intentar obtenerlo de localStorage
-      try {
-        const dataStored = localStorage.state;
-        const data = JSON.parse(dataStored);
-        token = data.userReducer.update.usuario.token;
-      } catch (e) {}
+    // Verifica si el usuario ya tiene un token Gmail válido
+    const userRedux = this.props.state?.userReducer?.update?.usuario?.user;
+    const userId = userRedux?._id;
+    const gmailToken = userRedux?.gmailToken;
+    if (gmailToken && gmailToken.access_token) {
+      alert('Ya tienes acceso autorizado a Gmail. Puedes buscar tus facturas directamente.');
+      // Aquí podrías abrir el modal de búsqueda directamente o activar la función de buscar
+      this.correoModalState.show = true;
+      this.forceUpdate();
+      return;
     }
-    let dbname = '';
-    // Intentar obtener DBname desde Redux
-    if (this.props.state && this.props.state.userReducer && this.props.state.userReducer.update && this.props.state.userReducer.update.usuario && this.props.state.userReducer.update.usuario.user && this.props.state.userReducer.update.usuario.user.DBname) {
-      dbname = this.props.state.userReducer.update.usuario.user.DBname;
-    } else {
-      // Fallback: intentar obtenerlo de localStorage
-      try {
-        const dataStored = localStorage.state;
-        const data = JSON.parse(dataStored);
-        dbname = data.userReducer.update.usuario.user.DBname;
-      } catch (e) {}
+    if (userId) {
+      localStorage.setItem('gmailUserId', userId);
+      // Solicita la URL de autorización desde el backend, pero fuerza el redirect_uri a /gmail-callback
+      const res = await fetch(`/api/correo/gmail-auth?userId=${userId}&redirect_uri=${encodeURIComponent(window.location.origin + '/gmail-callback')}`);
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert('No se pudo obtener la URL de autorización de Gmail.');
+      }
+      return;
     }
+    alert('No se encontró el usuario en sesión.');
+  };
+
+  handleBuscarCorreo = async () => {
+    this.correoModalState.buscando = true;
+    this.forceUpdate();
     try {
-      const res = await fetch('/public/getCorreoConfig', {
+      // Obtener token y DBname como en handleCorreoButton
+      let token = '';
+      if (this.props.state && this.props.state.userReducer && this.props.state.userReducer.update && this.props.state.userReducer.update.usuario && this.props.state.userReducer.update.usuario.token) {
+        token = this.props.state.userReducer.update.usuario.token;
+      } else {
+        try {
+          const dataStored = localStorage.state;
+          const data = JSON.parse(dataStored);
+          token = data.userReducer.update.usuario.token;
+        } catch (e) {}
+      }
+      let dbname = '';
+      if (this.props.state && this.props.state.userReducer && this.props.state.userReducer.update && this.props.state.userReducer.update.usuario && this.props.state.userReducer.update.usuario.user && this.props.state.userReducer.update.usuario.user.DBname) {
+        dbname = this.props.state.userReducer.update.usuario.user.DBname;
+      } else {
+        try {
+          const dataStored = localStorage.state;
+          const data = JSON.parse(dataStored);
+          dbname = data.userReducer.update.usuario.user.DBname;
+        } catch (e) {}
+      }
+      // Flujo clásico y OAuth2: solo llamar al backend con los datos correctos
+      // Si tienes token OAuth2, úsalo; si tienes user/password, úsalo (flujo clásico)
+      const fechaInicio = this.correoModalState.fechaInicio;
+      const fechaFin = this.correoModalState.fechaFin;
+      let gmailToken = this.props.state?.userReducer?.update?.usuario?.user?.gmailToken;
+      let bodyRequest = {};
+      if (gmailToken && gmailToken.access_token) {
+        // Flujo Gmail OAuth2
+        bodyRequest = {
+          token: gmailToken,
+          fechaInicio,
+          fechaFin
+        };
+      } else {
+        // Flujo clásico (correo/contraseña de aplicación)
+        // ...aquí puedes dejar la lógica original si es necesario...
+        // Si tienes user/password en la config, agrégalo aquí
+        // bodyRequest = { emailConfig: { user, password }, fechaInicio, fechaFin };
+        // Si no hay config, muestra error
+        this.correoModalState.error = 'No se encontró configuración de correo.';
+        this.correoModalState.buscando = false;
+        this.forceUpdate();
+        return;
+      }
+      const res = await fetch('/correo/buscar-facturas-gmail', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-access-token': token
         },
-        body: JSON.stringify({ User: { DBname: dbname } })
+        body: JSON.stringify(bodyRequest)
       });
       const data = await res.json();
-      if (data.dataconfig && data.dataconfig.length > 0) {
-        this.correoModalState.show = true;
-        this.correoModalState.noConfig = false;
-        this.forceUpdate();
-      } else {
-        // Mostrar modal profesional si no está configurado
-        this.correoModalState.show = true;
-        this.correoModalState.noConfig = true;
-        this.forceUpdate();
-      }
-    } catch (err) {
-      this.correoModalState.error = 'Error verificando configuración de correo';
-      this.forceUpdate();
-    }
-  };
-
-  handleBuscarCorreo = () => {
-    this.correoModalState.buscando = true;
-    this.forceUpdate();
-    // Aquí iría la llamada al backend para buscar adjuntos
-    setTimeout(() => {
       this.correoModalState.buscando = false;
       this.correoModalState.show = false;
+      this.setState({ facturasCorreo: data.facturas || [] });
       this.forceUpdate();
-    }, 1500);
+    } catch (err) {
+      this.correoModalState.error = 'Error buscando adjuntos en correo';
+      this.correoModalState.buscando = false;
+      this.forceUpdate();
+    }
   };
 
   handleCerrarCorreoModal = () => {
@@ -225,6 +258,11 @@ class Contacto extends Component {
     showBarcodeDirect: false,
     isCompact: false
   };
+  componentDidMount() {
+    // No validar OAuth2 aquí, solo en el callback dedicado
+    // El modal solo consulta el estado del usuario y token
+  }
+
   componentDidUpdate(prevProps, prevState) {
     // Compacto sin animación: solo cambia el flag para el render
     const xmlOk = this.state.xmlData && this.state.xmlData.fechaAutorizacion && this.state.xmlData.fechaAutorizacion[0] !== '';
@@ -233,6 +271,24 @@ class Contacto extends Component {
     }
     if (!xmlOk && this.state.isCompact) {
       this.setState({ isCompact: false });
+    }
+
+    // LOGS para depuración
+    const prevUser = prevProps.state?.userReducer?.update?.usuario?.user;
+    const currUser = this.props.state?.userReducer?.update?.usuario?.user;
+    const prevToken = prevUser?.gmailToken?.access_token;
+    const currToken = currUser?.gmailToken?.access_token;
+    console.log('[GMAIL DEBUG] prevUser:', prevUser);
+    console.log('[GMAIL DEBUG] currUser:', currUser);
+    console.log('[GMAIL DEBUG] prevToken:', prevToken);
+    console.log('[GMAIL DEBUG] currToken:', currToken);
+    console.log('[GMAIL DEBUG] modalState.show:', this.correoModalState.show);
+
+    // Detectar cambio de token Gmail en Redux y abrir modal automáticamente
+    if (!prevToken && currToken && !this.correoModalState.show) {
+      console.log('[GMAIL DEBUG] Token Gmail detectado, abriendo modal búsqueda.');
+      this.correoModalState.show = true;
+      this.forceUpdate();
     }
   }
   // OCR: Tomar foto y extraer clave de acceso
@@ -466,7 +522,7 @@ function generarVariantesClave(clave) {
               /clave\s*de\s*acceso/i,
               /n[uú]mero\s*de\s*autorizaci[oó]n/i,
               /c[oó]digo\s*de\s*autorizaci[oó]n/i,
-              /c[oó]digo\s*[uú]nico\s*del?\s*comprobante\s*electr[oó]nico/i
+              /c[oó]gico\s*[uú]nico\s*del?\s*comprobante\s*electr[oó]nico/i
             ];
             let lineas = (text || '').split(/\n|\r/);
             for (let i = 0; i < lineas.length; i++) {
@@ -514,7 +570,7 @@ function generarVariantesClave(clave) {
             /clave\s*de\s*acceso[\s:;\-_/]*([0-9]{49})/i,
             /n[uú]mero\s*de\s*autorizaci[oó]n[\s:;\-_/]*([0-9]{49})/i,
             /c[oó]digo\s*de\s*autorizaci[oó]n[\s:;\-_/]*([0-9]{49})/i,
-            /c[oó]digo\s*[uú]nico\s*del?\s*comprobante\s*electr[oó]nico[\s:;\-_/]*([0-9]{49})/i,
+            /c[oó]gico\s*[uú]nico\s*del?\s*comprobante\s*electr[oó]nico[\s:;\-_/]*([0-9]{49})/i,
             /clave\s*de\s*acceso\s*\/\s*autorizaci[oó]n[\s:;\-_/]*([0-9]{49})/i
           ];
           let claveTitulo = null;
@@ -1354,7 +1410,7 @@ if(result.factura){
       let dia = now.getDate()
       let mes = now.getMonth() + 1
       
-      let fecha =  `${AddCero(dia)} / ${AddCero(mes)} / ${año} ` 
+      let fecha =  `${AddCero(dia)} / ${AddCero(mes)} / ${año} `
       
       let TotalPago = 0
       if(this.state.Fpago.length > 0){
@@ -1516,58 +1572,82 @@ Agregar Factura
       </IconButton>
       <span style={{fontSize:13, color:'#ff9800', fontWeight:700, marginTop:2, letterSpacing:1}}>xml</span>
     </div>
-    {/* Botón Correo */}
+    {/* Botón Correo Gmail */}
     <div style={{display:'flex', flexDirection:'column', alignItems:'center', marginLeft:24}}>
-      <IconButton
-        color="primary"
-        aria-label="Buscar en correo"
-        component="span"
-        onClick={this.handleCorreoButton}
-        style={{ background:'#fff', border:'2px solid #388e3c', borderRadius:8, boxShadow:'0 1px 4px #0001', width:48, height:48, marginBottom:2 }}
-        title="Buscar facturas en correo"
-      >
-  <img src="/icons/mail.svg" alt="Correo" style={{ width:32, height:32 }} />
-      </IconButton>
-      <span style={{fontSize:13, color:'#388e3c', fontWeight:700, marginTop:2, letterSpacing:1}}>Correo</span>
+      {(() => {
+        const gmailToken = this.props.state?.userReducer?.update?.usuario?.user?.gmailToken;
+        const tieneToken = gmailToken && gmailToken.access_token;
+        console.log('[GMAIL DEBUG] Render botón Gmail:', { gmailToken, tieneToken });
+        return (
+          <IconButton
+            color="primary"
+            aria-label="Buscar en correo Gmail"
+            component="span"
+            onClick={tieneToken ? undefined : this.handleCorreoButton}
+            disabled={!!tieneToken}
+            style={{ background: tieneToken ? '#e0f2f1' : '#fff', border: tieneToken ? '2px solid #388e3c' : '2px solid #388e3c', borderRadius:8, boxShadow:'0 1px 4px #0001', width:48, height:48, marginBottom:2, opacity: tieneToken ? 0.7 : 1, cursor: tieneToken ? 'not-allowed' : 'pointer' }}
+            title={tieneToken ? 'Gmail conectado' : 'Buscar facturas en correo Gmail'}
+          >
+            <img src="/icons/mail.svg" alt="Correo" style={{ width:32, height:32, filter: tieneToken ? 'grayscale(60%)' : 'none' }} />
+          </IconButton>
+        );
+      })()}
+      <span style={{fontSize:13, color:'#388e3c', fontWeight:700, marginTop:2, letterSpacing:1}}>
+        {(() => {
+          const gmailToken = this.props.state?.userReducer?.update?.usuario?.user?.gmailToken;
+          const tieneToken = gmailToken && gmailToken.access_token;
+          return tieneToken ? 'Gmail conectado' : 'Correo Gmail';
+        })()}
+      </span>
     </div>
-      {/* Modal seguro para rango de fechas o configuración elegante */}
-      {this.correoModalState.show && (
-        <div style={{ position:'fixed', top:0, left:0, width:'100vw', height:'100vh', background:'rgba(0,0,0,0.25)', zIndex:99999, display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <div style={{ background:'#fff', borderRadius:20, padding:36, maxWidth:420, width:'100%', boxShadow:'0 8px 32px #0002', textAlign:'center', fontFamily:'inherit' }}>
-            {this.correoModalState.noConfig ? (
-              <>
-                <img src="/icons/mail.svg" alt="Correo" style={{ width:48, height:48, marginBottom:18, filter:'drop-shadow(0 2px 8px #1976d2aa)' }} />
-                <h2 style={{marginBottom:16, color:'#1976d2', fontWeight:800}}>Correo no configurado</h2>
-                <div style={{fontSize:17, color:'#444', marginBottom:24, lineHeight:1.5}}>
-                  Para habilitar la opción de buscar facturas en tu correo,<br />ve a <b>Configuración General</b> &gt; <b>Correo</b> y configura tu cuenta de <b>Gmail</b>.<br /><br />
-                  <span style={{color:'#1976d2', fontWeight:600}}>Una vez configurado, podrás usar esta función automáticamente.</span>
-                </div>
-                <div style={{display:'flex', gap:18, justifyContent:'center', marginTop:10}}>
-                  <button onClick={this.handleCerrarCorreoModal} style={{padding:'10px 24px', borderRadius:7, background:'#888', color:'#fff', fontWeight:'bold', fontSize:16, border:'none'}}>Volver</button>
-                  <button onClick={()=>window.location.href='/configuracion-general'} style={{padding:'10px 24px', borderRadius:7, background:'#1976d2', color:'#fff', fontWeight:'bold', fontSize:16, border:'none'}}>Ir a Configuración</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h3 style={{marginBottom:18}}>Buscar facturas en correo</h3>
-                <div style={{marginBottom:12}}>
-                  <label>Fecha inicio:</label><br/>
-                  <input type="date" value={this.correoModalState.fechaInicio} onChange={e=>{this.correoModalState.fechaInicio=e.target.value;this.forceUpdate();}} style={{padding:6, fontSize:16, borderRadius:4, border:'1px solid #1976d2', marginBottom:8}} />
-                </div>
-                <div style={{marginBottom:18}}>
-                  <label>Fecha fin:</label><br/>
-                  <input type="date" value={this.correoModalState.fechaFin} onChange={e=>{this.correoModalState.fechaFin=e.target.value;this.forceUpdate();}} style={{padding:6, fontSize:16, borderRadius:4, border:'1px solid #1976d2'}} />
-                </div>
-                <button onClick={this.handleBuscarCorreo} disabled={this.correoModalState.buscando || !this.correoModalState.fechaInicio || !this.correoModalState.fechaFin} style={{padding:'10px 24px', borderRadius:7, background:'#388e3c', color:'#fff', fontWeight:'bold', fontSize:16, border:'none', marginRight:8}}>
-                  {this.correoModalState.buscando ? 'Buscando...' : 'Buscar'}
-                </button>
-                <button onClick={this.handleCerrarCorreoModal} style={{padding:'10px 24px', borderRadius:7, background:'#888', color:'#fff', fontWeight:'bold', fontSize:16, border:'none'}}>Cancelar</button>
-                {this.correoModalState.error && <div style={{color:'red',marginTop:12}}>{this.correoModalState.error}</div>}
-              </>
-            )}
-          </div>
+    {/* Modal Gmail: muestra estado de autorización y flujo OAuth2 */}
+    {this.correoModalState.show && (
+      <div style={{ position:'fixed', top:0, left:0, width:'100vw', height:'100vh', background:'rgba(0,0,0,0.25)', zIndex:99999, display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <div style={{ background:'#fff', borderRadius:20, padding:36, maxWidth:420, width:'100%', boxShadow:'0 8px 32px #0002', textAlign:'center', fontFamily:'inherit' }}>
+          {/* Detectar token OAuth2 en Redux */}
+          {(() => {
+            const gmailToken = this.props.state?.userReducer?.update?.usuario?.user?.gmailToken;
+            const tieneToken = gmailToken && gmailToken.access_token;
+            if (!tieneToken) {
+              return (
+                <>
+                  <img src="/icons/mail.svg" alt="Correo" style={{ width:48, height:48, marginBottom:18, filter:'drop-shadow(0 2px 8px #1976d2aa)' }} />
+                  <h2 style={{marginBottom:16, color:'#1976d2', fontWeight:800}}>No has autorizado tu cuenta de Gmail</h2>
+                  <div style={{fontSize:17, color:'#444', marginBottom:24, lineHeight:1.5}}>
+                    Para buscar facturas en tu correo Gmail, primero debes autorizar tu cuenta.<br /><br />
+                    <span style={{color:'#1976d2', fontWeight:600}}>Haz clic en el siguiente botón y sigue el proceso de Google.</span>
+                  </div>
+                  <div style={{display:'flex', gap:18, justifyContent:'center', marginTop:10}}>
+                    <button onClick={() => window.open('/api/correo/gmail-auth', '_blank')} style={{padding:'10px 24px', borderRadius:7, background:'#388e3c', color:'#fff', fontWeight:'bold', fontSize:16, border:'none'}}>Autorizar Gmail</button>
+                    <button onClick={this.handleCerrarCorreoModal} style={{padding:'10px 24px', borderRadius:7, background:'#888', color:'#fff', fontWeight:'bold', fontSize:16, border:'none'}}>Cancelar</button>
+                  </div>
+                  {this.correoModalState.error && <div style={{color:'red',marginTop:12}}>{this.correoModalState.error}</div>}
+                </>
+              );
+            } else {
+              return (
+                <>
+                  <h3 style={{marginBottom:18}}>Buscar facturas en Gmail</h3>
+                  <div style={{marginBottom:12}}>
+                    <label>Fecha inicio:</label><br/>
+                    <input type="date" value={this.correoModalState.fechaInicio} onChange={e=>{this.correoModalState.fechaInicio=e.target.value;this.forceUpdate();}} style={{padding:6, fontSize:16, borderRadius:4, border:'1px solid #1976d2', marginBottom:8}} />
+                  </div>
+                  <div style={{marginBottom:18}}>
+                    <label>Fecha fin:</label><br/>
+                    <input type="date" value={this.correoModalState.fechaFin} onChange={e=>{this.correoModalState.fechaFin=e.target.value;this.forceUpdate();}} style={{padding:6, fontSize:16, borderRadius:4, border:'1px solid #1976d2'}} />
+                  </div>
+                  <button onClick={this.handleBuscarCorreo} disabled={this.correoModalState.buscando || !this.correoModalState.fechaInicio || !this.correoModalState.fechaFin} style={{padding:'10px 24px', borderRadius:7, background:'#388e3c', color:'#fff', fontWeight:'bold', fontSize:16, border:'none', marginRight:8}}>
+                    {this.correoModalState.buscando ? 'Buscando...' : 'Buscar'}
+                  </button>
+                  <button onClick={this.handleCerrarCorreoModal} style={{padding:'10px 24px', borderRadius:7, background:'#888', color:'#fff', fontWeight:'bold', fontSize:16, border:'none'}}>Cancelar</button>
+                  {this.correoModalState.error && <div style={{color:'red',marginTop:12}}>{this.correoModalState.error}</div>}
+                </>
+              );
+            }
+          })()}
         </div>
-      )}
+      </div>
+    )}
   </div>
 </div>
 

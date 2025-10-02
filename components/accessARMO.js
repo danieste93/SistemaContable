@@ -113,6 +113,22 @@ acc+=valdata
       
       
   
+      // Abrir modal de facturas si el usuario tiene token Gmail válido
+    try {
+      const dataStored = localStorage.state;
+      if (dataStored) {
+        const data = JSON.parse(dataStored);
+        const user = data?.userReducer?.update?.usuario?.user;
+        if (user?.gmailToken && user.gmailToken.access_token) {
+          setTimeout(() => {
+            if (this.modalAddFact) {
+              this.modalAddFact.correoModalState.show = true;
+              this.modalAddFact.forceUpdate();
+            }
+          }, 500);
+        }
+      }
+    } catch (e) {}
       }
 
       updateData = ()=>{
@@ -911,6 +927,7 @@ list
                   </Animate>
  <Animate show={this.state.addCompraFact}>
  <ModalAddFact
+ ref={ref => this.modalAddFact = ref}
  
  updateArt={()=>{ this.getdata()}} 
  Flecharetro={()=>{this.setState({addCompraFact:false})}} 
