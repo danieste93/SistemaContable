@@ -29,15 +29,29 @@ const { google } = require('googleapis');
 const zohoControler = require('../controler/zohoCorreo');
 const gmailControler = require('../controler/gmailCorreo');
 
-// Cargar credenciales
+// Cargar credenciales de forma segura
 const CREDENTIALS_PATH = path.join(__dirname, '../credentials.json');
-const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH));
-const { client_id, client_secret, redirect_uris } = credentials.web || credentials.installed;
-// Usar el redirect URI del backend para el flujo OAuth2
-const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[1] || redirect_uris[0]);
+let credentials = {};
+let oAuth2Client = null;
+
+try {
+  if (fs.existsSync(CREDENTIALS_PATH)) {
+    credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH));
+    const { client_id, client_secret, redirect_uris } = credentials.web || credentials.installed;
+    // Usar el redirect URI del backend para el flujo OAuth2
+    oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[1] || redirect_uris[0]);
+  } else {
+    console.warn('Archivo credentials.json no encontrado. Las funciones de Gmail no estarán disponibles.');
+  }
+} catch (error) {
+  console.error('Error cargando credentials.json:', error.message);
+}
 
 // Endpoint para iniciar el flujo OAuth2
 router.get('/gmail-auth', (req, res) => {
+	if (!oAuth2Client) {
+		return res.status(503).json({ error: 'Gmail authentication is not configured' });
+	}
 	const scopes = [
 		'https://www.googleapis.com/auth/gmail.readonly'
 	];
@@ -50,6 +64,9 @@ router.get('/gmail-auth', (req, res) => {
 
 // Endpoint para recibir el token de Google
 router.get('/oauth2callback', async (req, res) => {
+	if (!oAuth2Client) {
+		return res.status(503).json({ error: 'Gmail authentication is not configured' });
+	}
 	const code = req.query.code;
 	if (!code) return res.status(400).send('No code provided');
 	try {

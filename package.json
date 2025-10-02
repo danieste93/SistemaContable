@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "set NODE_OPTIONS=--openssl-legacy-provider && node server.js -p $PORT",
-    "dev2": "node serverhttps.js -p $PORT",
-    "build": "set NODE_OPTIONS=--openssl-legacy-provider && next build",
-    "start": "node server.js -p $PORT"
+    "dev": "node server.js",
+    "dev2": "node serverhttps.js",
+    "build": "next build",
+    "start": "node server.js",
+    "gcp-build": "npm install --legacy-peer-deps && npm run build"
   },
   "engines": {
-    "node": "16.14.2",
-    "npm": "7.24.2"
+    "node": "16.x",
+    "npm": "8.x"
   },
   "dependencies": {
     "@date-io/date-fns": "^2.11.0",
@@ -99,7 +100,6 @@
     "redux-thunk": "^2.3.0",
     "resize-observer": "^1.0.4",
     "serve-build": "^0.1.0",
-    "sharp": "^0.27.0",
     "soap": "^1.4.1",
     "socket.io": "^3.1.2",
     "socket.io-client": "^4.8.0",
