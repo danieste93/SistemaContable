@@ -5,11 +5,16 @@ const genProds = (arts, Inf)=>{
     
 let mapeador = arts.map((item)=>{
   
-    let precioGenerado = item.Iva?((item.PrecioVendido / parseFloat(`1.${process.env.IVA_EC }`))).toFixed(2)
-    : (item.PrecioVendido).toFixed(2)
+    // Validar que los valores existan antes de usar toFixed
+    let precioVendido = item.PrecioVendido || 0;
+    let precioCompraTotal = item.PrecioCompraTotal || 0;
+    let ivaEC = process.env.IVA_EC || 12;
+    
+    let precioGenerado = item.Iva ? ((precioVendido / parseFloat(`1.${ivaEC}`))).toFixed(2)
+    : (precioVendido).toFixed(2)
    
-    let precioVentaFinal = item.Iva?(item.PrecioCompraTotal / parseFloat(`1.${process.env.IVA_EC }`)).toFixed(2)
-    : (item.PrecioCompraTotal).toFixed(2)
+    let precioVentaFinal = item.Iva ? (precioCompraTotal / parseFloat(`1.${ivaEC}`)).toFixed(2)
+    : (precioCompraTotal).toFixed(2)
   
     return(<div class="ContDetalle">
         <div class="divigualTitulo">
@@ -72,27 +77,28 @@ const renderPagos = (Fpago) => {
         <tbody>
           {Fpago.map((pago, i) => {
             
-                 let tituloRender = pago.Tipo.replace(/-/g, " ")
-    if(pago.Tipo === "Transferencia"){
+                 // Validar que pago.Tipo exista antes de hacer replace
+                 let tituloRender = pago && pago.Tipo ? pago.Tipo.replace(/-/g, " ") : "Sin especificar"
+    if(pago && pago.Tipo === "Transferencia"){
 
         tituloRender  = "Otros con utilización del sistema financiero"
      }
-      else if(pago.Tipo === "Efectivo"){
+      else if(pago && pago.Tipo === "Efectivo"){
 
         tituloRender  = "Sin utilización del sistema financiero"
      }
-       else if(pago.Tipo === "Tarjeta-de-Credito"){
+       else if(pago && pago.Tipo === "Tarjeta-de-Credito"){
 
         tituloRender  = "Tarjeta de Crédito"
      }
-       else if(pago.Tipo === "Tarjeta-de-Debito"){
+       else if(pago && pago.Tipo === "Tarjeta-de-Debito"){
 
         tituloRender  = "Tarjeta de Débito"
      }
            return(
             <tr key={i}>
               <td>{tituloRender}</td>
-              <td>${pago.Cantidad.toFixed(2)}</td>
+              <td>${pago && pago.Cantidad !== undefined ? pago.Cantidad.toFixed(2) : "0.00"}</td>
             </tr>
           )})}
         </tbody>
@@ -224,7 +230,7 @@ let Rimpeval =""
         <div class="Cont1FactTo">
 
         <p class="enfData" >Valor Total</p> 
-        <span class="subenfData">${Inf.SuperTotal.toFixed(2)}</span> 
+        <span class="subenfData">${Inf && Inf.SuperTotal !== undefined ? Inf.SuperTotal.toFixed(2) : "0.00"}</span> 
         <span class="subenfData">{}</span>
         <span class="subenfData">{}</span>
 
@@ -261,7 +267,7 @@ let Rimpeval =""
         </div>
      
         <div class="divigual">
-      $ {Inf.baseImpoConImpuestos.toFixed(2)}
+      $ {Inf && Inf.baseImpoConImpuestos !== undefined ? Inf.baseImpoConImpuestos.toFixed(2) : "0.00"}
         </div>
         </div>
         <div class="ContDetalle contValues" >
@@ -271,7 +277,7 @@ let Rimpeval =""
      
         
         <div class="divigual">
-        $ {Inf.baseImpoSinImpuestos.toFixed(2)}
+        $ {Inf && Inf.baseImpoSinImpuestos !== undefined ? Inf.baseImpoSinImpuestos.toFixed(2) : "0.00"}
         </div>
         </div>
         <div class="ContDetalle contValues" >
@@ -291,7 +297,7 @@ let Rimpeval =""
         
         
         <div class="divigual">
-      $  {Inf.SuperTotal.toFixed(2)}
+      $  {Inf && Inf.SuperTotal !== undefined ? Inf.SuperTotal.toFixed(2) : "0.00"}
         </div>
         </div>
         </div>

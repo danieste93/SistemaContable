@@ -9,9 +9,28 @@ import addCero from "../../components/funciones/addcero"
 
 const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen, SuperTotal, SubTotal, IvaEC, contP12, TotalDescuento,adicionalInfo, AmbienteSelect) => {
    
+   // Validaciones para evitar NaN
+   const safeParseFloat = (value, defaultValue = 0) => {
+     const parsed = parseFloat(value);
+     return isNaN(parsed) ? defaultValue : parsed;
+   };
+   
+   const safeToFixed = (value, decimals = 2, defaultValue = "0.00") => {
+     const num = safeParseFloat(value);
+     return num.toFixed(decimals);
+   };
+   
+   // Validar parámetros de entrada
+   SuperTotal = safeParseFloat(SuperTotal);
+   SubTotal = safeParseFloat(SubTotal); 
+   IvaEC = safeParseFloat(IvaEC);
+   TotalDescuento = safeParseFloat(TotalDescuento);
+   
+   // Validar IVA_EC desde variables de entorno
+   const IVA_PORCENTAJE = safeParseFloat(process.env.IVA_EC, 15);
    
    
-    const ceroMaker =(val)=>{
+   const ceroMaker =(val)=>{
 
         let cantidad = JSON.stringify(val).length
     
@@ -67,8 +86,12 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
          let baseImponibleImpuestos = 0
          let valtotal = 0
                 for(let i=0;i<artImpuestos.length;i++){
-                    baseImponibleImpuestos += ((artImpuestos[i].PrecioCompraTotal-valdescuento) /  parseFloat(`1.${process.env.IVA_EC }`))
-                    valtotal += (artImpuestos[i].PrecioCompraTotal)
+                    const precioTotal = safeParseFloat(artImpuestos[i].PrecioCompraTotal);
+                    const descuento = safeParseFloat(valdescuento);
+                    const divisorIVA = safeParseFloat(`1.${IVA_PORCENTAJE}`, 1.15);
+                    
+                    baseImponibleImpuestos += ((precioTotal - descuento) / divisorIVA);
+                    valtotal += precioTotal;
                 }
           
               
@@ -77,7 +100,7 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
             `                <codigo>${codigoDeta}</codigo>\n`+
             `                <codigoPorcentaje>${codigoPorcentajeDeta}</codigoPorcentaje>\n`+
             `                <baseImponible>${ (parseFloat(baseImponibleImpuestos.toFixed(2)))}</baseImponible>\n`+
-            `                <tarifa>${process.env.IVA_EC}</tarifa>\n`+
+            `                <tarifa>${IVA_PORCENTAJE}</tarifa>\n`+
             `                <valor>${((valtotal- TotalDescuento) - (parseFloat(baseImponibleImpuestos.toFixed(2)))).toFixed(2)}</valor>\n`+
             `            </totalImpuesto>\n`
          
@@ -93,9 +116,14 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
 
   if (Array.isArray(campos)) {
     campos.forEach(({ clave, valor }) => {
-      const claveEscapada = escapeXml(clave);
-      const valorEscapado = escapeXml(valor);
-      info += `  <campoAdicional nombre="${claveEscapada}">${valorEscapado}</campoAdicional>\n`;
+      // Validar que clave y valor existan antes de escapar
+      if (clave !== undefined && clave !== null && valor !== undefined && valor !== null) {
+        const claveEscapada = escapeXml(clave);
+        const valorEscapado = escapeXml(valor);
+        info += `  <campoAdicional nombre="${claveEscapada}">${valorEscapado}</campoAdicional>\n`;
+      } else {
+        console.warn('Campo adicional con datos inválidos:', { clave, valor });
+      }
     });
   }
 
@@ -109,6 +137,12 @@ const genFact = async (idVenta, idReg, Fpago, ArtVent, Comprador, secuencialGen,
 
 // Función para escapar caracteres XML
 function escapeXml(unsafe) {
+  // Validar que el valor no sea undefined o null
+  if (unsafe === undefined || unsafe === null) {
+    console.warn('escapeXml recibió valor undefined/null:', unsafe);
+    return '';
+  }
+  
   return String(unsafe)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -121,17 +155,30 @@ function escapeXml(unsafe) {
     const generarPagosXML = (pagos) => {
   const codigosSRI = {
     "Efectivo": "01",
-    "Transferencia": "20",
+    "Transferencia": "20", 
+    "Transferencia-Bancaria": "20",
     "Tarjeta-de-Debito": "16",
-    "Tarjeta-de-Credito": "19"
+    "Tarjeta-de-Credito": "19",
+    "Tarjeta-Debito": "16",
+    "Tarjeta-Credito": "19",
+    "Cheque": "02",
+    "Deposito": "17",
+    "PayPal": "20",
+    "Otros": "20"
   };
 
  
 
   const pagosXML = pagos.map(pago => {
     const tipo = pago.Tipo;
-    const codigo = codigosSRI[tipo] || "00";
-    const monto = parseFloat(pago.Cantidad)?.toFixed(2) || "0.00";
+    const codigo = codigosSRI[tipo] || "01"; // Cambio: usar "01" (efectivo) en lugar de "00"
+    
+    // Validación robusta para evitar NaN
+    let cantidad = parseFloat(pago.Cantidad);
+    if (isNaN(cantidad) || cantidad < 0) {
+      cantidad = 0;
+    }
+    const monto = cantidad.toFixed(2);
    
 
     return `
@@ -150,7 +197,7 @@ function escapeXml(unsafe) {
     const genImpuestos = () => {
   const codigoIVA = 2;
   const codigoPorcentajeIVA = 4;
-  const tarifaIVA = parseFloat(process.env.IVA_EC); // Ej. 15 para 15%
+  const tarifaIVA = IVA_PORCENTAJE; // Ej. 15 para 15%
 
   const artConIVA = ArtVent.filter(x => x.Iva);
   const artSinIVA = ArtVent.filter(x => !x.Iva);
@@ -224,8 +271,8 @@ function escapeXml(unsafe) {
             let codigoPorcentajeDeta =item.Iva? 4 : 0 // 0:0%  2:12%  3:14%  4:15% 5:5% 10:13% 
             let codigoDeta =2 //IVA:2 ICE:3 IRBPNR:5
 
-          let tarifaDetal =item.Iva? parseFloat(process.env.IVA_EC) : 0
-          let baseImponible =  (item.PrecioCompraTotal /  parseFloat(`1.${process.env.IVA_EC }`)).toFixed(2)
+          let tarifaDetal =item.Iva? IVA_PORCENTAJE : 0
+          let baseImponible =  safeToFixed(item.PrecioCompraTotal / safeParseFloat(`1.${IVA_PORCENTAJE}`, 1.15))
             let precioTotalSinImpuesto = item.Iva? baseImponible 
                                         :   (item.PrecioCompraTotal ).toFixed(2) 
 
@@ -264,7 +311,7 @@ function escapeXml(unsafe) {
   }
 
   let nuevosDetalles = ArtVent.map(item => {
-    const tarifaIVA = item.Iva ? parseFloat(process.env.IVA_EC) : 0; // Ej: 15
+    const tarifaIVA = item.Iva ? IVA_PORCENTAJE : 0; // Ej: 15
     const codigoPorcentajeDeta = item.Iva ? 4 : 0; 
     const codigoDeta = 2;
 
@@ -311,31 +358,32 @@ function escapeXml(unsafe) {
   return nuevosDetalles.join("");
 };
 
-                   let razon = state.userReducer.update.usuario.user.Factura.razon 
-                   let nombreComercial = state.userReducer.update.usuario.user.Factura.nombreComercial
-                   let ruc = state.userReducer.update.usuario.user.Factura.ruc
+                   // Validar datos del estado antes de asignar
+                   let razon = state.userReducer.update.usuario.user.Factura.razon || "SIN RAZON SOCIAL"
+                   let nombreComercial = state.userReducer.update.usuario.user.Factura.nombreComercial || "SIN NOMBRE COMERCIAL"
+                   let ruc = state.userReducer.update.usuario.user.Factura.ruc || "0000000000000"
                    let codDoc = "01" // 04 nota de credito, 01 factura, 
-                   let estab =state.userReducer.update.usuario.user.Factura.codigoEstab
-                   let ptoEmi= state.userReducer.update.usuario.user.Factura.codigoPuntoEmision
+                   let estab = state.userReducer.update.usuario.user.Factura.codigoEstab || "001"
+                   let ptoEmi = state.userReducer.update.usuario.user.Factura.codigoPuntoEmision || "001"
                    let secuencial= ceroMaker(secuencialGen)
                    //    let secuencial=  "000000034"
-                   let dirMatriz=state.userReducer.update.usuario.user.Factura.dirMatriz    
-                   let dirEstablecimiento=state.userReducer.update.usuario.user.Factura.dirEstab
-                   let obligadoContabilidad =state.userReducer.update.usuario.user.Factura.ObligadoContabilidad?"SI":"NO"
-                   let rimpeval = state.userReducer.update.usuario.user.Factura.rimpe?"        <contribuyenteRimpe>CONTRIBUYENTE RÉGIMEN RIMPE</contribuyenteRimpe>\n":""
+                   let dirMatriz = state.userReducer.update.usuario.user.Factura.dirMatriz || "SIN DIRECCION"    
+                   let dirEstablecimiento = state.userReducer.update.usuario.user.Factura.dirEstab || "SIN DIRECCION"
+                   let obligadoContabilidad = state.userReducer.update.usuario.user.Factura.ObligadoContabilidad ? "SI" : "NO"
+                   let rimpeval = state.userReducer.update.usuario.user.Factura.rimpe ? "        <contribuyenteRimpe>CONTRIBUYENTE RÉGIMEN RIMPE</contribuyenteRimpe>\n" : ""
                    
                    let tipoIdentificacionComprador = "07" // 04--ruc  05--cedula  06--pasaporte  07-VENTA A CONSUMIDOR FINAL  08--IDENTIFICACION DELEXTERIOR*//
                    let razonSocialComprador ='CONSUMIDOR FINAL'
                    let identificacionComprador ="9999999999999" 
                    let direccionComprador = "xxxxxx"
                  
-                   if(Comprador.UserSelect){
-                       tipoIdentificacionComprador=Comprador.ClientID =="Cedula"?"05":
-                                                   Comprador.ClientID == "RUC"?"04":
-                                                   Comprador.ClientID =="Pasaporte"?"06":"07"
-                   razonSocialComprador = Comprador.usuario
-                   identificacionComprador = Comprador.cedula
-                   direccionComprador = Comprador.direccion
+                   if(Comprador && Comprador.UserSelect){
+                       tipoIdentificacionComprador = Comprador.ClientID == "Cedula" ? "05" :
+                                                   Comprador.ClientID == "RUC" ? "04" :
+                                                   Comprador.ClientID == "Pasaporte" ? "06" : "07"
+                   razonSocialComprador = Comprador.usuario || "CONSUMIDOR FINAL"
+                   identificacionComprador = Comprador.cedula || "9999999999999"
+                   direccionComprador = Comprador.direccion || "SIN DIRECCION"
                    }
                 
                      let valorIVA = IvaEC.toFixed(2)
@@ -355,8 +403,13 @@ function escapeXml(unsafe) {
     }
                                if(artImpuestos.length > 0){
                                    for(let i=0;i<artImpuestos.length;i++){
-                                       totalSinImpuestos += ((artImpuestos[i].PrecioCompraTotal - valdescuento) /  parseFloat(`1.${process.env.IVA_EC }`))
-                                       baseImpoConImpuestos += ((artImpuestos[i].PrecioCompraTotal - valdescuento) /  parseFloat(`1.${process.env.IVA_EC }`))
+                                       const precioTotal = safeParseFloat(artImpuestos[i].PrecioCompraTotal);
+                                       const descuento = safeParseFloat(valdescuento);
+                                       const divisorIVA = safeParseFloat(`1.${IVA_PORCENTAJE}`, 1.15);
+                                       const baseCalculada = (precioTotal - descuento) / divisorIVA;
+                                       
+                                       totalSinImpuestos += baseCalculada;
+                                       baseImpoConImpuestos += baseCalculada;
                                    }
                                    
                                }
@@ -471,6 +524,13 @@ function escapeXml(unsafe) {
 
     try {
       
+        // Validar que xmlgenerator no sea undefined antes de firmar
+        if (!xmlgenerator || typeof xmlgenerator !== 'string') {
+            throw new Error('XML del comprobante no se generó correctamente');
+        }
+        
+        console.log('XML a firmar:', xmlgenerator.substring(0, 200) + '...'); // Debug: mostrar inicio del XML
+        
         let docFirmado = SignerJS(xmlgenerator, 
             contP12, 
            decryptData( state.userReducer.update.usuario.user.Firmdata.pass))

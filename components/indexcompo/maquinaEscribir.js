@@ -5,6 +5,14 @@ const Typewriter = ({ words, typingSpeed = 50, pauseTime = 2000, deletingSpeed =
   const [isDeleting, setIsDeleting] = useState(false);
   const [wordIndex, setWordIndex] = useState(0);
 
+  // Validación para evitar el error cuando words es undefined
+  if (!words || !Array.isArray(words) || words.length === 0) {
+    return <div className='contData'>
+      <span className='title'> Dinero </span>
+      <span className="contMaquina">Cargando...</span>
+    </div>;
+  }
+
   useEffect(() => {
     const currentWord = words[wordIndex];
     let timer;

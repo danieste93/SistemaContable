@@ -72,16 +72,17 @@ const renderPagos = (Fpago) => {
         <tbody>
           {Fpago.map((pago, i) => {
             
-                 let tituloRender = pago.Tipo.replace(/-/g, " ")
-    if(pago.Tipo === "Transferencia"){
+                 // Validar que pago.Tipo exista antes de hacer replace
+                 let tituloRender = pago && pago.Tipo ? pago.Tipo.replace(/-/g, " ") : "Sin especificar"
+    if(pago && pago.Tipo === "Transferencia"){
 
         tituloRender  = "Otros con utilización del sistema financiero"
      }
-      else if(pago.Tipo === "Efectivo"){
+      else if(pago && pago.Tipo === "Efectivo"){
 
         tituloRender  = "Sin utilización del sistema financiero"
      }
-       else if(pago.Tipo === "Tarjeta-de-Credito"){
+       else if(pago && pago.Tipo === "Tarjeta-de-Credito"){
 
         tituloRender  = "Tarjeta de Crédito"
      }
@@ -92,7 +93,7 @@ const renderPagos = (Fpago) => {
            return(
             <tr key={i}>
               <td>{tituloRender}</td>
-              <td>${pago.Cantidad.toFixed(2)}</td>
+              <td>${pago && pago.Cantidad !== undefined ? pago.Cantidad.toFixed(2) : "0.00"}</td>
             </tr>
           )})}
         </tbody>
