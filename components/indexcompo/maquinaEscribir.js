@@ -5,16 +5,14 @@ const Typewriter = ({ words, typingSpeed = 50, pauseTime = 2000, deletingSpeed =
   const [isDeleting, setIsDeleting] = useState(false);
   const [wordIndex, setWordIndex] = useState(0);
 
-  // Validación para evitar el error cuando words es undefined
-  if (!words || !Array.isArray(words) || words.length === 0) {
-    return <div className='contData'>
-      <span className='title'> Dinero </span>
-      <span className="contMaquina">Cargando...</span>
-    </div>;
-  }
+  // Validación mejorada para evitar errores
+  const safeWords = words && Array.isArray(words) && words.length > 0 ? words : ['Cargando...'];
 
   useEffect(() => {
-    const currentWord = words[wordIndex];
+    // Validación adicional dentro del useEffect
+    if (!safeWords || safeWords.length === 0) return;
+    
+    const currentWord = safeWords[wordIndex] || '';
     let timer;
 
     if (isDeleting) {
@@ -25,7 +23,7 @@ const Typewriter = ({ words, typingSpeed = 50, pauseTime = 2000, deletingSpeed =
       } else {
         // Cuando termina de borrar, pasamos a la siguiente palabra
         setIsDeleting(false);
-        setWordIndex((prev) => (prev + 1) % words.length);
+        setWordIndex((prev) => (prev + 1) % safeWords.length);
       }
     } else {
       if (text.length < currentWord.length) {
@@ -39,7 +37,7 @@ const Typewriter = ({ words, typingSpeed = 50, pauseTime = 2000, deletingSpeed =
     }
 
     return () => clearTimeout(timer);
-  }, [text, isDeleting, wordIndex, words, typingSpeed, deletingSpeed, pauseTime]);
+  }, [text, isDeleting, wordIndex, safeWords, typingSpeed, deletingSpeed, pauseTime]);
 
   return (<div className='contData'>
     <span className='title'> Dinero </span>
