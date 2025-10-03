@@ -3117,7 +3117,7 @@ function  signatureCloudi (req, res){
     
       let signature = `s--${base64.slice(0, 8)}--` 
       let chanceUrl = url.replace(signature,"x-x-x-x")
-      let secureUrl = chanceUrl.replace(process.env.REACT_CLOUDY_CLOUDNAME,"y-y-y-y" )
+      let secureUrl = chanceUrl.replace(process.env.CLOUDINARY_CLOUD_NAME,"y-y-y-y" )
 
       return secureUrl
     }
@@ -3125,7 +3125,7 @@ function  signatureCloudi (req, res){
     cloudinary.uploader.upload(fileGettingUploaded,options, async (err, result)=> {
         console.log(result);
 
-       let newurl = await generateURL(result.url, process.env.REACT_CLOUDY_SECRET,result.public_id)
+       let newurl = await generateURL(result.url, process.env.CLOUDINARY_API_SECRET,result.public_id)
        
    
        let conn = await mongoose.connection.useDb("datashop");
@@ -4842,12 +4842,12 @@ console.log(datafind)
                   md.update(txt,"utf8");
                   return Buffer.from(md.digest().toHex(), 'hex').toString('base64');
                   }
-              let stringdata = name +""+process.env.REACT_CLOUDY_SECRET
+              let stringdata = name +""+process.env.CLOUDINARY_API_SECRET
               let base64 = sha1_base64(stringdata)
               
               let signature = `s--${base64.slice(0, 8)}--` 
               let chanceUrl = url.replace("x-x-x-x",signature)
-              let secureUrl = chanceUrl.replace("y-y-y-y",process.env.REACT_CLOUDY_CLOUDNAME)
+              let secureUrl = chanceUrl.replace("y-y-y-y",process.env.CLOUDINARY_CLOUD_NAME)
         
               return secureUrl
               }
