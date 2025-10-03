@@ -4836,27 +4836,18 @@ console.log(datafind)
              }
              async function getDbuserData(req,res) {
               try {
-              console.log("🔍 getDbuserData iniciado");
-              console.log("📝 Variables de entorno disponibles:");
-              console.log("CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "✅ Definida" : "❌ No definida");
-              console.log("CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME ? "✅ Definida" : "❌ No definida");
-              console.log("CLOUDINARY_URL:", process.env.CLOUDINARY_URL ? "✅ Definida" : "❌ No definida");
-              
               const getSignature=(url, name)=>{
                 let sha1_base64=(txt)=> {
                   let md = Forge.md.sha1.create();
                   md.update(txt,"utf8");
                   return Buffer.from(md.digest().toHex(), 'hex').toString('base64');
                   }
-              console.log("🔑 Generando firma para:", { url, name });
               let stringdata = name +""+process.env.CLOUDINARY_API_SECRET
-              console.log("🔐 String para firma:", stringdata.substring(0, 20) + "...");
               let base64 = sha1_base64(stringdata)
               
               let signature = `s--${base64.slice(0, 8)}--` 
               let chanceUrl = url.replace("x-x-x-x",signature)
               let secureUrl = chanceUrl.replace("y-y-y-y",process.env.CLOUDINARY_CLOUD_NAME)
-              console.log("🌐 URL generada:", secureUrl);
         
               return secureUrl
               }
@@ -4868,8 +4859,6 @@ console.log(datafind)
                 req.body.datos.url,   
                 req.body.datos.publicId
               );
-              
-              console.log("📡 Intentando descargar desde:", GeneratedURL);
 
               const response = await fetch(GeneratedURL, {
                 method: 'GET',
@@ -4878,22 +4867,12 @@ console.log(datafind)
                 },
             });
             
-            console.log("📊 Respuesta de Cloudinary:", {
-              status: response.status,
-              statusText: response.statusText,
-              ok: response.ok,
-              headers: Object.fromEntries(response.headers.entries())
-            });
-            
             if (!response.ok) {
-              console.log("❌ Error en descarga:", response.statusText);
               throw new Error(`Error en la descarga: ${response.statusText}`);
           }
 
               const buffer = await response.arrayBuffer();
         const base64Data = await Buffer.from(buffer).toString('base64');
-        
-        console.log("✅ Archivo descargado exitosamente, tamaño:", base64Data.length);
      
     //    const encryptedData = await encryptData(base64Data, process.env.CLOUDY_SECRET);
       //  console.log("encriptando")
@@ -4901,8 +4880,7 @@ console.log(datafind)
         res.send({status: "Ok", data:base64Data});
  
       } catch (error) {
-        console.log("💥 Error completo en getDbuserData:", error);
-        res.send({status: "Error", message: error.message || error});
+        res.send({status: "Error", message: error});
  
     }
   }
