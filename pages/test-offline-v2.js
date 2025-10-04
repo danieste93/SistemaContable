@@ -11,13 +11,16 @@ import Router from 'next/router';
 
 class OfflineTestV2 extends Component {
   state = {
-    isOnline: navigator.onLine,
+    isOnline: true, // Se actualizará en componentDidMount
     testResults: [],
     loading: false,
     userInfo: null
   }
 
   componentDidMount() {
+    // Configurar estado inicial de conexión
+    this.setState({ isOnline: navigator.onLine });
+    
     this.addTestResult("🚀 Iniciando diagnóstico...");
     this.debugLocalStorage();
     
