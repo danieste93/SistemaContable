@@ -16,7 +16,7 @@ const cors = require('cors')
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
 
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 3000;
 // verificamos si estamos corriendo en desarrollo o producción
 const dev = process.env.NODE_ENV !== 'production'
 // iniciamos nuestra aplicación de Next.js
