@@ -4836,18 +4836,27 @@ console.log(datafind)
              }
              async function getDbuserData(req,res) {
               try {
+              console.log("🔥 [CLOUDINARY DEBUG] Iniciando getDbuserData");
+              console.log("🔥 Variables:", {
+                CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ? "EXISTS" : "MISSING",
+                CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ? "EXISTS" : "MISSING",
+                REACT_CLOUDY_SECRET: process.env.REACT_CLOUDY_SECRET ? "EXISTS" : "MISSING"
+              });
+              
               const getSignature=(url, name)=>{
                 let sha1_base64=(txt)=> {
                   let md = Forge.md.sha1.create();
                   md.update(txt,"utf8");
                   return Buffer.from(md.digest().toHex(), 'hex').toString('base64');
                   }
+              console.log("🔥 [CLOUDINARY DEBUG] Generando firma para:", name);
               let stringdata = name +""+process.env.CLOUDINARY_API_SECRET
               let base64 = sha1_base64(stringdata)
               
               let signature = `s--${base64.slice(0, 8)}--` 
               let chanceUrl = url.replace("x-x-x-x",signature)
               let secureUrl = chanceUrl.replace("y-y-y-y",process.env.CLOUDINARY_CLOUD_NAME)
+              console.log("🔥 [CLOUDINARY DEBUG] URL final:", secureUrl);
         
               return secureUrl
               }
@@ -4867,7 +4876,14 @@ console.log(datafind)
                 },
             });
             
+            console.log("🔥 [CLOUDINARY DEBUG] Response:", {
+              status: response.status,
+              statusText: response.statusText,
+              ok: response.ok
+            });
+            
             if (!response.ok) {
+              console.log("🔥 [CLOUDINARY DEBUG] ERROR:", response.statusText);
               throw new Error(`Error en la descarga: ${response.statusText}`);
           }
 
