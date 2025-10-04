@@ -73,15 +73,115 @@ class admins extends Component {
       }
     },
     // Estado para trackear cuentas ocultas en el bar chart
-    hiddenBarChartAccounts: {}
+    hiddenBarChartAccounts: {},
+    // Estado de conexión offline
+    isOnline: true,
+    offlineMode: false,
+    showOfflineNotification: false
    }
    
    // Referencias para los charts
    chartRefs = {};
    
    channel2 = null;
-   componentDidMount(){
+   
+   // Funciones para validación offline del usuario
+   getOfflineUserData = () => {
+     // Verificar que estemos en el cliente antes de usar localStorage
+     if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+       return null;
+     }
+     
+     try {
+       const savedData = localStorage.getItem('offlineUserData');
+       if (savedData) {
+         const userData = JSON.parse(savedData);
+         // Verificar que los datos no sean muy antiguos (24 horas)
+         const now = new Date().getTime();
+         const maxAge = 24 * 60 * 60 * 1000; // 24 horas
+         
+         if (now - userData.timestamp < maxAge) {
+           console.log('💾 [ADMIN-OFFLINE] Datos del usuario recuperados desde offline');
+           return userData.usuario;
+         } else {
+           console.log('⏰ [ADMIN-OFFLINE] Datos del usuario expirados, limpiando');
+           localStorage.removeItem('offlineUserData');
+         }
+       }
+     } catch (error) {
+       console.error('Error recuperando usuario offline:', error);
+     }
+     return null;
+   }
 
+   getUserForRequest = () => {
+     // Intentar obtener usuario desde Redux
+     if (this.props.state.userReducer?.update?.usuario?.user?.DBname) {
+       return this.props.state.userReducer.update.usuario;
+     }
+     
+     // Si no está en Redux, intentar desde offline
+     const offlineUser = this.getOfflineUserData();
+     if (offlineUser) {
+       console.log('🔄 [ADMIN-OFFLINE] Usando usuario desde datos offline');
+       return offlineUser;
+     }
+     
+     return null;
+   }
+
+   // 🌐 Configurar listeners para eventos de red
+   setupNetworkListeners = () => {
+     if (typeof window !== 'undefined') {
+       // Estado inicial de la conexión
+       this.setState({ isOnline: navigator.onLine });
+       
+       // Event listener para cuando se pierde la conexión
+       window.addEventListener('offline', this.handleOffline);
+       
+       // Event listener para cuando se recupera la conexión
+       window.addEventListener('online', this.handleOnline);
+       
+       console.log('🌐 [NETWORK] Listeners configurados, estado inicial:', navigator.onLine ? 'Online' : 'Offline');
+     }
+   }
+
+   // 📶 Manejar evento de pérdida de conexión
+   handleOffline = () => {
+     console.log('📴 [NETWORK] Conexión perdida - activando modo offline');
+     this.setState({ 
+       isOnline: false, 
+       offlineMode: true,
+       showOfflineNotification: true 
+     });
+     
+     // Evitar redirects automáticos
+     if (typeof window !== 'undefined') {
+       window.history.replaceState(null, '', window.location.pathname);
+     }
+   }
+
+   // 📶 Manejar evento de recuperación de conexión
+   handleOnline = () => {
+     console.log('📶 [NETWORK] Conexión recuperada - modo online');
+     this.setState({ 
+       isOnline: true, 
+       offlineMode: false,
+       showOfflineNotification: false 
+     });
+   }
+
+   // 🧹 Cleanup de event listeners
+   componentWillUnmount() {
+     if (typeof window !== 'undefined') {
+       window.removeEventListener('offline', this.handleOffline);
+       window.removeEventListener('online', this.handleOnline);
+     }
+   }
+   
+   componentDidMount(){
+    // 🌐 Configurar event listeners para detectar cambios de conexión
+    this.setupNetworkListeners();
 
     if(!this.props.state.RegContableReducer.Regs){
    
@@ -99,9 +199,16 @@ class admins extends Component {
    }
 
    getMontRegs=()=>{
+  // Validar usuario antes de hacer la petición
+  const usuario = this.getUserForRequest();
+  if (!usuario) {
+    console.log('❌ [ADMIN-OFFLINE] No hay usuario válido para getMontRegs, saltando petición');
+    return;
+  }
+  
   let datos = {
-    User: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
-      Tipo: this.props.state.userReducer.update.usuario.user.Tipo, 
+    User: {DBname: usuario.user.DBname,
+      Tipo: usuario.user.Tipo, 
     },
     tiempo:new Date().getTime()
   }
@@ -114,16 +221,31 @@ method: 'POST', // or 'PUT'
 body: lol, // data can be `string` or {object}!
 headers:{
 'Content-Type': 'application/json',
-"x-access-token": this.props.state.userReducer.update.usuario.token
+"x-access-token": usuario.token
 }
-}).then(res => res.json())
-.catch(error => {console.error('Error:', error);
-})  .then(response => {  
-console.log(response,"getmontregs")
-if(response.status == 'error'){
-alert("error al actualizar registros")
+}).then(res => {
+  if (!res.ok) {
+    throw new Error('Network response was not ok');
   }
-else{
+  return res.json();
+})
+.catch(error => {
+  console.error('Error en getMontRegs:', error);
+  console.log('🔴 [ADMIN-OFFLINE] Sin conexión a servidor, usando datos offline si están disponibles');
+  return null; // Retornar null en lugar de undefined
+})
+.then(response => {  
+  // Verificar que tenemos una respuesta válida
+  if (!response) {
+    console.log('📵 [ADMIN-OFFLINE] No hay respuesta del servidor, saltando actualización');
+    return;
+  }
+  
+  console.log(response,"getmontregs")
+  if(response.status == 'error'){
+    alert("error al actualizar registros")
+  }
+  else{
   let regsToSend = []
 this.props.dispatch(addFirstRegs(response.regsHabiles));
 this.props.dispatch(addFirstRegsDelete(response.regsHabilesDelete));
@@ -133,9 +255,15 @@ this.exeRegs()
 }
 
 exeRegs=()=>{
+  // Validar usuario antes de hacer la petición
+  const usuario = this.getUserForRequest();
+  if (!usuario) {
+    console.log('❌ [ADMIN-OFFLINE] No hay usuario válido para exeRegs, saltando petición');
+    return;
+  }
    
-  let datos = {User: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
-    Tipo: this.props.state.userReducer.update.usuario.user.Tipo, 
+  let datos = {User: {DBname: usuario.user.DBname,
+    Tipo: usuario.user.Tipo, 
     tiempo:new Date().getTime()
   
   }}
@@ -146,59 +274,99 @@ method: 'POST', // or 'PUT'
 body: lol, // data can be `string` or {object}!
 headers:{
 'Content-Type': 'application/json',
-"x-access-token": this.props.state.userReducer.update.usuario.token
+"x-access-token": usuario.token
 }
-}).then(res => res.json())
-.catch(error => {console.error('Error:', error);
-})  .then(response => {  
-console.log(response,"exeregs")
-if(response.status == 'error'){
-alert("error al actualizar registros")
-}
-else{
-
-  if(response.registrosUpdate.length > 0){
-
-  this.props.dispatch(updateRegs(response.registrosUpdate)); 
-this.getCuentasyCats()
+}).then(res => {
+  if (!res.ok) {
+    throw new Error('Network response was not ok');
+  }
+  return res.json();
+})
+.catch(error => {
+  console.error('Error en exeRegs:', error);
+  console.log('🔴 [ADMIN-OFFLINE] Sin conexión a servidor para exeRegs');
+  return null;
+})
+.then(response => {  
+  // Verificar que tenemos una respuesta válida
+  if (!response) {
+    console.log('📵 [ADMIN-OFFLINE] No hay respuesta del servidor, saltando ejecución de registros');
+    return;
   }
 
-}   
+  console.log(response,"exeregs")
+  if(response.status == 'error'){
+    alert("error al actualizar registros")
+  }
+  else{
+
+    if(response.registrosUpdate.length > 0){
+
+    this.props.dispatch(updateRegs(response.registrosUpdate)); 
+  this.getCuentasyCats()
+    }
+
+  }   
 })
 }
 getCuentasyCats=()=>{
+ // Validar usuario antes de hacer la petición
+ const usuario = this.getUserForRequest();
+ if (!usuario) {
+   console.log('❌ [ADMIN-OFFLINE] No hay usuario válido para getCuentasyCats, saltando petición');
+   return;
+ }
  
-  let datos = {User: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
-    Tipo: this.props.state.userReducer.update.usuario.user.Tipo}}
+  let datos = {User: {DBname: usuario.user.DBname,
+    Tipo: usuario.user.Tipo}}
 let lol = JSON.stringify(datos)
   let settings = {
     method: 'POST', // or 'PUT'
     body: lol, // data can be `string` or {object}!
     headers:{
       'Content-Type': 'application/json',
-      "x-access-token": this.props.state.userReducer.update.usuario.token
+      "x-access-token": usuario.token
     }
   }
 
-  fetch("/cuentas/getCuentasyCats", settings).then(res => res.json())
-  .catch(error => {console.error('Error:', error);
-         })
+  fetch("/cuentas/getCuentasyCats", settings).then(res => {
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return res.json();
+  })
+  .catch(error => {
+    console.error('Error en getCuentasyCats:', error);
+    console.log('🔴 [ADMIN-OFFLINE] Sin conexión a servidor para getCuentasyCats');
+    return null;
+  })
   .then(response => {  
+    // Verificar que tenemos una respuesta válida
+    if (!response) {
+      console.log('📵 [ADMIN-OFFLINE] No hay respuesta del servidor, saltando actualización de cuentas y categorías');
+      return;
+    }
   
     if(response.status == 'error'){}
-  else if(response.status == 'Ok'){
-  //  this.props.dispatch(getVentas(response.ventasHabiles));       
-  this.props.dispatch(getcats(response.catHabiles)); 
-  this.props.dispatch(getcuentas(response.cuentasHabiles)); 
-  
-  }
+    else if(response.status == 'Ok'){
+    //  this.props.dispatch(getVentas(response.ventasHabiles));       
+    this.props.dispatch(getcats(response.catHabiles)); 
+    this.props.dispatch(getcuentas(response.cuentasHabiles)); 
+    
+    }
 
   })
 }
    getAllregs=()=>{
+   // Validar usuario antes de hacer la petición
+   const usuario = this.getUserForRequest();
+   if (!usuario) {
+     console.log('❌ [ADMIN-OFFLINE] No hay usuario válido para getAllregs, saltando petición');
+     return;
+   }
    
-    let datos = {User: {DBname:this.props.state.userReducer.update.usuario.user.DBname,
-      Tipo: this.props.state.userReducer.update.usuario.user.Tipo   }}
+    let datos = {User: {DBname: usuario.user.DBname,
+      Tipo: usuario.user.Tipo   }}
 let lol = JSON.stringify(datos)
 
 fetch("/cuentas/getregs", {
@@ -206,18 +374,32 @@ method: 'POST', // or 'PUT'
 body: lol, // data can be `string` or {object}!
 headers:{
 'Content-Type': 'application/json',
-"x-access-token": this.props.state.userReducer.update.usuario.token
+"x-access-token": usuario.token
 }
-}).then(res => res.json())
-.catch(error => {console.error('Error:', error);
-})  .then(response => {  
-
-if(response.status == 'error'){
-alert("error al actualizar registros")
+}).then(res => {
+  if (!res.ok) {
+    throw new Error('Network response was not ok');
   }
-else{
+  return res.json();
+})
+.catch(error => {
+  console.error('Error en getAllregs:', error);
+  console.log('🔴 [ADMIN-OFFLINE] Sin conexión a servidor para getAllregs');
+  return null;
+})
+.then(response => {  
+  // Verificar que tenemos una respuesta válida
+  if (!response) {
+    console.log('📵 [ADMIN-OFFLINE] No hay respuesta del servidor, saltando actualización de registros');
+    return;
+  }
 
-this.props.dispatch(addFirstRegs(response.regsHabiles));
+  if(response.status == 'error'){
+    alert("error al actualizar registros")
+  }
+  else{
+
+    this.props.dispatch(addFirstRegs(response.regsHabiles));
 
 }   
 })
@@ -232,8 +414,14 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
   }
 
   handleMember=(e)=>{
+    // Validar usuario antes de verificar membresía
+    const usuario = this.getUserForRequest();
+    if (!usuario) {
+      console.log('❌ [ADMIN-OFFLINE] No hay usuario válido para handleMember, usando membresía por defecto');
+      return;
+    }
      
-    let Membership = this.props.state.userReducer.update.usuario.user.Membresia
+    let Membership = usuario.user.Membresia
     let aprovedURL = ""
 
 
@@ -434,7 +622,14 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
 
   saveWidgetConfig = async () => {
     try {
-      const userId = this.props.state.userReducer.update.usuario.user._id;
+      // Validar usuario antes de hacer la petición
+      const usuario = this.getUserForRequest();
+      if (!usuario) {
+        console.log('❌ [ADMIN-OFFLINE] No hay usuario válido para saveWidgetConfig, saltando petición');
+        return;
+      }
+      
+      const userId = usuario.user._id;
       
       const configData = {
         widgetConfig: this.state.widgetConfig,
@@ -480,7 +675,14 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
 
   loadWidgetConfig = async () => {
     try {
-      const userId = this.props.state.userReducer.update.usuario.user._id;
+      // Validar usuario antes de hacer la petición
+      const usuario = this.getUserForRequest();
+      if (!usuario) {
+        console.log('❌ [ADMIN-OFFLINE] No hay usuario válido para loadWidgetConfig, usando configuración por defecto');
+        return;
+      }
+      
+      const userId = usuario.user._id;
       console.log('Cargando configuración para usuario:', userId);
       
       const response = await fetch("/users/get-config", {
@@ -889,7 +1091,9 @@ this.props.dispatch(addFirstRegs(response.regsHabiles));
   }
 
  render() {
-  let nameUser = this.props.state.userReducer !=""? this.props.state.userReducer.update.usuario.user.Usuario:""
+  // Obtener usuario de forma segura para el render
+  const usuario = this.getUserForRequest();
+  let nameUser = usuario && usuario.user ? usuario.user.Usuario : ""
   const defaultLegendClickHandler = Chart.defaults.plugins.legend.onClick;
   const pieDoughnutLegendClickHandler =  Chart.overrides.pie.plugins.legend.onClick
 

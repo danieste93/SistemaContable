@@ -92,15 +92,20 @@ setTimets=(tiempoRes)=>{
 
    setTimeout(()=>{
 
-    let add = {
-      Estado:true,
-      Tipo:"error",
-      Mensaje:"Su token ha expirado, vuelva a iniciar sesión"
-  }
-  this.setState({Alert: add})
+    // Solo hacer logout si tenemos internet
+    if (navigator.onLine) {
+      let add = {
+        Estado:true,
+        Tipo:"error",
+        Mensaje:"Su token ha expirado, vuelva a iniciar sesión"
+      }
+      this.setState({Alert: add})
 
-  store.dispatch(logOut());
-  Router.push("/ingreso")
+      store.dispatch(logOut());
+      Router.push("/ingreso")
+    } else {
+      console.log('📴 [APP] Token expirado por timeout pero sin internet - manteniendo sesión offline');
+    }
    },(tiempoRes*1000))
 }
 
@@ -121,24 +126,40 @@ setTimets=(tiempoRes)=>{
         this.setTimets(tiempoRes)
           } else{
             
-            let add = {
-              Estado:true,
-              Tipo:"error",
-              Mensaje:"Su token ha expirado, vuelva a iniciar sesión"
-          }
-          this.setState({Alert: add})
-          store.dispatch(logOut());
-          Router.push("/ingreso")
+            // Solo hacer logout si tenemos internet
+            if (navigator.onLine) {
+              let add = {
+                Estado:true,
+                Tipo:"error",
+                Mensaje:"Su token ha expirado, vuelva a iniciar sesión"
+              }
+              this.setState({Alert: add})
+              store.dispatch(logOut());
+              Router.push("/ingreso")
+            } else {
+              console.log('📴 [APP] Token expirado pero sin internet - manteniendo sesión offline');
+            }
           }
       }
     
      });
+    
+    // 🔴 DESHABILITADO: Event listener de offline que causaba logout automático
+    // window.addEventListener('offline', function(e) {
+    //    alert("Aplicacion off-line")
+    //    store.dispatch(logOut());
+    //    Router.push("/ingreso")
+    // });
+    
+    // 🌐 Nuevo manejo de offline que NO hace logout
     window.addEventListener('offline', function(e) {
-   
-       alert("Aplicacion off-line")
-       store.dispatch(logOut());
-       Router.push("/ingreso")
-       });
+      console.log('📴 [APP] Aplicación offline - manteniendo sesión');
+      // NO hacer logout automático, mantener sesión
+    });
+    
+    window.addEventListener('online', function(e) {
+      console.log('📶 [APP] Aplicación online - reconectada');
+    });
       
 
 
@@ -164,15 +185,20 @@ this.channel1.subscribe('setTokenTimer', (data) => {
 
   setTimeout(()=>{
 
-   let add = {
-     Estado:true,
-     Tipo:"error",
-     Mensaje:"Su token ha expirado, vuelva a iniciar sesión"
- }
- this.setState({Alert: add})
+   // Solo hacer logout si tenemos internet
+   if (navigator.onLine) {
+     let add = {
+       Estado:true,
+       Tipo:"error",
+       Mensaje:"Su token ha expirado, vuelva a iniciar sesión"
+     }
+     this.setState({Alert: add})
 
- store.dispatch(logOut());
- Router.push("/ingreso")
+     store.dispatch(logOut());
+     Router.push("/ingreso")
+   } else {
+     console.log('📴 [APP] Token expirado por setTokenTimer pero sin internet - manteniendo sesión offline');
+   }
   },tiempoRestanteSegundos)
     
   });
@@ -186,14 +212,19 @@ let tiempoRes = (deco && deco.exp) ? (deco.exp - tiempoAct) : 0
   
     }else{
       
-      let add = {
-        Estado:true,
-        Tipo:"info",
-        Mensaje:"vuelva a iniciar sesión"
-    }
-    this.setState({Alert: add})
-    store.dispatch(logOut());
-    Router.push("/ingreso")
+      // Solo hacer logout si tenemos internet
+      if (navigator.onLine) {
+        let add = {
+          Estado:true,
+          Tipo:"info",
+          Mensaje:"vuelva a iniciar sesión"
+        }
+        this.setState({Alert: add})
+        store.dispatch(logOut());
+        Router.push("/ingreso")
+      } else {
+        console.log('📴 [APP] Sesión expirada en componentDidMount pero sin internet - manteniendo sesión offline');
+      }
     } }
 
   
