@@ -75,11 +75,11 @@ nextApp.prepare().then(() => {
   //base de datos 
   const CONNECTION_Test = process.env.REACT_DATA_BASE
   mongoose.connect(CONNECTION_Test,  { useNewUrlParser: true, useUnifiedTopology: true }, (err, res) =>{
-    if (err) throw err
-    console.log("coneccion a la base datos funcionando");
-
- 
-    
+    if (err) {
+      console.log("Error conectando a la base de datos:", err.message);
+    } else {
+      console.log("coneccion a la base datos funcionando");
+    }
 })
 
  app.listen(port, '0.0.0.0', (err) => {
