@@ -79,7 +79,7 @@ import moment from "moment";
               let sumaing = 0
               if(reging.length > 0){
                 for (let i=0; i < reging.length; i++ ){
-                  sumaing = sumaing + reging[i].Importe
+                  sumaing = sumaing + (parseFloat(reging[i].Importe) || 0)
               } 
             }
             let regsgas = grupo.registros.filter(regsgas => regsgas.Accion == "Gasto"&& regsgas.TiempoEjecucion != 0)
@@ -89,7 +89,7 @@ import moment from "moment";
 
     if(regsgas.length > 0){
      for (let i=0; i < regsgas.length; i++ ){
-        sumagas = sumagas + regsgas[i].Importe
+        sumagas = sumagas + (parseFloat(regsgas[i].Importe) || 0)
        }
       }
     
@@ -99,11 +99,11 @@ import moment from "moment";
         for (let i=0; i < regstrans.length; i++ ){
   
         if(this.props.cuentaSelect._id ==  regstrans[i].CuentaSelec.idCuenta){
-      sumatransgas +=  regstrans[i].Importe
+      sumatransgas +=  (parseFloat(regstrans[i].Importe) || 0)
         
         }
         else if(this.props.cuentaSelect._id ==  regstrans[i].CuentaSelec2.idCuenta){
-          sumatransing +=  regstrans[i].Importe
+          sumatransing +=  (parseFloat(regstrans[i].Importe) || 0)
           } 
       }}
 
@@ -176,8 +176,8 @@ import moment from "moment";
                 {generadorDias()}
                 </div>
                 <div className="contenedorImportes">
-                  <div className="imporing">${superIng.toFixed(2)}</div>
-                  <div className="imporgas">${superGas.toFixed(2)}</div>
+                  <div className="imporing">${(parseFloat(superIng) || 0).toFixed(2)}</div>
+                  <div className="imporgas">${(parseFloat(superGas) || 0).toFixed(2)}</div>
                 </div>
                 </div>
                 <div className="registrosConte">

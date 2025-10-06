@@ -12,10 +12,13 @@ import Croom from"./cuentascompo/croom"
 import Searcher from"./cuentascompo/searcher"
 import Router from 'next/router';
 
-import {getcuentas,updateCounter,updateCuenta, updateRepsAddreps,addFirstRegs, gettipos,getcats, getRepeticiones, getCounter,getArts, cleanData,addRegs, } from "../reduxstore/actions/regcont";
+import {getcuentas,updateCounter,updateCuenta, updateRepsAddreps,addFirstRegs, gettipos,getcats, getRepeticiones, getCounter,getArts, cleanData,addRegs, deleteReg, updateReg } from "../reduxstore/actions/regcont";
 import {loadingReps } from "../reduxstore/actions/configredu";
 import {logOut } from "../reduxstore/actions/myact";
 import { OfflineStorage } from "../utils/offlineStorage";
+
+// 🔥 NUEVA IMPORTACIÓN: WebSockets para sincronización en tiempo real
+import io from 'socket.io-client';
  
 class RegistroContable extends Component {
     state={
@@ -34,6 +37,9 @@ class RegistroContable extends Component {
         loadingReps:false,
         // Estado de conexión
         isOnline: true,
+        // 🔥 NUEVA FUNCIONALIDAD: WebSocket para sincronización en tiempo real
+        socket: null,
+        isSocketConnected: false,
 
     }
     
@@ -209,6 +215,9 @@ class RegistroContable extends Component {
 
       // 🌐 Configurar event listeners para detectar cambios de conexión
       this.setupNetworkListeners();
+
+      // 🔥 NUEVA FUNCIONALIDAD: Configurar WebSocket para sincronización en tiempo real
+      this.setupWebSocket();
     
       this.channel2 = postal.channel();
       this.channel3 = postal.channel();
@@ -311,6 +320,12 @@ this.startData()
                 this.props.dispatch(getcuentas(response.cuentasHabiles)); 
                 this.props.dispatch(getRepeticiones(response.repsHabiles)); 
                 this.props.dispatch(getCounter(response.contadoresHabiles[0])); 
+
+                // 🔥 NUEVA FUNCIONALIDAD: Configurar WebSocket después de cargar datos completos
+                if (!this.state.socket) {
+                  console.log('📡 [WEBSOCKET] Configurando WebSocket después de cargar datos completos');
+                  this.setupWebSocket();
+                }
               }
           });
         }  
@@ -393,6 +408,12 @@ this.startData()
                 this.props.dispatch(gettipos(response.tiposHabiles));
                                      
                 this.props.dispatch(getcuentas(response.cuentasHabiles)); 
+
+                // 🔥 NUEVA FUNCIONALIDAD: Configurar WebSocket después de cargar datos
+                if (!this.state.socket) {
+                  console.log('📡 [WEBSOCKET] Configurando WebSocket después de cargar datos');
+                  this.setupWebSocket();
+                }
              
                 if(!this.props.state.RegContableReducer.Categorias  ||!this.props.state.RegContableReducer.Repeticiones ||!this.props.state.RegContableReducer.Contador ){
                   this.getRCR2()
@@ -564,7 +585,202 @@ this.startData()
           }
         }
 
-  
+  // 🔥 NUEVA FUNCIONALIDAD: Configurar WebSocket para sincronización en tiempo real
+  setupWebSocket = () => {
+    try {
+      // Solo configurar si tenemos usuario
+      const userId = this.props.state.userReducer?.update?.usuario?.user?._id;
+      if (!userId) {
+        console.log('⏳ [WEBSOCKET] Esperando usuario para configurar WebSocket');
+        return;
+      }
+
+      console.log('📡 [WEBSOCKET] Configurando WebSocket para usuario:', userId);
+
+      // Crear conexión WebSocket
+      const socket = io(window.location.origin, {
+        transports: ['websocket', 'polling']
+      });
+
+      // Eventos de conexión
+      socket.on('connect', () => {
+        console.log('✅ [WEBSOCKET] Conectado al servidor WebSocket');
+        this.setState({ isSocketConnected: true });
+        
+        // Unirse a la sala del usuario
+        socket.emit('join-user', userId);
+        console.log('👤 [WEBSOCKET] Unido a sala del usuario:', userId);
+      });
+
+      socket.on('disconnect', () => {
+        console.log('📡 [WEBSOCKET] Desconectado del servidor WebSocket');
+        this.setState({ isSocketConnected: false });
+      });
+
+      // Manejar datos sincronizados desde otros dispositivos
+      socket.on('sync-data', (data) => {
+        console.log('🔄 [WEBSOCKET] Datos sincronizados desde otro dispositivo:', data);
+        console.log('🔄 [WEBSOCKET] Tipo de evento:', data.action, 'Colección:', data.collection);
+        this.handleRemoteDataSync(data);
+      });
+
+      // Manejar eliminación de registros en tiempo real
+      socket.on('delete-registro', (data) => {
+        console.log('🗑️ [WEBSOCKET] Registro eliminado desde otro dispositivo:', data);
+        console.log('🗑️ [WEBSOCKET] Estoy en la página:', window.location.pathname);
+        this.handleRemoteDeleteSync(data);
+      });
+
+      // Manejar edición de registros en tiempo real
+      socket.on('edit-registro', (data) => {
+        console.log('✏️ [WEBSOCKET] Registro editado desde otro dispositivo:', data);
+        this.handleRemoteEditSync(data);
+      });
+
+      // Agregar listener para cualquier evento que llegue
+      socket.onAny((eventName, ...args) => {
+        console.log('📻 [WEBSOCKET] Evento recibido:', eventName, args);
+        if (eventName === 'delete-registro') {
+          console.log('🗑️ [WEBSOCKET] ¡Evento delete-registro detectado!', args);
+        }
+      });
+
+      this.setState({ socket });
+
+    } catch (error) {
+      console.error('❌ [WEBSOCKET] Error configurando WebSocket:', error);
+    }
+  }
+
+  // Manejar datos sincronizados desde otros dispositivos
+  handleRemoteDataSync = (remoteData) => {
+    try {
+      if (remoteData.action === 'save' && remoteData.collection === 'registros') {
+        console.log('📥 [WEBSOCKET] Agregando registro sincronizado a Redux:', remoteData.data);
+        console.log('🔍 [WEBSOCKET] Importe original:', remoteData.data.Importe);
+        console.log('🔍 [WEBSOCKET] Tipo de Importe:', typeof remoteData.data.Importe);
+        console.log('🔍 [WEBSOCKET] Importe como JSON:', JSON.stringify(remoteData.data.Importe));
+        
+        // Manejar diferentes tipos de Importe (Decimal128, string, number)
+        let importeValue = 0;
+        if (remoteData.data.Importe) {
+          if (typeof remoteData.data.Importe === 'object' && remoteData.data.Importe.$numberDecimal) {
+            // Es un Decimal128 de MongoDB
+            importeValue = parseFloat(remoteData.data.Importe.$numberDecimal);
+          } else if (typeof remoteData.data.Importe === 'string') {
+            // Es string
+            importeValue = parseFloat(remoteData.data.Importe);
+          } else if (typeof remoteData.data.Importe === 'number') {
+            // Ya es number
+            importeValue = remoteData.data.Importe;
+          }
+        }
+        
+        console.log('🔍 [WEBSOCKET] Importe procesado:', importeValue);
+
+        // Asegurar que los valores numéricos estén correctamente formateados
+        const registroFormateado = {
+          ...remoteData.data,
+          Importe: importeValue,
+          TiempoEjecucion: remoteData.data.TiempoEjecucion || 0,
+          Tiempo: remoteData.data.Tiempo || Date.now()
+        };
+
+        console.log('📦 [WEBSOCKET] Registro formateado final:', registroFormateado);
+
+        // Agregar el registro al estado de Redux
+        this.props.dispatch(addRegs([registroFormateado]));
+        
+        // Mostrar notificación visual (opcional)
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+          if (Notification.permission === 'granted') {
+            new Notification('Sistema Contable', {
+              body: '📡 Nuevo registro sincronizado desde otro dispositivo',
+              icon: '/assets/logo1.png'
+            });
+          }
+        }
+        
+        console.log('✅ [WEBSOCKET] Registro sincronizado exitosamente');
+      }
+    } catch (error) {
+      console.error('❌ [WEBSOCKET] Error manejando datos remotos:', error);
+    }
+  }
+
+  // Manejar eliminación de registros sincronizados desde otros dispositivos
+  handleRemoteDeleteSync = (deleteData) => {
+    try {
+      console.log('🗑️ [WEBSOCKET] Procesando eliminación remota:', deleteData);
+      console.log('🗑️ [WEBSOCKET] deletedRegistro:', deleteData.deletedRegistro);
+      console.log('🗑️ [WEBSOCKET] Estado actual de registros antes:', this.props.state.RegContableReducer.Regs?.length);
+      
+      if (deleteData.deletedRegistro) {
+        console.log('🗑️ [WEBSOCKET] Llamando dispatch(deleteReg) con:', deleteData.deletedRegistro);
+        
+        // Eliminar el registro del estado Redux usando la acción existente
+        this.props.dispatch(deleteReg(deleteData.deletedRegistro));
+        
+        console.log('🗑️ [WEBSOCKET] Dispatch ejecutado, estado después:', this.props.state.RegContableReducer.Regs?.length);
+        
+        // Mostrar notificación visual
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+          if (Notification.permission === 'granted') {
+            new Notification('Sistema Contable', {
+              body: '🗑️ Registro eliminado desde otro dispositivo',
+              icon: '/assets/logo1.png'
+            });
+          }
+        }
+        
+        console.log('✅ [WEBSOCKET] Registro eliminado exitosamente del estado local');
+      }
+    } catch (error) {
+      console.error('❌ [WEBSOCKET] Error manejando eliminación remota:', error);
+    }
+  }
+
+  // Manejar edición de registros sincronizados desde otros dispositivos
+  handleRemoteEditSync = (editData) => {
+    try {
+      console.log('✏️ [WEBSOCKET] Procesando edición remota:', editData);
+      
+      if (editData.editedRegistro) {
+        // Formatear el registro editado
+        const registroEditado = {
+          ...editData.editedRegistro,
+          Importe: parseFloat(editData.editedRegistro.Importe) || 0,
+          TiempoEjecucion: editData.editedRegistro.TiempoEjecucion || 0,
+          Tiempo: editData.editedRegistro.Tiempo || Date.now()
+        };
+
+        // Actualizar el registro en el estado Redux usando la acción existente
+        this.props.dispatch(updateReg(registroEditado));
+        
+        // Mostrar notificación visual
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+          if (Notification.permission === 'granted') {
+            new Notification('Sistema Contable', {
+              body: '✏️ Registro editado desde otro dispositivo',
+              icon: '/assets/logo1.png'
+            });
+          }
+        }
+        
+        console.log('✅ [WEBSOCKET] Registro editado exitosamente en el estado local');
+      }
+    } catch (error) {
+      console.error('❌ [WEBSOCKET] Error manejando edición remota:', error);
+    }
+  }
+
+  // Limpiar WebSocket cuando el componente se desmonte
+  componentWillUnmount() {
+    if (this.state.socket) {
+      console.log('🧹 [WEBSOCKET] Desconectando WebSocket');
+      this.state.socket.disconnect();
+    }
+  }
 
   
     render() {

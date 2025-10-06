@@ -2,13 +2,21 @@
 const express = require('express');
 const path = require('path');
 const url = require('url');
-const app = require('express')()
+const http = require('http');
+const { Server } = require('socket.io');
 
-
+const app = express();
 
 // creamos un servidor HTTP desde de nuestra aplicación de Express
+const server = http.createServer(app);
 
 // creamos una aplicación de socket.io desde nuestro servidor HTTP
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:3000", "https://sistemacontable-436626443349.us-central1.run.app"],
+    methods: ["GET", "POST"]
+  }
+});
 
 // cargamos Next.js
 const next = require('next')
@@ -71,6 +79,33 @@ nextApp.prepare().then(() => {
       nextHandler(req, res, parsedUrl);
     })
 
+  // Hacer io disponible globalmente para los controladores
+  app.set('io', io);
+
+  // Configuración de WebSockets para sincronización en tiempo real
+  io.on('connection', (socket) => {
+    console.log('📡 Usuario conectado via WebSocket:', socket.id);
+    
+    // Cuando un usuario se une a su sala personal
+    socket.on('join-user', (userId) => {
+      socket.join(`user-${userId}`);
+      console.log(`👤 Usuario ${userId} unido a sala WebSocket (socket: ${socket.id})`);
+      console.log(`👥 Salas activas para user-${userId}:`, io.sockets.adapter.rooms.get(`user-${userId}`)?.size || 0, 'conexiones');
+    });
+    
+    // Cuando hay cambios de datos que deben sincronizarse
+    socket.on('data-changed', (data) => {
+      console.log(`🔄 Sincronizando datos para usuario ${data.userId}:`, data.action);
+      const roomSize = io.sockets.adapter.rooms.get(`user-${data.userId}`)?.size || 0;
+      console.log(`📤 Enviando a ${roomSize} conexiones en sala user-${data.userId}`);
+      socket.to(`user-${data.userId}`).emit('sync-data', data);
+    });
+    
+    // Cuando un usuario se desconecta
+    socket.on('disconnect', () => {
+      console.log('📡 Usuario desconectado via WebSocket:', socket.id);
+    });
+  });
 
   //base de datos 
   const CONNECTION_Test = process.env.REACT_DATA_BASE
@@ -82,7 +117,7 @@ nextApp.prepare().then(() => {
     }
 })
 
- app.listen(port, '0.0.0.0', (err) => {
+ server.listen(port, '0.0.0.0', (err) => {
   // si ocurre un error matamos el proceso
   if (err) process.exit(0)
   // si todo está bien dejamos un log en consola

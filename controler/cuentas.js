@@ -116,6 +116,43 @@ async function addReg (req, res){
                  
                   await session.commitTransaction();
                     session.endSession();
+
+                  // 📡 NUEVA FUNCIONALIDAD: Notificar a otros dispositivos via WebSocket
+                  const io = req.app.get('io');
+                  console.log('🔍 [WEBSOCKET-SERVER] IO disponible:', !!io);
+                  console.log('🔍 [WEBSOCKET-SERVER] Usuario completo:', req.body.Usuario);
+                  console.log('🔍 [WEBSOCKET-SERVER] Usuario _id:', req.body.Usuario._id);
+                  console.log('🔍 [WEBSOCKET-SERVER] Usuario Id:', req.body.Usuario.Id);
+                  
+                  const userId = req.body.Usuario._id || req.body.Usuario.Id;
+                  
+                  if (io && userId) {
+                    // Convertir Decimal128 a número regular para WebSocket
+                    const registroParaWebSocket = {
+                      ...regIngGas,
+                      Importe: parseFloat(regIngGas.Importe.toString()), // Convertir Decimal128 a number
+                      id: regCreate[0]._id,
+                      _id: regCreate[0]._id
+                    };
+                    
+                    const dataToSync = {
+                      userId: userId,
+                      action: 'save',
+                      collection: 'registros',
+                      data: registroParaWebSocket
+                    };
+                    
+                    const roomSize = io.sockets.adapter.rooms.get(`user-${userId}`)?.size || 0;
+                    console.log('📤 [WEBSOCKET-SERVER] Enviando a', roomSize, 'conexiones en sala user-' + userId);
+                    console.log('📦 [WEBSOCKET-SERVER] Datos a enviar:', dataToSync);
+                    console.log('💰 [WEBSOCKET-SERVER] Importe convertido:', registroParaWebSocket.Importe, typeof registroParaWebSocket.Importe);
+                    
+                    io.to(`user-${userId}`).emit('sync-data', dataToSync);
+                    console.log('📡 [WEBSOCKET-SERVER] Registro sincronizado via WebSocket para usuario:', userId);
+                  } else {
+                    console.log('❌ [WEBSOCKET-SERVER] No se pudo enviar notificación - IO:', !!io, 'UserID:', userId);
+                  }
+
                   return res.json({status: "Ok", message: "Exito registroIngGas individual", regCreate,cuenta:Cuentadata});
                
               } else if(req.body.Accion === "Trans"){
@@ -161,6 +198,33 @@ async function addReg (req, res){
                   }  
                   await session.commitTransaction();
                         session.endSession();
+
+                  // 📡 NUEVA FUNCIONALIDAD: Notificar a otros dispositivos via WebSocket
+                  const io = req.app.get('io');
+                  const userId = req.body.Usuario._id || req.body.Usuario.Id;
+                  
+                  if (io && userId) {
+                    // Convertir Decimal128 a número regular para WebSocket
+                    const registroParaWebSocket = {
+                      ...regTrans,
+                      Importe: parseFloat(regTrans.Importe.toString()), // Convertir Decimal128 a number
+                      id: regCreate[0]._id,
+                      _id: regCreate[0]._id
+                    };
+                    
+                    const dataToSync = {
+                      userId: userId,
+                      action: 'save',
+                      collection: 'registros',
+                      data: registroParaWebSocket
+                    };
+                    
+                    console.log('📡 [WEBSOCKET-SERVER] Transferencia sincronizada via WebSocket para usuario:', userId);
+                    console.log('� [WEBSOCKET-SERVER] Importe transferencia convertido:', registroParaWebSocket.Importe, typeof registroParaWebSocket.Importe);
+                    
+                    io.to(`user-${userId}`).emit('sync-data', dataToSync);
+                  }
+
                  return res.status(200).send({message:"Transferencia genereda", regCreate,cuenta1,cuenta2})
 
               }//fin trans 
@@ -582,6 +646,10 @@ async function addReg (req, res){
 
 async function editReg(req,res){
 
+    console.log('✏️ [SERVER] *** EDITREG FUNCTION CALLED ***');
+    console.log('✏️ [SERVER] Request body Usuario:', req.body.Usuario);
+    console.log('✏️ [SERVER] Request body keys:', Object.keys(req.body));
+
     let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
     let RegModelSass = await conn.model('Reg', regSchema);
     let CuentasModelSass = await conn.model('Cuenta', accountSchema);
@@ -628,7 +696,7 @@ if(cuentax1 == null || cuentax2 == null){
 
 
 
-    let newversiones = req.body.Versiones
+    let newversiones = req.body.Versiones || [] // Si no existe, usar array vacío
 const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.Importe).toFixed(2));
       if(req.body.Accion === "Ingreso" || req.body.Accion === "Gasto"){
 
@@ -691,6 +759,24 @@ const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.Importe).t
           await session.commitTransaction();
           session.endSession();
          
+          // WebSocket notification for real-time sync (Edit Ingreso/Gasto)
+          const io = req.app.get('io');
+          if (io) {
+            // Detect user ID field (flexible handling)
+            const userId = req.body.Usuario._id || req.body.Usuario.Id;
+            console.log('✏️ EDIT WebSocket notification - User ID:', userId);
+            
+            if (userId) {
+              console.log('✏️ Emitting edit-registro to room:', `user-${userId}`);
+              io.to(`user-${userId}`).emit('edit-registro', {
+                editedRegistro: regUp,
+                updatedCuenta: Cuentaup,
+                previousCuenta: cuentaUpa,
+                message: 'Registro editado'
+              });
+            }
+          }
+
           res.send({status: "Ok", message: "reg y cuenta", registro:regUp, cuenta:Cuentaup, cuentaA:cuentaUpa });
 
       }
@@ -750,12 +836,28 @@ const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.Importe).t
         throw new Error("Reg Trans no Encontradas, vuelva intentar en unos minutos")
       } 
      
-      res.send({status: "Ok", message: "reg y cuenta", registro:regTrans, cuenta1, cuenta2 });    
-   
-   
-   
       await session.commitTransaction();
       session.endSession();
+
+      // WebSocket notification for real-time sync (Edit Transfer)
+      const io = req.app.get('io');
+      if (io) {
+        // Detect user ID field (flexible handling)
+        const userId = req.body.Usuario._id || req.body.Usuario.Id;
+        console.log('✏️ EDIT TRANSFER WebSocket notification - User ID:', userId);
+        
+        if (userId) {
+          console.log('✏️ Emitting edit-registro (transfer) to room:', `user-${userId}`);
+          io.to(`user-${userId}`).emit('edit-registro', {
+            editedRegistro: regTrans,
+            updatedCuenta1: cuenta1,
+            updatedCuenta2: cuenta2,
+            message: 'Transferencia editada'
+          });
+        }
+      }
+ 
+      res.send({status: "Ok", message: "reg y cuenta", registro:regTrans, cuenta1, cuenta2 });
  
     }
  
@@ -764,7 +866,10 @@ const fixedImport = new mongoose.Types.Decimal128(parseFloat(req.body.Importe).t
 
     }
    catch(error){
-      console.log(error)
+      console.log('❌ [SERVER] *** EDITREG ERROR ***');
+      console.log('❌ [SERVER] Error name:', error.name);
+      console.log('❌ [SERVER] Error message:', error.message);
+      console.log('❌ [SERVER] Full error:', error);
       await session.abortTransaction();
       session.endSession();
       return res.json({status: "Error", message: "error al registrar", error });
@@ -1004,6 +1109,9 @@ if (yaExiste) {
   
         async function deleteReg (req,res){
          
+          console.log('🗑️ [SERVER] *** DELETERREG FUNCTION CALLED ***');
+          console.log('🗑️ [SERVER] Request body Usuario:', req.body.Usuario);
+          
           let conn = await mongoose.connection.useDb(req.body.Usuario.DBname);
          
           let CuentasModelSass = await conn.model('Cuenta', accountSchema);
@@ -1042,6 +1150,25 @@ if (yaExiste) {
             await session.commitTransaction();    
             session.endSession(); 
 
+            // WebSocket notification for real-time sync (Inventory deletion)
+            const io = req.app.get('io');
+            if (io) {
+              // Detect user ID field (flexible handling)
+              const userId = req.body.Usuario._id || req.body.Usuario.Id;
+              console.log('🗑️ DELETE INVENTORY WebSocket notification - User ID:', userId);
+              
+              if (userId) {
+                console.log('🗑️ Emitting delete-registro (inventory) to room:', `user-${userId}`);
+                io.to(`user-${userId}`).emit('delete-registro', {
+                  deletedRegistro: regdel,
+                  deletedId: req.body.reg._id,
+                  updatedCuenta: cuentaUpdate,
+                  updatedArticulo: artInve,
+                  message: 'Registro de inventario eliminado'
+                });
+              }
+            }
+
             return res.json({status: "Ok", message: "Registro de baja Eliminado", registro:regdel, cuenta:cuentaUpdate,
                articulo:artInve})
 
@@ -1073,6 +1200,30 @@ if (yaExiste) {
          await session.commitTransaction();    
          session.endSession();   
   
+        // WebSocket notification for real-time sync
+        const io = req.app.get('io');
+        if (io) {
+          // Detect user ID field (flexible handling)
+          const userId = req.body.Usuario._id || req.body.Usuario.Id;
+          console.log('🗑️ DELETE WebSocket notification - User ID:', userId);
+          console.log('🗑️ DELETE WebSocket notification - Full Usuario object:', req.body.Usuario);
+          console.log('🗑️ DELETE WebSocket notification - Room name will be:', `user-${userId}`);
+          
+          if (userId) {
+            console.log('🗑️ Emitting delete-registro to room:', `user-${userId}`);
+            const roomSize = io.sockets.adapter.rooms.get(`user-${userId}`)?.size || 0;
+            console.log('🗑️ Room size (connected clients):', roomSize);
+            
+            io.to(`user-${userId}`).emit('delete-registro', {
+              deletedRegistro: regdel,
+              deletedId: req.body.reg._id,
+              updatedCuenta: cuentadel,
+              newRegDelete: newRegDelete[0],
+              message: 'Registro eliminado'
+            });
+          }
+        }
+
         return res.json({status: "Ok", message: "Registro Eliminado", registro:regdel, cuenta:cuentadel,
          newRegDelete:newRegDelete[0]})
         }
@@ -1094,6 +1245,27 @@ if (yaExiste) {
       }
       await session.commitTransaction();    
       session.endSession();   
+
+      // WebSocket notification for real-time sync (Transfer deletion)
+      const io = req.app.get('io');
+      if (io) {
+        // Detect user ID field (flexible handling)
+        const userId = req.body.Usuario._id || req.body.Usuario.Id;
+        console.log('🗑️ DELETE TRANSFER WebSocket notification - User ID:', userId);
+        
+        if (userId) {
+          console.log('🗑️ Emitting delete-registro (transfer) to room:', `user-${userId}`);
+          io.to(`user-${userId}`).emit('delete-registro', {
+            deletedRegistro: regdel,
+            deletedId: req.body.reg._id,
+            updatedCuenta1: cuenta1,
+            updatedCuenta2: cuenta2,
+            newRegDelete: newRegDelete[0],
+            message: 'Transferencia eliminada'
+          });
+        }
+      }
+
      return res.json({status: "Ok", message: "Transferencia Eliminado", registro:regdel, cuenta1, cuenta2,   newRegDelete:newRegDelete[0]})
         }
       

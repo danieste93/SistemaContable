@@ -1255,12 +1255,12 @@ calcData=(Ingregister, Gasregister, Transregister, cuenta)=>{
   
   if(Ingregister.length > 0){
     for (let i=0; i < Ingregister.length; i++ ){
-      sumaingbalance += Ingregister[i].Importe
+      sumaingbalance += parseFloat(Ingregister[i].Importe) || 0
   }
   }
   if(Gasregister.length > 0){
     for (let i=0; i < Gasregister.length; i++ ){
-         sumagasbalance += Gasregister[i].Importe
+         sumagasbalance += parseFloat(Gasregister[i].Importe) || 0
        }
       } 
     
@@ -1268,11 +1268,11 @@ calcData=(Ingregister, Gasregister, Transregister, cuenta)=>{
         for (let i=0; i < Transregister.length; i++ ){
         
         if(cuenta._id ==  Transregister[i].CuentaSelec.idCuenta){
-       sumatransgasbalance +=  Transregister[i].Importe
+       sumatransgasbalance += parseFloat(Transregister[i].Importe) || 0
      
         }
         else if(cuenta._id ==  Transregister[i].CuentaSelec2.idCuenta){
-     sumatransingbalance +=  (Transregister[i].Importe)
+     sumatransingbalance += parseFloat(Transregister[i].Importe) || 0
      arrsee.push(Transregister[i])
         } 
         }
@@ -1281,8 +1281,8 @@ calcData=(Ingregister, Gasregister, Transregister, cuenta)=>{
         }
      
        
-        ingbalance= (sumaingbalance +sumatransingbalance).toFixed(2)
-        gasbalance=(sumagasbalance+sumatransgasbalance).toFixed(2)
+        ingbalance= (parseFloat(sumaingbalance) + parseFloat(sumatransingbalance)).toFixed(2)
+        gasbalance=(parseFloat(sumagasbalance) + parseFloat(sumatransgasbalance)).toFixed(2)
         AllBalanceRender = (ingbalance - gasbalance).toFixed(2)
         if(cuenta.NombreC == "Johnny Merizalde "){
        
@@ -1304,7 +1304,7 @@ generadorBalanceGeneral=(DetallesPorrender)=>{
   let misregsing = DetallesPorrender.filter(regsing => regsing.Accion == "Ingreso")
             if(misregsing.length > 0){
               for (let i=0; i < misregsing.length; i++ ){
-                sumaingbalance +=  misregsing[i].Importe
+                sumaingbalance += parseFloat(misregsing[i].Importe) || 0
             }
               }
 
@@ -1312,7 +1312,7 @@ generadorBalanceGeneral=(DetallesPorrender)=>{
             if(misregsgas.length > 0){
         for (let i=0; i < misregsgas.length; i++ ){
 
-            sumagasbalance += misregsgas[i].Importe
+            sumagasbalance += parseFloat(misregsgas[i].Importe) || 0
         
           }
           } 
@@ -1334,8 +1334,8 @@ generadorBalanceGeneral=(DetallesPorrender)=>{
                }
 
 
-ingbalance= (sumaingbalance +sumatransingbalance).toFixed(2)
-  gasbalance=(sumagasbalance+sumatransgasbalance).toFixed(2)
+ingbalance= (parseFloat(sumaingbalance) + parseFloat(sumatransingbalance)).toFixed(2)
+  gasbalance=(parseFloat(sumagasbalance) + parseFloat(sumatransgasbalance)).toFixed(2)
 
 let balancegeneral = ingbalance - gasbalance
 

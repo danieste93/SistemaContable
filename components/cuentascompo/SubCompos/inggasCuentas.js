@@ -98,7 +98,7 @@ matchSelect = matchVenta || matchNotaDebito || matchNotaCredito
 
 
 
-if(this.state.version != "Act"){
+if(this.state.version != "Act" && this.props.reg.Versiones && this.props.reg.Versiones[this.state.version]){
   dataProvider= this.props.reg.Versiones[this.state.version]
   importeCheck= this.props.reg.Importe == this.props.reg.Versiones[this.state.version].Importe?"":"enfatizado"
   cuenta1Check= this.props.reg.CuentaSelec.idCuenta  == this.props.reg.Versiones[this.state.version].CuentaSelec._id  ?"":"enfatizado"
@@ -257,7 +257,7 @@ let renderimg=()=>{
 let renderVersionsArr = [{_id:""}]
 let renderVersions = ""
 let getarr = []
-if(this.props.reg.Versiones.length > 0){
+if(this.props.reg.Versiones && this.props.reg.Versiones.length > 0){
 
   getarr= renderVersionsArr.concat(this.props.reg.Versiones)
 
@@ -377,7 +377,7 @@ matchVenta? "Venta":""
     </i>
   }
 { this.props.cuentaActual._id != 0 && <span className="operador"> {operadorGen} </span>}
-<p className={` importegeneral ${importeCheck} `}>${dataProvider.Importe.toFixed(2)}</p> 
+<p className={` importegeneral ${importeCheck} `}>${(parseFloat(dataProvider.Importe) || 0).toFixed(2)}</p> 
 </div>
 {this.props.saldoActive && <p className={` importegeneral valormodificado  `}>{generadorSaldo()}</p> }
 
@@ -473,7 +473,7 @@ Registro Número:
   <span> {dataProvider.IdRegistro}</span>
 
   </div>
-  <Animate show={this.props.reg.Versiones.length > 0}>
+  <Animate show={this.props.reg.Versiones && this.props.reg.Versiones.length > 0}>
   <div className="subContDetaData">
   <div className=" tituloDetaData">
  Versiones:

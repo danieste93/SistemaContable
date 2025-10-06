@@ -1160,7 +1160,7 @@ if(DetallesIng.length > 0){
   
   DetallesFilterIng.forEach(element => {
     arrIngCats.push(element.CatSelect._id)
-    sumaIng += element.Importe
+    sumaIng += (parseFloat(element.Importe) || 0)
     let newtime 
     if(this.state.tiempoValue == "diario"){
        newtime = new Date(element.Tiempo).getHours()
@@ -1215,7 +1215,7 @@ let DetallesFilterGas =[]
    
     DetallesFilterGas.forEach(element => {
       arrGasCats.push(element.CatSelect._id)
-      sumaGas += element.Importe
+      sumaGas += (parseFloat(element.Importe) || 0)
       let newtime 
       if(this.state.tiempoValue == "diario"){
          newtime = new Date(element.Tiempo).getHours()
@@ -1446,7 +1446,7 @@ if(this.props.state.RegContableReducer.Cuentas){
     });
     
     liquidezLabels = periodosOrdenados;
-    liquidezData = periodosOrdenados.map(periodo => liquidezPorPeriodo[periodo].toFixed(2));
+    liquidezData = periodosOrdenados.map(periodo => (parseFloat(liquidezPorPeriodo[periodo]) || 0).toFixed(2));
   }
 
   // Cálculo de patrimonio total (todas las cuentas)
@@ -1510,7 +1510,7 @@ if(this.props.state.RegContableReducer.Cuentas){
     });
     
     patrimonioLabels = periodosOrdenadosPatrimonio;
-    patrimonioData = periodosOrdenadosPatrimonio.map(periodo => patrimonioPorPeriodo[periodo].toFixed(2));
+    patrimonioData = periodosOrdenadosPatrimonio.map(periodo => (parseFloat(patrimonioPorPeriodo[periodo]) || 0).toFixed(2));
   }
 
   // Construir datos para el gráfico de barras según la selección
@@ -2334,7 +2334,7 @@ const Alert=(props)=> {
       <div className='contDinero'>
         
 
-      <p>$ {balanceTotal.toFixed(2)}</p>
+      <p>$ {(parseFloat(balanceTotal) || 0).toFixed(2)}</p>
 <span>Saldo Disponible</span>
       </div>
 
@@ -2653,7 +2653,7 @@ const Alert=(props)=> {
                   <p>Ingresos</p>
                 </div>
                 <div className='valorCuadro'>
-                  <p>$ {sumaIng.toFixed(2)}</p>
+                  <p>$ {(parseFloat(sumaIng) || 0).toFixed(2)}</p>
                 </div>
               </div>
               <div className='contLIneChart' style={{
@@ -2793,7 +2793,7 @@ const Alert=(props)=> {
                   <p>Gastos</p>
                 </div>
                 <div className='valorCuadro'>
-                  <p>$ {sumaGas.toFixed(2)}</p>
+                  <p>$ {(parseFloat(sumaGas) || 0).toFixed(2)}</p>
                 </div>
               </div>
               <div className='contLIneChart' style={{height:'85%'}}>

@@ -33,7 +33,12 @@ class Contacto extends Component {
       DeleteReg=(regdata)=>{
       
         let reg ={...regdata, 
-          Usuario:{DBname:this.props.state.userReducer.update.usuario.user.DBname},
+          Usuario:{
+            DBname:this.props.state.userReducer.update.usuario.user.DBname,
+            _id:this.props.state.userReducer.update.usuario.user._id,
+            Id:this.props.state.userReducer.update.usuario.user._id, // Por compatibilidad
+            Usuario:this.props.state.userReducer.update.usuario.user.Usuario
+          },
           TiempoDel:new Date().getTime(),
           UsuarioDelete:{
             

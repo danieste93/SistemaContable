@@ -532,7 +532,7 @@ if(DetallesPorrender.length > 0){
     let sumaing = 0
                 if(misregs2ing.length > 0){
                   for (let i=0; i < misregs2ing.length; i++ ){
-                    sumaing = sumaing + misregs2ing[i].Importe
+                    sumaing = sumaing + (parseFloat(misregs2ing[i].Importe) || 0)
                 }
               }
               let misregsgas = DetallesPorrender.filter(regsgas => regsgas.Accion == "Gasto"&& regsgas.TiempoEjecucion != 0)
@@ -540,7 +540,7 @@ if(DetallesPorrender.length > 0){
 
                 if(misregsgas.length > 0){
                 for (let i=0; i < misregsgas.length; i++ ){
-                    sumagas = sumagas + misregsgas[i].Importe
+                    sumagas = sumagas + (parseFloat(misregsgas[i].Importe) || 0)
                    }
                   } 
 
@@ -551,10 +551,10 @@ let sumatransgas = 0
 
 
 
-superIng=  sumaing + sumatransing
-    superGas= sumagas + sumatransgas
+superIng = parseFloat(sumaing + sumatransing) || 0
+    superGas = parseFloat(sumagas + sumatransgas) || 0
 
-    balanceinggas=  superIng - superGas
+    balanceinggas = superIng - superGas
 
 }//fin display detalles 
 
@@ -776,11 +776,11 @@ superIng=  sumaing + sumatransing
                    <div className="contsgens">
                        <div className="minigen">
                            <div style={{color:"blue"}}>Ingreso</div>
-                           <div>${superIng.toFixed(2)}</div>
+                           <div>${(parseFloat(superIng) || 0).toFixed(2)}</div>
                        </div>
                        <div className="minigen">
                            <div style={{color:"red"}}>Gasto</div>
-                           <div>${superGas.toFixed(2)}</div>
+                           <div>${(parseFloat(superGas) || 0).toFixed(2)}</div>
                        </div>
                        <div className="minigen">
                            <div>Balance</div>
