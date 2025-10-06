@@ -1,0 +1,204 @@
+.iconoCuenta.material-icons {
+    display: inline-block !important;
+    font-size: 28px !important;
+    color: #1976d2 !important;
+    background: #fff !important;
+    border-radius: 50% !important;
+    box-shadow: 0 2px 8px #1976d233 !important;
+    padding: 2px !important;
+    cursor: pointer !important;
+    vertical-align: middle !important;
+    user-select: none !important;
+}
+@keyframes fadeInPopup {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.MuiIconButton-root, .MuiSvgIcon-root, svg, .MuiButtonBase-root, button {
+    background: #ff0000 !important;
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 14px !important;
+    transition: all 0.4s cubic-bezier(.4,2,.6,1) !important;
+}
+.compact-icons, .compact-icons * {
+    background: #ffe082 !important; /* color de fondo visible para depuración */
+    transition: all 0.4s cubic-bezier(.4,2,.6,1) !important;
+}
+.compact-icons .MuiIconButton-root,
+.compact-icons .MuiButtonBase-root,
+.compact-icons input[type="file"] + .MuiIconButton-root,
+.compact-icons > div > .MuiIconButton-root,
+.compact-icons *[class*="IconButton"],
+.compact-icons button,
+.compact-icons svg {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
+    font-size: 14px !important;
+    transition: all 0.4s cubic-bezier(.4,2,.6,1) !important;
+}
+.compact-icons span,
+.compact-icons label,
+.compact-icons .MuiTypography-root,
+.compact-icons *[class*="Typography"],
+.compact-icons *[class*="label"],
+.compact-icons *[class*="span"] {
+    font-size: 8px !important;
+    transition: all 0.4s cubic-bezier(.4,2,.6,1) !important;
+}
+.compact-icons textarea,
+.compact-icons input,
+.compact-icons .MuiInputBase-input,
+.compact-icons *[class*="InputBase-input"] {
+    font-size: 10px !important;
+    min-height: 18px !important;
+    max-height: 24px !important;
+    padding: 1px !important;
+    transition: all 0.4s cubic-bezier(.4,2,.6,1) !important;
+}
+.compact-anim {
+    border: 2px solid #ff9800;
+    box-shadow: 0 0 12px 0 #ff9800a0;
+    border-radius: 16px;
+    transition: border 0.4s cubic-bezier(.4,2,.6,1), box-shadow 0.4s cubic-bezier(.4,2,.6,1);
+}
+
+.iconos-factura, .compact-icons {
+    transition: all 0.4s cubic-bezier(.4,2,.6,1);
+}
+.compact-icons {
+    gap: 12px !important;
+    margin: 8px 0 4px 0 !important;
+}
+.compact-icons .MuiIconButton-root,
+.compact-icons .MuiButtonBase-root,
+.compact-icons input[type="file"] + .MuiIconButton-root,
+.compact-icons > div > .MuiIconButton-root {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    transition: all 0.4s cubic-bezier(.4,2,.6,1);
+}
+.compact-icons .MuiSvgIcon-root,
+.compact-icons svg {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    transition: all 0.4s cubic-bezier(.4,2,.6,1);
+}
+.compact-icons span,
+.compact-icons label,
+.compact-icons .MuiTypography-root {
+    font-size: 9px !important;
+    transition: all 0.4s cubic-bezier(.4,2,.6,1);
+}
+.compact-icons textarea,
+.compact-icons input,
+.compact-icons .MuiInputBase-input {
+    font-size: 11px !important;
+    min-height: 22px !important;
+    max-height: 28px !important;
+    padding: 2px !important;
+    transition: all 0.4s cubic-bezier(.4,2,.6,1);
+}
+.compact-icons > div,
+.compact-icons > * {
+    transition: all 0.4s cubic-bezier(.4,2,.6,1);
+}
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap");
+
+:root {
+    --body-bg: #f5f8ff;
+    --box-bg: #fff;
+    --input-bg: #f5f8ff;
+    --txt-color: #2f2d2f;
+    --txt-second-color: #ccc;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Montserrat", sans-serif;
+    background-color: var(--body-bg);
+    color: var(--txt-color);
+    font-weight: 400;
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    height: 100vh;
+    padding-top: 100px;
+}
+
+.box {
+    background-color: var(--box-bg);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+}
+
+/* Estilos para cuentas ocultas */
+.cuenta-oculta-visible {
+    position: relative;
+    animation: pulseOculta 2s infinite;
+}
+
+.cuenta-oculta-visible::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #ff9800, #ffc107, #ff9800, #ffc107);
+    background-size: 400% 400%;
+    border-radius: inherit;
+    z-index: -1;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes pulseOculta {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.indicador-cuenta-oculta {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    border-radius: 12px;
+    padding: 2px 6px;
+    font-size: 10px;
+    color: white;
+    font-weight: bold;
+    z-index: 15;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4);
+    animation: bounce 1s infinite alternate;
+}
+
+@keyframes bounce {
+    0% { transform: translateY(0px); }
+    100% { transform: translateY(-2px); }
+}
+
+.indicador-cuenta-oculta .material-icons {
+    font-size: 14px;
+    margin-right: 2px;
+}

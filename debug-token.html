@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Token</title>
+</head>
+<body>
+    <h1>Debug de Token</h1>
+    <button onclick="checkToken()">Verificar Token</button>
+    <div id="result"></div>
+
+    <script>
+        function checkToken() {
+            const token = localStorage.getItem('token');
+            const state = localStorage.getItem('state');
+            
+            document.getElementById('result').innerHTML = `
+                <h3>Información de localStorage:</h3>
+                <p><strong>Token:</strong> ${token ? 'Existe (longitud: ' + token.length + ')' : 'No existe'}</p>
+                <p><strong>State:</strong> ${state ? 'Existe' : 'No existe'}</p>
+                <p><strong>Todas las keys:</strong> ${Object.keys(localStorage).join(', ')}</p>
+                
+                <h3>Contenido del token (primeros 50 caracteres):</h3>
+                <p>${token ? token.substring(0, 50) + '...' : 'No hay token'}</p>
+            `;
+        }
+    </script>
+</body>
+</html>

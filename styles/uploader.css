@@ -1,0 +1,23 @@
+.contenedoruploader{
+    margin-top: 15vh;
+    padding-left: 5vw;
+padding-right: 5vw;
+
+}
+
+.grupo{
+    display: flex;
+    flex-flow: column;
+    
+}
+.jwEditorContainer{
+    padding:15px;
+  }
+  .demo-wrapper{
+    background: white;
+  }
+  .demo-editor{
+    background: white;
+    padding:10px;
+    border-radius:10px
+  }

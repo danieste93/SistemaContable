@@ -1,0 +1,25 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.nyc_output
+coverage
+.next
+out
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.DS_Store
+.vscode
+*.log
+cert.pem
+key.pem
+debug-token.html
+test-auth.html
+serverhttps.js
+addregold.js
+"package copy.json"
+"next.config asd.js"

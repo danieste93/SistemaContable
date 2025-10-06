@@ -1,0 +1,23 @@
+                 <div className="glass-container">
+        <FormControlLabel
+          control={
+            <CustomSwitch
+              color="#2196f3" // Azul para Liquidez
+              checked={this.state.liquidez}
+              onChange={this.handleToggle}
+              name="liquidez"
+            />
+          }
+          label={
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              <AttachMoneyIcon
+                style={{
+                  color: this.state.deletedRegs ? '#2196f3' : 'gray', // Azul si está activo, gris si está desactivado
+                  marginRight: '5px',
+                }}
+              />
+              {"Liquidez"}
+            </span>
+          }
+        />
+      </div>
