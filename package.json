@@ -1,3 +1,4 @@
+
 {
   "name": "iglassop",
   "version": "0.1.0",
@@ -10,8 +11,8 @@
     "gcp-build": "npm install --legacy-peer-deps && npm run build"
   },
   "engines": {
-    "node": "16.x",
-    "npm": "8.x"
+    "node": "22.x",
+    "npm": "10.x"
   },
   "dependencies": {
     "@date-io/date-fns": "^2.11.0",
@@ -101,7 +102,7 @@
     "resize-observer": "^1.0.4",
     "serve-build": "^0.1.0",
     "soap": "^1.4.1",
-    "socket.io": "^3.1.2",
+    "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "tabletop": "^1.6.3",
     "tesseract.js": "^6.0.1",
