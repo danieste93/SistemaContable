@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { Animate } from "react-animate-mount";
 import {connect} from 'react-redux';
 import {  KeyboardDatePicker,  MuiPickersUtilsProvider } from "@material-ui/pickers";
+import io from 'socket.io-client';
 import GenGroupRegs from './SubCompos/GenGroupRegsCuentasNuevas';
 import moment from "moment";
 import MomentUtils from '@date-io/moment';
@@ -291,10 +292,9 @@ InventarioVal:0,
 
      // Cargar configuración de cuentas del usuario
      this.loadCuentasConfig();
-   
 
-
-
+     // 🔄 WEBSOCKETS: Configurar conexión en tiempo real
+     this.setupWebSocket();
 
         }
 
@@ -490,6 +490,11 @@ InventarioVal:0,
           // Remover los listeners cuando el componente se desmonte
           document.removeEventListener('keypress', this.handleKeyPress);
           document.removeEventListener('keydown', this.handleKeyDown);
+          
+          // 🔄 WEBSOCKETS: Limpiar conexión WebSocket
+          if (this.socket) {
+            this.socket.disconnect();
+          }
         }
         
         handleKeyDown = (event) => {
@@ -616,6 +621,134 @@ fetch("/cuentas/getcuentas", {
           
           this.setState({loadginData:true})
           this.getCuentas()
+        }
+
+        // 🔄 WEBSOCKETS: Configuración de conexión en tiempo real
+        setupWebSocket = () => {
+          try {
+            // Obtener URL base según el entorno
+            const socketUrl = process.env.NODE_ENV === 'production' 
+              ? window.location.origin 
+              : 'http://localhost:3000';
+            
+            console.log('🔌 [CROOM-WS] Conectando WebSocket a:', socketUrl);
+            
+            // Establecer conexión WebSocket
+            this.socket = io(socketUrl, {
+              transports: ['websocket', 'polling'],
+              timeout: 20000,
+              forceNew: true
+            });
+
+            // Manejar conexión exitosa
+            this.socket.on('connect', () => {
+              console.log('✅ [CROOM-WS] Conectado con ID:', this.socket.id);
+              
+              // Unirse a la sala del usuario
+              const userId = this.props.state.userReducer?.update?.usuario?.user?._id;
+              if (userId) {
+                this.socket.emit('join-user', userId);
+                console.log('👤 [CROOM-WS] Usuario unido a sala WebSocket:', userId);
+              }
+            });
+
+            // Manejar desconexión
+            this.socket.on('disconnect', (reason) => {
+              console.log('❌ [CROOM-WS] Desconectado:', reason);
+            });
+
+            // Manejar errores de conexión
+            this.socket.on('connect_error', (error) => {
+              console.error('🚨 [CROOM-WS] Error de conexión:', error);
+            });
+
+            // 🔄 Escuchar sincronización de datos en tiempo real
+            this.socket.on('sync-data', (data) => {
+              console.log('📥 [CROOM-WS] Datos sincronizados recibidos:', data);
+              this.handleRemoteDataSync(data);
+            });
+
+            // 🗑️ Escuchar eliminaciones en tiempo real
+            this.socket.on('delete-registro', (data) => {
+              console.log('🗑️ [CROOM-WS] Eliminación recibida:', data);
+              this.handleRemoteDeleteSync(data);
+            });
+
+            // ✏️ Escuchar ediciones en tiempo real
+            this.socket.on('edit-registro', (data) => {
+              console.log('✏️ [CROOM-WS] Edición recibida:', data);
+              this.handleRemoteEditSync(data);
+            });
+
+          } catch (error) {
+            console.error('🚨 [CROOM-WS] Error configurando WebSocket:', error);
+          }
+        }
+
+        // 📥 Manejar sincronización de datos remotos
+        handleRemoteDataSync = (data) => {
+          try {
+            console.log('🔄 [CROOM-WS] Procesando sincronización de datos...');
+            
+            // Actualizar datos automáticamente sin mostrar loading
+            this.getCuentas();
+            
+            // Mostrar notificación discreta
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('💼 Registro Contable', {
+                body: 'Nuevo registro agregado por otro dispositivo',
+                icon: '/assets/logo1.png',
+                tag: 'sync-data'
+              });
+            }
+            
+          } catch (error) {
+            console.error('🚨 [CROOM-WS] Error procesando sincronización:', error);
+          }
+        }
+
+        // 🗑️ Manejar eliminación remota
+        handleRemoteDeleteSync = (data) => {
+          try {
+            console.log('🗑️ [CROOM-WS] Procesando eliminación remota...');
+            
+            // Actualizar datos automáticamente
+            this.getCuentas();
+            
+            // Mostrar notificación
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('💼 Registro Contable', {
+                body: 'Registro eliminado por otro dispositivo',
+                icon: '/assets/logo1.png',
+                tag: 'delete-registro'
+              });
+            }
+            
+          } catch (error) {
+            console.error('🚨 [CROOM-WS] Error procesando eliminación:', error);
+          }
+        }
+
+        // ✏️ Manejar edición remota
+        handleRemoteEditSync = (data) => {
+          try {
+            console.log('✏️ [CROOM-WS] Procesando edición remota...');
+            
+            // Actualizar datos automáticamente
+            this.getCuentas();
+            
+            // Mostrar notificación
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('💼 Registro Contable', {
+                body: 'Registro editado por otro dispositivo',
+                icon: '/assets/logo1.png',
+                tag: 'edit-registro'
+              });
+            }
+            
+          } catch (error) {
+            console.error('🚨 [CROOM-WS] Error procesando edición:', error);
+          }
         }
         onDragEnd = async ({ destination, source }) => {
           // dropped outside the list

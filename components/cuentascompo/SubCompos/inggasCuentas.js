@@ -52,7 +52,7 @@ console.log(this.props)
        }} >  edit</i>)
       }else{
        
-        return( this.props.reg.CatSelect.idCat != 18  && <i className="material-icons i3D" onClick={(e)=>{
+        return( (this.props.reg.CatSelect?.idCat || 0) != 18  && <i className="material-icons i3D" onClick={(e)=>{
           e.stopPropagation(); 
          this.sendEdit(this.props.reg)
        }} >  edit</i>)
@@ -82,7 +82,7 @@ let upcont=''
 let matchSelect = null;
 
 if (dataProvider.Accion == "Ingreso") {
-    if (dataProvider.CatSelect.idCat == 5) {
+    if ((dataProvider.CatSelect?.idCat || 0) == 5) {
         // Match "Venta N°"
         matchVenta = dataProvider.Nota && dataProvider.Nota.match(/^(?!.*Nota de (?:Débito|Crédito) de la ).*Venta N°(\d+)/);
         // Match "Nota de Débito de la Venta N°"
@@ -101,23 +101,27 @@ matchSelect = matchVenta || matchNotaDebito || matchNotaCredito
 if(this.state.version != "Act" && this.props.reg.Versiones && this.props.reg.Versiones[this.state.version]){
   dataProvider= this.props.reg.Versiones[this.state.version]
   importeCheck= this.props.reg.Importe == this.props.reg.Versiones[this.state.version].Importe?"":"enfatizado"
-  cuenta1Check= this.props.reg.CuentaSelec.idCuenta  == this.props.reg.Versiones[this.state.version].CuentaSelec._id  ?"":"enfatizado"
+  cuenta1Check= (this.props.reg.CuentaSelec?.idCuenta && this.props.reg.Versiones[this.state.version].CuentaSelec?._id) ? 
+                (this.props.reg.CuentaSelec.idCuenta == this.props.reg.Versiones[this.state.version].CuentaSelec._id ? "" : "enfatizado") : ""
  
   tiempoCheck= this.props.reg.Tiempo  == this.props.reg.Versiones[this.state.version].Tiempo ?"":"enfatizado"
   descripCheck= this.props.reg.Descripcion  == this.props.reg.Versiones[this.state.version].Descripcion ?"":"enfatizado"
   notaCheck= this.props.reg.Nota  == this.props.reg.Versiones[this.state.version].Nota ?"":"enfatizado"
   userCheck= this.props.reg.Usuario.Id  == this.props.reg.Versiones[this.state.version].Usuario.Id ?"":"enfatizado"
   if(dataProvider.Accion != "Trans"){
-    catCheck= this.props.reg.CatSelect._id  == this.props.reg.Versiones[this.state.version].CatSelect._id  ?"":"enfatizado"
-    subCatCheck= this.props.reg.CatSelect.subCatSelect  == this.props.reg.Versiones[this.state.version].CatSelect.subCatSelect ?"":"enfatizado"
+    catCheck= (this.props.reg.CatSelect?._id && this.props.reg.Versiones[this.state.version].CatSelect?._id) ? 
+              (this.props.reg.CatSelect._id  == this.props.reg.Versiones[this.state.version].CatSelect._id ? "" : "enfatizado") : ""
+    subCatCheck= (this.props.reg.CatSelect?.subCatSelect && this.props.reg.Versiones[this.state.version].CatSelect?.subCatSelect) ? 
+                 (this.props.reg.CatSelect.subCatSelect == this.props.reg.Versiones[this.state.version].CatSelect.subCatSelect ? "" : "enfatizado") : ""
   }
   if(dataProvider.Accion == "Trans"){
-    cuenta2Check= this.props.reg.CuentaSelec2.idCuenta  == this.props.reg.Versiones[this.state.version].CuentaSelec2._id  ?"":"enfatizado"
+    cuenta2Check= (this.props.reg.CuentaSelec2?.idCuenta && this.props.reg.Versiones[this.state.version].CuentaSelec2?._id) ? 
+                  (this.props.reg.CuentaSelec2.idCuenta == this.props.reg.Versiones[this.state.version].CuentaSelec2._id ? "" : "enfatizado") : ""
   }
 }
 
-let urlIco = dataProvider.Accion == "Trans"?"/iconscuentas/transfer.png":dataProvider.CatSelect.urlIcono
-let genNombreCat = dataProvider.Accion == "Trans"?"Transferencia":dataProvider.CatSelect.nombreCat
+let urlIco = dataProvider.Accion == "Trans"?"/iconscuentas/transfer.png":(dataProvider.CatSelect?.urlIcono || "")
+let genNombreCat = dataProvider.Accion == "Trans"?"Transferencia":(dataProvider.CatSelect?.nombreCat || "")
 
 let operadorGen =""
 
