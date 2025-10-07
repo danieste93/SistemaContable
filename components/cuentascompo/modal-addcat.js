@@ -8,6 +8,7 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import {connect} from 'react-redux';
 import { CircularProgress } from '@material-ui/core';
 import SelectIcons from "./modal-select-icons"
+import io from 'socket.io-client';
 import {addcat} from "../../reduxstore/actions/regcont"
 class Contacto extends Component {
    state={
@@ -90,6 +91,9 @@ nombreCat:this.state.nombreCat.trim()
           else{
           const categoria = response.categoria
     this.props.dispatch(addcat({categoria}))
+
+          // 🔄 WEBSOCKETS: Notificar creación de categoría a otros dispositivos
+          this.notifyCategoryCreated(categoria);
          
           
           this.Onsalida()  
@@ -110,6 +114,46 @@ nombreCat:this.state.nombreCat.trim()
           setTimeout(()=>{ 
             this.props.Flecharetro4()
           }, 500);
+        }
+
+        // 🔄 WEBSOCKETS: Notificar creación de categoría a otros dispositivos
+        notifyCategoryCreated = (nuevaCategoria) => {
+          try {
+            const socketUrl = process.env.NODE_ENV === 'production' 
+              ? window.location.origin 
+              : 'http://localhost:3000';
+            
+            const socket = io(socketUrl, {
+              transports: ['websocket', 'polling'],
+              timeout: 5000
+            });
+
+            socket.on('connect', () => {
+              console.log('🔌 [ADD-CAT-WS] Conectado para notificar creación de categoría');
+              
+              const userId = this.props.state.userReducer?.update?.usuario?.user?._id;
+              if (userId) {
+                // Enviar notificación de categoría creada
+                socket.emit('category-created', {
+                  userId: userId,
+                  categoria: nuevaCategoria,
+                  timestamp: new Date().toISOString()
+                });
+                
+                console.log('📨 [ADD-CAT-WS] Notificación de categoría creada enviada:', nuevaCategoria.nombreCat);
+                
+                // Desconectar después de enviar
+                setTimeout(() => socket.disconnect(), 1000);
+              }
+            });
+
+            socket.on('connect_error', (error) => {
+              console.error('🚨 [ADD-CAT-WS] Error de conexión:', error);
+            });
+
+          } catch (error) {
+            console.error('🚨 [ADD-CAT-WS] Error notificando creación de categoría:', error);
+          }
         }
         handlerepChange=(e)=>{
    

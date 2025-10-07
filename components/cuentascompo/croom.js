@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Animate } from "react-animate-mount";
 import {connect} from 'react-redux';
 import {  KeyboardDatePicker,  MuiPickersUtilsProvider } from "@material-ui/pickers";
-import io from 'socket.io-client';
+import websocketService from '../../services/websocketService';
 import GenGroupRegs from './SubCompos/GenGroupRegsCuentasNuevas';
 import moment from "moment";
 import MomentUtils from '@date-io/moment';
@@ -491,9 +491,15 @@ InventarioVal:0,
           document.removeEventListener('keypress', this.handleKeyPress);
           document.removeEventListener('keydown', this.handleKeyDown);
           
-          // 🔄 WEBSOCKETS: Limpiar conexión WebSocket
-          if (this.socket) {
-            this.socket.disconnect();
+          // 🔄 WEBSOCKETS: Limpiar listeners del servicio global
+          if (this.componentId) {
+            websocketService.unsubscribe('sync-data', this.componentId);
+            websocketService.unsubscribe('delete-registro', this.componentId);
+            websocketService.unsubscribe('edit-registro', this.componentId);
+            websocketService.unsubscribe('account-created', this.componentId);
+            websocketService.unsubscribe('category-created', this.componentId);
+            websocketService.unsubscribe('account-deleted', this.componentId);
+            console.log('🔇 [CROOM-WS] Listeners eliminados para:', this.componentId);
           }
         }
         
@@ -623,62 +629,29 @@ fetch("/cuentas/getcuentas", {
           this.getCuentas()
         }
 
-        // 🔄 WEBSOCKETS: Configuración de conexión en tiempo real
+        // 🔄 WEBSOCKETS: Configuración de conexión en tiempo real usando servicio global
         setupWebSocket = () => {
           try {
-            // Obtener URL base según el entorno
-            const socketUrl = process.env.NODE_ENV === 'production' 
-              ? window.location.origin 
-              : 'http://localhost:3000';
+            const userId = this.props.state.userReducer?.update?.usuario?.user?._id;
+            if (!userId) {
+              console.log('⚠️ [CROOM-WS] No hay usuario, no se puede conectar WebSocket');
+              return;
+            }
+
+            console.log('🔌 [CROOM-WS] Configurando listeners para usuario:', userId);
             
-            console.log('🔌 [CROOM-WS] Conectando WebSocket a:', socketUrl);
+            // Generar ID único para este componente
+            this.componentId = `croom-${Date.now()}`;
             
-            // Establecer conexión WebSocket
-            this.socket = io(socketUrl, {
-              transports: ['websocket', 'polling'],
-              timeout: 20000,
-              forceNew: true
-            });
+            // � Registrar listeners en el servicio global
+            websocketService.subscribe('sync-data', this.handleRemoteDataSync, this.componentId);
+            websocketService.subscribe('delete-registro', this.handleRemoteDeleteSync, this.componentId);
+            websocketService.subscribe('edit-registro', this.handleRemoteEditSync, this.componentId);
+            websocketService.subscribe('account-created', this.handleRemoteAccountCreated, this.componentId);
+            websocketService.subscribe('category-created', this.handleRemoteCategoryCreated, this.componentId);
+            websocketService.subscribe('account-deleted', this.handleRemoteAccountDeleted, this.componentId);
 
-            // Manejar conexión exitosa
-            this.socket.on('connect', () => {
-              console.log('✅ [CROOM-WS] Conectado con ID:', this.socket.id);
-              
-              // Unirse a la sala del usuario
-              const userId = this.props.state.userReducer?.update?.usuario?.user?._id;
-              if (userId) {
-                this.socket.emit('join-user', userId);
-                console.log('👤 [CROOM-WS] Usuario unido a sala WebSocket:', userId);
-              }
-            });
-
-            // Manejar desconexión
-            this.socket.on('disconnect', (reason) => {
-              console.log('❌ [CROOM-WS] Desconectado:', reason);
-            });
-
-            // Manejar errores de conexión
-            this.socket.on('connect_error', (error) => {
-              console.error('🚨 [CROOM-WS] Error de conexión:', error);
-            });
-
-            // 🔄 Escuchar sincronización de datos en tiempo real
-            this.socket.on('sync-data', (data) => {
-              console.log('📥 [CROOM-WS] Datos sincronizados recibidos:', data);
-              this.handleRemoteDataSync(data);
-            });
-
-            // 🗑️ Escuchar eliminaciones en tiempo real
-            this.socket.on('delete-registro', (data) => {
-              console.log('🗑️ [CROOM-WS] Eliminación recibida:', data);
-              this.handleRemoteDeleteSync(data);
-            });
-
-            // ✏️ Escuchar ediciones en tiempo real
-            this.socket.on('edit-registro', (data) => {
-              console.log('✏️ [CROOM-WS] Edición recibida:', data);
-              this.handleRemoteEditSync(data);
-            });
+            console.log('✅ [CROOM-WS] Listeners registrados para:', this.componentId);
 
           } catch (error) {
             console.error('🚨 [CROOM-WS] Error configurando WebSocket:', error);
@@ -748,6 +721,94 @@ fetch("/cuentas/getcuentas", {
             
           } catch (error) {
             console.error('🚨 [CROOM-WS] Error procesando edición:', error);
+          }
+        }
+
+        // 🏦 Manejar creación de cuenta remota
+        handleRemoteAccountCreated = (data) => {
+          try {
+            console.log('🏦 [CROOM-WS] Procesando creación de cuenta remota...');
+            
+            // Actualizar datos automáticamente
+            this.getCuentas();
+            
+            // Mostrar notificación
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('🏦 Sistema Contable', {
+                body: `Nueva cuenta "${data.cuenta.nombreCuenta}" creada por otro dispositivo`,
+                icon: '/assets/logo1.png',
+                tag: 'account-created'
+              });
+            }
+            
+          } catch (error) {
+            console.error('🚨 [CROOM-WS] Error procesando creación de cuenta:', error);
+          }
+        }
+
+        // 🗑️ Manejar eliminación de cuenta remota
+        handleRemoteAccountDeleted = (data) => {
+          try {
+            console.log('🗑️ [CROOM-WS] Procesando eliminación de cuenta remota...');
+            
+            // Actualizar datos automáticamente
+            this.getCuentas();
+            
+            // Mostrar notificación
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('🏦 Sistema Contable', {
+                body: `Cuenta "${data.cuenta.nombreCuenta || data.cuenta.NombreC}" eliminada por otro dispositivo`,
+                icon: '/assets/logo1.png',
+                tag: 'account-deleted'
+              });
+            }
+            
+          } catch (error) {
+            console.error('🚨 [CROOM-WS] Error procesando eliminación de cuenta:', error);
+          }
+        }
+
+        // 📂 Manejar creación de categoría remota
+        handleRemoteCategoryCreated = (data) => {
+          try {
+            console.log('📂 [CROOM-WS] Procesando creación de categoría remota...');
+            
+            // Actualizar datos automáticamente
+            this.getCuentas();
+            
+            // Mostrar notificación
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('📂 Sistema Contable', {
+                body: `Nueva categoría "${data.categoria.nombreCat}" creada por otro dispositivo`,
+                icon: '/assets/logo1.png',
+                tag: 'category-created'
+              });
+            }
+            
+          } catch (error) {
+            console.error('🚨 [CROOM-WS] Error procesando creación de categoría:', error);
+          }
+        }
+
+        // 🗑️ Manejar eliminación de categoría remota
+        handleRemoteCategoryDeleted = (data) => {
+          try {
+            console.log('🗑️ [CROOM-WS] Procesando eliminación de categoría remota...');
+            
+            // Actualizar datos automáticamente
+            this.getCuentas();
+            
+            // Mostrar notificación
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('📂 Sistema Contable', {
+                body: `Categoría "${data.categoria.nombreCat}" eliminada por otro dispositivo`,
+                icon: '/assets/logo1.png',
+                tag: 'category-deleted'
+              });
+            }
+            
+          } catch (error) {
+            console.error('🚨 [CROOM-WS] Error procesando eliminación de categoría:', error);
           }
         }
         onDragEnd = async ({ destination, source }) => {

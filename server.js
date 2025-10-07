@@ -100,6 +100,38 @@ nextApp.prepare().then(() => {
       console.log(`📤 Enviando a ${roomSize} conexiones en sala user-${data.userId}`);
       socket.to(`user-${data.userId}`).emit('sync-data', data);
     });
+
+    // 🏦 CUENTAS: Cuando se crea una nueva cuenta
+    socket.on('account-created', (data) => {
+      console.log(`🏦 Nueva cuenta creada para usuario ${data.userId}:`, data.cuenta.nombreCuenta);
+      const roomSize = io.sockets.adapter.rooms.get(`user-${data.userId}`)?.size || 0;
+      console.log(`📤 Notificando creación de cuenta a ${roomSize} conexiones en sala user-${data.userId}`);
+      socket.to(`user-${data.userId}`).emit('account-created-notification', data);
+    });
+
+    // 🗑️ CUENTAS: Cuando se elimina una cuenta
+    socket.on('account-deleted', (data) => {
+      console.log(`🗑️ Cuenta eliminada para usuario ${data.userId}:`, data.cuenta.nombreCuenta || data.cuenta.NombreC);
+      const roomSize = io.sockets.adapter.rooms.get(`user-${data.userId}`)?.size || 0;
+      console.log(`📤 Notificando eliminación de cuenta a ${roomSize} conexiones en sala user-${data.userId}`);
+      socket.to(`user-${data.userId}`).emit('account-deleted-notification', data);
+    });
+
+    // 📂 CATEGORÍAS: Cuando se crea una nueva categoría
+    socket.on('category-created', (data) => {
+      console.log(`📂 Nueva categoría creada para usuario ${data.userId}:`, data.categoria.nombreCat);
+      const roomSize = io.sockets.adapter.rooms.get(`user-${data.userId}`)?.size || 0;
+      console.log(`📤 Notificando creación de categoría a ${roomSize} conexiones en sala user-${data.userId}`);
+      socket.to(`user-${data.userId}`).emit('category-created-notification', data);
+    });
+
+    // 🗑️ CATEGORÍAS: Cuando se elimina una categoría
+    socket.on('category-deleted', (data) => {
+      console.log(`🗑️ Categoría eliminada para usuario ${data.userId}:`, data.categoria.nombreCat);
+      const roomSize = io.sockets.adapter.rooms.get(`user-${data.userId}`)?.size || 0;
+      console.log(`📤 Notificando eliminación de categoría a ${roomSize} conexiones en sala user-${data.userId}`);
+      socket.to(`user-${data.userId}`).emit('category-deleted-notification', data);
+    });
     
     // Cuando un usuario se desconecta
     socket.on('disconnect', () => {

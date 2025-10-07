@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import {connect} from 'react-redux';
+import io from 'socket.io-client';
 
 import  {deleteCuenta} from "../../reduxstore/actions/regcont"
 import Snackbar from '@material-ui/core/Snackbar';
@@ -27,6 +28,46 @@ console.log(this.props.CuentaDelete)
         setTimeout(()=>{ 
           this.props.Flecharetro()
         }, 500);
+      }
+
+      // 🔄 WEBSOCKETS: Notificar eliminación de cuenta a otros dispositivos
+      notifyAccountDeleted = (cuentaEliminada) => {
+        try {
+          const socketUrl = process.env.NODE_ENV === 'production' 
+            ? window.location.origin 
+            : 'http://localhost:3000';
+          
+          const socket = io(socketUrl, {
+            transports: ['websocket', 'polling'],
+            timeout: 5000
+          });
+
+          socket.on('connect', () => {
+            console.log('🔌 [DELETE-CUENTA-WS] Conectado para notificar eliminación de cuenta');
+            
+            const userId = this.props.state.userReducer?.update?.usuario?.user?._id;
+            if (userId) {
+              // Enviar notificación de cuenta eliminada
+              socket.emit('account-deleted', {
+                userId: userId,
+                cuenta: cuentaEliminada,
+                timestamp: new Date().toISOString()
+              });
+              
+              console.log('📨 [DELETE-CUENTA-WS] Notificación de cuenta eliminada enviada:', cuentaEliminada.nombreCuenta || cuentaEliminada.NombreC);
+              
+              // Desconectar después de enviar
+              setTimeout(() => socket.disconnect(), 1000);
+            }
+          });
+
+          socket.on('connect_error', (error) => {
+            console.error('🚨 [DELETE-CUENTA-WS] Error de conexión:', error);
+          });
+
+        } catch (error) {
+          console.error('🚨 [DELETE-CUENTA-WS] Error notificando eliminación de cuenta:', error);
+        }
       }
         
       deleteCount=(cuenta)=>{
@@ -64,6 +105,10 @@ console.log(this.props.CuentaDelete)
         else {
        
 this.props.dispatch(deleteCuenta(response.Cuenta))
+
+       // 🔄 WEBSOCKETS: Notificar eliminación de cuenta a otros dispositivos
+       this.notifyAccountDeleted(response.Cuenta);
+
        this.Onsalida()
       }
       }) 

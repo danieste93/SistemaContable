@@ -7,6 +7,7 @@ import Nav from '../components/navbar';
 import Head from 'next/head';
 import { DEFAULT_SEO } from '../config';
 import inireducer from '../reduxstore/reducers';
+import websocketService from '../services/websocketService';
 
 import postal from 'postal';
 import Snackbar from '@material-ui/core/Snackbar';
@@ -21,13 +22,158 @@ import "../styles/extrabootstrap.css"
 import "../styles/main.css"
 import {GoogleOAuthProvider} from "@react-oauth/google"
 //import 'bootstrap/dist/css/bootstrap.min.css';
-export const saveToLocalStorage=(state)=>{
-  try{
-const serializedState = JSON.stringify(state)
-localStorage.setItem("state", serializedState)
-  } catch(e){
-   
+// 🧠 Sistema de Backup Inteligente
+class SmartBackupService {
+  constructor() {
+    this.lastBackupTime = 0;
+    this.hasChanges = false;
+    this.lastStateHash = null;
+    this.isUserActive = true;
+    this.backupInterval = 5 * 60 * 1000; // 5 minutos por defecto
   }
+
+  // Marcar que hay cambios (muy ligero)
+  markChanged = () => {
+    this.hasChanges = true;
+  }
+
+  // Crear hash simple para detectar cambios reales
+  createStateHash = (state) => {
+    const criticalData = {
+      registros: state.registrosReducer?.length || 0,
+      cuentas: state.cuentasReducer?.length || 0,
+      user: state.userReducer?.update?.usuario?.user?._id || null
+    };
+    return JSON.stringify(criticalData);
+  }
+
+  // Backup inteligente - solo si hay cambios reales
+  smartBackup = (state) => {
+    try {
+      const currentHash = this.createStateHash(state);
+      const now = Date.now();
+
+      // Si no hay cambios reales, no hacer backup
+      if (currentHash === this.lastStateHash) {
+        return;
+      }
+
+      // Si el usuario está muy activo, esperar
+      if (this.isUserActive && (now - this.lastBackupTime) < 60000) {
+        return; // Esperar al menos 1 minuto si está activo
+      }
+
+      // Solo hacer backup si han pasado al menos 3 minutos
+      if ((now - this.lastBackupTime) < 180000) {
+        return;
+      }
+
+      // Crear backups múltiples
+      const serializedState = JSON.stringify(state);
+      
+      // Backup principal
+      localStorage.setItem("state", serializedState);
+      
+      // Backup de seguridad
+      localStorage.setItem("state_backup", serializedState);
+      
+      // Backup con timestamp (mantener solo los últimos 3)
+      const timestamp = now;
+      localStorage.setItem(`state_${timestamp}`, serializedState);
+      this.cleanOldBackups();
+
+      // Backup en IndexedDB (async, no bloquea)
+      this.saveToIndexedDB(state);
+
+      this.lastBackupTime = now;
+      this.lastStateHash = currentHash;
+      this.hasChanges = false;
+
+      console.log('💾 Backup inteligente completado:', new Date().toLocaleTimeString());
+
+    } catch(e) {
+      console.error('🚨 Error en backup inteligente:', e);
+    }
+  }
+
+  // Limpiar backups antiguos
+  cleanOldBackups = () => {
+    try {
+      const keys = Object.keys(localStorage);
+      const timestampBackups = keys
+        .filter(key => key.startsWith('state_') && key !== 'state_backup')
+        .sort()
+        .reverse();
+
+      // Mantener solo los últimos 3
+      timestampBackups.slice(3).forEach(key => {
+        localStorage.removeItem(key);
+      });
+    } catch(e) {
+      console.error('Error limpiando backups:', e);
+    }
+  }
+
+  // Backup en IndexedDB (más robusto)
+  saveToIndexedDB = async (state) => {
+    try {
+      const request = indexedDB.open('AppBackup', 1);
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('backups')) {
+          db.createObjectStore('backups', { keyPath: 'id' });
+        }
+      };
+
+      request.onsuccess = (event) => {
+        const db = event.target.result;
+        const transaction = db.transaction(['backups'], 'readwrite');
+        const store = transaction.objectStore('backups');
+        
+        store.put({
+          id: 'main_backup',
+          data: state,
+          timestamp: Date.now()
+        });
+      };
+    } catch(e) {
+      console.error('Error en IndexedDB backup:', e);
+    }
+  }
+
+  // Detectar actividad del usuario
+  trackUserActivity = () => {
+    let activityTimer;
+    
+    const resetTimer = () => {
+      this.isUserActive = true;
+      clearTimeout(activityTimer);
+      
+      activityTimer = setTimeout(() => {
+        this.isUserActive = false;
+        console.log('😴 Usuario inactivo, backup habilitado');
+      }, 30000); // 30 segundos de inactividad
+    };
+
+    // Escuchar eventos de actividad
+    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+      document.addEventListener(event, resetTimer, true);
+    });
+
+    resetTimer();
+  }
+}
+
+// Crear instancia global
+const smartBackup = new SmartBackupService();
+
+export const saveToLocalStorage=(state)=>{
+  // Marcar que hay cambios
+  smartBackup.markChanged();
+  
+  // Backup inteligente (no siempre)
+  smartBackup.smartBackup(state);
 }
 
 export const loadFromLocalStorage=(state)=>{
@@ -44,7 +190,152 @@ return JSON.parse(serializedState)
   }
 }
 
-export const persistedState= loadFromLocalStorage()
+// 🛡️ Sistema de Recuperación Inteligente
+class SmartRecoveryService {
+  
+  // Recuperar datos con múltiples intentos
+  recoverData = () => {
+    console.log('🔍 Iniciando recuperación inteligente...');
+    
+    // Intento 1: Estado principal
+    let data = this.tryLoadFromSource('state');
+    if (data && this.validateData(data)) {
+      console.log('✅ Datos recuperados desde estado principal');
+      return data;
+    }
+
+    // Intento 2: Backup de seguridad
+    data = this.tryLoadFromSource('state_backup');
+    if (data && this.validateData(data)) {
+      console.log('✅ Datos recuperados desde backup de seguridad');
+      // Restaurar como principal
+      localStorage.setItem('state', JSON.stringify(data));
+      return data;
+    }
+
+    // Intento 3: Backups con timestamp
+    const timestampBackups = this.getTimestampBackups();
+    for (const backupKey of timestampBackups) {
+      data = this.tryLoadFromSource(backupKey);
+      if (data && this.validateData(data)) {
+        console.log(`✅ Datos recuperados desde ${backupKey}`);
+        localStorage.setItem('state', JSON.stringify(data));
+        return data;
+      }
+    }
+
+    // Intento 4: IndexedDB
+    this.tryRecoverFromIndexedDB();
+
+    console.log('⚠️ No se pudieron recuperar datos locales');
+    return undefined;
+  }
+
+  // Intentar cargar desde una fuente específica
+  tryLoadFromSource = (key) => {
+    try {
+      const serializedState = localStorage.getItem(key);
+      if (serializedState === null) return null;
+      return JSON.parse(serializedState);
+    } catch(e) {
+      console.log(`❌ Error cargando desde ${key}:`, e);
+      return null;
+    }
+  }
+
+  // Validar que los datos están completos
+  validateData = (data) => {
+    try {
+      return (
+        data &&
+        typeof data === 'object' &&
+        data.userReducer &&
+        (data.registrosReducer !== undefined) &&
+        (data.cuentasReducer !== undefined)
+      );
+    } catch(e) {
+      return false;
+    }
+  }
+
+  // Obtener backups con timestamp ordenados
+  getTimestampBackups = () => {
+    try {
+      const keys = Object.keys(localStorage);
+      return keys
+        .filter(key => key.startsWith('state_') && key !== 'state_backup')
+        .sort()
+        .reverse(); // Más recientes primero
+    } catch(e) {
+      return [];
+    }
+  }
+
+  // Recuperar desde IndexedDB
+  tryRecoverFromIndexedDB = async () => {
+    try {
+      console.log('💾 Intentando recuperar desde IndexedDB...');
+      
+      const request = indexedDB.open('AppBackup', 1);
+      
+      request.onsuccess = (event) => {
+        const db = event.target.result;
+        const transaction = db.transaction(['backups'], 'readonly');
+        const store = transaction.objectStore('backups');
+        const getRequest = store.get('main_backup');
+        
+        getRequest.onsuccess = () => {
+          const backup = getRequest.result;
+          if (backup && backup.data && this.validateData(backup.data)) {
+            console.log('✅ Datos recuperados desde IndexedDB');
+            localStorage.setItem('state', JSON.stringify(backup.data));
+            
+            // Recargar página para aplicar datos
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          }
+        };
+      };
+    } catch(e) {
+      console.error('Error recuperando desde IndexedDB:', e);
+    }
+  }
+
+  // Limpiar datos corruptos
+  cleanCorruptedData = () => {
+    try {
+      const keysToClean = ['state', 'state_backup'];
+      keysToClean.forEach(key => {
+        const data = localStorage.getItem(key);
+        if (data && !this.validateData(JSON.parse(data))) {
+          localStorage.removeItem(key);
+          console.log(`🧹 Limpiado dato corrupto: ${key}`);
+        }
+      });
+    } catch(e) {
+      console.error('Error limpiando datos:', e);
+    }
+  }
+}
+
+// Crear instancia global de recuperación
+const smartRecovery = new SmartRecoveryService();
+
+// Función mejorada de carga
+export const loadFromLocalStorageWithRecovery = () => {
+  // Intentar carga normal primero
+  const normalData = loadFromLocalStorage();
+  if (normalData && smartRecovery.validateData(normalData)) {
+    return normalData;
+  }
+
+  // Si falla, usar recuperación inteligente
+  console.log('🚨 Carga normal falló, iniciando recuperación...');
+  return smartRecovery.recoverData();
+}
+
+export const persistedState= loadFromLocalStorageWithRecovery()
 
 //const composeEnhancer = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
 const composeEnhancers = (typeof window !== 'undefined' && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__) || compose;
@@ -236,10 +527,91 @@ let tiempoRes = (deco && deco.exp) ? (deco.exp - tiempoAct) : 0
 const wb = new Workbox("sw.js", { scope: "/" });
     wb.register();
 
- 
+    // 🔄 WEBSOCKETS: Inicializar conexión global si hay usuario logueado
+    this.initializeWebSocketConnection();
 
+    // 🧠 BACKUP INTELIGENTE: Inicializar tracking de actividad
+    smartBackup.trackUserActivity();
+
+    // 🛡️ BACKUP: Verificar integridad de datos después de cargar
+    setTimeout(() => {
+      this.checkDataIntegrity();
+    }, 2000); // Esperar 2 segundos para que cargue todo
 
   }//fin DidMount 
+
+  // 🔄 WEBSOCKETS: Inicializar conexión WebSocket global
+  initializeWebSocketConnection = () => {
+    const state = store.getState();
+    const user = state.userReducer?.update?.usuario?.user;
+    
+    if (user && user._id) {
+      console.log('🔌 [APP] Inicializando WebSocket para usuario:', user._id);
+      websocketService.connect(user._id);
+      
+      // Escuchar cambios en el store para reconectar si cambia el usuario
+      store.subscribe(() => {
+        const newState = store.getState();
+        const newUser = newState.userReducer?.update?.usuario?.user;
+        
+        if (newUser && newUser._id && newUser._id !== user._id) {
+          console.log('🔄 [APP] Usuario cambió, reconectando WebSocket:', newUser._id);
+          websocketService.connect(newUser._id);
+        } else if (!newUser && websocketService.isConnectedToSocket()) {
+          console.log('❌ [APP] Usuario cerró sesión, desconectando WebSocket');
+          websocketService.disconnect();
+        }
+      });
+    } else {
+      console.log('⚠️ [APP] No hay usuario logueado, WebSocket no se inicializa');
+    }
+  }
+
+  // �️ BACKUP: Verificar y recuperar datos si es necesario
+  checkDataIntegrity = () => {
+    try {
+      const state = store.getState();
+      
+      // Si hay usuario pero no datos, intentar recuperar
+      if (state.userReducer?.update?.usuario?.user && 
+          (!state.cuentasReducer || state.cuentasReducer.length === 0)) {
+        
+        console.log('⚠️ Usuario logueado pero sin datos, intentando recuperar...');
+        
+        // Intentar recuperación automática
+        const recoveredData = smartRecovery.recoverData();
+        if (recoveredData) {
+          // Si recuperamos datos, recargar la página
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } else {
+          // Si no hay backup, mostrar opción de recargar desde servidor
+          this.showDataRecoveryOptions();
+        }
+      }
+    } catch (error) {
+      console.error('🚨 Error verificando integridad de datos:', error);
+    }
+  }
+
+  // Mostrar opciones de recuperación al usuario
+  showDataRecoveryOptions = () => {
+    const shouldReload = confirm(
+      'Parece que algunos datos no se cargaron correctamente. ¿Quieres recargar la aplicación para recuperarlos?'
+    );
+    
+    if (shouldReload) {
+      window.location.reload();
+    }
+  }
+
+  // 🔄 WEBSOCKETS: Limpiar al desmontar
+  componentWillUnmount() {
+    if (websocketService.isConnectedToSocket()) {
+      websocketService.disconnect();
+    }
+  }
 
 
 

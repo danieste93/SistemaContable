@@ -7,6 +7,7 @@ import TextField from '@material-ui/core/TextField';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import {connect} from 'react-redux';
 import Checkbox from '@material-ui/core/Checkbox';
+import io from 'socket.io-client';
 import {addCuenta, addRegs} from "../../reduxstore/actions/regcont"
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
@@ -213,7 +214,11 @@ else if
   
         this.props.dispatch(addCuenta(response.Cuenta))
         this.props.dispatch(addRegs(response.Reg))
-this.Onsalida()
+
+        // 🔄 WEBSOCKETS: Notificar creación de cuenta a otros dispositivos
+        this.notifyAccountCreated(response.Cuenta);
+
+        this.Onsalida()
     }
     
   });
@@ -227,6 +232,46 @@ this.Onsalida()
           setTimeout(()=>{ 
             this.props.Flecharetro4()
           }, 500);
+        }
+
+        // 🔄 WEBSOCKETS: Notificar creación de cuenta a otros dispositivos
+        notifyAccountCreated = (nuevaCuenta) => {
+          try {
+            const socketUrl = process.env.NODE_ENV === 'production' 
+              ? window.location.origin 
+              : 'http://localhost:3000';
+            
+            const socket = io(socketUrl, {
+              transports: ['websocket', 'polling'],
+              timeout: 5000
+            });
+
+            socket.on('connect', () => {
+              console.log('🔌 [ADD-CUENTA-WS] Conectado para notificar creación de cuenta');
+              
+              const userId = this.props.state.userReducer?.update?.usuario?.user?._id;
+              if (userId) {
+                // Enviar notificación de cuenta creada
+                socket.emit('account-created', {
+                  userId: userId,
+                  cuenta: nuevaCuenta,
+                  timestamp: new Date().toISOString()
+                });
+                
+                console.log('📨 [ADD-CUENTA-WS] Notificación de cuenta creada enviada:', nuevaCuenta.nombreCuenta);
+                
+                // Desconectar después de enviar
+                setTimeout(() => socket.disconnect(), 1000);
+              }
+            });
+
+            socket.on('connect_error', (error) => {
+              console.error('🚨 [ADD-CUENTA-WS] Error de conexión:', error);
+            });
+
+          } catch (error) {
+            console.error('🚨 [ADD-CUENTA-WS] Error notificando creación de cuenta:', error);
+          }
         }
     render () {
       let flechaval = this.state.filtrosflecha?"▲":"▼"
